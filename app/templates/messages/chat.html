@@ -1,0 +1,950 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* ── Layout reset ── */
+    body.chat-active footer,
+    body:has(.chat-page-wrapper) footer { display: none !important; }
+
+    body.chat-active main.container,
+    body.chat-active main,
+    body:has(.chat-page-wrapper) main.container,
+    body:has(.chat-page-wrapper) main {
+        max-width: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ── Chat wrapper ── */
+    .chat-page-wrapper {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        height: 100dvh;
+        z-index: 150;
+        background: var(--bg-body);
+        display: flex;
+        flex-direction: column;
+        padding-top: env(safe-area-inset-top);
+    }
+
+    /* ── Header ── */
+    .chat-header {
+        padding: 8px 16px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        z-index: 60;
+        min-height: 56px;
+    }
+    .btn-back {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-main);
+        text-decoration: none;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        transition: background 0.15s;
+        flex-shrink: 0;
+    }
+    .btn-back:hover { background: var(--border); }
+
+    .header-profile-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: inherit;
+        min-width: 0;
+        flex: 1;
+    }
+    .header-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+    .header-name {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .header-role {
+        font-size: 10px;
+        margin: 0;
+        color: var(--text-muted);
+    }
+
+    /* ── Viewport ── */
+    .chat-viewport {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background-color: var(--bg-body);
+        background-image: radial-gradient(var(--border) 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    /* ── Date separators ── */
+    .date-separator {
+        align-self: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin: 12px 0;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        opacity: 0.9;
+    }
+
+    /* ── Message groups ── */
+    .msg-group {
+        display: flex;
+        flex-direction: column;
+        max-width: 80%;
+        position: relative;
+    }
+    .msg-group.me { align-self: flex-end; align-items: flex-end; }
+    .msg-group.them { align-self: flex-start; align-items: flex-start; }
+
+    .msg-bubble-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        max-width: 100%;
+    }
+    .msg-group.me .msg-bubble-row { flex-direction: row-reverse; }
+
+    .msg-bubble {
+        padding: 10px 14px;
+        font-size: 14px;
+        line-height: 1.5;
+        border-radius: 16px;
+        position: relative;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+    .msg-group.me .msg-bubble {
+        background: var(--primary);
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+    }
+    .msg-group.them .msg-bubble {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        border-bottom-left-radius: 4px;
+    }
+
+    /* ── Session attachment ── */
+    .session-attachment {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px;
+        width: 100%;
+        min-width: 220px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: inherit;
+        margin-top: 4px;
+        transition: all 0.15s;
+    }
+    .session-attachment:not(.locked):hover {
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+    .session-attachment.locked {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .session-icon-box {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-upcoming { background: #eff6ff; color: #1d4ed8; }
+    .status-locked { background: var(--bg-body); border: 1px solid var(--border); color: var(--text-muted); }
+
+    .attach-title {
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .attach-sub {
+        font-size: 10px;
+        color: var(--text-muted);
+    }
+    .attach-locked-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    /* ── Footer & input ── */
+    .chat-footer {
+        padding: 10px 16px;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+    }
+
+    .attachment-preview {
+        display: none;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+    }
+    .preview-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+    }
+    .preview-clear {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        padding: 4px;
+    }
+
+    .input-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .chat-textarea {
+        flex: 1;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 10px 14px;
+        font-size: 14px;
+        outline: none;
+        color: var(--text-main);
+        resize: none;
+        max-height: 120px;
+        min-height: 42px;
+        font-family: inherit;
+        line-height: 1.4;
+    }
+    .chat-textarea:focus { border-color: var(--primary); }
+
+    .btn-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+        transition: transform 0.1s;
+    }
+    .btn-icon:active { transform: scale(0.95); }
+    .btn-attach { background: transparent; color: var(--text-muted); }
+    .btn-attach:hover { background: var(--bg-body); color: var(--text-main); }
+    .btn-send {
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        height: 38px;
+        width: 42px;
+    }
+
+    /* ── Meta & reactions ── */
+    .msg-meta {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        opacity: 0.7;
+    }
+    .msg-group.me .msg-meta { justify-content: flex-end; margin-right: 4px; }
+    .msg-group.them .msg-meta { justify-content: flex-start; margin-left: 4px; }
+
+    .reaction-trigger {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: var(--text-muted);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.15s;
+        font-size: 12px;
+    }
+    .msg-bubble-row:hover .reaction-trigger { opacity: 1; }
+    @media (hover: none) { .reaction-trigger { opacity: 0.5; } }
+
+    .emoji-popup {
+        position: absolute;
+        bottom: 28px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px;
+        gap: 2px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        z-index: 100;
+        flex-direction: row;
+    }
+    .emoji-btn {
+        font-size: 18px;
+        padding: 4px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: transform 0.1s;
+    }
+    .emoji-btn:hover { background: var(--bg-body); transform: scale(1.15); }
+
+    .reactions-row {
+        display: flex;
+        gap: 3px;
+        margin-top: 2px;
+        flex-wrap: wrap;
+    }
+    .msg-group.me .reactions-row { justify-content: flex-end; }
+    .reaction-pill {
+        font-size: 10px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        padding: 2px 5px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        gap: 2px;
+    }
+    .reaction-pill.active { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+
+    .reply-quote {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        padding: 4px 8px;
+        background: var(--bg-body);
+        border-radius: 6px;
+        border-left: 3px solid var(--primary);
+    }
+    .reply-preview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: var(--bg-body);
+        border-left: 3px solid var(--primary);
+        border-radius: 8px;
+        margin-bottom: 6px;
+        font-size: 12px;
+    }
+    .reply-preview-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .msg-reply-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 11px;
+        cursor: pointer;
+        padding: 2px 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .msg-reply-btn:hover { color: var(--primary); }
+
+    /* ── Session picker modal ── */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-sheet {
+        background: var(--bg-card);
+        width: 90%;
+        max-width: 380px;
+        max-height: 65vh;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+    .modal-head {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-head h3 { margin: 0; font-size: 14px; font-weight: 800; }
+    .modal-close-btn {
+        border: none;
+        background: none;
+        font-size: 18px;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+    }
+    .modal-search {
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        outline: none;
+        font-size: 12px;
+        color: var(--text-main);
+    }
+    .session-list {
+        overflow-y: auto;
+        padding: 0 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .session-pick-item {
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        transition: background 0.1s;
+        font-size: 12px;
+    }
+    .session-pick-item:hover { background: var(--bg-body); }
+    .session-pick-locked {
+        padding: 10px;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        opacity: 0.5;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+    }
+
+    /* ── Mobile tweaks ── */
+    @media (max-width: 600px) {
+        .msg-group { max-width: 88%; }
+        .chat-viewport { padding: 12px; }
+        .input-row { gap: 4px; }
+        .btn-icon { width: 36px; height: 36px; }
+    }
+</style>
+
+<div class="chat-page-wrapper" onclick="closeAllPickers()">
+
+    {# ── Header ── #}
+    <div class="chat-header">
+        <a href="{{ url_for('messages.inbox') }}" class="btn-back" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"><i class="fa-solid fa-arrow-left"></i></a>
+        {% if channel %}
+        <div class="header-profile-link" style="pointer-events: none;">
+            {% if channel_avatar_employee %}
+            <img src="{{ channel_avatar_employee.avatar(36) }}" class="header-avatar" alt="">
+            {% else %}
+            <div class="header-avatar" style="border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--primary);"><i class="fa-solid fa-hashtag"></i></div>
+            {% endif %}
+            <div style="min-width: 0;">
+                <h1 class="header-name">{{ channel_display_name }}</h1>
+                <p class="header-role">{{ participants|length }} member{{ 's' if participants|length != 1 else '' }}{% if channel.name and participants %} · {{ participants|map(attribute='first_name')|join(', ') }}{% endif %}</p>
+            </div>
+        </div>
+        {% else %}
+        <a href="{{ url_for('manager.employee_detail', employee_id=partner.id) }}" class="header-profile-link">
+            <img src="{{ partner.avatar(36) }}" class="header-avatar">
+            <div>
+                <h1 class="header-name">{{ partner.first_name }} {{ partner.last_name }}</h1>
+                <p class="header-role">{{ partner.role|capitalize }}</p>
+            </div>
+        </a>
+        {% endif %}
+    </div>
+
+    {# ── Viewport ── #}
+    <div id="chat-viewport" class="chat-viewport">
+        {% set ns = namespace(last_date=None) %}
+
+        {% for m in messages %}
+            {% set msg_date = m.timestamp.strftime('%Y-%m-%d') %}
+            {% if ns.last_date != msg_date %}
+                <div class="date-separator">
+                    {% if msg_date == now_date %} Today
+                    {% elif msg_date == yesterday_date %} Yesterday
+                    {% else %} {{ m.timestamp.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </div>
+                {% set ns.last_date = msg_date %}
+            {% endif %}
+
+            {% set is_me = (m.sender_id == current_user.employee_id) %}
+
+            <div class="msg-group {{ 'me' if is_me else 'them' }}" id="msg-{{ m.id }}" data-id="{{ m.id }}">
+                <div class="msg-bubble-row">
+                    <div style="position:relative;">
+                        {% if m.reply_to_id and reply_to_map is defined and reply_to_map.get(m.reply_to_id) %}
+                            {% set rt = reply_to_map[m.reply_to_id] %}
+                            <div class="reply-quote">Replying to {{ rt.sender_name }}: {{ rt.body }}</div>
+                        {% endif %}
+
+                        {% if '[SESSION_LINK:' in m.body %}
+                            {% set parts = m.body.split('[SESSION_LINK:') %}
+                            {% set text_part = parts[0].strip() %}
+                            {% set session_id = parts[1].replace(']', '').strip()|int %}
+                            {% set s = session_map.get(session_id) %}
+
+                            {% if text_part %}
+                                <div class="msg-bubble" style="margin-bottom:4px;">{{ text_part }}</div>
+                            {% endif %}
+
+                            {% if s %}
+                                {% if s.is_locked %}
+                                    <div class="session-attachment locked">
+                                        <div class="session-icon-box status-locked"><i class="fa-solid fa-lock"></i></div>
+                                        <div style="min-width:0;">
+                                            <div class="attach-locked-title">Assignment Pending</div>
+                                            <div class="attach-sub">Hidden · {{ s.session_date.strftime('%b %d') }}</div>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <a href="{{ url_for('employee.session_rating', session_id=session_id) }}" class="session-attachment">
+                                        <div class="session-icon-box {{ 'status-completed' if s.completed_at else 'status-upcoming' }}">
+                                            <i class="fa-solid {{ 'fa-circle-check' if s.completed_at else 'fa-clock' }}"></i>
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div class="attach-title">{{ s.position.name }}</div>
+                                            <div class="attach-sub">{{ 'Completed' if s.completed_at else 'Upcoming' }} · {{ s.session_date.strftime('%b %d') }}</div>
+                                        </div>
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <div class="msg-bubble" style="font-style:italic; color:var(--text-muted);">Attachment unavailable</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="msg-bubble">{{ m.body }}</div>
+                        {% endif %}
+
+                        <div id="picker-{{ m.id }}" class="emoji-popup" style="display:none; {{ 'right:0;' if is_me else 'left:0;' }}" onclick="event.stopPropagation()">
+                            {% for emoji in ['👍', '👎', '❤️', '😂', '😮', '😢'] %}
+                                <div class="emoji-btn" onclick="submitReaction('{{ m.id }}', '{{ emoji }}')">{{ emoji }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="reaction-trigger" onclick="togglePicker(event, '{{ m.id }}')">
+                        <i class="fa-regular fa-face-smile"></i>
+                    </div>
+                    <button type="button" class="msg-reply-btn" data-id="{{ m.id }}" data-me="{{ 1 if is_me else 0 }}" data-sender="{{ (m.sender.first_name + ' ' + m.sender.last_name) if channel else (partner.first_name + ' ' + partner.last_name) }}" onclick="event.stopPropagation(); setReplyFromMessage(this);">
+                        <i class="fa-solid fa-reply"></i> Reply
+                    </button>
+                </div>
+
+                <div class="reactions-row" id="reactions-{{ m.id }}">
+                    {% if reactions and m.id in reactions %}
+                        {% for r in reactions[m.id] %}
+                            <div class="reaction-pill {{ 'active' if r.me }}" title="{{ 'Click again to remove' if r.me else 'Add reaction' }}" onclick="submitReaction('{{ m.id }}', '{{ r.emoji }}')">
+                                <span>{{ r.emoji }}</span> <span>{{ r.count }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="msg-meta">
+                    <span class="msg-time" data-iso="{{ m.timestamp.isoformat() }}"></span>
+                    {% if is_me %}
+                        {% if m.read_at %}
+                            <i class="fa-solid fa-check-double" style="color:var(--primary);"></i>
+                        {% else %}
+                            <i class="fa-solid fa-check"></i>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {# ── Footer ── #}
+    <div class="chat-footer">
+        <div id="attachmentPreview" class="attachment-preview">
+            <div class="preview-info">
+                <div id="previewIcon" class="session-icon-box" style="width:26px; height:26px; border-radius:6px;"></div>
+                <div style="min-width:0;">
+                    <div id="previewTitle" class="attach-title"></div>
+                    <div id="previewSub" class="attach-sub"></div>
+                </div>
+            </div>
+            <button type="button" onclick="clearAttachment()" class="preview-clear"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="replyPreview" class="reply-preview" style="display:none;">
+            <div class="reply-preview-text"><strong id="replyPreviewSender"></strong>: <span id="replyPreviewBody"></span></div>
+            <button type="button" class="preview-clear" onclick="clearReply()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="input-row">
+            <button type="button" class="btn-icon btn-attach" onclick="openSessionPicker()">
+                <i class="fa-solid fa-paperclip"></i>
+            </button>
+            <textarea id="messageInput" class="chat-textarea" rows="1" placeholder="Message..."
+                      oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+            <button type="button" class="btn-icon btn-send" onclick="sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+{# ── Session picker modal ── #}
+<div id="sessionModal" class="modal-overlay" onclick="closeSessionPicker(event)">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-head">
+            <h3>Attach Session</h3>
+            <button onclick="closeSessionPicker(null, true)" class="modal-close-btn">&times;</button>
+        </div>
+        <div style="padding:10px 12px;">
+            <input type="text" id="sessionSearch" class="modal-search" placeholder="Search sessions..." oninput="filterSessions()">
+        </div>
+        <div id="sessionList" class="session-list"></div>
+    </div>
+</div>
+
+<script>
+    document.body.classList.add('chat-active');
+
+    var viewport = document.getElementById('chat-viewport');
+    var MY_ID = {{ current_user.employee_id }};
+    var CHANNEL_ID = {{ channel.id if channel else 'null' }};
+    var PARTNER_ID = {{ partner.id if partner else 'null' }};
+    var PARTNER_NAME = {{ (channel_display_name if channel else (partner.first_name + ' ' + partner.last_name))|tojson }};
+    var activePickerId = null;
+    var pendingSessionId = null;
+    var replyToId = null;
+    var allSessions = [];
+    var pollInterval = null;
+
+    function setReplyTo(id, body, senderName) {
+        replyToId = id;
+        document.getElementById('replyPreviewSender').textContent = senderName || 'Unknown';
+        document.getElementById('replyPreviewBody').textContent = body || '';
+        document.getElementById('replyPreview').style.display = 'flex';
+    }
+    function clearReply() {
+        replyToId = null;
+        document.getElementById('replyPreview').style.display = 'none';
+    }
+    function setReplyFromMessage(btn) {
+        var group = btn.closest('.msg-group');
+        var bubble = group ? group.querySelector('.msg-bubble') : null;
+        var text = bubble ? bubble.textContent.replace(/\s+/g, ' ').trim() : '';
+        var snippet = text.length > 60 ? text.slice(0, 60) + '\u2026' : text;
+        var sender = btn.dataset.me === '1' ? 'You' : (btn.dataset.sender || '');
+        setReplyTo(btn.dataset.id, snippet, sender);
+    }
+
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function sendMessage() {
+        var input = document.getElementById('messageInput');
+        var body = input.value.trim();
+        if (!body && !pendingSessionId) return;
+
+        if (pendingSessionId) {
+            body = body + ' [SESSION_LINK:' + pendingSessionId + ']';
+        }
+
+        var formData = new FormData();
+        formData.append('body', body);
+        if (replyToId) formData.append('reply_to_id', replyToId);
+
+        input.value = '';
+        input.style.height = 'auto';
+        clearAttachment();
+        clearReply();
+
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function(res) {
+            if (res.ok) {
+                pollMessages();
+                setTimeout(function() { viewport.scrollTop = viewport.scrollHeight; }, 100);
+            }
+        });
+    }
+
+    function pollMessages() {
+        var groups = document.querySelectorAll('.msg-group');
+        var lastId = 0;
+        if (groups.length > 0) {
+            lastId = parseInt(groups[groups.length - 1].dataset.id);
+        }
+
+        var updatesUrl = CHANNEL_ID ? '{{ url_for("messages.channel_updates", channel_id=0) }}'.replace('/0/', '/' + CHANNEL_ID + '/') : '{{ url_for("messages.chat_updates", partner_id=0) }}'.replace('/0/', '/' + PARTNER_ID + '/');
+        fetch(updatesUrl + '?last_id=' + lastId)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.messages.length > 0) {
+                    var wasAtBottom = (viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight) < 150;
+                    data.messages.forEach(function(msg) {
+                        viewport.insertAdjacentHTML('beforeend', renderMessageHTML(msg));
+                    });
+                    if (wasAtBottom) viewport.scrollTop = viewport.scrollHeight;
+                    localizeTimes();
+                }
+                for (var msgId in data.reactions) {
+                    if (data.reactions.hasOwnProperty(msgId)) {
+                        updateReactions(msgId, data.reactions[msgId]);
+                    }
+                }
+            });
+    }
+
+    function renderMessageHTML(msg) {
+        var isMe = (msg.sender_id === MY_ID);
+        var contentHtml = '';
+
+        if (msg.reply_to) {
+            contentHtml += '<div class="reply-quote">Replying to ' + escapeHtml(msg.reply_to.sender_name) + ': ' + escapeHtml(msg.reply_to.body) + '</div>';
+        }
+
+        if (msg.body.indexOf('[SESSION_LINK:') !== -1 && msg.session_preview) {
+            var parts = msg.body.split('[SESSION_LINK:');
+            var textPart = parts[0].trim();
+            var s = msg.session_preview;
+
+            if (textPart) contentHtml += '<div class="msg-bubble" style="margin-bottom:4px;">' + escapeHtml(textPart) + '</div>';
+
+            if (s.is_locked) {
+                contentHtml += '<div class="session-attachment locked">' +
+                    '<div class="session-icon-box status-locked"><i class="fa-solid fa-lock"></i></div>' +
+                    '<div style="min-width:0;"><div class="attach-locked-title">Assignment Pending</div>' +
+                    '<div class="attach-sub">Hidden · ' + s.date + '</div></div></div>';
+            } else {
+                var icon = s.status === 'completed' ? 'fa-circle-check' : 'fa-clock';
+                var statusClass = s.status === 'completed' ? 'status-completed' : 'status-upcoming';
+                contentHtml += '<a href="/employee/sessions/' + s.id + '" class="session-attachment">' +
+                    '<div class="session-icon-box ' + statusClass + '"><i class="fa-solid ' + icon + '"></i></div>' +
+                    '<div style="min-width:0;"><div class="attach-title">' + escapeHtml(s.position) + '</div>' +
+                    '<div class="attach-sub">' + capitalize(s.status) + ' · ' + s.date + '</div></div></a>';
+            }
+        } else {
+            contentHtml = '<div class="msg-bubble">' + escapeHtml(msg.body) + '</div>';
+        }
+
+        var checkMark = isMe ? (msg.read_at ? '<i class="fa-solid fa-check-double" style="color:var(--primary);"></i>' : '<i class="fa-solid fa-check"></i>') : '';
+        var popupStyle = isMe ? 'right:0;' : 'left:0;';
+        var emojis = ['👍','👎','❤️','😂','😮','😢'];
+        var emojiHtml = emojis.map(function(e) {
+            return '<div class="emoji-btn" onclick="submitReaction(\'' + msg.id + '\', \'' + e + '\')">' + e + '</div>';
+        }).join('');
+
+        var replySender = isMe ? 'You' : (PARTNER_NAME || '');
+        var replyBtn = '<button type="button" class="msg-reply-btn" data-id="' + msg.id + '" data-me="' + (isMe ? '1' : '0') + '" data-sender="' + escapeHtml(replySender) + '" onclick="event.stopPropagation(); setReplyFromMessage(this);"><i class="fa-solid fa-reply"></i> Reply</button>';
+        return '<div class="msg-group ' + (isMe ? 'me' : 'them') + '" id="msg-' + msg.id + '" data-id="' + msg.id + '">' +
+            '<div class="msg-bubble-row"><div style="position:relative;">' + contentHtml +
+            '<div id="picker-' + msg.id + '" class="emoji-popup" style="display:none; ' + popupStyle + '" onclick="event.stopPropagation()">' + emojiHtml + '</div>' +
+            '</div><div class="reaction-trigger" onclick="togglePicker(event, \'' + msg.id + '\')"><i class="fa-regular fa-face-smile"></i></div>' + replyBtn + '</div>' +
+            '<div class="reactions-row" id="reactions-' + msg.id + '"></div>' +
+            '<div class="msg-meta"><span class="msg-time" data-iso="' + msg.timestamp + '"></span>' + checkMark + '</div></div>';
+    }
+
+    function updateReactions(msgId, reactions) {
+        var container = document.getElementById('reactions-' + msgId);
+        if (!container) return;
+        if (!Array.isArray(reactions)) return;
+        container.innerHTML = reactions.map(function(r) {
+            var title = r.me ? 'Click again to remove' : 'Add reaction';
+            return '<div class="reaction-pill ' + (r.me ? 'active' : '') + '" title="' + escapeHtml(title) + '" onclick="submitReaction(\'' + msgId + '\', \'' + r.emoji + '\')">' +
+                '<span>' + r.emoji + '</span><span>' + r.count + '</span></div>';
+        }).join('');
+    }
+
+    function togglePicker(e, msgId) {
+        e.stopPropagation();
+        var picker = document.getElementById('picker-' + msgId);
+        var wasOpen = picker.style.display === 'flex';
+        closeAllPickers();
+        if (!wasOpen) {
+            picker.style.display = 'flex';
+            activePickerId = msgId;
+        }
+    }
+
+    function closeAllPickers() {
+        if (activePickerId) {
+            var el = document.getElementById('picker-' + activePickerId);
+            if (el) el.style.display = 'none';
+            activePickerId = null;
+        }
+    }
+
+    function submitReaction(msgId, emoji) {
+        fetch('/messages/react/' + msgId, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emoji: emoji })
+        }).then(function() { pollMessages(); closeAllPickers(); });
+    }
+
+    function openSessionPicker() {
+        document.getElementById('sessionModal').style.display = 'flex';
+        document.getElementById('sessionSearch').focus();
+        var list = document.getElementById('sessionList');
+        list.innerHTML = '<div style="text-align:center; padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+        fetch('/messages/api/sessions/' + (PARTNER_ID || MY_ID))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                allSessions = data;
+                renderSessionList(data);
+            });
+    }
+
+    function renderSessionList(data) {
+        var list = document.getElementById('sessionList');
+        if (data.length === 0) {
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No sessions found.</div>';
+            return;
+        }
+        list.innerHTML = data.map(function(s) {
+            if (s.is_locked) {
+                return '<div class="session-pick-locked"><i class="fa-solid fa-lock"></i> <span>Hidden Assignment · ' + s.date + '</span></div>';
+            }
+            var icon = s.status === 'completed' ? 'fa-circle-check' : 'fa-clock';
+            var colorClass = s.status === 'completed' ? 'status-completed' : 'status-upcoming';
+            return '<div class="session-pick-item" onclick="stageSession(\'' + s.id + '\', \'' + escapeHtml(s.position) + '\', \'' + s.date + '\', \'' + s.status + '\')">' +
+                '<div class="session-icon-box ' + colorClass + '" style="width:28px; height:28px;"><i class="fa-solid ' + icon + '"></i></div>' +
+                '<div style="flex:1;"><div style="font-weight:700;">' + escapeHtml(s.position) + '</div>' +
+                '<div style="font-size:10px; color:var(--text-muted);">' + s.date + '</div></div></div>';
+        }).join('');
+    }
+
+    function filterSessions() {
+        var q = document.getElementById('sessionSearch').value.toLowerCase();
+        renderSessionList(allSessions.filter(function(s) {
+            return s.position.toLowerCase().indexOf(q) > -1 || s.date.indexOf(q) > -1;
+        }));
+    }
+
+    function closeSessionPicker(e, force) {
+        if (force || (e && e.target.id === 'sessionModal')) {
+            document.getElementById('sessionModal').style.display = 'none';
+        }
+    }
+
+    function stageSession(id, title, date, status) {
+        pendingSessionId = id;
+        document.getElementById('attachmentPreview').style.display = 'flex';
+        document.getElementById('previewTitle').innerText = title;
+        document.getElementById('previewSub').innerText = capitalize(status) + ' · ' + date;
+
+        var iconDiv = document.getElementById('previewIcon');
+        iconDiv.className = 'session-icon-box ' + (status === 'completed' ? 'status-completed' : 'status-upcoming');
+        iconDiv.innerHTML = '<i class="fa-solid ' + (status === 'completed' ? 'fa-circle-check' : 'fa-clock') + '"></i>';
+
+        closeSessionPicker(null, true);
+    }
+
+    function clearAttachment() {
+        pendingSessionId = null;
+        document.getElementById('attachmentPreview').style.display = 'none';
+    }
+
+    function localizeTimes() {
+        var els = document.querySelectorAll('.msg-time');
+        for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.dataset.iso && !el.innerText) {
+                var iso = el.dataset.iso;
+                var date = new Date(iso.charAt(iso.length - 1) === 'Z' ? iso : iso + 'Z');
+                el.innerText = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+    window.addEventListener('load', function() {
+        document.body.appendChild(document.getElementById('sessionModal'));
+        localizeTimes();
+        viewport.scrollTop = viewport.scrollHeight;
+        pollInterval = setInterval(pollMessages, 3000);
+    });
+    window.addEventListener('beforeunload', function() { clearInterval(pollInterval); });
+</script>
+{% endblock %}

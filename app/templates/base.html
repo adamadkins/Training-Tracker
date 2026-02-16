@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Training Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ── Theme variables ── */
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --header-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.04);
+            --input-bg: #ffffff;
+        }
+
+        {% if current_user.is_authenticated and current_user.settings and current_user.settings.theme_pref == 'dark' %}
+        :root {
+            --bg-body: #0b0f1a;
+            --bg-card: #161e2e;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #2d3748;
+            --header-bg: #161e2e;
+            --shadow: rgba(0, 0, 0, 0.4);
+            --input-bg: #1f2937;
+        }
+        {% endif %}
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark mode harmonization (only where needed — not blanket !important) */
+        input, select, textarea {
+            background-color: var(--input-bg);
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        /* ── Header ── */
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 3px var(--shadow);
+            width: 100%;
+        }
+        .container.nav-split {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+            padding: 0 24px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 40px;
+        }
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .brand-logo span {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            justify-content: space-between;
+        }
+        .nav-links {
+            display: flex;
+            gap: 28px;
+        }
+        .nav-links a {
+            position: relative;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 20px 0;
+            transition: color 0.15s;
+        }
+        .nav-links a:hover { color: var(--primary); }
+        .nav-links a.active { color: var(--text-main); font-weight: 600; }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px 2px 0 0;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notif-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: background 0.15s;
+            position: relative;
+            font-size: 14px;
+        }
+        .notif-btn:hover { background: var(--bg-body); color: var(--text-main); }
+        .notif-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+        .nav-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 7px;
+            height: 7px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid var(--header-bg);
+        }
+
+        .profile-pill-link { text-decoration: none; }
+        .pill-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px 4px 4px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: transparent;
+            transition: all 0.15s;
+        }
+        .pill-container:hover { border-color: var(--text-muted); background: var(--bg-body); }
+        .nav-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-name-nav {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .btn-logout-icon {
+            color: var(--text-muted);
+            padding: 0 8px;
+            transition: color 0.15s;
+            font-size: 14px;
+        }
+        .btn-logout-icon:hover { color: #ef4444; }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* ── Toast ── */
+        .toast-container {
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: fixed;
+            top: 74px;
+            right: 16px;
+        }
+        .toast-message {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            padding: 12px 16px;
+            animation: toastIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ── DM disabled banner ── */
+        .dm-disabled-banner {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        /* ── Footer ── */
+        .site-footer {
+            text-align: center;
+            padding: 24px;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        /* ── Responsive nav ── */
+        @media (max-width: 900px) {
+            .container { padding: 0 16px !important; }
+            .mobile-menu-btn { display: block; }
+            .nav-group { gap: 0; justify-content: space-between; }
+
+            .nav-content {
+                display: none;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                right: 0;
+                background: var(--header-bg);
+                flex-direction: column;
+                padding: 20px;
+                border-bottom: 1px solid var(--border);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+                z-index: 99;
+            }
+            .nav-content.show { display: flex; }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 6px;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .nav-links a {
+                padding: 12px 0;
+                width: 100%;
+                border-radius: 10px;
+                background: var(--bg-body);
+            }
+            .nav-links a.active::after { display: none; }
+            .nav-links a.active {
+                background: var(--bg-body);
+                color: var(--primary);
+                border: 1px solid var(--primary);
+            }
+
+            .user-profile {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: 100%;
+                gap: 12px;
+                justify-content: center;
+                padding-top: 12px;
+                border-top: 1px solid var(--border);
+            }
+            .btn-logout-icon {
+                width: 40px;
+                height: 40px;
+                background: var(--bg-body);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+            }
+            .notif-btn { width: 40px; height: 40px; background: var(--bg-body); }
+            .profile-pill-link {
+                width: 100%;
+                order: 10;
+                display: flex;
+                justify-content: center;
+                margin-top: 4px;
+            }
+            .pill-container {
+                width: 100%;
+                justify-content: center;
+                padding: 8px;
+                background: var(--bg-body);
+            }
+        }
+
+        /* ── Global content padding ── */
+        main.container { padding-top: 32px !important; }
+        @media (max-width: 900px) { main.container { padding-top: 20px !important; } }
+        main { flex: 1; }
+    </style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<div id="toast-container" class="toast-container"></div>
+
+{% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
+<div class="dm-disabled-banner">
+    <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
+    Direct messaging is currently disabled for all staff.
+</div>
+{% endif %}
+
+<header class="main-header">
+    <div class="container nav-split">
+        <div class="nav-group">
+            <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
+                <span>Training<b>Tracker</b></span>
+            </a>
+
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+
+            <div class="nav-content" id="navContent">
+                {% if current_user.is_authenticated %}
+                <nav class="nav-links">
+                    {% if current_user.role == 'manager' %}
+                    <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>
+                    <a href="{{ url_for('manager.positions_list') }}" data-tutorial="positions" class="{{ 'active' if 'position' in request.endpoint else '' }}">Positions</a>
+                    <a href="{{ url_for('manager.roadmaps_list') }}" data-tutorial="roadmaps" class="{{ 'active' if 'roadmap' in request.endpoint and request.endpoint not in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] else '' }}">Roadmaps</a>
+                    <a href="{{ url_for('manager.dayparts_list') }}" data-tutorial="dayparts" class="{{ 'active' if 'daypart' in request.endpoint else '' }}">Dayparts</a>
+                    <a href="{{ url_for('manager.locations_list') }}" data-tutorial="locations" class="{{ 'active' if 'location' in request.endpoint else '' }}">Locations</a>
+                    <a href="{{ url_for('manager.schedules_list') }}" data-tutorial="schedule" class="{{ 'active' if 'schedule' in request.endpoint or request.endpoint in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] else '' }}">Schedules</a>
+                    {% else %}
+                    <a href="{{ url_for('employee.dashboard') }}" data-tutorial="dashboard" class="{{ 'active' if 'dashboard' in request.endpoint else '' }}">Dashboard</a>
+                    <a href="{{ url_for('employee.schedules_list') }}" data-tutorial="schedule" class="{{ 'active' if 'schedule' in request.endpoint else '' }}">Schedules</a>
+                    {% endif %}
+                </nav>
+                <div class="nav-actions">
+                    <div class="user-profile">
+                        {% if g.system_settings and not g.system_settings.dm_enabled %}
+                        <div class="notif-btn disabled" title="Messaging Disabled"><i class="fa-regular fa-paper-plane"></i></div>
+                        {% else %}
+                        <a href="{{ url_for('messages.inbox') }}" data-tutorial="messages" class="notif-btn {{ 'active' if 'messages' in request.endpoint else '' }}">
+                            <i class="fa-regular fa-paper-plane"></i>
+                            <span id="msg-badge" class="nav-badge" style="display:none;"></span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('employee.notifications') }}" data-tutorial="notifications" class="notif-btn {{ 'active' if 'notification' in request.endpoint else '' }}">
+                            <i class="fa-regular fa-bell"></i>
+                            <span id="notif-badge" class="nav-badge" style="display:none;"></span>
+                        </a>
+                        <a href="{{ url_for('manager.settings') }}" data-tutorial="settings" class="notif-btn {{ 'active' if 'settings' in request.endpoint else '' }}">
+                            <i class="fa-solid fa-gear"></i>
+                        </a>
+
+                        <a href="{{ url_for('manager.employee_detail', employee_id=current_user.employee_id, back=request.path) }}" class="profile-pill-link">
+                            <div class="pill-container">
+                                <img src="{{ current_user.employee.avatar(26) }}" class="nav-avatar">
+                                <span class="user-name-nav">{{ current_user.employee.first_name }}</span>
+                            </div>
+                        </a>
+
+                        <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="container py-xl fade-in-up">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <p>&copy; 2026 Training Tracker built by Adam Adkins.</p>
+</footer>
+
+<script>
+    function toggleMobileMenu() {
+        document.getElementById('navContent').classList.toggle('show');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};
+
+        window.createToast = function(message) {
+            if (!notifyInApp) return;
+            var container = document.getElementById('toast-container');
+            var toast = document.createElement('div');
+            toast.className = 'toast-message';
+            var icon = document.createElement('i');
+            icon.className = 'fa-solid fa-circle-info';
+            icon.style.color = 'var(--primary)';
+            var span = document.createElement('span');
+            span.textContent = message;
+            toast.appendChild(icon);
+            toast.appendChild(span);
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(function() { toast.remove(); }, 400);
+            }, 4000);
+        };
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        window.createToast({{ message | tojson }});
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if current_user.is_authenticated %}
+        function checkUpdates() {
+            {% if g.system_settings and g.system_settings.dm_enabled %}
+            fetch("{{ url_for('messages.api_unread_count') }}")
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var badge = document.getElementById('msg-badge');
+                    if (badge) {
+                        badge.style.display = (data.count > 0) ? 'block' : 'none';
+                        if (data.count > 0) badge.textContent = data.count > 99 ? '99+' : data.count;
+                    }
+                })
+                .catch(function() {});
+            {% endif %}
+
+            fetch("{{ url_for('employee.api_notification_count') }}")
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var badge = document.getElementById('notif-badge');
+                    if (badge) {
+                        badge.style.display = (data.count > 0) ? 'block' : 'none';
+                        if (data.count > 0) badge.textContent = data.count > 99 ? '99+' : data.count;
+                    }
+                })
+                .catch(function() {});
+        }
+        setInterval(checkUpdates, 15000);
+        checkUpdates();
+        {% endif %}
+    });
+</script>
+{% if current_user.is_authenticated and not current_user.has_seen_tutorial %}
+{% include 'tutorial_overlay.html' %}
+{% endif %}
+</body>
+</html>

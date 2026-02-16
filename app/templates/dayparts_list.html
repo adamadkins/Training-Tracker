@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- SYSTEM OVERRIDES --- */
+    body:has(.dayparts-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.dayparts-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .dayparts-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .dayparts-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* --- HERO SECTION --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .header-title { font-size: 32px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.03em; }
+    .header-subtitle { color: var(--text-muted); font-size: 16px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* --- SEARCH BAR --- */
+    .search-section {
+        margin-bottom: 32px;
+        position: relative;
+        max-width: 500px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 14px 14px 52px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        font-size: 15px;
+        background: var(--bg-card);
+        color: var(--text-main);
+        box-shadow: 0 2px 4px var(--shadow);
+        transition: all 0.2s;
+        outline: none;
+    }
+
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+
+    /* --- TABLE STYLES --- */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 20px var(--shadow);
+        overflow: hidden;
+    }
+
+    .dp-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .dp-table th {
+        padding: 20px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.1em;
+    }
+
+    .daypart-row {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.2s;
+        cursor: pointer;
+        background: var(--bg-card);
+    }
+
+    .daypart-row:last-child { border-bottom: none; }
+    .daypart-row:hover { background-color: var(--bg-body); }
+
+    .dp-cell { padding: 16px 24px; vertical-align: middle; }
+
+    .icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    /* Badge & Status */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+    .pill-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .pill-inactive { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .action-cell {
+        text-align: right;
+    }
+
+    .btn-edit-link {
+        color: var(--text-muted);
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        text-decoration: none;
+    }
+    .btn-edit-link:hover { color: var(--primary); border-color: var(--primary); background: var(--bg-card); }
+
+    /* --- MOBILE HYBRID LOGIC --- */
+    .mobile-only { display: none; }
+
+    @media (max-width: 900px) {
+        .dayparts-wrapper { padding: 24px 16px; }
+        .dp-table thead { display: none; }
+
+        .daypart-row {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        .dp-cell { padding: 0; border: none; }
+
+        /* Hide standalone desktop columns */
+        .time-col, .status-col, .desktop-only { display: none; }
+
+        /* Show mobile info stack */
+        .mobile-only { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+
+        .name-wrapper {
+            font-weight: 800; font-size: 16px; color: var(--text-main);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .mobile-time-row {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .action-cell {
+            margin-left: auto;
+        }
+    }
+</style>
+
+<div class="dayparts-wrapper">
+    <div class="dayparts-container">
+
+        {# --- NAVIGATION --- #}
+        <div style="margin-bottom: 32px;">
+            <a href="{{ url_for('manager.dashboard') }}"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;"
+               onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {# --- Header --- #}
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">Dayparts</h1>
+                <p class="header-subtitle">Configure shifts and precise timeframes for training.</p>
+            </div>
+            <a href="{{ url_for('manager.daypart_create') }}" class="btn-primary" style="padding: 14px 28px; border-radius: 14px; font-weight: 750; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                <i class="fa-solid fa-plus"></i> Add Daypart
+            </a>
+        </div>
+
+        {# --- Search --- #}
+        <div class="search-section">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="daypartSearch" class="search-input" placeholder="Search shifts or times...">
+        </div>
+
+        {# --- Content --- #}
+        <div class="table-card">
+            <table class="dp-table" id="daypartTable">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"></th>
+                        <th>Shift Name</th>
+                        <th class="time-col">Timeframe</th>
+                        <th class="status-col">Status</th>
+                        <th style="text-align: right;">Manage</th>
+                    </tr>
+                </thead>
+                <tbody id="daypartTableBody">
+                    {% for dp in dayparts %}
+                    <tr class="daypart-row" data-href="{{ url_for('manager.daypart_edit', daypart_id=dp.id) }}" onclick="if(!event.target.closest('a')) window.location.href=this.dataset.href;">
+
+                        {# 1. Icon #}
+                        <td class="dp-cell">
+                            {% set start_hour = dp.start_time.hour if dp.start_time else none %}
+                            {% if start_hour is not none %}
+                                {% if start_hour < 11 %}
+                                    <div class="icon-box" style="background: #fff7ed; color: #ea580c; border-color: #ffedd5;">
+                                        <i class="fa-solid fa-cloud-sun"></i>
+                                    </div>
+                                {% elif start_hour < 16 %}
+                                    <div class="icon-box" style="background: #fffbeb; color: #f59e0b; border-color: #fef3c7;">
+                                        <i class="fa-solid fa-sun"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="icon-box" style="background: #f5f3ff; color: #7c3aed; border-color: #ede9fe;">
+                                        <i class="fa-solid fa-moon"></i>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <div class="icon-box"><i class="fa-solid fa-clock"></i></div>
+                            {% endif %}
+                        </td>
+
+                        {# 2. Details Cell #}
+                        <td class="dp-cell" style="flex: 1; min-width: 0;">
+                            <div class="name-wrapper">
+                                <span class="search-name text-truncate" style="font-weight: 800; font-size: 16px;">{{ dp.name }}</span>
+                                <span class="mobile-only">
+                                    {% if dp.active %}
+                                        <span class="status-pill pill-active" style="font-size: 8px; padding: 2px 6px;">Active</span>
+                                    {% else %}
+                                        <span class="status-pill pill-inactive" style="font-size: 8px; padding: 2px 6px;">Inactive</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            {# FIXED: System ID Removed from desktop; mobile details kept stacked #}
+                            <div class="mobile-only">
+                                <div class="mobile-time-row">
+                                    {% if dp.start_time and dp.end_time %}
+                                        {{ dp.start_time.strftime('%I:%M %p').lstrip('0') }} — {{ dp.end_time.strftime('%I:%M %p').lstrip('0') }}
+                                    {% else %}
+                                        No timeframe
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        {# 3. Timeframe (Desktop Only) #}
+                        <td class="dp-cell time-col">
+                            {% if dp.start_time and dp.end_time %}
+                                <div class="search-time" style="font-size: 15px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                                    {{ dp.start_time.strftime('%I:%M %p').lstrip('0') }}
+                                    <span style="color: var(--border); font-weight: 400;">—</span>
+                                    {{ dp.end_time.strftime('%I:%M %p').lstrip('0') }}
+                                </div>
+                            {% else %}
+                                <span class="search-time" style="font-size: 14px; color: var(--text-muted); font-style: italic;">No timeframe</span>
+                            {% endif %}
+                        </td>
+
+                        {# 4. Status (Desktop Only) #}
+                        <td class="dp-cell status-col">
+                            {% if dp.active %}
+                                <span class="status-pill pill-active">Active</span>
+                            {% else %}
+                                <span class="status-pill pill-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+
+                        {# 5. Action Cell #}
+                        <td class="dp-cell action-cell">
+                            <a href="{{ url_for('manager.daypart_edit', daypart_id=dp.id) }}" class="btn-edit-link" title="Edit Shift">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="padding: 100px 24px; text-align: center; color: var(--text-muted);">
+                            <i class="fa-regular fa-clock" style="font-size: 48px; opacity: 0.2; display: block; margin: 0 auto 20px auto;"></i>
+                            <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">No dayparts defined</h3>
+                            <p style="font-size: 15px; margin: 0; font-weight: 500;">Create shifts to organize your training schedule.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr id="noResults" style="display: none;">
+                        <td colspan="5" style="padding: 80px 24px; text-align: center; color: var(--text-muted);">
+                            <p style="font-size: 16px; font-weight: 600;">No shifts match your search.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('daypartSearch');
+    const rows = document.querySelectorAll('.daypart-row');
+    const noResults = document.getElementById('noResults');
+
+    function applySearch() {
+        const query = searchInput.value.toLowerCase();
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.querySelector('.search-name').textContent.toLowerCase();
+            const textContent = row.innerText.toLowerCase();
+
+            if (name.includes(query) || textContent.includes(query)) {
+                row.style.setProperty('display', '', 'important');
+                if (window.innerWidth <= 900) {
+                    row.style.setProperty('display', 'flex', 'important');
+                }
+                visibleCount++;
+            } else {
+                row.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+        noResults.style.display = (visibleCount === 0 && rows.length > 0) ? 'table-row' : 'none';
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applySearch);
+    window.addEventListener('resize', applySearch);
+</script>
+{% endblock %}

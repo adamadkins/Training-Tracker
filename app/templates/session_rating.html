@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT & BASE LAYOUT --- */
+    body:has(.rating-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body:has(.rating-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .rating-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    /* Single-column layout now that history is at top */
+    .rating-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* --- FORM CARDS --- */
+    .criteria-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .rating-options {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        background: var(--bg-body);
+        padding: 6px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+    }
+
+    .rating-radio { display: none; }
+
+    .rating-label {
+        flex: 1;
+        text-align: center;
+        padding: 14px 0;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-muted);
+        border-radius: 10px;
+        transition: all 0.2s;
+    }
+
+    /* Active States for Rating Buttons (1-5 and 1-10) */
+    .rating-radio[value="1"]:checked + .rating-label { background: #ef4444; color: white; }
+    .rating-radio[value="2"]:checked + .rating-label { background: #f97316; color: white; }
+    .rating-radio[value="3"]:checked + .rating-label { background: #eab308; color: white; }
+    .rating-radio[value="4"]:checked + .rating-label { background: #84cc16; color: white; }
+    .rating-radio[value="5"]:checked + .rating-label { background: #22c55e; color: white; }
+    .rating-radio[value="6"]:checked + .rating-label { background: #22c55e; color: white; }
+    .rating-radio[value="7"]:checked + .rating-label { background: #10b981; color: white; }
+    .rating-radio[value="8"]:checked + .rating-label { background: #059669; color: white; }
+    .rating-radio[value="9"]:checked + .rating-label { background: #0d9488; color: white; }
+    .rating-radio[value="10"]:checked + .rating-label { background: #14b8a6; color: white; }
+
+    /* Legacy mode: slider + colored value */
+    .rating-legacy-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .rating-legacy-value {
+        width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+        font-size: 22px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+    .rating-legacy-slider {
+        flex: 1; min-width: 160px; height: 28px; cursor: pointer;
+        -webkit-appearance: none; appearance: none;
+        background: linear-gradient(to right, #ef4444 0%, #22c55e 100%);
+        border-radius: 14px; border: none;
+    }
+    .rating-legacy-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none;
+        width: 24px; height: 24px; border-radius: 50%;
+        background: white; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .rating-legacy-slider::-moz-range-thumb {
+        width: 24px; height: 24px; border-radius: 50%;
+        background: white; cursor: pointer; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .rating-legacy-slider::-moz-range-track { background: transparent; border: none; }
+    /* Legacy value colors 1-10 */
+    .legacy-v1 { background: #ef4444; }
+    .legacy-v2 { background: #f97316; }
+    .legacy-v3 { background: #eab308; }
+    .legacy-v4 { background: #84cc16; }
+    .legacy-v5 { background: #22c55e; }
+    .legacy-v6 { background: #22c55e; }
+    .legacy-v7 { background: #10b981; }
+    .legacy-v8 { background: #059669; }
+    .legacy-v9 { background: #0d9488; }
+    .legacy-v10 { background: #14b8a6; }
+
+    .comment-input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-size: 14px;
+    }
+
+    .btn-submit-main {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 18px 32px;
+        border-radius: 14px;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+    }
+
+    /* --- POSITION HISTORY (TOP STRIP) --- */
+    .history-strip {
+        max-width: 1400px;
+        margin: 0 auto 32px auto;
+    }
+    .history-strip-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 16px;
+    }
+    .history-strip-header h3 {
+        font-size: 13px; text-transform: uppercase; color: var(--text-muted);
+        letter-spacing: 0.05em; margin: 0; font-weight: 800;
+    }
+    .history-strip-header span {
+        background: var(--bg-card); border: 1px solid var(--border);
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 12px; font-weight: 800; color: var(--text-muted);
+    }
+    .history-scroll {
+        display: flex; gap: 16px;
+        overflow-x: auto; padding-bottom: 8px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+    .history-scroll::-webkit-scrollbar { height: 6px; }
+    .history-scroll::-webkit-scrollbar-track { background: transparent; }
+    .history-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .hist-card {
+        min-width: 220px; max-width: 260px;
+        padding: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        transition: all 0.2s;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+    .hist-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px var(--shadow);
+    }
+
+    .hist-score {
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        color: white;
+    }
+    .score-high { background: #10b981; }
+    .score-med { background: #f59e0b; }
+    .score-low { background: #ef4444; }
+
+    .hist-notes {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+        margin-top: 8px;
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+        line-height: 1.4;
+    }
+
+    .history-empty {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 16px; padding: 32px; text-align: center;
+    }
+
+    /* --- RESPONSIVE OVERRIDES --- */
+    @media (max-width: 1024px) {
+        .rating-wrapper { padding: 24px 16px; }
+        .header-section h1 { font-size: 28px; }
+        .btn-submit-main { width: 100%; justify-content: center; }
+        .hist-card { min-width: 180px; }
+    }
+
+    @media (max-width: 480px) {
+        .rating-label { padding: 10px 0; font-size: 14px; }
+        .criteria-card { padding: 16px; }
+        .rating-options { gap: 4px; padding: 4px; }
+        .hist-card { min-width: 160px; }
+    }
+</style>
+
+<div class="rating-wrapper">
+    {# Header Section #}
+    <div class="header-section" style="margin-bottom: 40px; max-width: 1400px; margin-left: auto; margin-right: auto;">
+        <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-weight: 700; font-size: 13px;">
+            <i class="fa-solid fa-arrow-left"></i> BACK
+        </a>
+        <h1 style="font-size: 36px; font-weight: 900; margin-top: 15px; color: var(--text-main); letter-spacing: -0.02em;">{{ session.position.name }}</h1>
+        <p style="color: var(--text-muted); font-size: 18px;">Evaluating: <b>{{ session.trainee.first_name }} {{ session.trainee.last_name }}</b></p>
+    </div>
+
+    {# POSITION HISTORY — shown first so trainers review past performance before grading #}
+    <div class="history-strip">
+        <div class="history-strip-header">
+            <h3><i class="fa-solid fa-clock-rotate-left" style="margin-right: 6px;"></i> Position History</h3>
+            <span>{{ history|length }} session{{ 's' if history|length != 1 else '' }}</span>
+        </div>
+
+        {% if history %}
+        <div class="history-scroll">
+            {% for h in history %}
+            <a href="{{ url_for('employee.session_rating', session_id=h.id) }}" class="hist-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">{{ h.session_date.strftime('%b %d') }}</span>
+                    {% set scores = h.ratings|map(attribute='rating_value')|list %}
+                    {% set avg = (scores|sum / scores|length)|round(1) if scores else 0 %}
+                    <span class="hist-score {{ 'score-high' if avg >= 4 else 'score-med' if avg >= 3 else 'score-low' }}">
+                        {{ avg }}
+                    </span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Trainer: {{ h.trainer.first_name }}</span>
+                    <span style="color: var(--primary); font-size: 10px; font-weight: 800;">VIEW <i class="fa-solid fa-chevron-right" style="font-size: 8px;"></i></span>
+                </div>
+                {% if h.overall_notes %}
+                <div class="hist-notes">"{{ h.overall_notes | truncate(80, True, '...') }}"</div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="history-empty">
+            <i class="fa-solid fa-ghost" style="font-size: 28px; opacity: 0.15; margin-bottom: 10px; display: block;"></i>
+            <p style="font-size: 13px; color: var(--text-muted); font-style: italic; margin: 0;">No previous ratings for this position.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <form method="POST" action="{{ url_for('employee.session_submit_rating', session_id=session.id) }}">
+        <div class="rating-grid">
+
+            {# RATING FORM #}
+            <div class="form-column">
+                {% for d in descriptors %}
+                <div class="criteria-card">
+                    <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--text-main);">{{ d.text }}</h3>
+                    {% if rating_style == 'legacy' %}
+                    <div class="rating-legacy-row">
+                        <input type="hidden" name="rating_{{ d.id }}" id="rating_val_{{ d.id }}" value="5" required>
+                        <span class="rating-legacy-value legacy-v5" id="legacy_display_{{ d.id }}">5</span>
+                        <input type="range" class="rating-legacy-slider" min="1" max="10" value="5" id="slider_{{ d.id }}" data-descriptor="{{ d.id }}">
+                    </div>
+                    {% else %}
+                    <div class="rating-options">
+                        {% for i in range(1, scale_max + 1) %}
+                        <input type="radio" name="rating_{{ d.id }}" id="r_{{ d.id }}_{{ i }}" value="{{ i }}" class="rating-radio" required>
+                        <label for="r_{{ d.id }}_{{ i }}" class="rating-label">{{ i }}</label>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <input type="text" name="comment_{{ d.id }}" class="comment-input" placeholder="Add a specific note about this criteria...">
+                </div>
+                {% endfor %}
+
+                <div class="criteria-card" style="border-left: 6px solid var(--primary);">
+                    <h3 style="margin-bottom: 12px; color: var(--text-main);">Final Summary{% if require_notes %} <span style="color: #ef4444; font-size: 12px; font-weight: 600;">(Required)</span>{% endif %}</h3>
+                    <textarea name="overall_notes" class="comment-input" rows="5" {% if require_notes %}required{% endif %} placeholder="General feedback for the trainee..."></textarea>
+                </div>
+
+                {# --- Discreet Flag Section --- #}
+                <div id="flagSection" style="margin-top: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+                    <label style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="flagToggle" name="flagged" value="1" style="width: 18px; height: 18px; accent-color: #64748b; flex-shrink: 0;">
+                        <div style="flex: 1; min-width: 0;">
+                            <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block;">Flag for Manager Review</span>
+                            <span style="font-size: 11px; color: var(--text-muted); opacity: 0.7;">Discreetly notify leadership about a concern with this session.</span>
+                        </div>
+                        <i class="fa-solid fa-flag" style="color: var(--text-muted); opacity: 0.3; font-size: 14px;"></i>
+                    </label>
+                    <div id="flagDetails" style="display: none; padding: 0 20px 20px 20px; border-top: 1px solid var(--border);">
+                        <div style="margin-top: 16px; margin-bottom: 12px;">
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Reason</label>
+                            <select name="flag_reason" class="comment-input" style="height: 48px; padding: 12px 16px;">
+                                <option value="">Select a category...</option>
+                                <option value="Attitude">Attitude</option>
+                                <option value="Safety Violation">Safety Violation</option>
+                                <option value="Slow Pace">Slow Pace</option>
+                                <option value="Attendance">Attendance</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Notes (optional)</label>
+                            <textarea name="flag_notes" class="comment-input" rows="2" placeholder="Add context for the manager..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 30px;">
+                    <button type="submit" id="submitBtn" class="btn-submit-main">Complete Session <i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+{% if rating_style == 'legacy' %}
+<script>
+(function() {
+    var sliders = document.querySelectorAll('.rating-legacy-slider');
+    sliders.forEach(function(slider) {
+        var did = slider.getAttribute('data-descriptor');
+        var hidden = document.getElementById('rating_val_' + did);
+        var display = document.getElementById('legacy_display_' + did);
+        function update() {
+            var v = parseInt(slider.value, 10);
+            hidden.value = v;
+            display.textContent = v;
+            display.className = 'rating-legacy-value legacy-v' + v;
+        }
+        slider.addEventListener('input', update);
+        update();
+    });
+})();
+</script>
+{% endif %}
+<script>
+(function() {
+    var toggle = document.getElementById('flagToggle');
+    var details = document.getElementById('flagDetails');
+    if (toggle && details) {
+        toggle.addEventListener('change', function() {
+            details.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+
+    var form = document.querySelector('form');
+    var submitBtn = document.getElementById('submitBtn');
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+            submitBtn.style.opacity = '0.7';
+            submitBtn.style.cursor = 'not-allowed';
+        });
+    }
+})();
+</script>
+{% endblock %}

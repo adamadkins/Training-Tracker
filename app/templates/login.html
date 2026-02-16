@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block body_class %}login-active{% endblock %}
+
+{% block content %}
+<style>
+    /* --- Hide header/footer on login --- */
+    body.login-active .main-header,
+    body.login-active .site-footer { display: none !important; }
+    body.login-active main.container,
+    body.login-active main {
+        max-width: none !important; width: 100% !important;
+        padding: 0 !important; margin: 0 !important;
+    }
+
+    /* --- RESET & BOX MODEL SAFETY --- */
+    .auth-wrapper,
+    .auth-wrapper *,
+    .auth-wrapper *::before,
+    .auth-wrapper *::after {
+        box-sizing: border-box !important;
+    }
+
+    /* --- CENTERED LAYOUT --- */
+    .auth-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100dvh;
+        padding: 24px;
+        width: 100%;
+    }
+
+    .auth-container {
+        max-width: 550px; /* Increased from 500px to remove the "skinny" look */
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* --- SPECTACLE HEADER --- */
+    .auth-spectacle {
+        text-align: center;
+        margin-bottom: 32px; /* Tightened from 40px to reduce length */
+        width: 100%;
+    }
+
+    .icon-spectacle {
+        background: var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        border-radius: 24px;
+        width: 84px;
+        height: 84px;
+        margin: 0 auto;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        position: relative;
+    }
+
+    .icon-spectacle::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 28px;
+        border: 2px solid var(--primary);
+        opacity: 0.1;
+    }
+
+    .auth-title {
+        margin: 16px 0 4px 0; /* Reduced margins to tighten up the header */
+        font-size: 36px;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -0.04em;
+    }
+
+    .auth-subtitle {
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.5;
+        font-weight: 500;
+        max-width: 380px;
+        margin: 0 auto;
+    }
+
+    /* --- AUTH CARD --- */
+    .auth-card {
+        background: var(--bg-card);
+        padding: 40px 48px; /* Adjusted padding to be wider and slightly shorter */
+        border-radius: 28px;
+        border: 1px solid var(--border);
+        box-shadow: 0 20px 25px -5px var(--shadow), 0 8px 10px -6px var(--shadow);
+        border-top: 6px solid var(--primary);
+        width: 100%;
+    }
+
+    .form-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 8px; /* Tightened label margin */
+    }
+
+    .input-style {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 14px 18px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        font-size: 16px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        display: block;
+        min-width: 0 !important;
+        height: 54px; /* Slightly shorter to reduce overall length */
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .input-style:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: var(--bg-card);
+    }
+
+    .password-container {
+        position: relative;
+        width: 100%;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+
+    .toggle-password:hover {
+        color: var(--text-main);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: #ffffff;
+        border: none;
+        font-weight: 800;
+        border-radius: 16px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        margin-top: 8px; /* Reduced top margin */
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+    }
+
+    .forgot-link {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary);
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+
+    .forgot-link:hover {
+        opacity: 0.8;
+    }
+
+    .footer-note {
+        text-align: center;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .auth-attribution {
+        text-align: center;
+        margin-top: 24px;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 500;
+        opacity: 0.7;
+    }
+    .auth-attribution span { font-weight: 700; color: var(--text-muted); }
+
+    /* --- MOBILE REFINEMENTS --- */
+    @media (max-width: 600px) {
+        .auth-wrapper { padding: 24px 16px; }
+        .auth-card { padding: 32px 24px; }
+        .auth-title { font-size: 28px; }
+        .auth-subtitle { font-size: 14px; }
+        .auth-spectacle { margin-bottom: 24px; }
+        .icon-spectacle { width: 68px; height: 68px; }
+        .icon-spectacle i { font-size: 26px !important; }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-container">
+
+        {# --- Header Spectacle --- #}
+        <div class="auth-spectacle">
+            <div class="icon-spectacle">
+                <i class="fa-solid fa-lock" style="font-size: 32px;"></i>
+            </div>
+
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">
+                Please sign in to access your training tracker portal.
+            </p>
+        </div>
+
+        {# --- Login Card --- #}
+        <div class="auth-card">
+            <form method="POST" action="{{ url_for('auth.login') }}" style="display: flex; flex-direction: column; gap: 20px;">
+
+                <div>
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="name@company.com" required autofocus
+                           class="input-style">
+                </div>
+
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                        <label for="password" class="form-label" style="margin: 0;">Password</label>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="forgot-link">Forgot?</a>
+                    </div>
+
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" placeholder="••••••••" required
+                               class="input-style">
+                        <button type="button" id="togglePassword" class="toggle-password">
+                            <i class="fa-regular fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    Sign In to Portal
+                </button>
+            </form>
+
+            <div class="footer-note">
+                Having trouble logging in? <br>
+                <span style="color: var(--text-main); font-weight: 700;">Contact your manager for assistance.</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="auth-attribution">Made by <span>Adam</span></div>
+</div>
+
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const password = document.querySelector('#password');
+    const eyeIcon = document.querySelector('#eyeIcon');
+    const loginForm = document.querySelector('form');
+    const submitBtn = document.querySelector('#submitBtn');
+
+    // Toggle Password Visibility
+    togglePassword.addEventListener('click', function () {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+
+        if (type === 'text') {
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    });
+
+    // QOL: Submission Loading State
+    loginForm.addEventListener('submit', function() {
+        if (this.checkValidity()) {
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 12px;"></i> Authenticating...';
+            submitBtn.style.opacity = '0.8';
+            submitBtn.style.cursor = 'wait';
+        }
+    });
+</script>
+{% endblock %}

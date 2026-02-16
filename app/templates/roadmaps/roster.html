@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- SYSTEM OVERRIDES --- */
+    body:has(.roster-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.roster-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+
+    .roster-wrapper { background: var(--bg-body); min-height: calc(100vh - 72px); padding: 40px; }
+    .roster-container { max-width: 1400px; margin: 0 auto; }
+
+    /* --- HEADER --- */
+    .roster-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border);
+        flex-wrap: wrap; gap: 24px;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 20px; }
+
+    .btn-back {
+        width: 40px; height: 40px; border-radius: 12px;
+        background: var(--bg-body); border: 1px solid var(--border);
+        color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s; text-decoration: none;
+    }
+    .btn-back:hover { background: var(--bg-card); color: var(--text-main); border-color: var(--text-main); }
+
+    .roster-title { margin: 0; font-size: 28px; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+    .roster-subtitle { margin: 2px 0 0 0; color: var(--text-muted); font-size: 14px; font-weight: 500; }
+
+    /* --- SEARCH BAR --- */
+    .search-container { position: relative; margin-bottom: 32px; }
+    .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .search-input {
+        width: 100%; padding: 14px 16px 14px 48px; border-radius: 16px;
+        border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main);
+        font-size: 15px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+    .search-input:focus { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    /* --- GRID --- */
+    .roster-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+    .column-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .col-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0; }
+    .col-count { font-size: 11px; font-weight: 700; color: var(--text-muted); background: var(--bg-card); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
+
+    /* --- CARDS --- */
+    .emp-list { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
+
+    .emp-card {
+        display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 14px; cursor: pointer; transition: all 0.25s;
+        position: relative; overflow: hidden;
+    }
+    .emp-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+
+    /* Enrolled card styling */
+    .emp-card.in-enrolled { background: #f0fdf4; border-color: #bbf7d0; }
+    .emp-card.in-enrolled:hover { border-color: #ef4444; background: #fef2f2; }
+    .emp-card.in-enrolled:hover .action-tag { background: #fef2f2; color: #ef4444; }
+    .emp-card.in-enrolled:hover .action-tag .tag-default { display: none; }
+    .emp-card.in-enrolled:hover .action-tag .tag-hover { display: inline; }
+    .emp-card.in-enrolled .emp-name { color: #14532d; }
+    .emp-card.in-enrolled .emp-sub { color: #166534; opacity: 0.8; }
+
+    /* Content Styling */
+    .emp-avatar { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
+    .emp-info { flex: 1; min-width: 0; }
+    .emp-name { font-weight: 700; font-size: 14px; color: var(--text-main); margin-bottom: 2px; }
+    .emp-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+    .action-tag {
+        font-size: 10px; font-weight: 800; text-transform: uppercase;
+        padding: 6px 10px; border-radius: 8px;
+        transition: all 0.2s;
+        background: var(--bg-body); color: var(--text-muted);
+        min-width: 70px; text-align: center;
+    }
+    .action-tag .tag-hover { display: none; }
+    .emp-card.in-enrolled .action-tag { background: transparent; color: #166534; }
+
+    /* Card move animation */
+    .emp-card.card-moving-out {
+        opacity: 0; transform: scale(0.95); max-height: 0; padding-top: 0; padding-bottom: 0;
+        margin-top: 0; margin-bottom: 0; border-width: 0; overflow: hidden;
+        transition: all 0.25s ease-out;
+    }
+    .emp-card.card-moving-in {
+        animation: cardSlideIn 0.3s ease-out forwards;
+    }
+    @keyframes cardSlideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .no-results { display: none; text-align: center; padding: 40px; color: var(--text-muted); border: 2px dashed var(--border); border-radius: 16px; font-size: 13px; }
+
+    .btn-save {
+        background: #10b981; color: white; border: none;
+        padding: 12px 24px; border-radius: 12px;
+        font-weight: 700; font-size: 14px;
+        cursor: pointer; transition: transform 0.1s, background 0.2s;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-save:hover { background: #059669; transform: translateY(-1px); }
+
+    /* --- MOBILE --- */
+    @media (max-width: 1000px) {
+        .roster-grid { grid-template-columns: 1fr; gap: 48px; }
+        .roster-wrapper { padding: 20px 16px; }
+        .roster-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        .header-actions { width: 100%; justify-content: space-between; }
+        .roster-title { font-size: 24px; }
+    }
+</style>
+
+<div class="roster-wrapper">
+    <div class="roster-container">
+
+        {# --- HEADER --- #}
+        <div class="roster-header">
+            <div class="header-left">
+                <a href="{{ url_for('manager.roadmaps_list') }}" class="btn-back" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="roster-title">{{ roadmap.name }}</h1>
+                    <p class="roster-subtitle">Manage Class Roster</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button type="submit" form="roster-form" class="btn-save">
+                    <i class="fa-solid fa-check"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        {# --- SEARCH --- #}
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="rosterSearch" class="search-input" placeholder="Search students by name...">
+        </div>
+
+        <form method="POST" id="roster-form">
+            <div id="hidden-inputs"></div>
+            <div class="roster-grid">
+
+                {# --- COLUMN 1: AVAILABLE --- #}
+                <div>
+                    <div class="column-header">
+                        <h2 class="col-title">Available Trainees</h2>
+                        <span class="col-count" id="count-avail">{{ available|length }}</span>
+                    </div>
+
+                    <div class="emp-list" id="list-avail">
+                        {% for emp in available %}
+                        <div class="emp-card search-item" data-emp-id="{{ emp.id }}" data-origin="available" onclick="moveCard(this)">
+                            <img src="{{ emp.avatar(50) }}" class="emp-avatar">
+                            <div class="emp-info">
+                                <div class="emp-name search-target">{{ emp.first_name }} {{ emp.last_name }}</div>
+                                <div class="emp-sub">
+                                    {% if emp.active_roadmap %}
+                                        Switch from: {{ emp.active_roadmap.name }}
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">Unassigned</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <span class="action-tag"><span class="tag-default">Add</span><span class="tag-hover">Add</span></span>
+                        </div>
+                        {% endfor %}
+                        <div class="no-results" id="empty-avail">
+                            <i class="fa-solid fa-user-group" style="font-size: 24px; margin-bottom: 12px; opacity: 0.3;"></i>
+                            <p style="margin: 0; font-size: 14px;">No available trainees.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {# --- COLUMN 2: ENROLLED --- #}
+                <div>
+                    <div class="column-header" style="border-color: #bbf7d0;">
+                        <h2 class="col-title" style="color: #166534;">Currently Enrolled</h2>
+                        <span class="col-count" id="count-enroll" style="color: #166534; background: #dcfce7; border-color: #bbf7d0;">{{ enrolled|length }}</span>
+                    </div>
+
+                    <div class="emp-list" id="list-enroll">
+                        {% for emp in enrolled %}
+                        <div class="emp-card in-enrolled search-item" data-emp-id="{{ emp.id }}" data-origin="enrolled" onclick="moveCard(this)">
+                            <img src="{{ emp.avatar(50) }}" class="emp-avatar">
+                            <div class="emp-info">
+                                <div class="emp-name search-target">{{ emp.first_name }} {{ emp.last_name }}</div>
+                                {% set prog = emp.get_roadmap_progress() %}
+                                <div class="emp-sub">
+                                    <i class="fa-solid fa-bars-progress"></i> {{ prog.percent_complete|round|int }}% Complete
+                                </div>
+                            </div>
+                            <span class="action-tag"><span class="tag-default">Enrolled</span><span class="tag-hover">Remove</span></span>
+                        </div>
+                        {% endfor %}
+                        <div class="no-results" id="empty-enroll">
+                            <i class="fa-solid fa-user-plus" style="font-size: 24px; margin-bottom: 8px;"></i>
+                            <p style="margin: 0; font-size: 14px;">Select trainees from the left to enroll them.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+    const listAvail  = document.getElementById('list-avail');
+    const listEnroll = document.getElementById('list-enroll');
+    const hiddenBox  = document.getElementById('hidden-inputs');
+
+    function updateCounts() {
+        document.getElementById('count-avail').textContent  = listAvail.querySelectorAll('.emp-card').length;
+        document.getElementById('count-enroll').textContent = listEnroll.querySelectorAll('.emp-card').length;
+        /* Show/hide empty placeholders */
+        document.getElementById('empty-avail').style.display  = listAvail.querySelectorAll('.emp-card').length  === 0 ? 'block' : 'none';
+        document.getElementById('empty-enroll').style.display = listEnroll.querySelectorAll('.emp-card').length === 0 ? 'block' : 'none';
+    }
+
+    function moveCard(card) {
+        const empId  = card.dataset.empId;
+        const origin = card.dataset.origin;
+        const isInEnrolled = card.closest('#list-enroll') !== null;
+
+        /* Animate out */
+        card.classList.add('card-moving-out');
+
+        setTimeout(() => {
+            card.classList.remove('card-moving-out');
+
+            if (isInEnrolled) {
+                /* --- Move from Enrolled → Available --- */
+                card.classList.remove('in-enrolled');
+                card.querySelector('.action-tag').innerHTML = '<span class="tag-default">Add</span><span class="tag-hover">Add</span>';
+                listAvail.insertBefore(card, listAvail.querySelector('.no-results'));
+
+                if (origin === 'enrolled') {
+                    /* Originally enrolled: create remove_employee_ids input */
+                    let inp = hiddenBox.querySelector('input[name="remove_employee_ids"][value="' + empId + '"]');
+                    if (!inp) {
+                        inp = document.createElement('input');
+                        inp.type = 'hidden'; inp.name = 'remove_employee_ids'; inp.value = empId;
+                        hiddenBox.appendChild(inp);
+                    }
+                } else {
+                    /* Was added client-side: just remove the add input */
+                    const inp = hiddenBox.querySelector('input[name="add_employee_ids"][value="' + empId + '"]');
+                    if (inp) inp.remove();
+                }
+            } else {
+                /* --- Move from Available → Enrolled --- */
+                card.classList.add('in-enrolled');
+                card.querySelector('.action-tag').innerHTML = '<span class="tag-default">Enrolled</span><span class="tag-hover">Remove</span>';
+                listEnroll.insertBefore(card, listEnroll.querySelector('.no-results'));
+
+                if (origin === 'available') {
+                    /* Originally available: create add_employee_ids input */
+                    let inp = hiddenBox.querySelector('input[name="add_employee_ids"][value="' + empId + '"]');
+                    if (!inp) {
+                        inp = document.createElement('input');
+                        inp.type = 'hidden'; inp.name = 'add_employee_ids'; inp.value = empId;
+                        hiddenBox.appendChild(inp);
+                    }
+                } else {
+                    /* Was removed client-side: cancel the removal */
+                    const inp = hiddenBox.querySelector('input[name="remove_employee_ids"][value="' + empId + '"]');
+                    if (inp) inp.remove();
+                }
+            }
+
+            card.classList.add('card-moving-in');
+            setTimeout(() => card.classList.remove('card-moving-in'), 300);
+            updateCounts();
+        }, 250);
+    }
+
+    /* --- LIVE FILTER --- */
+    document.getElementById('rosterSearch').addEventListener('keyup', function() {
+        const query = this.value.toLowerCase();
+        function filterList(listId, emptyId, countId) {
+            const list = document.getElementById(listId);
+            const items = list.querySelectorAll('.emp-card');
+            let visible = 0;
+            items.forEach(item => {
+                const name = item.querySelector('.search-target').textContent.toLowerCase();
+                const show = name.includes(query);
+                item.style.display = show ? 'flex' : 'none';
+                if (show) visible++;
+            });
+            document.getElementById(countId).textContent = visible;
+            document.getElementById(emptyId).style.display = (visible === 0 && items.length > 0) ? 'block' : 'none';
+        }
+        filterList('list-avail',  'empty-avail',  'count-avail');
+        filterList('list-enroll', 'empty-enroll', 'count-enroll');
+    });
+
+    /* Initial empty state check */
+    updateCounts();
+</script>
+{% endblock %}

@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT OVERRIDES --- */
+    body:has(.people-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.people-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .people-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .people-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* --- HERO SECTION --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 48px;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .header-title { font-size: 32px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.03em; }
+    .header-subtitle { color: var(--text-muted); font-size: 16px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* --- SEARCH & FILTER SECTION --- */
+    .controls-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+    }
+
+    .search-section {
+        position: relative;
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input, .filter-select {
+        width: 100%;
+        padding: 14px 14px 14px 52px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        font-size: 15px;
+        background: var(--bg-card);
+        color: var(--text-main);
+        box-shadow: 0 1px 2px var(--shadow);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+    }
+
+    .filter-select {
+        padding: 14px 40px 14px 20px;
+        flex: 0 0 200px;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 16px;
+    }
+
+    /* --- TABLE STYLES --- */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        overflow: hidden;
+    }
+
+    .staff-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .staff-table th {
+        padding: 20px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.1em;
+    }
+
+    .employee-row {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.2s;
+        cursor: pointer;
+        background: var(--bg-card);
+    }
+
+    .employee-row:last-child { border-bottom: none; }
+    .employee-row:hover { background-color: var(--bg-body); }
+
+    .staff-cell { padding: 16px 24px; vertical-align: middle; }
+
+    .avatar-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 2px solid var(--bg-body);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        object-fit: cover;
+    }
+
+    .you-badge {
+        font-size: 9px;
+        color: var(--primary);
+        background: rgba(79, 70, 229, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 800;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        letter-spacing: 0.05em;
+        margin-left: 8px;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .pill-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .pill-invited { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .pill-offline { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .action-group {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-action-icon {
+        color: var(--text-muted);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        text-decoration: none;
+    }
+    .btn-action-icon:hover { color: var(--primary); border-color: var(--primary); background: var(--bg-card); }
+    .btn-action-icon.delete:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+    /* --- MOBILE STACK LOGIC --- */
+    .mobile-only { display: none; }
+
+    @media (max-width: 900px) {
+        .people-wrapper { padding: 24px 16px; }
+        .staff-table thead { display: none; }
+
+        .employee-row {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        .staff-cell { padding: 0; border: none; }
+
+        /* Hide original columns */
+        .role-col, .status-col, .desktop-only { display: none; }
+
+        /* Show mobile stacked info */
+        .mobile-only { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+
+        .name-wrapper {
+            font-weight: 800; font-size: 16px; color: var(--text-main);
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .mobile-badge-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    }
+</style>
+
+<div class="people-wrapper">
+    <div class="people-container">
+
+        {# --- DASHBOARD LINK --- #}
+        <div style="margin-bottom: 24px;">
+            <a href="{{ url_for('manager.dashboard') }}"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;"
+               onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {# --- Hero Section --- #}
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">Team Roster</h1>
+                <p class="header-subtitle">Manage staff accounts and track team progression.</p>
+            </div>
+            <a href="{{ url_for('manager.employee_create') }}" class="btn-primary" style="padding: 14px 28px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                <i class="fa-solid fa-user-plus"></i> Add Employee
+            </a>
+        </div>
+
+        {# --- Search & Filter --- #}
+        <div class="controls-row">
+            <div class="search-section">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="employeeSearch" class="search-input" placeholder="Search by name or email...">
+            </div>
+            <select id="roleFilter" class="filter-select">
+                <option value="all">All Roles</option>
+                <option value="manager">Managers</option>
+                <option value="trainer">Trainers</option>
+                <option value="trainee">Trainees</option>
+            </select>
+        </div>
+
+        {# --- Content --- #}
+        <div class="table-card">
+            <table class="staff-table" id="employeeTable">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;"></th>
+                        <th>Staff Member</th>
+                        <th class="role-col">Role</th>
+                        <th class="status-col">Account Status</th>
+                        <th style="text-align: right;">Manage</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTableBody">
+                    {% for e in employees %}
+                    <tr class="employee-row" data-role="{{ e.role }}" onclick="if(!event.target.closest('a') && !event.target.closest('button')) window.location.href='{{ url_for('manager.employee_detail', employee_id=e.id) }}';">
+
+                        {# 1. Avatar #}
+                        <td class="staff-cell">
+                            <img src="{{ e.avatar(44) }}" class="avatar-box">
+                        </td>
+
+                        {# 2. Details Cell (Adaptive) #}
+                        <td class="staff-cell" style="flex: 1; min-width: 0;">
+                            {# SINGLE NAME SOURCE #}
+                            <div class="name-wrapper">
+                                <span class="search-name text-truncate">{{ e.first_name }} {{ e.last_name }}</span>
+                                {% if e.id == current_user.employee_id %}
+                                    <span class="you-badge">YOU</span>
+                                {% endif %}
+                            </div>
+
+                            {# Desktop View Details #}
+                            <div class="desktop-only" style="font-size: 13px; color: var(--text-muted); font-weight: 500; margin-top: 2px;">
+                                {{ e.user_account.email if e.user_account else 'No active login' }}
+                            </div>
+
+                            {# Mobile View Details #}
+                            <div class="mobile-only">
+                                <div class="mobile-badge-row">
+                                    {% if e.role == 'manager' %}
+                                        <span class="badge bg-info" style="font-size: 8px; padding: 2px 6px;">Manager</span>
+                                    {% elif e.role == 'trainer' %}
+                                        <span class="badge bg-warning" style="font-size: 8px; padding: 2px 6px;">Trainer</span>
+                                    {% else %}
+                                        <span class="badge bg-success" style="font-size: 8px; padding: 2px 6px;">Trainee</span>
+                                    {% endif %}
+
+                                    {% if e.user_account and not e.user_account.password_hash %}
+                                        <span class="status-pill pill-invited" style="font-size: 8px; padding: 2px 6px;">Invited</span>
+                                    {% elif e.user_account %}
+                                        <span class="status-pill pill-active" style="font-size: 8px; padding: 2px 6px;">Active</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        {# 3. Role (Desktop Only) #}
+                        <td class="staff-cell role-col">
+                            {% if e.role == 'manager' %}
+                                <span class="badge bg-info" style="font-size: 10px; padding: 5px 12px; border-radius: 8px;">Manager</span>
+                            {% elif e.role == 'trainer' %}
+                                <span class="badge bg-warning" style="font-size: 10px; padding: 5px 12px; border-radius: 8px;">Trainer</span>
+                            {% else %}
+                                <span class="badge bg-success" style="font-size: 10px; padding: 5px 12px; border-radius: 8px;">Trainee</span>
+                            {% endif %}
+                        </td>
+
+                        {# 4. Status (Desktop Only) #}
+                        <td class="staff-cell status-col">
+                            {% if e.user_account and not e.user_account.password_hash %}
+                                <span class="status-pill pill-invited">Invited</span>
+                            {% elif e.user_account %}
+                                <span class="status-pill pill-active">Active</span>
+                            {% else %}
+                                <span class="status-pill pill-offline">Offline</span>
+                            {% endif %}
+                        </td>
+
+                        {# 5. Actions #}
+                        <td class="staff-cell" style="text-align: right;">
+                            <div class="action-group" onclick="event.stopPropagation();">
+                                <a href="{{ url_for('manager.employee_edit', employee_id=e.id) }}" class="btn-action-icon" title="Edit Profile">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                {% if e.id != current_user.employee_id %}
+                                <form method="post" action="{{ url_for('manager.employee_delete', employee_id=e.id) }}"
+                                      onsubmit="return confirm('Permanently delete {{ e.first_name }}?');" style="display:inline;">
+                                    <button type="submit" class="btn-action-icon delete" title="Delete Account">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <tr id="noResults" style="display: none;">
+                        <td colspan="5" style="padding: 80px 24px; text-align: center; color: var(--text-muted);">
+                            <p style="font-size: 16px; font-weight: 600;">No team members match your current filters.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('employeeSearch');
+    const roleFilter = document.getElementById('roleFilter');
+    const rows = document.querySelectorAll('.employee-row');
+    const noResults = document.getElementById('noResults');
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase();
+        const role = roleFilter.value;
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.querySelector('.search-name').textContent.toLowerCase();
+            const rowRole = row.dataset.role;
+
+            const matchesSearch = name.includes(query);
+            const matchesRole = (role === 'all' || rowRole === role);
+
+            if (matchesSearch && matchesRole) {
+                row.style.setProperty('display', '', 'important');
+                if (window.innerWidth <= 900) {
+                    row.style.setProperty('display', 'flex', 'important');
+                }
+                visibleCount++;
+            } else {
+                row.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+        noResults.style.display = (visibleCount === 0 && rows.length > 0) ? 'table-row' : 'none';
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (roleFilter) roleFilter.addEventListener('change', applyFilters);
+    window.addEventListener('resize', applyFilters);
+</script>
+{% endblock %}

@@ -1,0 +1,753 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.schedule-detail-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body:has(.schedule-detail-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .schedule-detail-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 28px 32px;
+    }
+    .detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text-main); }
+
+    /* ── Header ── */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .header-title {
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .header-subtitle {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin: 3px 0 0 0;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .badge-draft { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+    .badge-published { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+
+    .btn-publish {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 13px;
+        background: #16a34a;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.15s;
+    }
+    .btn-publish:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+    }
+
+    /* ── Content split ── */
+    .content-split {
+        display: flex;
+        gap: 28px;
+        align-items: flex-start;
+    }
+    .main-content { flex: 1; min-width: 0; }
+    .sidebar { width: 360px; flex-shrink: 0; }
+
+    /* ── Day filter tabs ── */
+    .day-filter {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+        padding: 3px;
+        background: var(--bg-card);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: fit-content;
+        max-width: 100%;
+    }
+    .day-filter-btn {
+        padding: 6px 14px;
+        border-radius: 7px;
+        border: none;
+        background: none;
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .day-filter-btn:hover { background: var(--bg-body); }
+    .day-filter-btn.active { background: var(--primary); color: white; }
+    .day-filter-count {
+        font-size: 9px;
+        font-weight: 800;
+        opacity: 0.7;
+        margin-left: 2px;
+    }
+
+    /* ── Table ── */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .table-header {
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-body);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .table-title {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--text-muted);
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .table-count { font-size: 11px; font-weight: 700; color: var(--text-muted); }
+
+    .session-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .session-table th {
+        padding: 10px 18px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.06em;
+    }
+
+    /* Date group header */
+    .date-group-row td {
+        padding: 10px 18px 6px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+    }
+    .date-group-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .date-group-count {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+
+    .session-row {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+        background: var(--bg-card);
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-row:hover { background-color: var(--bg-body); }
+
+    .session-cell { padding: 12px 18px; vertical-align: middle; }
+
+    .time-display {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .time-display i { font-size: 11px; }
+
+    .position-pill {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--primary) 8%, transparent);
+        color: var(--primary);
+        border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+
+    .assignment-stack { display: flex; flex-direction: column; gap: 5px; }
+    .assignee-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .role-label {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        width: 46px;
+        flex-shrink: 0;
+    }
+    .avatar-sm {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+
+    .btn-action-icon {
+        color: var(--text-muted);
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 7px;
+        transition: all 0.15s;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        font-size: 12px;
+    }
+    .btn-action-icon:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+    .empty-state {
+        padding: 60px 18px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+    .empty-state i { font-size: 32px; opacity: 0.15; display: block; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; font-weight: 500; margin: 0; }
+
+    /* ── Sidebar ── */
+    .sidebar-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        position: sticky;
+        top: 20px;
+    }
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+    }
+    .sidebar-icon {
+        width: 32px;
+        height: 32px;
+        background: color-mix(in srgb, var(--primary) 8%, transparent);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-size: 13px;
+    }
+    .sidebar-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    .form-label {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .input-style {
+        width: 100% !important;
+        padding: 9px 11px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        outline: none;
+        height: 40px;
+        transition: border-color 0.15s;
+    }
+    .input-style:focus { border-color: var(--primary); }
+
+    .toggle-pill {
+        background: var(--bg-body);
+        padding: 3px;
+        border-radius: 8px;
+        display: flex;
+        gap: 3px;
+        margin-bottom: 8px;
+        border: 1px solid var(--border);
+    }
+    .toggle-btn {
+        flex: 1;
+        text-align: center;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        transition: all 0.15s;
+    }
+    input[name="time_mode"]:checked + .toggle-btn {
+        background: var(--bg-card);
+        color: var(--primary);
+        box-shadow: 0 1px 3px var(--shadow);
+    }
+
+    .form-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    /* ── Insights ── */
+    .insights-card {
+        padding: 12px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+    }
+    .roadmap-badge, .rec-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 7px;
+        border-radius: 6px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    .roadmap-badge {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fdba74;
+    }
+    .rec-badge {
+        background: color-mix(in srgb, var(--primary) 6%, transparent);
+        color: var(--primary);
+        border: 1px solid color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+
+    .btn-add {
+        width: 100%;
+        padding: 11px;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 13px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-add:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+        .content-split { flex-direction: column-reverse; gap: 20px; }
+        .sidebar { width: 100%; }
+        .sidebar-panel { position: static; }
+    }
+
+    @media (max-width: 700px) {
+        .schedule-detail-wrapper { padding: 16px 12px; }
+        .header-title { font-size: 20px; }
+        .session-table thead { display: none; }
+        .session-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 14px;
+            align-items: center;
+        }
+        .session-cell { padding: 0; }
+        .session-cell:nth-child(1) { flex: 1; min-width: 0; }
+        .session-cell:nth-child(2) { order: 3; width: 100%; }
+        .session-cell:nth-child(3) { order: 4; width: 100%; }
+        .session-cell:last-child { margin-left: auto; order: 2; }
+        .date-group-row td { padding: 8px 14px 4px; }
+    }
+</style>
+
+<div class="schedule-detail-wrapper">
+    <div class="detail-container">
+
+        <a href="{{ url_for('manager.schedules_list') }}" class="back-link" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">Week of {{ schedule.start_date.strftime('%b %d') }}</h1>
+                <div class="header-subtitle">
+                    {{ schedule.start_date.strftime('%b %d') }} — {{ schedule.end_date.strftime('%b %d, %Y') }}
+                    {% if schedule.status == 'draft' %}
+                        <span class="status-badge badge-draft"><i class="fa-solid fa-pen-ruler"></i> Draft</span>
+                    {% else %}
+                        <span class="status-badge badge-published"><i class="fa-solid fa-circle-check"></i> Published</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if schedule.status == "draft" %}
+            <form method="post" action="{{ url_for('manager.schedule_publish', schedule_id=schedule.id) }}" onsubmit="return confirm('Publish this schedule and notify all assigned staff?');">
+                <button type="submit" class="btn-publish">
+                    <i class="fa-solid fa-paper-plane"></i> Publish Schedule
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {# ── Day filter ── #}
+        <div class="day-filter" id="dayFilter">
+            <button class="day-filter-btn active" data-day="all" onclick="filterDay('all', this)">
+                All <span class="day-filter-count">({{ sessions|length }})</span>
+            </button>
+            {% set ns = namespace(days_seen=[]) %}
+            {% for s in sessions %}
+                {% set day_key = s.session_date.strftime('%a') %}
+                {% if day_key not in ns.days_seen %}
+                    {% set day_count = sessions|selectattr('session_date', 'equalto', s.session_date)|list|length %}
+                    <button class="day-filter-btn" data-day="{{ s.session_date.strftime('%Y-%m-%d') }}" onclick="filterDay('{{ s.session_date.strftime('%Y-%m-%d') }}', this)">
+                        {{ s.session_date.strftime('%a') }} <span class="day-filter-count">({{ day_count }})</span>
+                    </button>
+                    {% set ns.days_seen = ns.days_seen + [day_key] %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="content-split">
+            <div class="main-content">
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2 class="table-title">Scheduled Sessions</h2>
+                        <span class="table-count" id="visibleCount">{{ sessions|length }} total</span>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="session-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Position</th>
+                                    <th>Assignments</th>
+                                    {% if schedule.status == 'draft' %}
+                                    <th style="text-align: right; width: 50px;"></th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody id="sessionBody">
+                                {% set ns2 = namespace(last_date=None) %}
+                                {% for s in sessions %}
+
+                                {# Date group header #}
+                                {% if s.session_date != ns2.last_date %}
+                                <tr class="date-group-row" data-date="{{ s.session_date.strftime('%Y-%m-%d') }}">
+                                    <td colspan="{{ 4 if schedule.status == 'draft' else 3 }}">
+                                        <div class="date-group-label">
+                                            {{ s.session_date.strftime('%A, %b %d') }}
+                                            {% set day_sessions = sessions|selectattr('session_date', 'equalto', s.session_date)|list %}
+                                            <span class="date-group-count">{{ day_sessions|length }} session{{ 's' if day_sessions|length != 1 else '' }}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% set ns2.last_date = s.session_date %}
+                                {% endif %}
+
+                                <tr class="session-row" data-date="{{ s.session_date.strftime('%Y-%m-%d') }}">
+                                    <td class="session-cell">
+                                        <div class="time-display">
+                                            <i class="fa-regular fa-clock"></i>
+                                            {% if s.custom_start_time and s.custom_end_time %}
+                                                {{ s.custom_start_time.strftime('%I:%M %p').lstrip('0') }} – {{ s.custom_end_time.strftime('%I:%M %p').lstrip('0') }}
+                                            {% else %}
+                                                {{ s.daypart.name if s.daypart else 'All Day' }}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td class="session-cell">
+                                        <span class="position-pill">{{ s.position.name }}</span>
+                                    </td>
+                                    <td class="session-cell">
+                                        <div class="assignment-stack">
+                                            <div class="assignee-item">
+                                                <span class="role-label">Trainer</span>
+                                                <img src="{{ s.trainer.avatar(20) }}" class="avatar-sm">
+                                                <span>{{ s.trainer.first_name }} {{ s.trainer.last_name[0] }}.</span>
+                                            </div>
+                                            <div class="assignee-item">
+                                                <span class="role-label">Trainee</span>
+                                                <img src="{{ s.trainee.avatar(20) }}" class="avatar-sm">
+                                                <span>{{ s.trainee.first_name }} {{ s.trainee.last_name[0] }}.</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {% if schedule.status == 'draft' %}
+                                    <td class="session-cell" style="text-align: right;">
+                                        <form method="post" action="{{ url_for('manager.session_delete', session_id=s.id) }}" onsubmit="return confirm('Remove this session?');">
+                                            <button type="submit" class="btn-action-icon">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="{{ 4 if schedule.status == 'draft' else 3 }}" class="empty-state">
+                                        <i class="fa-regular fa-calendar"></i>
+                                        <p>No sessions added yet. Use the form to add your first session.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% if schedule.status == "draft" %}
+            <div class="sidebar">
+                <div class="sidebar-panel">
+                    <div class="sidebar-header">
+                        <div class="sidebar-icon"><i class="fa-solid fa-plus"></i></div>
+                        <h3 class="sidebar-title">Add Session</h3>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('manager.session_create', schedule_id=schedule.id) }}" class="form-stack">
+                        <div>
+                            <label class="form-label">Date</label>
+                            <input type="date" name="session_date" min="{{ schedule.start_date }}" max="{{ schedule.end_date }}" required class="input-style">
+                        </div>
+                        <div>
+                            <label class="form-label">Time</label>
+                            <div class="toggle-pill">
+                                <input type="radio" name="time_mode" value="daypart" id="mode-dp" checked onchange="toggleTimeMode()" style="display:none;">
+                                <label for="mode-dp" class="toggle-btn">Shift Name</label>
+                                <input type="radio" name="time_mode" value="custom" id="mode-custom" onchange="toggleTimeMode()" style="display:none;">
+                                <label for="mode-custom" class="toggle-btn">Custom</label>
+                            </div>
+                            <div id="daypart_select_container">
+                                <select name="daypart_id" class="input-style">
+                                    <option value="">(None / All Day)</option>
+                                    {% for dp in dayparts %}
+                                    <option value="{{ dp.id }}">{{ dp.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div id="custom_time_container" style="display:none; grid-template-columns:1fr 1fr; gap:8px;">
+                                <input type="time" name="custom_start_time" class="input-style" placeholder="Start">
+                                <input type="time" name="custom_end_time" class="input-style" placeholder="End">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Trainee</label>
+                            <select name="trainee_employee_id" required onchange="updateTraineeInsights(); filterPositionsByLocation()" class="input-style">
+                                <option value="" disabled selected>Select trainee...</option>
+                                {% for emp in employees %}
+                                    {% if emp.role == 'trainee' %}
+                                    <option value="{{ emp.id }}" data-location-ids="{{ emp.location_ids() | join(',') }}">{{ emp.first_name }} {{ emp.last_name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="trainee_insights" class="insights-card" style="display:none;"></div>
+
+                        <div>
+                            <label class="form-label">Position</label>
+                            <select name="position_id" id="positionSelect" required class="input-style">
+                                {% for pos in positions %}
+                                <option value="{{ pos.id }}" data-location-id="{{ pos.location_id or '' }}">{{ pos.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Trainer</label>
+                            <select name="trainer_employee_id" required class="input-style">
+                                <option value="" disabled selected>Select trainer...</option>
+                                {% for emp in employees %}
+                                    {% if emp.role in ['manager', 'trainer'] %}
+                                    <option value="{{ emp.id }}">{{ emp.first_name }} {{ emp.last_name }} ({{ emp.role|capitalize }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-add">Add to Schedule</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const traineeStats = {{ trainee_stats|tojson|safe if trainee_stats else '{}' }};
+
+    /* ── Filter positions by selected trainee's location(s) ── */
+    function filterPositionsByLocation() {
+        var traineeSelect = document.querySelector('select[name="trainee_employee_id"]');
+        var posSelect = document.getElementById('positionSelect');
+        if (!traineeSelect || !posSelect) return;
+        var opt = traineeSelect.options[traineeSelect.selectedIndex];
+        var locIdsStr = opt ? (opt.getAttribute('data-location-ids') || '') : '';
+        var locIds = locIdsStr ? locIdsStr.split(',').map(function(s) { return s.trim(); }) : [];
+        var options = posSelect.querySelectorAll('option[value]');
+        posSelect.value = '';
+        options.forEach(function(o) {
+            var posLoc = o.getAttribute('data-location-id');
+            var show = !posLoc || (locIds.length === 0) || (posLoc && locIds.indexOf(posLoc) !== -1);
+            o.style.display = show ? '' : 'none';
+            o.disabled = !show;
+        });
+    }
+
+    /* ── Day filter ── */
+    function filterDay(day, btn) {
+        document.querySelectorAll('.day-filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const rows = document.querySelectorAll('.session-row, .date-group-row');
+        let count = 0;
+
+        rows.forEach(row => {
+            if (day === 'all') {
+                row.style.display = '';
+                if (row.classList.contains('session-row')) count++;
+            } else {
+                const match = row.dataset.date === day;
+                row.style.display = match ? '' : 'none';
+                if (match && row.classList.contains('session-row')) count++;
+            }
+        });
+
+        const label = day === 'all' ? `{{ sessions|length }} total` : `${count} session${count !== 1 ? 's' : ''}`;
+        document.getElementById('visibleCount').textContent = label;
+    }
+
+    /* ── Time mode toggle ── */
+    function toggleTimeMode() {
+        const mode = document.querySelector('input[name="time_mode"]:checked').value;
+        document.getElementById('daypart_select_container').style.display = mode === 'custom' ? 'none' : 'block';
+        document.getElementById('custom_time_container').style.display = mode === 'custom' ? 'grid' : 'none';
+    }
+
+    /* ── Trainee insights ── */
+    function updateTraineeInsights() {
+        const traineeId = document.querySelector('select[name="trainee_employee_id"]').value;
+        const insightsDiv = document.getElementById('trainee_insights');
+        const posSelect = document.querySelector('select[name="position_id"]');
+
+        if (!traineeId || !traineeStats[traineeId]) {
+            insightsDiv.style.display = 'none';
+            return;
+        }
+
+        const data = traineeStats[traineeId];
+        let html = '';
+
+        if (data.suggestion) {
+            const isRoadmap = data.suggestion.reason === 'Roadmap Step';
+            const badgeClass = isRoadmap ? 'roadmap-badge' : 'rec-badge';
+            const icon = isRoadmap ? '<i class="fa-solid fa-map"></i>' : '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+            const label = isRoadmap ? 'Roadmap Target' : 'Recommended';
+
+            html += `<div style="margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border);">
+                <div class="${badgeClass}">${icon} ${label}</div>
+                <div style="font-size:13px; font-weight:800; color:var(--text-main); display:flex; align-items:center; justify-content:space-between;">
+                    ${data.suggestion.name}
+                    ${isRoadmap ? '<span style="font-size:9px; color:#c2410c; font-weight:800;">ACTIVE PATH</span>' : ''}
+                </div>
+            </div>`;
+            posSelect.value = data.suggestion.id;
+        }
+
+        if (data.history.length > 0) {
+            html += '<div style="font-size:9px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px;">Completed Training</div>';
+            data.history.forEach(h => {
+                const color = h.avg >= 4 ? '#166534' : (h.avg >= 3 ? '#d97706' : '#b91c1c');
+                const bg = h.avg >= 4 ? 'rgba(34,197,94,0.08)' : (h.avg >= 3 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)');
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:4px;">
+                    <span style="color:var(--text-main); font-weight:600;">${h.name} <span style="color:var(--text-muted); font-size:10px;">(${h.count}x)</span></span>
+                    <span style="font-weight:800; color:${color}; background:${bg}; padding:2px 6px; border-radius:4px;">${h.avg}</span>
+                </div>`;
+            });
+        }
+
+        insightsDiv.innerHTML = html;
+        insightsDiv.style.display = 'block';
+    }
+</script>
+{% endblock %}

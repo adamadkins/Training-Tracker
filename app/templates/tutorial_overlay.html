@@ -1,0 +1,233 @@
+<style>
+    .tutorial-backdrop {
+        position: fixed; inset: 0; z-index: 10000;
+        background: transparent;
+        transition: opacity 0.3s;
+        opacity: 0;
+        pointer-events: all;
+    }
+    .tutorial-backdrop.active { opacity: 1; }
+
+    .tutorial-spotlight {
+        position: fixed; z-index: 10001;
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
+        transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
+        pointer-events: none;
+    }
+
+    .tutorial-tooltip {
+        position: fixed; z-index: 10002;
+        background: white; color: #1e293b;
+        border-radius: 20px;
+        padding: 28px;
+        max-width: 360px; width: calc(100vw - 40px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        transition: top 0.35s ease, left 0.35s ease, opacity 0.25s;
+    }
+
+    .tutorial-step-counter {
+        font-size: 11px; font-weight: 800; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.08em;
+        margin-bottom: 8px;
+    }
+
+    .tutorial-title {
+        font-size: 18px; font-weight: 800; color: #1e293b;
+        margin: 0 0 8px 0;
+    }
+
+    .tutorial-desc {
+        font-size: 14px; color: #64748b; line-height: 1.6;
+        margin: 0 0 24px 0;
+    }
+
+    .tutorial-actions {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+
+    .tutorial-btn-skip {
+        background: none; border: none; color: #94a3b8;
+        font-size: 13px; font-weight: 700; cursor: pointer;
+        padding: 8px 0; transition: color 0.2s;
+    }
+    .tutorial-btn-skip:hover { color: #64748b; }
+
+    .tutorial-btn-next {
+        background: #4f46e5; color: white; border: none;
+        padding: 12px 24px; border-radius: 12px;
+        font-size: 14px; font-weight: 700; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .tutorial-btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); }
+
+    .tutorial-dots {
+        display: flex; gap: 6px; align-items: center;
+    }
+    .tutorial-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #e2e8f0; transition: all 0.3s;
+    }
+    .tutorial-dot.active { background: #4f46e5; width: 20px; border-radius: 4px; }
+
+    @media (max-width: 900px) {
+        .tutorial-spotlight { display: none !important; }
+        .tutorial-tooltip {
+            top: 50% !important; left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            padding: 24px; max-width: calc(100vw - 32px);
+        }
+        .tutorial-title { font-size: 16px; }
+        .tutorial-desc { font-size: 13px; margin-bottom: 16px; }
+    }
+</style>
+
+<div class="tutorial-backdrop" id="tutorialBackdrop"></div>
+<div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+<div class="tutorial-tooltip" id="tutorialTooltip" style="opacity: 0;">
+    <div class="tutorial-step-counter" id="tutorialCounter"></div>
+    <h3 class="tutorial-title" id="tutorialTitle"></h3>
+    <p class="tutorial-desc" id="tutorialDesc"></p>
+    <div class="tutorial-dots" id="tutorialDots"></div>
+    <div class="tutorial-actions" style="margin-top: 16px;">
+        <button class="tutorial-btn-skip" id="tutorialSkip">Skip</button>
+        <button class="tutorial-btn-next" id="tutorialNext">Next <i class="fa-solid fa-arrow-right" style="font-size: 12px;"></i></button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var role = '{{ current_user.role }}';
+
+    var managerSteps = [
+        { target: '[data-tutorial="staff"]', title: 'Your Team', desc: 'Manage all employees here -- add new hires, view profiles, and track individual progress.' },
+        { target: '[data-tutorial="positions"]', title: 'Positions & Checklists', desc: 'Define training positions and the competency checklist used to evaluate each one.' },
+        { target: '[data-tutorial="roadmaps"]', title: 'Training Roadmaps', desc: 'Create structured learning paths that guide trainees through positions in order.' },
+        { target: '[data-tutorial="schedule"]', title: 'Schedules', desc: 'Build and publish weekly training schedules. Assign trainers to trainees for each session.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Chat with your team in real time -- direct messages and group channels.' },
+        { target: '[data-tutorial="settings"]', title: 'Settings', desc: 'Configure system-wide preferences like rating scales, sign-off requirements, and more.' }
+    ];
+
+    var trainerSteps = [
+        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'See your upcoming training sessions and track your activity at a glance.' },
+        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'View your assigned training sessions. Click any session to begin evaluating.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Communicate with managers and fellow trainers via direct messages or channels.' },
+        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'Stay on top of schedule changes, new assignments, and important updates.' }
+    ];
+
+    var traineeSteps = [
+        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'Track your training progress, see upcoming sessions, and view your scores.' },
+        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'See when and where your next training sessions are. Review the rubric before each one.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Reach out to your trainers or team members with questions.' },
+        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'Get notified when sessions are completed, scores are posted, or schedules change.' }
+    ];
+
+    var steps = role === 'manager' ? managerSteps : (role === 'trainer' ? trainerSteps : traineeSteps);
+    var currentStep = 0;
+
+    var backdrop = document.getElementById('tutorialBackdrop');
+    var spotlight = document.getElementById('tutorialSpotlight');
+    var tooltip = document.getElementById('tutorialTooltip');
+    var titleEl = document.getElementById('tutorialTitle');
+    var descEl = document.getElementById('tutorialDesc');
+    var counterEl = document.getElementById('tutorialCounter');
+    var dotsEl = document.getElementById('tutorialDots');
+    var nextBtn = document.getElementById('tutorialNext');
+    var skipBtn = document.getElementById('tutorialSkip');
+
+    function buildDots() {
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < steps.length; i++) {
+            var dot = document.createElement('div');
+            dot.className = 'tutorial-dot' + (i === currentStep ? ' active' : '');
+            dotsEl.appendChild(dot);
+        }
+    }
+
+    function positionTooltip(rect) {
+        var tw = Math.min(360, window.innerWidth - 40);
+        var th = tooltip.offsetHeight || 220;
+        var pad = 16;
+        var top, left;
+
+        /* Try below the spotlight */
+        if (rect.bottom + pad + th < window.innerHeight) {
+            top = rect.bottom + pad;
+        } else if (rect.top - pad - th > 0) {
+            top = rect.top - pad - th;
+        } else {
+            top = Math.max(20, (window.innerHeight - th) / 2);
+        }
+
+        left = Math.max(20, Math.min(rect.left, window.innerWidth - tw - 20));
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+    }
+
+    function showStep(idx) {
+        if (idx >= steps.length) { finish(); return; }
+        currentStep = idx;
+        var step = steps[idx];
+        var el = document.querySelector(step.target);
+
+        counterEl.textContent = 'Step ' + (idx + 1) + ' of ' + steps.length;
+        titleEl.textContent = step.title;
+        descEl.textContent = step.desc;
+        buildDots();
+
+        nextBtn.innerHTML = (idx === steps.length - 1)
+            ? 'Finish <i class="fa-solid fa-check" style="font-size:12px;"></i>'
+            : 'Next <i class="fa-solid fa-arrow-right" style="font-size:12px;"></i>';
+
+        var isMobile = window.innerWidth <= 900;
+
+        if (el && !isMobile) {
+            var rect = el.getBoundingClientRect();
+            /* Skip elements that are hidden (collapsed mobile nav) */
+            if (rect.width === 0 && rect.height === 0) {
+                spotlight.style.display = 'none';
+            } else {
+                var sp = 6;
+                spotlight.style.top = (rect.top - sp) + 'px';
+                spotlight.style.left = (rect.left - sp) + 'px';
+                spotlight.style.width = (rect.width + sp * 2) + 'px';
+                spotlight.style.height = (rect.height + sp * 2) + 'px';
+                spotlight.style.display = 'block';
+                positionTooltip(rect);
+            }
+        } else {
+            /* Mobile or missing element: hide spotlight, center tooltip via CSS */
+            spotlight.style.display = 'none';
+        }
+
+        tooltip.style.opacity = '1';
+    }
+
+    function finish() {
+        backdrop.style.opacity = '0';
+        tooltip.style.opacity = '0';
+        spotlight.style.display = 'none';
+        setTimeout(function() {
+            backdrop.remove();
+            spotlight.remove();
+            tooltip.remove();
+        }, 350);
+        fetch('{{ url_for("employee.api_tutorial_seen") }}', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    }
+
+    nextBtn.addEventListener('click', function() { showStep(currentStep + 1); });
+    skipBtn.addEventListener('click', finish);
+    backdrop.addEventListener('click', function(e) { if (e.target === backdrop) finish(); });
+
+    /* Start after a brief delay so page finishes rendering */
+    setTimeout(function() {
+        backdrop.classList.add('active');
+        showStep(0);
+    }, 600);
+
+    /* Reposition on resize */
+    window.addEventListener('resize', function() { showStep(currentStep); });
+})();
+</script>

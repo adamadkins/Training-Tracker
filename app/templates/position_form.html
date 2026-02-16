@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block body_class %}form-page{% endblock %}
+
+{% block content %}
+<style>
+    /* --- RESET & BOX MODEL SAFETY --- */
+    .form-wrapper,
+    .form-wrapper *,
+    .form-wrapper *::before,
+    .form-wrapper *::after {
+        box-sizing: border-box !important;
+    }
+
+    /* --- HIDE SITE CHROME --- */
+    body.form-page .main-header,
+    body.form-page .site-footer { display: none !important; }
+    body.form-page main.container,
+    body.form-page main {
+        max-width: none !important; width: 100% !important;
+        padding: 0 !important; margin: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .form-wrapper {
+        background: var(--bg-body);
+        min-height: 100dvh;
+        padding: 24px;
+        justify-content: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .form-container {
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* --- SPECTACLE HEADER --- */
+    .form-spectacle {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .icon-spectacle {
+        background: var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        border-radius: 24px;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        position: relative;
+    }
+
+    .icon-spectacle::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 28px;
+        border: 2px solid var(--primary);
+        opacity: 0.1;
+    }
+
+    .form-title {
+        margin: 24px 0 8px 0;
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -0.03em;
+    }
+
+    .form-subtitle {
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    /* --- FORM CARD --- */
+    .form-card {
+        background: var(--bg-card);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 20px 25px -5px var(--shadow);
+        border-top: 6px solid var(--primary);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .form-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .input-style {
+        width: 100% !important;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 16px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        display: block;
+        height: 52px;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .input-style:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: var(--bg-card);
+    }
+
+    .checklist-section {
+        background: var(--bg-body);
+        padding: 24px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        margin-bottom: 24px;
+    }
+
+    .skill-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn-remove {
+        background: var(--bg-card);
+        border: 1px solid #fee2e2;
+        color: #ef4444;
+        border-radius: 10px;
+        width: 48px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .btn-remove:hover { background: #fef2f2; border-color: #f87171; }
+
+    .btn-add-skill {
+        background: var(--bg-card);
+        border: 1px dashed #cbd5e1;
+        color: var(--text-muted);
+        padding: 12px;
+        border-radius: 10px;
+        width: 100%;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .btn-add-skill:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-body); }
+
+    .active-toggle {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--bg-body);
+        transition: all 0.2s;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+    .active-toggle:hover { border-color: var(--primary); background: var(--bg-card); }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-weight: 800;
+        border-radius: 14px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
+
+    @media (max-width: 900px) {
+        .form-wrapper { padding: 24px 12px; }
+        .form-card { padding: 24px 16px; }
+        .form-title { font-size: 28px; }
+    }
+</style>
+
+<div class="form-wrapper">
+    <div class="form-container">
+
+        {# --- SMART BACK BUTTON --- #}
+        <div style="margin-bottom: 32px;">
+            <a href="javascript:history.back()"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                <i class="fa-solid fa-arrow-left"></i> BACK
+            </a>
+        </div>
+
+        {# --- Header Spectacle --- #}
+        <div class="form-spectacle">
+            <div class="icon-spectacle">
+                <i class="fa-solid fa-list-check" style="font-size: 32px;"></i>
+            </div>
+            <h1 class="form-title">
+                {% if mode == "new" %}Define Position{% else %}Edit Position{% endif %}
+            </h1>
+            <p class="form-subtitle">
+                Set up the role and the specific skill checklist used during evaluations.
+            </p>
+        </div>
+
+        {# --- Form Card --- #}
+        <div class="form-card">
+            <form method="post" id="positionForm"
+                  action="{% if mode == 'new' %}{{ url_for('manager.position_create') }}{% else %}{{ url_for('manager.position_edit', position_id=position.id) }}{% endif %}">
+
+                <div style="margin-bottom: 32px;">
+                    <label class="form-label">Position Name</label>
+                    <input type="text" id="name" name="name" required
+                           value="{% if position %}{{ position.name }}{% endif %}"
+                           placeholder="e.g. Kitchen, Front Counter" autofocus
+                           class="input-style">
+                </div>
+
+                {% if locations %}
+                <div style="margin-bottom: 32px;">
+                    <label class="form-label">Location <span style="opacity: 0.5; text-transform: none; letter-spacing: 0;">(optional)</span></label>
+                    <select name="location_id" class="input-style" style="cursor: pointer;">
+                        <option value="">All Locations (Global)</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}" {% if position and position.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 8px 0 0 0; font-weight: 500;">
+                        Assign to a location so it only appears for employees at that location.
+                    </p>
+                </div>
+                {% endif %}
+
+                {% if mode == "new" %}
+                <div class="checklist-section">
+                    <label class="form-label" style="margin-bottom: 16px;">Initial Skill Checklist</label>
+
+                    <div id="descriptor-container">
+                        <div class="skill-row">
+                            <input type="text" name="descriptors[]" placeholder="e.g. Proper station setup" required
+                                   class="input-style" style="flex: 1; height: 48px;">
+                            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addDescriptorRow()" class="btn-add-skill">
+                        <i class="fa-solid fa-plus"></i> Add another skill
+                    </button>
+                </div>
+                {% else %}
+                <div class="checklist-section" style="margin-bottom: 24px;">
+                    <label class="form-label" style="margin-bottom: 16px;">Skill Checklist</label>
+                    <div id="descriptor-container">
+                        {% for d in position.descriptors %}
+                        <div class="skill-row">
+                            <input type="text" name="descriptors[]" value="{{ d.text }}" placeholder="e.g. Proper station setup"
+                                   class="input-style" style="flex: 1; height: 48px;">
+                            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                        {% if not position.descriptors %}
+                        <div class="skill-row">
+                            <input type="text" name="descriptors[]" placeholder="e.g. Proper station setup"
+                                   class="input-style" style="flex: 1; height: 48px;">
+                            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" onclick="addDescriptorRow()" class="btn-add-skill">
+                        <i class="fa-solid fa-plus"></i> Add another skill
+                    </button>
+                </div>
+
+                <label class="active-toggle" id="activeToggle">
+                    <input type="checkbox" name="active" id="activeCheckbox" style="width: 20px; height: 20px; accent-color: var(--primary);" {% if position.active %}checked{% endif %}>
+                    <div>
+                        <span style="font-weight: 800; font-size: 15px; color: var(--text-main); display: block;">Position is Active</span>
+                        <span style="font-size: 13px; color: var(--text-muted); margin-top: 2px; display: block; font-weight: 500;">Inactive positions are hidden from new schedules and sessions.</span>
+                    </div>
+                </label>
+
+                {% if position.active and (pending_sessions or active_roadmaps) %}
+                <div id="deactivateWarning" style="display: none; background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 18px; margin-top: 2px; flex-shrink: 0;"></i>
+                        <div>
+                            <p style="font-weight: 800; font-size: 14px; color: #92400e; margin: 0 0 6px 0;">Heads up — this position is in use</p>
+                            <p style="font-size: 13px; color: #a16207; margin: 0; line-height: 1.6; font-weight: 500;">
+                                Making it inactive will <b>not</b> delete any existing data. Completed sessions and scores are always preserved.
+                                It just won't appear when creating new sessions or schedules.
+                            </p>
+                            <ul style="margin: 10px 0 0 0; padding-left: 18px; font-size: 13px; color: #92400e; font-weight: 600; line-height: 1.8;">
+                                {% if pending_sessions %}
+                                <li><b>{{ pending_sessions }}</b> pending session{{ 's' if pending_sessions != 1 else '' }} still use this position</li>
+                                {% endif %}
+                                {% if active_roadmaps %}
+                                <li>Used in roadmap{{ 's' if active_roadmaps|length > 1 else '' }}: <b>{{ active_roadmaps|join(', ') }}</b></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    {% if mode == "new" %}Create Position{% else %}Save Changes{% endif %}
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+                {# SMART BACK BUTTON FOR CANCEL #}
+                <a href="javascript:history.back()" style="text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;">
+                    <i class="fa-solid fa-xmark"></i> Cancel and Return
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function addDescriptorRow() {
+        const container = document.getElementById('descriptor-container');
+        const div = document.createElement('div');
+        div.className = 'skill-row';
+        div.innerHTML = `
+            <input type="text" name="descriptors[]" placeholder="Enter skill..." class="input-style" style="flex: 1; height: 48px;">
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+        container.appendChild(div);
+        div.querySelector('input').focus();
+    }
+
+    document.getElementById('positionForm').addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 12px;"></i> Saving...';
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'wait';
+            btn.disabled = true;
+        }
+    });
+
+    /* Show/hide deactivation warning when toggling active off */
+    (function() {
+        var cb = document.getElementById('activeCheckbox');
+        var warning = document.getElementById('deactivateWarning');
+        if (cb && warning) {
+            cb.addEventListener('change', function() {
+                warning.style.display = this.checked ? 'none' : 'block';
+            });
+        }
+    })();
+</script>
+{% endblock %}

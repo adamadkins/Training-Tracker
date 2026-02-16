@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT OVERRIDES --- */
+    body:has(.roadmaps-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.roadmaps-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .roadmaps-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .roadmaps-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* --- HEADER & ACTIONS --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .header-title { font-size: 32px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.03em; }
+    .header-subtitle { color: var(--text-muted); font-size: 16px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* --- SEARCH SECTION --- */
+    .controls-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+    }
+
+    .search-section {
+        position: relative;
+        flex: 1;
+        min-width: 300px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 14px 14px 52px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        font-size: 15px;
+        background: var(--bg-card);
+        color: var(--text-main);
+        transition: all 0.2s;
+        outline: none;
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    /* --- TABLE/GRID STYLES --- */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 20px var(--shadow);
+        overflow: hidden;
+    }
+
+    .rm-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .rm-table th {
+        padding: 20px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.1em;
+    }
+
+    .roadmap-row {
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s;
+        background: var(--bg-card);
+    }
+
+    .roadmap-row:last-child { border-bottom: none; }
+
+    .rm-cell { padding: 20px 24px; vertical-align: middle; }
+
+    /* Icons and Badges */
+    .icon-box {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; background: rgba(79, 70, 229, 0.08);
+        color: var(--primary); border: 1px solid rgba(79, 70, 229, 0.1);
+        flex-shrink: 0;
+    }
+
+    .badge-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 12px;
+        font-size: 12px; font-weight: 700;
+        background: var(--bg-body); color: var(--text-main);
+        border: 1px solid var(--border);
+    }
+
+    /* Action Buttons */
+    .actions-flex { display: flex; justify-content: flex-end; gap: 10px; }
+
+    .btn-action {
+        height: 40px; padding: 0 16px;
+        display: flex; align-items: center; gap: 8px;
+        border-radius: 12px; font-size: 13px; font-weight: 700;
+        transition: all 0.2s; text-decoration: none; border: 1px solid var(--border);
+    }
+
+    .btn-roster { background: #eff6ff; color: #1d4ed8; border-color: #dbeafe; }
+    .btn-roster:hover { background: #1d4ed8; color: white; }
+
+    .btn-builder { background: var(--bg-body); color: var(--text-main); }
+    .btn-builder:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* --- MOBILE STACK VIEW --- */
+    @media (max-width: 900px) {
+        .roadmaps-wrapper { padding: 24px 16px; }
+        .controls-row { flex-direction: column; align-items: stretch; }
+
+        .rm-table thead { display: none; }
+        .roadmap-row {
+            display: block;
+            padding: 20px;
+            border-bottom: 8px solid var(--bg-body);
+        }
+        .rm-cell {
+            display: block;
+            padding: 0;
+            margin-bottom: 16px;
+        }
+        .rm-cell:last-child { margin-bottom: 0; }
+
+        .icon-box { width: 40px; height: 40px; font-size: 16px; }
+        .actions-flex { justify-content: stretch; }
+        .btn-action { flex: 1; justify-content: center; }
+
+        .mobile-label {
+            display: block;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+    }
+
+    @media (min-width: 901px) {
+        .mobile-label { display: none; }
+        .roadmap-row:hover { background-color: var(--bg-body); cursor: pointer; }
+    }
+</style>
+
+<div class="roadmaps-wrapper">
+    <div class="roadmaps-container">
+
+        {# --- BACK BUTTON --- #}
+        <div style="margin-bottom: 24px;">
+            <a href="{{ url_for('manager.dashboard') }}"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'"
+               onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {# --- Header --- #}
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">Training Roadmaps</h1>
+                <p class="header-subtitle">Standardized paths for team development.</p>
+            </div>
+            <a href="{{ url_for('manager.roadmap_create') }}" class="btn-primary" style="padding: 12px 24px; border-radius: 14px; font-weight: 750; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                <i class="fa-solid fa-plus"></i> New Roadmap
+            </a>
+        </div>
+
+        {# --- Search Section --- #}
+        <div class="controls-row">
+            <div class="search-section">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="roadmapSearch" class="search-input" placeholder="Search by name or description...">
+            </div>
+        </div>
+
+        {# --- List Content --- #}
+        <div class="table-card">
+            <div style="overflow-x: auto;">
+                <table class="rm-table" id="roadmapTable">
+                    <thead>
+                        <tr>
+                            <th>Roadmap Details</th>
+                            <th>Steps</th>
+                            <th>Active Students</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for map in roadmaps %}
+                        <tr class="roadmap-row" data-href="{{ url_for('manager.roadmap_builder', roadmap_id=map.id) }}">
+                            <td class="rm-cell">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="icon-box">
+                                        <i class="fa-solid fa-map-location-dot"></i>
+                                    </div>
+                                    <div>
+                                        <span class="search-name" style="font-weight: 800; font-size: 16px; color: var(--text-main); display: block;">{{ map.name }}</span>
+                                        <span class="search-desc" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">{{ map.description if map.description else 'No description provided' }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="rm-cell">
+                                <span class="mobile-label">Path Length</span>
+                                <span class="badge-pill">
+                                    <i class="fa-solid fa-list-ol" style="color: var(--primary);"></i>
+                                    {{ map.steps|length }} Positions
+                                </span>
+                            </td>
+
+                            <td class="rm-cell">
+                                <span class="mobile-label">Enrollment</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-weight: 800; color: var(--text-main); font-size: 16px;">{{ map.trainees|length if map.trainees is defined else 0 }}</span>
+                                    <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Employees</span>
+                                </div>
+                            </td>
+
+                            <td class="rm-cell" style="text-align: right;" onclick="event.stopPropagation();">
+                                <div class="actions-flex">
+                                    <a href="{{ url_for('manager.roadmap_roster', roadmap_id=map.id) }}" class="btn-action btn-roster" title="Manage Roster">
+                                        <i class="fa-solid fa-users"></i> Roster
+                                    </a>
+                                    <a href="{{ url_for('manager.roadmap_builder', roadmap_id=map.id) }}" class="btn-action btn-builder" title="Edit Steps">
+                                        <i class="fa-solid fa-layer-group"></i> Builder
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="padding: 100px 24px; text-align: center; color: var(--text-muted);">
+                                <i class="fa-solid fa-map" style="font-size: 48px; margin-bottom: 20px; opacity: 0.2; display: block; margin: 0 auto 20px auto;"></i>
+                                <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">Start your first roadmap</h3>
+                                <p style="font-size: 15px; margin: 0; font-weight: 500;">Roadmaps help automate training suggestions for your team.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {# Search Empty State #}
+                        <tr id="noResults" style="display: none;">
+                            <td colspan="4" style="padding: 60px 24px; text-align: center; color: var(--text-muted);">
+                                <p style="font-size: 15px; font-weight: 600;">No roadmaps found for your search.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Handle Row Clicks (Desktop only to prevent accidental mobile taps)
+    if (window.innerWidth > 900) {
+        document.querySelectorAll('.roadmap-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if(e.target.closest('a')) return;
+                window.location = this.dataset.href;
+            });
+        });
+    }
+
+    // Live Search Logic
+    document.getElementById('roadmapSearch').addEventListener('keyup', function() {
+        const query = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.roadmap-row');
+        let found = false;
+
+        rows.forEach(row => {
+            const name = row.querySelector('.search-name').textContent.toLowerCase();
+            const desc = row.querySelector('.search-desc').textContent.toLowerCase();
+            if (name.includes(query) || desc.includes(query)) {
+                row.style.display = '';
+                found = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('noResults').style.display = (found || rows.length === 0) ? 'none' : 'table-row';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT OVERRIDES --- */
+    body:has(.notif-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.notif-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .notif-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .notif-container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* Header & Navigation */
+    .back-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: color 0.2s;
+        margin-bottom: 24px;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 40px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .page-title { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: var(--text-main); }
+    .page-subtitle { color: var(--text-muted); font-size: 18px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* Action Button */
+    .btn-mark-read {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        font-size: 13px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-weight: 700;
+        box-shadow: 0 2px 4px var(--shadow);
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    .btn-mark-read:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+
+    /* Notification Cards */
+    .notif-list { display: flex; flex-direction: column; gap: 16px; max-width: 1200px; }
+
+    .notif-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        position: relative;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        cursor: pointer;
+    }
+
+    .notif-card.unread {
+        border-left: 5px solid var(--primary);
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .notif-card.read {
+        opacity: 0.7;
+        background: var(--bg-body);
+    }
+
+    .notif-card:hover {
+        transform: scale(1.01);
+        border-color: var(--primary);
+        opacity: 1;
+        box-shadow: 0 10px 25px -5px var(--shadow);
+    }
+
+    /* Icon Styles */
+    .icon-circle {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+    .icon-blue { background: #eff6ff; color: #2563eb; }
+    .icon-green { background: #f0fdf4; color: #16a34a; }
+    .icon-orange { background: #fff7ed; color: #ea580c; }
+
+    /* Action Button for individual read */
+    .action-check {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 5;
+    }
+    .action-check:hover { background: #dcfce7; border-color: #16a34a; color: #16a34a; transform: rotate(15deg); }
+
+    /* Empty State */
+    .empty-state {
+        background: var(--bg-card);
+        border: 2px dashed var(--border);
+        border-radius: 24px;
+        padding: 80px 40px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 1200px;
+    }
+    .empty-icon {
+        width: 80px; height: 80px;
+        background: var(--bg-body);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 24px;
+        color: var(--text-muted);
+        font-size: 32px;
+    }
+
+    @media (max-width: 1024px) {
+        .notif-wrapper { padding: 32px 16px; }
+        .icon-circle { width: 44px; height: 44px; font-size: 18px; }
+    }
+</style>
+
+<div class="notif-wrapper">
+    <div class="notif-container">
+
+        {# --- SMART BACK BUTTON --- #}
+        <a href="javascript:history.back()" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> BACK
+        </a>
+
+        <div class="header-flex">
+            <div>
+                <h1 class="page-title">Notifications</h1>
+                <p class="page-subtitle">Stay updated with your latest training activities.</p>
+            </div>
+
+            {% set unread_count = notifications|selectattr('read_at', 'none')|list|length %}
+            {% if unread_count > 0 %}
+                <form method="post" action="{{ url_for('manager.notifications_clear') if current_user.role == 'manager' else url_for('employee.notifications_clear') }}">
+                    <button type="submit" class="btn-mark-read">
+                        <i class="fa-solid fa-check-double"></i> Mark All as Read
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if notifications|length == 0 %}
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
+                <h3 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 12px;">All caught up!</h3>
+                <p style="font-size: 16px; color: var(--text-muted); margin: 0; max-width: 400px; line-height: 1.6;">You have no new notifications. Check back later for updates on your training plan.</p>
+            </div>
+        {% else %}
+            <div class="notif-list">
+                {% for n in notifications %}
+                    {% set is_unread = n.read_at is none %}
+                    {% set cat = n.category or 'general' %}
+
+                    {# Deep link from notification, fallback to dashboard #}
+                    {% if n.link_url %}
+                        {% set target_url = n.link_url %}
+                    {% elif cat == 'schedule' %}
+                        {% set target_url = url_for('manager.schedules_list') if current_user.role == 'manager' else url_for('employee.schedules_list') %}
+                    {% else %}
+                        {% set target_url = url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') %}
+                    {% endif %}
+
+                    <div class="notif-card {{ 'unread' if is_unread else 'read' }}"
+                         onclick="if(!event.target.closest('form')) window.location.href='{{ target_url }}'">
+
+                        {# Icon Column (category-based) #}
+                        {% if cat == 'schedule' %}
+                        <div class="icon-circle icon-blue"><i class="fa-solid fa-calendar-days"></i></div>
+                        {% elif cat == 'session' %}
+                        <div class="icon-circle icon-green"><i class="fa-solid fa-clipboard-check"></i></div>
+                        {% elif cat == 'employee' %}
+                        <div class="icon-circle icon-orange"><i class="fa-solid fa-user"></i></div>
+                        {% elif cat == 'roadmap' %}
+                        <div class="icon-circle" style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-route"></i></div>
+                        {% elif cat == 'message' %}
+                        <div class="icon-circle" style="background:#e0f2fe; color:#0284c7;"><i class="fa-solid fa-paper-plane"></i></div>
+                        {% else %}
+                        <div class="icon-circle icon-orange"><i class="fa-solid fa-bell"></i></div>
+                        {% endif %}
+
+                        {# Content Column #}
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: var(--text-main); margin: 0; line-height: 1.2;">
+                                    {{ n.title }}
+                                    {% if is_unread %}
+                                        <span style="display: inline-block; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; margin-left: 8px; vertical-align: middle;"></span>
+                                    {% endif %}
+                                </h3>
+                                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600; white-space: nowrap; margin-left: 16px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px;">
+                                    {{ n.created_at.strftime('%b %d, %I:%M %p') }}
+                                </span>
+                            </div>
+
+                            <p style="font-size: 15px; color: var(--text-muted); margin: 0; line-height: 1.6; font-weight: 500;">
+                                {{ n.body }}
+                            </p>
+                        </div>
+
+                        {# Mark Read Button #}
+                        {% if is_unread %}
+                        <form method="post" action="{{ url_for('manager.notification_read', notification_id=n.id) if current_user.role == 'manager' else url_for('employee.notification_read', notification_id=n.id) }}">
+                            <button type="submit" class="action-check" title="Mark as Read">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

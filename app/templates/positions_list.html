@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT OVERRIDES --- */
+    body:has(.positions-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.positions-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .positions-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .positions-container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* --- HERO SECTION --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 48px;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .header-title { font-size: 36px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.03em; }
+    .header-subtitle { color: var(--text-muted); font-size: 18px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* --- SEARCH SECTION --- */
+    .search-section {
+        margin-bottom: 32px;
+        position: relative;
+        max-width: 500px;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 14px 14px 52px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        font-size: 15px;
+        background: var(--bg-card);
+        color: var(--text-main);
+        box-shadow: 0 1px 2px var(--shadow);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    /* --- TABLE STYLES --- */
+    .table-card {
+        background: var(--bg-card);
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        overflow: hidden;
+    }
+
+    .pos-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .pos-table th {
+        padding: 20px 24px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        letter-spacing: 0.1em;
+    }
+
+    .pos-row {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.2s;
+        cursor: pointer;
+        background: var(--bg-card);
+    }
+
+    .pos-row:last-child { border-bottom: none; }
+    .pos-row:hover { background-color: var(--bg-body); }
+
+    .pos-cell { padding: 16px 24px; }
+
+    .icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        background: rgba(79, 70, 229, 0.1);
+        color: var(--primary);
+        border: 1px solid rgba(79, 70, 229, 0.2);
+        flex-shrink: 0;
+    }
+
+    /* Status Pills */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .pill-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .pill-inactive { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); }
+    .pill-location {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+        background: rgba(16, 185, 129, 0.08); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+    .pill-global {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700;
+        background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border);
+    }
+
+    /* Action Buttons */
+    .action-group {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-action-icon {
+        color: var(--text-muted);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        transition: all 0.2s;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        text-decoration: none;
+    }
+    .btn-action-icon:hover { color: var(--primary); border-color: var(--primary); background: var(--bg-card); }
+    .btn-action-icon.blue { color: var(--primary); }
+
+    /* --- FILTER BAR --- */
+    .filter-bar {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .filter-group {
+        display: flex; align-items: center; gap: 6px;
+    }
+    .filter-label {
+        font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--text-muted); margin-right: 2px; white-space: nowrap;
+    }
+    .filter-pill {
+        padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+        background: var(--bg-card); color: var(--text-muted); font-weight: 700; font-size: 12px;
+        cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .filter-pill:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .filter-pill.active-green { background: #166534; color: white; border-color: #166534; }
+    .filter-pill.active-gray { background: var(--text-muted); color: white; border-color: var(--text-muted); }
+    .filter-pill.active-teal { background: #10b981; color: white; border-color: #10b981; }
+    .filter-divider {
+        width: 1px; height: 24px; background: var(--border); margin: 0 6px;
+    }
+
+    /* --- MOBILE REFINEMENTS --- */
+    @media (max-width: 900px) {
+        .positions-wrapper { padding: 32px 16px; }
+        .status-col { display: none; }
+        .header-title { font-size: 28px; }
+        .header-subtitle { font-size: 15px; }
+        .filter-divider { display: none; }
+        .filter-bar { gap: 8px; }
+    }
+</style>
+
+<div class="positions-wrapper">
+    <div class="positions-container">
+
+        {# --- SMART BACK BUTTON --- #}
+        <div style="margin-bottom: 32px;">
+            <a href="javascript:history.back()"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                <i class="fa-solid fa-arrow-left"></i> BACK
+            </a>
+        </div>
+
+        {# --- Hero Section --- #}
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">Positions</h1>
+                <p class="header-subtitle">Manage roles and competency checklists for training.</p>
+            </div>
+            <a href="{{ url_for('manager.position_create') }}" class="btn-primary" style="padding: 14px 28px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                <i class="fa-solid fa-plus"></i> Add Position
+            </a>
+        </div>
+
+        {# --- Search Bar --- #}
+        <div class="search-section">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="positionSearch" class="search-input" placeholder="Search positions by name...">
+        </div>
+
+        {# --- Filter Bar --- #}
+        <div class="filter-bar">
+            <div class="filter-group">
+                <span class="filter-label">Status</span>
+                <button class="filter-pill active" data-filter="status" data-value="all" onclick="setFilter(this)">All</button>
+                <button class="filter-pill" data-filter="status" data-value="active" onclick="setFilter(this)">Active</button>
+                <button class="filter-pill" data-filter="status" data-value="inactive" onclick="setFilter(this)">Inactive</button>
+            </div>
+            {% if locations %}
+            <div class="filter-divider"></div>
+            <div class="filter-group">
+                <span class="filter-label">Location</span>
+                <button class="filter-pill active-teal" data-filter="location" data-value="all" onclick="setFilter(this)">All</button>
+                <button class="filter-pill" data-filter="location" data-value="global" onclick="setFilter(this)">Global</button>
+                {% for loc in locations %}
+                <button class="filter-pill" data-filter="location" data-value="{{ loc.id }}" onclick="setFilter(this)">{{ loc.name }}</button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        {# --- Positions Table --- #}
+        <div class="table-card">
+            <div style="overflow-x: auto;">
+                <table class="pos-table" id="positionTable">
+                    <thead>
+                        <tr>
+                            <th>Position Name</th>
+                            <th class="status-col">Status</th>
+                            <th style="text-align: right;">Manage</th>
+                        </tr>
+                    </thead>
+                    <tbody id="positionTableBody">
+                        {% for p in positions %}
+                        <tr class="pos-row" data-status="{{ 'active' if p.active else 'inactive' }}" data-location="{{ p.location_id or 'global' }}" onclick="if(!event.target.closest('a')) window.location.href='{{ url_for('manager.position_detail', position_id=p.id) }}';">
+                            <td class="pos-cell">
+                                <div style="display: flex; align-items: center; gap: 16px;">
+                                    <div class="icon-box">
+                                        <i class="fa-solid fa-briefcase"></i>
+                                    </div>
+                                    <div>
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="search-name" style="font-weight: 800; font-size: 16px; color: var(--text-main);">{{ p.name }}</span>
+                                            {% if p.location %}
+                                            <span class="pill-location"><i class="fa-solid fa-map-pin" style="font-size: 8px;"></i> {{ p.location.name }}</span>
+                                            {% else %}
+                                            <span class="pill-global">Global</span>
+                                            {% endif %}
+                                        </div>
+                                        <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">
+                                            {{ p.descriptors|selectattr('active')|list|length }} descriptors
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="pos-cell status-col">
+                                {% if p.active %}
+                                    <span class="status-pill pill-active">Active</span>
+                                {% else %}
+                                    <span class="status-pill pill-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td class="pos-cell" style="text-align: right;">
+                                <div class="action-group" onclick="event.stopPropagation();">
+                                    <a href="{{ url_for('manager.position_edit', position_id=p.id) }}" class="btn-action-icon" title="Settings">
+                                        <i class="fa-solid fa-gear"></i>
+                                    </a>
+                                    <a href="{{ url_for('manager.position_detail', position_id=p.id) }}" class="btn-action-icon blue" title="View Metrics">
+                                        <i class="fa-solid fa-list-check"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="padding: 100px 24px; text-align: center; color: var(--text-muted);">
+                                <i class="fa-solid fa-folder-open" style="font-size: 48px; margin-bottom: 20px; opacity: 0.2; display: block; margin-left: auto; margin-right: auto;"></i>
+                                <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0;">No positions defined</h3>
+                                <p style="font-size: 15px; margin: 0; font-weight: 500;">Define roles to begin building your training curriculum.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {# --- Search Empty State --- #}
+                        <tr id="noResults" style="display: none;">
+                            <td colspan="3" style="padding: 80px 24px; text-align: center; color: var(--text-muted);">
+                                <p style="font-size: 16px; font-weight: 600;">No positions match your search.</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    var searchInput = document.getElementById('positionSearch');
+    var noResults = document.getElementById('noResults');
+    var activeFilters = { status: 'all', location: 'all' };
+
+    function setFilter(btn) {
+        var filterType = btn.getAttribute('data-filter');
+        var value = btn.getAttribute('data-value');
+        activeFilters[filterType] = value;
+
+        var group = btn.closest('.filter-group');
+        group.querySelectorAll('.filter-pill').forEach(function(p) {
+            p.className = 'filter-pill';
+        });
+        if (filterType === 'location') {
+            btn.classList.add('active-teal');
+        } else {
+            btn.classList.add('active');
+        }
+        applyFilters();
+    }
+
+    window.setFilter = setFilter;
+
+    function applyFilters() {
+        var query = searchInput ? searchInput.value.toLowerCase() : '';
+        var rows = document.querySelectorAll('.pos-row');
+        var visibleCount = 0;
+
+        rows.forEach(function(row) {
+            var name = row.querySelector('.search-name').textContent.toLowerCase();
+            var status = row.getAttribute('data-status');
+            var location = row.getAttribute('data-location');
+
+            var matchSearch = !query || name.indexOf(query) !== -1;
+            var matchStatus = activeFilters.status === 'all' || status === activeFilters.status;
+            var matchLocation = activeFilters.location === 'all' || location === activeFilters.location;
+
+            if (matchSearch && matchStatus && matchLocation) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (noResults) {
+            noResults.style.display = (visibleCount === 0 && rows.length > 0) ? 'table-row' : 'none';
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+})();
+</script>
+
+{% endblock %}

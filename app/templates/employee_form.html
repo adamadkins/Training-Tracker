@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block body_class %}form-page{% endblock %}
+
+{% block content %}
+<style>
+    /* --- RESET & BOX MODEL SAFETY --- */
+    .form-wrapper,
+    .form-wrapper *,
+    .form-wrapper *::before,
+    .form-wrapper *::after {
+        box-sizing: border-box !important;
+    }
+
+    /* --- HIDE SITE CHROME --- */
+    body.form-page .main-header,
+    body.form-page .site-footer { display: none !important; }
+    body.form-page main.container,
+    body.form-page main {
+        max-width: none !important; width: 100% !important;
+        padding: 0 !important; margin: 0 !important;
+    }
+
+    /* --- LAYOUT --- */
+    .form-wrapper {
+        background: var(--bg-body);
+        min-height: 100dvh;
+        padding: 24px;
+        justify-content: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .form-container {
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    /* --- SPECTACLE HEADER --- */
+    .form-spectacle {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .avatar-spectacle {
+        width: 100px;
+        height: 100px;
+        border-radius: 24px;
+        border: 4px solid var(--bg-card);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        object-fit: cover;
+        margin: 0 auto;
+        display: block;
+    }
+
+    .icon-spectacle {
+        background: var(--bg-card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        border-radius: 24px;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        border: 1px solid var(--border);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+        position: relative;
+    }
+
+    .icon-spectacle::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 28px;
+        border: 2px solid var(--primary);
+        opacity: 0.1;
+    }
+
+    .form-title {
+        margin: 24px 0 8px 0;
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -0.03em;
+    }
+
+    .form-subtitle {
+        color: var(--text-muted);
+        font-size: 16px;
+        line-height: 1.5;
+        font-weight: 500;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    /* --- FORM CARD --- */
+    .form-card {
+        background: var(--bg-card);
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid var(--border);
+        box-shadow: 0 20px 25px -5px var(--shadow);
+        border-top: 6px solid var(--primary);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .form-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .input-style {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 16px; /* Prevents iOS zoom */
+        background: var(--bg-body);
+        color: var(--text-main);
+        transition: all 0.2s;
+        outline: none;
+        display: block;
+        min-width: 0 !important;
+        height: 52px;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .input-style:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        background: var(--bg-card);
+    }
+
+    .input-style[readonly] {
+        opacity: 0.7;
+        cursor: not-allowed;
+        background: var(--bg-body);
+    }
+
+    /* Safari Datetime Fixes */
+    input[type="date"]::-webkit-datetime-edit { display: flex; padding: 0; }
+
+    .field-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        width: 100%;
+    }
+
+    .name-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        font-weight: 800;
+        border-radius: 14px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .form-wrapper { padding: 24px 12px; }
+        .form-card { padding: 24px 16px; }
+        .name-grid { grid-template-columns: 1fr; }
+        .form-title { font-size: 28px; }
+    }
+</style>
+
+<div class="form-wrapper">
+    <div class="form-container">
+
+        {# --- SMART BACK BUTTON --- #}
+        <div style="margin-bottom: 32px;">
+            <a href="javascript:history.back()"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                <i class="fa-solid fa-arrow-left"></i> BACK
+            </a>
+        </div>
+
+        {# --- Header Spectacle --- #}
+        <div class="form-spectacle">
+            {% if mode == "new" %}
+                <div class="icon-spectacle">
+                    <i class="fa-solid fa-user-plus" style="font-size: 32px;"></i>
+                </div>
+            {% else %}
+                <img src="{{ employee.avatar(100) }}" class="avatar-spectacle">
+                <div style="margin-top: 16px;">
+                    <a href="https://en.gravatar.com/emails/" target="_blank" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-camera"></i> Update on Gravatar
+                    </a>
+                </div>
+            {% endif %}
+
+            <h1 class="form-title">
+                {% if mode == "new" %}Add Employee{% else %}Edit Profile{% endif %}
+            </h1>
+            <p class="form-subtitle">
+                {% if mode == "new" %}
+                    An invitation will be sent to the provided email to finalize their secure account setup.
+                {% else %}
+                    Manage personnel details, role assignments, and employment milestones.
+                {% endif %}
+            </p>
+        </div>
+
+        {# --- Form Card --- #}
+        <div class="form-card">
+            <form method="post" id="employeeForm"
+                  action="{% if mode == 'new' %}{{ url_for('manager.employee_create') }}{% else %}{{ url_for('manager.employee_edit', employee_id=employee.id) }}{% endif %}"
+                  class="field-stack">
+
+                <div class="name-grid">
+                    <div>
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="first_name" name="first_name" required
+                               value="{{ employee.first_name if employee else '' }}"
+                               placeholder="e.g. John" autofocus
+                               class="input-style">
+                    </div>
+                    <div>
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" required
+                               value="{{ employee.last_name if employee else '' }}"
+                               placeholder="e.g. Doe"
+                               class="input-style">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" required
+                           value="{{ employee.user_account.email if employee and employee.user_account else '' }}"
+                           placeholder="name@company.com"
+                           class="input-style"
+                           {% if mode == "edit" %}readonly{% endif %}>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500; font-style: italic;">
+                        {% if mode == "edit" %}
+                            Email is the primary identifier and cannot be changed after creation.
+                        {% else %}
+                            This email is used to sync profile photos automatically via Gravatar.
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div>
+                    <label class="form-label">Start Date</label>
+                    <input type="date" id="start_date" name="start_date"
+                           value="{{ employee.start_date.strftime('%Y-%m-%d') if employee and employee.start_date else '' }}"
+                           class="input-style">
+                </div>
+
+                <div>
+                    <label class="form-label">Assign System Role</label>
+                    <select name="role" id="role" required class="input-style" style="background-image: none;">
+                        <option value="" disabled {% if not employee or not employee.role %}selected{% endif %}>Select a role...</option>
+                        <option value="trainee" {% if employee and employee.role == 'trainee' %}selected{% endif %}>Trainee (Learning)</option>
+                        <option value="trainer" {% if employee and employee.role == 'trainer' %}selected{% endif %}>Trainer (Grading)</option>
+                        <option value="manager" {% if employee and employee.role == 'manager' %}selected{% endif %}>Manager (Full Access)</option>
+                    </select>
+                </div>
+
+                {% if locations is defined and locations %}
+                <div>
+                    <label class="form-label">Location</label>
+                    <select name="location_id" id="location_id" class="input-style" style="background-image: none;">
+                        <option value="">No location</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc.id }}" {% if employee and employee.location_id == loc.id %}selected{% endif %}>{{ loc.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500;">Assign trainees to a location (e.g. FOH/BOH). Managers with a location only see that location's data.</p>
+                </div>
+                {% endif %}
+
+                <div style="margin-top: 8px;">
+                    <button type="submit" id="submitBtn" class="btn-submit">
+                        {% if mode == "new" %}Create and Send Invite{% else %}Update Profile{% endif %}
+                    </button>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+                {# SMART BACK BUTTON FOR CANCEL #}
+                <a href="javascript:history.back()"
+                   style="text-decoration: none; color: var(--text-muted); font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+                   onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <i class="fa-solid fa-xmark"></i> Cancel and Return
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('employeeForm').addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 12px;"></i> Processing...';
+            btn.style.opacity = '0.7';
+            btn.style.cursor = 'wait';
+            btn.disabled = true;
+        }
+    });
+</script>
+{% endblock %}
