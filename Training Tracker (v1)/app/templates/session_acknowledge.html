@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block body_class %}form-page{% endblock %}
+
+{% block content %}
+<style>
+    body.form-page .main-header,
+    body.form-page .site-footer { display: none !important; }
+    body.form-page main.container,
+    body.form-page main {
+        max-width: none !important; width: 100% !important;
+        padding: 0 !important; margin: 0 !important;
+    }
+
+    .ack-wrapper {
+        background: var(--bg-body);
+        min-height: 100dvh;
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ack-container {
+        max-width: 640px;
+        width: 100%;
+    }
+
+    .ack-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .ack-icon {
+        width: 72px; height: 72px; border-radius: 20px;
+        background: #fef3c7; color: #f59e0b;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; margin: 0 auto 20px auto;
+        border: 1px solid #fde68a;
+    }
+
+    .ack-title {
+        font-size: 28px; font-weight: 900; color: var(--text-main);
+        margin: 0 0 8px 0; letter-spacing: -0.03em;
+    }
+
+    .ack-subtitle {
+        font-size: 15px; color: var(--text-muted); font-weight: 500; line-height: 1.5;
+    }
+
+    .handoff-banner {
+        background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 16px;
+        padding: 20px 24px; margin-bottom: 28px;
+        display: flex; align-items: center; gap: 16px;
+        color: #1e40af; font-weight: 600; font-size: 14px;
+    }
+
+    .handoff-banner i {
+        font-size: 24px; flex-shrink: 0;
+    }
+
+    .score-summary {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 20px; padding: 28px; margin-bottom: 28px;
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .summary-label {
+        font-size: 11px; font-weight: 800; color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.08em;
+        margin-bottom: 16px;
+    }
+
+    .rating-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .rating-row:last-child { border-bottom: none; }
+
+    .rating-name { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .rating-score {
+        font-size: 14px; font-weight: 800; color: var(--primary);
+        background: rgba(79, 70, 229, 0.08); padding: 4px 10px; border-radius: 8px;
+    }
+
+    .notes-box {
+        background: var(--bg-body); border-radius: 12px; padding: 16px;
+        font-size: 14px; color: var(--text-muted); line-height: 1.6;
+        margin-top: 16px; font-style: italic;
+    }
+
+    .sig-section {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 20px; padding: 28px; margin-bottom: 28px;
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .sig-canvas-wrap {
+        position: relative;
+        border: 2px dashed var(--border);
+        border-radius: 16px;
+        background: #fff;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .sig-canvas-wrap canvas {
+        display: block;
+        width: 100%;
+        height: 200px;
+        cursor: crosshair;
+        touch-action: none;
+    }
+
+    .sig-placeholder {
+        position: absolute;
+        top: 50%; left: 50%; transform: translate(-50%, -50%);
+        font-size: 14px; font-weight: 600; color: var(--text-muted);
+        opacity: 0.5; pointer-events: none;
+        transition: opacity 0.2s;
+    }
+
+    .sig-actions {
+        display: flex; justify-content: flex-end; gap: 12px;
+    }
+
+    .btn-clear {
+        background: none; border: 1px solid var(--border);
+        color: var(--text-muted); padding: 8px 16px; border-radius: 10px;
+        font-size: 13px; font-weight: 700; cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: #ef4444; color: #ef4444; }
+
+    .btn-acknowledge {
+        width: 100%; padding: 18px;
+        background: var(--primary); color: white;
+        border: none; border-radius: 14px;
+        font-size: 16px; font-weight: 800;
+        cursor: pointer; transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-acknowledge:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
+    .btn-acknowledge:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    @media (max-width: 600px) {
+        .ack-wrapper { padding: 20px 12px; }
+        .score-summary, .sig-section { padding: 20px 16px; }
+        .ack-title { font-size: 24px; }
+    }
+</style>
+
+<div class="ack-wrapper">
+    <div class="ack-container">
+
+        <div class="ack-header">
+            <div class="ack-icon"><i class="fa-solid fa-signature"></i></div>
+            <h1 class="ack-title">Trainee Acknowledgment</h1>
+            <p class="ack-subtitle">Review the evaluation results below, then sign to confirm you have received this feedback.</p>
+        </div>
+
+        <div class="handoff-banner">
+            <i class="fa-solid fa-hand-holding-hand"></i>
+            <div>
+                <strong>Trainer:</strong> Please hand this device to
+                <strong>{{ session.trainee.first_name }} {{ session.trainee.last_name }}</strong>
+                for their signature.
+            </div>
+        </div>
+
+        {# --- SCORE SUMMARY --- #}
+        <div class="score-summary">
+            <div class="summary-label">
+                <i class="fa-solid fa-clipboard-check" style="margin-right: 6px;"></i>
+                {{ session.position.name }} &mdash; {{ session.session_date.strftime('%b %d, %Y') }}
+            </div>
+
+            {% for r in session.ratings %}
+            <div class="rating-row">
+                <span class="rating-name">{{ r.descriptor.text }}</span>
+                <span class="rating-score">{{ r.rating_value }} / {{ scale_max }}</span>
+            </div>
+            {% endfor %}
+
+            {% if session.overall_notes %}
+            <div class="notes-box">
+                <strong style="font-style: normal;">Instructor Notes:</strong><br>
+                {{ session.overall_notes }}
+            </div>
+            {% endif %}
+        </div>
+
+        {# --- SIGNATURE PAD --- #}
+        <div class="sig-section">
+            <div class="summary-label"><i class="fa-solid fa-pen-nib" style="margin-right: 6px;"></i> Your Signature</div>
+
+            <div class="sig-canvas-wrap" id="canvasWrap">
+                <canvas id="sigCanvas"></canvas>
+                <div class="sig-placeholder" id="sigPlaceholder">Sign here with your finger or stylus</div>
+            </div>
+
+            <div class="sig-actions">
+                <button type="button" class="btn-clear" onclick="clearSignature()">
+                    <i class="fa-solid fa-eraser"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        {# --- SUBMIT --- #}
+        <form method="POST" id="ackForm">
+            <input type="hidden" name="signature_data" id="signatureInput">
+            <button type="submit" class="btn-acknowledge" id="ackBtn" disabled>
+                <i class="fa-solid fa-check-double"></i> I Acknowledge This Evaluation
+            </button>
+        </form>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    const canvas = document.getElementById('sigCanvas');
+    const ctx = canvas.getContext('2d');
+    const placeholder = document.getElementById('sigPlaceholder');
+    const ackBtn = document.getElementById('ackBtn');
+    const sigInput = document.getElementById('signatureInput');
+    let drawing = false;
+    let hasContent = false;
+
+    function resizeCanvas() {
+        const wrap = document.getElementById('canvasWrap');
+        const rect = wrap.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = 200;
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', function() {
+        if (!hasContent) resizeCanvas();
+    });
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        if (e.touches && e.touches.length > 0) {
+            return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+        }
+        return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    }
+
+    function startDraw(e) {
+        e.preventDefault();
+        drawing = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        if (!hasContent) {
+            hasContent = true;
+            placeholder.style.opacity = '0';
+            ackBtn.disabled = false;
+        }
+    }
+
+    function endDraw(e) {
+        if (drawing) {
+            drawing = false;
+            ctx.closePath();
+        }
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+
+    window.clearSignature = function() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasContent = false;
+        placeholder.style.opacity = '0.5';
+        ackBtn.disabled = true;
+    };
+
+    document.getElementById('ackForm').addEventListener('submit', function(e) {
+        if (!hasContent) { e.preventDefault(); return; }
+        sigInput.value = canvas.toDataURL('image/png');
+        ackBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+        ackBtn.disabled = true;
+    });
+})();
+</script>
+{% endblock %}

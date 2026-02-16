@@ -1,0 +1,821 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set trainees = employees|selectattr('role', 'equalto', 'trainee')|list %}
+
+<style>
+    body:has(.manager-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body:has(.manager-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .manager-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 28px 32px;
+    }
+    .manager-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* ── Hero ── */
+    .manager-hero {
+        margin-bottom: 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .hero-text { flex: 1; min-width: 200px; }
+    .hero-title {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.03em;
+    }
+    .hero-subtitle {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 4px 0 0;
+        font-weight: 500;
+    }
+
+    /* ── KPIs ── */
+    .kpi-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .kpi-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 20px;
+        text-align: center;
+        min-width: 100px;
+    }
+    .kpi-val {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--primary);
+        display: block;
+        line-height: 1;
+        margin-bottom: 2px;
+    }
+    .kpi-label {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .kpi-val.warn { color: #f59e0b; }
+    .kpi-val.danger { color: #ef4444; }
+
+    /* ── Cockpit grid ── */
+    .cockpit-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+        margin-bottom: 36px;
+        align-items: start;
+    }
+
+    /* ── Section heads ── */
+    .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .section-title {
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    .section-title i { color: var(--primary); }
+
+    /* ── Activity card ── */
+    .activity-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .activity-table { width: 100%; border-collapse: collapse; }
+    .activity-table th {
+        padding: 10px 16px;
+        background: var(--bg-body);
+        border-bottom: 1px solid var(--border);
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 800;
+        text-align: left;
+        letter-spacing: 0.06em;
+    }
+    .activity-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        transition: background 0.1s;
+    }
+    .activity-table tr:hover td { background: var(--bg-body); }
+    .activity-table tr:last-child td { border-bottom: none; }
+
+    .date-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+    .activity-pos {
+        font-weight: 800;
+        font-size: 13px;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+    .activity-trainee {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .trainer-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .avatar-xs {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+    }
+    .trainer-name {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .score-badge {
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-weight: 800;
+        font-size: 11px;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        text-decoration: none;
+        transition: transform 0.15s;
+    }
+    .score-badge:hover { transform: scale(1.05); }
+
+    .empty-activity {
+        text-align: center;
+        padding: 40px 16px;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    /* ── Launchpad ── */
+    .launchpad-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+    }
+    .launch-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .launch-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 14px 8px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--text-main);
+        transition: all 0.15s;
+        text-align: center;
+    }
+    .launch-btn:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        background: var(--bg-card);
+        box-shadow: 0 4px 12px var(--shadow);
+    }
+    .launch-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        color: white;
+    }
+    .launch-label {
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .tip-box {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+    }
+    .tip-inner {
+        background: var(--bg-body);
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        font-weight: 500;
+    }
+    .tip-inner i { color: var(--primary); margin-right: 4px; }
+
+    /* ── Personnel section ── */
+    .personnel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .search-container {
+        position: relative;
+        width: 240px;
+    }
+    .search-input {
+        width: 100%;
+        padding: 9px 12px 9px 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        outline: none;
+        font-size: 13px;
+        transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .search-icon {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+        font-size: 12px;
+    }
+    .filter-pill {
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .filter-pill:hover { border-color: var(--text-muted); }
+    .filter-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* ── Trainee grid ── */
+    .trainee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 16px;
+    }
+    .trainee-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: all 0.2s;
+        overflow: hidden;
+    }
+    .trainee-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 20px var(--shadow);
+    }
+
+    .card-top {
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .card-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        border: 2px solid var(--bg-card);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .card-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.01em;
+    }
+    .card-roadmap {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 1px;
+    }
+
+    .card-body {
+        padding: 14px 18px;
+        border-top: 1px solid var(--border);
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+    }
+    .progress-label {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    .progress-percent {
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--text-main);
+    }
+    .progress-bar-bg {
+        height: 6px;
+        background: var(--bg-body);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 8px;
+        transition: width 1s ease;
+    }
+
+    .next-step {
+        margin-top: 12px;
+    }
+    .next-step-label {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 3px;
+    }
+    .next-step-value {
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .next-step-value.active { color: var(--primary); }
+    .next-step-value.done { color: #10b981; }
+
+    .session-stat {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+
+    .mastery-list {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .mastery-pill {
+        font-size: 9px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .empty-grid {
+        grid-column: 1/-1;
+        padding: 60px 24px;
+        text-align: center;
+    }
+    .empty-grid i { font-size: 36px; color: var(--text-muted); opacity: 0.15; margin-bottom: 14px; display: block; }
+    .empty-grid p { color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+        .manager-wrapper { padding: 18px 14px; }
+        .cockpit-grid { grid-template-columns: 1fr; }
+        .launchpad-sidebar { order: -1; }
+        .launch-grid { grid-template-columns: repeat(3, 1fr); }
+        .trainee-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+        .personnel-header { flex-direction: column; align-items: flex-start !important; }
+    }
+
+    @media (max-width: 700px) {
+        .hero-title { font-size: 22px; }
+        .manager-hero { margin-bottom: 20px; gap: 16px; }
+        .kpi-row {
+            width: 100%;
+            background: var(--bg-card);
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            gap: 0;
+            flex-wrap: nowrap;
+        }
+        .kpi-card {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-right: 1px solid var(--border);
+            border-radius: 0;
+            padding: 4px;
+            min-width: 0;
+        }
+        .kpi-card:last-child { border-right: none; }
+        .kpi-val { font-size: 16px; }
+        .kpi-label { font-size: 8px; }
+
+        .launch-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .launch-btn { padding: 10px 6px; border-radius: 10px; }
+        .launch-icon { width: 30px; height: 30px; font-size: 13px; border-radius: 8px; }
+        .launch-label { font-size: 10px; }
+
+        .trainee-grid { grid-template-columns: 1fr; gap: 10px; }
+        .activity-table .mobile-hide { display: none; }
+        .search-container { width: 100%; }
+    }
+</style>
+
+<div class="manager-wrapper">
+    <div class="manager-container">
+
+        {# ── 1. Hero + KPIs ── #}
+        <div class="manager-hero">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    {% set hour = None %}
+                    Dashboard
+                </h1>
+                <p class="hero-subtitle">Overview of training operations and team progress.</p>
+            </div>
+
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <span class="kpi-val">{{ trainees|length }}</span>
+                    <span class="kpi-label">Trainees</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-val">{{ employees|length }}</span>
+                    <span class="kpi-label">Total Staff</span>
+                </div>
+                <div class="kpi-card">
+                    {% set completed = sessions|selectattr('completed_at')|list|length %}
+                    <span class="kpi-val">{{ completed }}</span>
+                    <span class="kpi-label">Completed</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-val {{ 'warn' if pending_sessions_count > 0 else '' }}">{{ pending_sessions_count }}</span>
+                    <span class="kpi-label">Pending</span>
+                </div>
+                {% if unlinked_count > 0 %}
+                <div class="kpi-card">
+                    <span class="kpi-val danger">{{ unlinked_count }}</span>
+                    <span class="kpi-label">Unlinked</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Location filter (when manager is in multiple locations) ── #}
+        {% if manager_locations %}
+        <div class="location-filter-bar" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em;">View:</span>
+            <a href="{{ url_for('manager.dashboard') }}" class="location-pill {{ 'active' if not current_location_filter else '' }}" style="display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.15s;">
+                All locations
+            </a>
+            {% for loc in manager_locations %}
+            <a href="{{ url_for('manager.dashboard', location_id=loc.id) }}" class="location-pill {{ 'active' if current_location_filter == loc.id else '' }}" style="display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.15s;">
+                <i class="fa-solid fa-map-pin" style="font-size: 10px; margin-right: 6px; opacity: 0.7;"></i>{{ loc.name }}
+            </a>
+            {% endfor %}
+        </div>
+        <style>
+            .location-filter-bar .location-pill:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-body); }
+            .location-filter-bar .location-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+        </style>
+        {% endif %}
+
+        {# ── FLAGGED SESSIONS ALERT ── #}
+        {% if flagged_sessions %}
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; padding: 24px; margin-bottom: 28px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 12px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                        <i class="fa-solid fa-flag"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #991b1b;">Needs Attention</h3>
+                        <p style="margin: 0; font-size: 12px; color: #b91c1c; font-weight: 500;">Sessions flagged by trainers for review</p>
+                    </div>
+                </div>
+                <span style="background: #ef4444; color: white; font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 20px;">{{ flagged_sessions|length }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for fs in flagged_sessions %}
+                <div style="background: white; border: 1px solid #fecaca; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex-shrink: 0;">
+                        <img src="{{ fs.trainee.avatar(36) }}" style="width: 36px; height: 36px; border-radius: 10px;">
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{{ fs.trainee.first_name }} {{ fs.trainee.last_name }}</div>
+                        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                            {{ fs.position.name }} &middot; {{ fs.session_date.strftime('%b %d') }}
+                            {% if fs.trainer %} &middot; Flagged by {{ fs.trainer.first_name }}{% endif %}
+                        </div>
+                    </div>
+                    {% if fs.flag_reason %}
+                    <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #991b1b; background: #fee2e2; padding: 4px 10px; border-radius: 8px; white-space: nowrap;">{{ fs.flag_reason }}</span>
+                    {% endif %}
+                    <a href="{{ url_for('employee.session_rating', session_id=fs.id) }}" style="font-size: 12px; font-weight: 700; color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+                        Review <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── 2. Cockpit (Activity + Launchpad) ── #}
+        <div class="cockpit-grid">
+
+            {# LEFT: Recent Activity #}
+            <div class="activity-center">
+                <div class="section-head">
+                    <h2 class="section-title"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Recent Activity</h2>
+                </div>
+                <div class="activity-card">
+                    <div style="overflow-x:auto;">
+                        <table class="activity-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Session</th>
+                                    <th class="mobile-hide">Trainer</th>
+                                    <th style="text-align:right;">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set all_completed = sessions|selectattr('completed_at')|sort(attribute='completed_at', reverse=True)|list %}
+                                {% for s in all_completed[:10] %}
+                                <tr>
+                                    <td>
+                                        <span class="date-label">{{ s.completed_at.strftime('%b %d') }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="activity-pos">{{ s.position.name }}</div>
+                                        <div class="activity-trainee">{{ s.trainee.first_name }} {{ s.trainee.last_name[0] }}.</div>
+                                    </td>
+                                    <td class="mobile-hide">
+                                        <div class="trainer-cell">
+                                            <img src="{{ s.trainer.avatar(18) }}" class="avatar-xs">
+                                            <span class="trainer-name">{{ s.trainer.first_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:right;">
+                                        {% set ratings = s.ratings|map(attribute='rating_value')|list %}
+                                        {% set avg = (ratings|sum / ratings|length)|round(1) if ratings else 0 %}
+                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                            {% if require_signoff and not s.acknowledged_at %}
+                                            <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; border: 1px solid #fde68a; white-space: nowrap;">
+                                                <i class="fa-solid fa-signature" style="margin-right: 3px;"></i>Pending
+                                            </span>
+                                            {% endif %}
+                                            <a href="{{ url_for('employee.session_rating', session_id=s.id) }}" class="score-badge" style="background: {{ '#10b981' if avg >= 4 else '#f59e0b' if avg >= 3 else '#ef4444' }};">
+                                                {{ avg }} <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="empty-activity">No completed sessions yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {# RIGHT: Launchpad #}
+            <div class="launchpad-sidebar">
+                <div class="section-head">
+                    <h2 class="section-title">Launchpad</h2>
+                </div>
+                <div class="launchpad-card">
+                    <div class="launch-grid">
+                        <a href="{{ url_for('manager.employees_list') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#10b981;"><i class="fa-solid fa-users-gear"></i></div>
+                            <span class="launch-label">Staff</span>
+                        </a>
+                        <a href="{{ url_for('manager.schedules_list') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#3b82f6;"><i class="fa-solid fa-calendar-days"></i></div>
+                            <span class="launch-label">Schedules</span>
+                        </a>
+                        <a href="{{ url_for('manager.positions_list') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-layer-group"></i></div>
+                            <span class="launch-label">Positions</span>
+                        </a>
+                        <a href="{{ url_for('manager.roadmaps_list') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#f43f5e;"><i class="fa-solid fa-map-location-dot"></i></div>
+                            <span class="launch-label">Roadmaps</span>
+                        </a>
+                        <a href="{{ url_for('manager.dayparts_list') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#f59e0b;"><i class="fa-solid fa-clock"></i></div>
+                            <span class="launch-label">Shifts</span>
+                        </a>
+                        <a href="{{ url_for('manager.settings') }}" class="launch-btn">
+                            <div class="launch-icon" style="background:#64748b;"><i class="fa-solid fa-sliders"></i></div>
+                            <span class="launch-label">Settings</span>
+                        </a>
+                    </div>
+
+                    <div class="tip-box">
+                        <div class="tip-inner">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <b>Tip:</b> Use <i>Roadmaps</i> to standardize training order for new hires.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {# ── 3. Personnel Progress ── #}
+        <div class="personnel-header">
+            <div class="section-head" style="margin-bottom:0;">
+                <h2 class="section-title"><i class="fa-solid fa-layer-group"></i> Personnel Progress</h2>
+            </div>
+
+            <div class="filter-bar">
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="traineeSearch" class="search-input" placeholder="Search trainee..." oninput="filterTrainees()">
+                </div>
+                <button class="filter-pill active" data-filter="all" onclick="setFilter('all', this)">All</button>
+                <button class="filter-pill" data-filter="on-roadmap" onclick="setFilter('on-roadmap', this)">On Roadmap</button>
+                <button class="filter-pill" data-filter="no-roadmap" onclick="setFilter('no-roadmap', this)">No Roadmap</button>
+            </div>
+        </div>
+
+        <div class="trainee-grid" id="traineeGrid">
+            {% for t in trainees %}
+            {% set roadmap_data = t.get_roadmap_progress() %}
+            <a href="{{ url_for('manager.employee_detail', employee_id=t.id) }}" class="trainee-card"
+               data-name="{{ t.first_name|lower }} {{ t.last_name|lower }}"
+               data-roadmap="{{ 'on-roadmap' if t.active_roadmap else 'no-roadmap' }}">
+                <div class="card-top">
+                    <img src="{{ t.avatar(42) }}" class="card-avatar">
+                    <div>
+                        <h3 class="card-name">{{ t.first_name }} {{ t.last_name }}</h3>
+                        <div class="card-roadmap">
+                            {{ t.active_roadmap.name if t.active_roadmap else 'General Training' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {% if roadmap_data %}
+                        {% set percent = roadmap_data.percent_complete|round|int %}
+                        <div class="progress-header">
+                            <span class="progress-label">Roadmap Progress</span>
+                            <span class="progress-percent">{{ percent }}%</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width:{{ percent }}%; background:{{ '#10b981' if roadmap_data.is_finished else 'var(--primary)' }};"></div>
+                        </div>
+
+                        <div class="next-step">
+                            <div class="next-step-label">Next Step</div>
+                            {% if roadmap_data.target_position %}
+                                <div class="next-step-value active">
+                                    <i class="fa-solid fa-arrow-right-long"></i> {{ roadmap_data.target_position.name }}
+                                </div>
+                            {% else %}
+                                <div class="next-step-value done">
+                                    <i class="fa-solid fa-check-double"></i> Path Completed
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="session-stat">
+                            <span class="progress-label">Completed Sessions</span>
+                            <span style="font-size:16px; font-weight:900; color:var(--text-main);">
+                                {{ t.trainee_sessions|selectattr('completed_at')|list|length }}
+                            </span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); font-weight:500;">
+                            Standard training — no roadmap assigned.
+                        </div>
+                    {% endif %}
+
+                    {% set mastered_positions = [] %}
+                    {% set has_mastery = false %}
+                    {% for s in t.trainee_sessions if s.completed_at %}
+                        {% if s.position.name not in mastered_positions %}
+                            {% set has_mastery = true %}
+                            {% set _ = mastered_positions.append(s.position.name) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if mastered_positions %}
+                    <div class="mastery-list">
+                        {% for pos_name in mastered_positions[:6] %}
+                        <span class="mastery-pill"><i class="fa-solid fa-circle-check"></i> {{ pos_name }}</span>
+                        {% endfor %}
+                        {% if mastered_positions|length > 6 %}
+                        <span class="mastery-pill" style="background:var(--bg-body); color:var(--text-muted); border-color:var(--border);">+{{ mastered_positions|length - 6 }} more</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% else %}
+            <div class="empty-grid">
+                <i class="fa-solid fa-user-slash"></i>
+                <p>No active trainees found.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let currentFilter = 'all';
+
+    function setFilter(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        filterTrainees();
+    }
+
+    function filterTrainees() {
+        const query = document.getElementById('traineeSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.trainee-card');
+
+        cards.forEach(card => {
+            const name = card.dataset.name || '';
+            const roadmap = card.dataset.roadmap || '';
+            const matchesSearch = name.includes(query);
+            const matchesFilter = currentFilter === 'all' || roadmap === currentFilter;
+            card.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

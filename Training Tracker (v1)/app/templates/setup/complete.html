@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.setup-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.setup-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+    .setup-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .setup-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px var(--shadow);
+    }
+    .setup-title { font-size: 22px; font-weight: 900; margin: 0 0 12px; color: var(--text-main); }
+    .setup-desc { color: var(--text-muted); font-size: 15px; margin-bottom: 28px; line-height: 1.5; }
+    .btn-wizard {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-wizard:hover { opacity: 0.95; }
+    .btn-dash {
+        display: inline-block;
+        margin-top: 16px;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .btn-dash:hover { color: var(--primary); }
+</style>
+
+<div class="setup-wrapper">
+    <div class="setup-card">
+        <h1 class="setup-title">Setup already complete</h1>
+        <p class="setup-desc">Your organization was set up earlier. You can change business type and locations in Settings, or run the setup wizard again to walk through the steps.</p>
+        <a href="{{ url_for('manager.setup_wizard', run=1) }}" class="btn-wizard">Run setup wizard</a>
+        <a href="{{ url_for('manager.dashboard') }}" class="btn-dash">Back to dashboard</a>
+    </div>
+</div>
+{% endblock %}

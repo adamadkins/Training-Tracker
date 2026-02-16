@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.profile-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body:has(.profile-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .profile-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 28px 32px;
+    }
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 20px;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text-main); }
+
+    /* ── Hero ── */
+    .profile-hero {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    .hero-top {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .hero-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 16px;
+        border: 3px solid var(--bg-body);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        object-fit: cover;
+    }
+    .hero-info { flex: 1; min-width: 200px; }
+    .hero-title {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .hero-badges {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+    .hero-badge {
+        font-size: 10px;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .badge-role-manager { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-role-trainer { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-role-trainee { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-status { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .hero-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .hero-btn {
+        padding: 9px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+    }
+    .hero-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .hero-btn-primary {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .hero-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent); color: white; }
+
+    /* ── Hero stats strip ── */
+    .hero-stats {
+        display: flex;
+        gap: 24px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    .hero-stat {
+        display: flex;
+        flex-direction: column;
+    }
+    .hero-stat-label {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 2px;
+    }
+    .hero-stat-val {
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+    .hero-stat-val small {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    /* ── Password form (hidden) ── */
+    .pw-form {
+        display: none;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+    .pw-form.show { display: block; }
+    .pw-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    /* ── Layout ── */
+    .layout-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+        font-size: 16px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title i { color: var(--primary); font-size: 14px; }
+
+    /* ── Transcript grid ── */
+    .transcript-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+    .transcript-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.15s;
+        border-left: 4px solid var(--primary);
+    }
+    .transcript-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px var(--shadow);
+        border-left-color: var(--primary);
+    }
+    .transcript-card.untrained {
+        opacity: 0.5;
+        border-left-color: var(--border);
+    }
+    .transcript-card.untrained:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--border);
+    }
+    .transcript-card.inactive-pos {
+        border-left-color: #f59e0b;
+        opacity: 0.75;
+    }
+    .transcript-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 2px;
+    }
+    .transcript-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .transcript-score {
+        font-size: 22px;
+        font-weight: 900;
+        color: var(--primary);
+        line-height: 1;
+    }
+    .transcript-score-label {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        text-align: right;
+        margin-top: 2px;
+    }
+
+    /* ── Trainer portfolio stats ── */
+    .portfolio-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+    .portfolio-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 24px;
+        flex: 1;
+    }
+    .portfolio-val {
+        font-size: 28px;
+        font-weight: 900;
+        line-height: 1;
+        margin-bottom: 3px;
+    }
+    .portfolio-label {
+        font-size: 10px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    /* ── Notes section ── */
+    .note-form-card {
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+    .note-form-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .note-category {
+        width: 100%;
+    }
+    .note-textarea {
+        width: 100%;
+        min-height: 72px;
+        resize: vertical;
+    }
+
+    .input-style {
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+    .input-style:focus { border-color: var(--primary); }
+
+    .notes-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .note-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 14px 16px;
+        border-radius: 10px;
+    }
+    .note-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .note-author {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+    .note-date {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+    .note-category-tag {
+        font-size: 9px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        margin-left: 6px;
+    }
+    .tag-performance { background: #dbeafe; color: #1e40af; }
+    .tag-recognition { background: #dcfce7; color: #166534; }
+    .tag-conduct { background: #fef3c7; color: #92400e; }
+    .tag-general { background: var(--bg-body); color: var(--text-muted); }
+    .note-text {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin: 0;
+        line-height: 1.5;
+    }
+    .notes-empty {
+        padding: 32px;
+        text-align: center;
+        color: var(--text-muted);
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: 14px;
+        position: sticky;
+        top: 20px;
+    }
+    .sidebar-title {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .sidebar-title i { color: var(--primary); }
+
+    .roadmap-info {
+        background: var(--bg-body);
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: 12px;
+    }
+    .roadmap-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 8px;
+    }
+    .progress-bar {
+        height: 6px;
+        background: var(--bg-body);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        margin-bottom: 4px;
+    }
+    .progress-fill {
+        height: 100%;
+        background: #10b981;
+        border-radius: 8px;
+        transition: width 0.5s ease-out;
+    }
+    .progress-pct {
+        font-size: 10px;
+        color: var(--text-muted);
+        font-weight: 700;
+        text-align: right;
+    }
+
+    .roadmap-select {
+        width: 100%;
+        padding: 9px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-size: 13px;
+        outline: none;
+        margin-bottom: 10px;
+    }
+
+    .btn-sm {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-sm-primary { background: var(--primary); color: white; }
+    .btn-sm-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent); }
+    .btn-sm-danger {
+        background: var(--bg-body);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+    .btn-sm-danger:hover { background: #fef2f2; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1000px) {
+        .layout-grid { grid-template-columns: 1fr; }
+        .sidebar-panel { position: static; }
+    }
+    @media (max-width: 700px) {
+        .profile-wrapper { padding: 16px 12px; }
+        .hero-top { gap: 14px; }
+        .hero-avatar { width: 56px; height: 56px; border-radius: 12px; }
+        .hero-title { font-size: 18px; }
+        .hero-stats { gap: 16px; }
+        .hero-actions { width: 100%; }
+        .hero-btn { flex: 1; justify-content: center; font-size: 11px; }
+        .transcript-grid { grid-template-columns: 1fr; }
+        .note-form-row { flex-direction: column; }
+        .note-category { width: 100%; }
+        .pw-grid { grid-template-columns: 1fr; }
+        .portfolio-row { flex-direction: column; }
+    }
+</style>
+
+<div class="profile-wrapper">
+    <div class="profile-container">
+
+        {# ── Back link ── #}
+        <a href="javascript:history.back()" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back</a>
+
+        {# ── Hero ── #}
+        <div class="profile-hero">
+            <div class="hero-top">
+                <img src="{{ employee.avatar(72) }}" class="hero-avatar">
+                <div class="hero-info">
+                    <h1 class="hero-title">{{ employee.first_name }} {{ employee.last_name }}</h1>
+                    <div class="hero-badges">
+                        {% if employee.role == 'manager' %}
+                            <span class="hero-badge badge-role-manager">Manager</span>
+                        {% elif employee.role == 'trainer' %}
+                            <span class="hero-badge badge-role-trainer">Trainer</span>
+                        {% else %}
+                            <span class="hero-badge badge-role-trainee">Trainee</span>
+                        {% endif %}
+                        {% if employee.graduated_at %}
+                            <span class="hero-badge" style="background: #d1fae5; color: #065f46; border-color: #a7f3d0;">Graduated</span>
+                        {% endif %}
+                        <span class="hero-badge badge-status">{{ employee.status|capitalize }}</span>
+                    </div>
+                </div>
+
+                <div class="hero-actions">
+                    {% if current_user.role == 'manager' %}
+                        <a href="{{ url_for('manager.employee_edit', employee_id=employee.id, back=request.path) }}" class="hero-btn hero-btn-primary">
+                            <i class="fa-solid fa-user-pen"></i> Edit
+                        </a>
+                        {% if employee.role == 'trainee' and not employee.graduated_at %}
+                        <form method="post" action="{{ url_for('manager.employee_graduate', employee_id=employee.id) }}" style="display: inline;" onsubmit="return confirm('Graduate {{ employee.first_name }}? They will see the graduation screen on next login and no longer use the trainee dashboard.');">
+                            <button type="submit" class="hero-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;">
+                                <i class="fa-solid fa-graduation-cap"></i> Graduate
+                            </button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                    {% if employee.id == current_user.employee_id %}
+                        <button onclick="togglePasswordForm()" id="toggle-pw-btn" class="hero-btn">
+                            <i class="fa-solid fa-key"></i> Security
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Stats strip #}
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-label">Joined</span>
+                    <span class="hero-stat-val">{{ employee.start_date.strftime('%b %d, %Y') if employee.start_date else 'N/A' }}</span>
+                </div>
+                {% if employee.role == 'trainee' %}
+                    {% set trained_items = mastery_list|selectattr('status', 'equalto', 'trained')|list %}
+                    {% set aggregate_avg = (trained_items|map(attribute='average')|sum / trained_items|length)|round(1) if trained_items|length > 0 else 0 %}
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Avg Rating</span>
+                        <span class="hero-stat-val" style="color:var(--primary);">{{ aggregate_avg }} <small>/ 5.0</small></span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Positions Trained</span>
+                        <span class="hero-stat-val">{{ trained_items|length }} <small>/ {{ mastery_list|length }}</small></span>
+                    </div>
+                {% elif employee.role in ['trainer', 'manager'] %}
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Sessions Taught</span>
+                        <span class="hero-stat-val">{{ teaching_stats.total_sessions if teaching_stats else 0 }}</span>
+                    </div>
+                    <div class="hero-stat">
+                        <span class="hero-stat-label">Trainees Mentored</span>
+                        <span class="hero-stat-val">{{ teaching_stats.students_reached if teaching_stats else 0 }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            {# Password form (hidden) #}
+            {% if employee.id == current_user.employee_id %}
+            <div id="pw-form-container" class="pw-form">
+                <form action="{{ url_for('manager.change_password') }}" method="POST">
+                    <div class="pw-grid">
+                        <input type="password" name="new_password" required placeholder="New Password" class="input-style">
+                        <input type="password" name="confirm_password" required placeholder="Confirm Password" class="input-style">
+                    </div>
+                    <button type="submit" class="btn-sm btn-sm-primary" style="width:auto; padding:8px 20px;">Update Password</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+        {# ── Main layout ── #}
+        <div class="layout-grid">
+            <div class="main-column">
+
+                {# ── Trainee: Training Transcript ── #}
+                {% if employee.role == 'trainee' %}
+                    <h2 class="section-title"><i class="fa-solid fa-graduation-cap"></i> Training Transcript</h2>
+                    <div class="transcript-grid">
+                        {% for m in mastery_list %}
+                        <a href="{{ url_for('manager.employee_position_detail', employee_id=employee.id, position_id=m.id, back=request.path) if m.status == 'trained' else '#' }}"
+                           class="transcript-card {{ 'untrained' if m.status != 'trained' }}{% if not m.active %} inactive-pos{% endif %}">
+                            <div>
+                                <div class="transcript-name">
+                                    {{ m.name }}
+                                    {% if not m.active %}
+                                    <span style="display: inline-block; font-size: 10px; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 6px; margin-left: 6px; vertical-align: middle; letter-spacing: 0.3px;">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <div class="transcript-sub">{{ m.session_count ~ ' session' ~ ('s' if m.session_count != 1 else '') if m.status == 'trained' else 'Not started' }}</div>
+                            </div>
+                            {% if m.status == 'trained' %}
+                            <div style="text-align:right;">
+                                <div class="transcript-score">{{ m.average }}</div>
+                                <div class="transcript-score-label">Avg</div>
+                            </div>
+                            {% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                {# ── Trainer/Manager: Portfolio ── #}
+                {% elif employee.role in ['trainer', 'manager'] %}
+                    <h2 class="section-title"><i class="fa-solid fa-chalkboard-user"></i> Instructor Portfolio</h2>
+                    <div class="portfolio-row">
+                        <div class="portfolio-stat">
+                            <div class="portfolio-val" style="color:var(--primary);">{{ teaching_stats.total_sessions if teaching_stats else 0 }}</div>
+                            <div class="portfolio-label">Sessions Taught</div>
+                        </div>
+                        <div class="portfolio-stat">
+                            <div class="portfolio-val" style="color:#10b981;">{{ teaching_stats.students_reached if teaching_stats else 0 }}</div>
+                            <div class="portfolio-label">Trainees Mentored</div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# ── Internal Notes ── #}
+                <h2 class="section-title"><i class="fa-solid fa-note-sticky" style="color:var(--text-muted);"></i> Internal Notes</h2>
+
+                {% if employee.id != current_user.employee_id and current_user.role == 'manager' %}
+                <div class="note-form-card">
+                    <form method="post" action="{{ url_for('manager.employee_add_note', employee_id=employee.id) }}">
+                        <div class="note-form-row">
+                            <select name="category" class="input-style note-category">
+                                <option value="General">General</option>
+                                <option value="Performance">Performance</option>
+                                <option value="Conduct">Conduct</option>
+                                <option value="Recognition">Recognition</option>
+                            </select>
+                            <textarea name="note_text" rows="2" placeholder="Add a private note..." required class="input-style note-textarea"></textarea>
+                        </div>
+                        <div style="text-align:right;">
+                            <button type="submit" class="btn-sm btn-sm-primary" style="width:auto; padding:8px 18px;">Save Note</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="notes-feed">
+                    {% for n in notes %}
+                    <div class="note-card">
+                        <div class="note-header">
+                            <div>
+                                <span class="note-author">{% if n.author and n.author.employee %}{{ n.author.employee.first_name }} {{ n.author.employee.last_name }}{% elif n.author %}{{ n.author.email }}{% else %}System{% endif %}</span>
+                                {% set tag_class = 'tag-performance' if n.category == 'Performance' else 'tag-recognition' if n.category == 'Recognition' else 'tag-conduct' if n.category == 'Conduct' else 'tag-general' %}
+                                <span class="note-category-tag {{ tag_class }}">{{ n.category }}</span>
+                            </div>
+                            <span class="note-date">{{ n.created_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        <p class="note-text">{{ n.note_text }}</p>
+                    </div>
+                    {% else %}
+                    <div class="notes-empty">No internal notes logged.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# ── Sidebar ── #}
+            <div class="sidebar-column">
+                {% if current_user.role == 'manager' and employee.role == 'trainee' %}
+                <div class="sidebar-panel">
+                    <div class="sidebar-title"><i class="fa-solid fa-map"></i> Training Roadmap</div>
+
+                    {% if employee.active_roadmap %}
+                        {% set progress = employee.get_roadmap_progress() %}
+                        <div class="roadmap-info">
+                            <div class="roadmap-name">{{ employee.active_roadmap.name }}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:{{ progress.percent_complete }}%;"></div>
+                            </div>
+                            <div class="progress-pct">{{ progress.percent_complete|round|int }}% complete</div>
+                        </div>
+
+                        {% if progress.target_position %}
+                        <div style="font-size:11px; color:var(--text-muted); font-weight:600; margin-bottom:12px;">
+                            Next: <span style="color:var(--primary); font-weight:800;">{{ progress.target_position.name }}</span>
+                        </div>
+                        {% else %}
+                        <div style="font-size:11px; color:#10b981; font-weight:700; margin-bottom:12px;">
+                            <i class="fa-solid fa-check-double"></i> Path completed
+                        </div>
+                        {% endif %}
+
+                        <form action="{{ url_for('manager.assign_roadmap', employee_id=employee.id) }}" method="POST">
+                            <button type="submit" class="btn-sm btn-sm-danger">Remove Roadmap</button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('manager.assign_roadmap', employee_id=employee.id) }}" method="POST">
+                            <select name="roadmap_id" class="roadmap-select" required>
+                                <option value="" disabled selected>Select a roadmap...</option>
+                                {% for r in roadmaps %}
+                                <option value="{{ r.id }}">{{ r.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-sm btn-sm-primary">Assign Roadmap</button>
+                        </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function togglePasswordForm() {
+    const container = document.getElementById('pw-form-container');
+    const btn = document.getElementById('toggle-pw-btn');
+    const showing = container.classList.toggle('show');
+    btn.innerHTML = showing
+        ? '<i class="fa-solid fa-xmark"></i> Cancel'
+        : '<i class="fa-solid fa-key"></i> Security';
+}
+</script>
+{% endblock %}

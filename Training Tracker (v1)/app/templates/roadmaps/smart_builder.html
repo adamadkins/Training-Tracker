@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* ── Reset container constraints ── */
+    body.sb-active main.container,
+    body:has(.sb-wrapper) main.container {
+        max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important;
+    }
+    body.sb-active main,
+    body:has(.sb-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+
+    .sb-wrapper { background: var(--bg-body); min-height: calc(100vh - 72px); padding: 16px; }
+
+    /* ── Header ── */
+    .sb-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .sb-header h2 { font-weight: 900; font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; }
+    .sb-header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sb-pill-btn {
+        padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border);
+        background: var(--bg-card); color: var(--text-muted); font-weight: 700; font-size: 11px;
+        cursor: pointer; transition: all 0.15s; white-space: nowrap; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .sb-pill-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .sb-pill-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+    /* ── Day Tabs ── */
+    .day-tabs {
+        display: flex; gap: 2px; padding: 3px; background: var(--bg-card);
+        border-radius: 10px; border: 1px solid var(--border); overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .day-tab {
+        padding: 9px 16px; border-radius: 7px; border: none; background: none;
+        font-size: 13px; font-weight: 800; color: var(--text-muted); cursor: pointer;
+        transition: all 0.15s; flex-shrink: 0;
+    }
+    .day-tab:hover { background: var(--bg-body); }
+    .day-tab.active { background: var(--primary); color: white; }
+
+    /* ── Main Layout ── */
+    .sb-layout { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Card ── */
+    .sb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+    .sb-card-title {
+        font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .sb-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 800; min-width: 18px; text-align: center; }
+    .sb-badge.amber { background: #f59e0b; }
+    .sb-badge.green { background: #22c55e; }
+
+    /* ── Time Axis ── */
+    .time-axis { display: flex; padding: 0 0 6px 0; margin-bottom: 4px; border-bottom: 1px solid var(--border); margin-left: 120px; }
+    .time-tick { flex: 1; font-size: 9px; font-weight: 700; color: var(--text-muted); text-align: center; }
+
+    /* ── Shift Rows ── */
+    .shift-section { display: block; visibility: visible; width: 100%; }
+    .shift-row {
+        display: flex; align-items: center; gap: 10px; padding: 8px 0;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+    }
+    .shift-row:last-child { border-bottom: none; }
+    .emp-info { width: 110px; flex-shrink: 0; min-width: 0; }
+    .emp-name { font-size: 12px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .emp-meta { font-size: 9px; font-weight: 700; text-transform: uppercase; }
+
+    .track { flex: 1; height: 32px; background: var(--bg-body); border-radius: 8px; position: relative; border: 1px solid var(--border); min-width: 0; }
+    .bar {
+        position: absolute; height: 22px; top: 4px; border-radius: 5px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 9px; font-weight: 700; color: white; cursor: pointer;
+        transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        user-select: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px;
+    }
+    .bar:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .bar.selected { outline: 2px solid var(--text-main); outline-offset: 2px; z-index: 10; transform: translateY(-1px); }
+    .bar-trainer { background: linear-gradient(135deg, #4285f4, #6366f1); }
+    .bar-trainee { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+    .empty-state { text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+
+    /* ── Pairing Panel ── */
+    .pairing-slots { display: flex; flex-direction: column; gap: 6px; }
+    .pairing-slot {
+        display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+        background: var(--bg-body); border-radius: 8px; border: 2px dashed var(--border); min-height: 44px;
+        transition: all 0.15s;
+    }
+    .pairing-slot.filled { border-style: solid; }
+    .pairing-slot.filled.trainee-slot { border-color: #f59e0b; }
+    .pairing-slot.filled.trainer-slot { border-color: #4285f4; }
+    .pairing-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .pairing-dot.trainee { background: #f59e0b; }
+    .pairing-dot.trainer { background: #4285f4; }
+    .pairing-placeholder { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .pairing-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .pairing-time { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+    .pairing-arrow { text-align: center; color: var(--text-muted); font-size: 14px; line-height: 1; }
+
+    /* Overlap */
+    .overlap-badge { display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 800; margin: 10px 0; }
+    .overlap-badge.has-overlap { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+    .overlap-badge.no-overlap { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    /* Form elements */
+    .sb-select { width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); font-weight: 600; font-size: 13px; }
+    .sb-field { margin-bottom: 10px; }
+    .sb-field-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
+
+    .sb-btn { width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; border: none; cursor: pointer; transition: all 0.15s; }
+    .sb-btn-primary { background: var(--primary); color: white; }
+    .sb-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(66,133,244,0.3); }
+    .sb-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+    .sb-btn-amber { background: #f59e0b; color: white; }
+    .sb-btn-amber:hover { box-shadow: 0 4px 12px rgba(245,158,11,0.3); transform: translateY(-1px); }
+    .sb-btn-green { background: #22c55e; color: white; }
+    .sb-btn-green:hover { box-shadow: 0 4px 12px rgba(34,197,94,0.3); transform: translateY(-1px); }
+    .sb-btn-green:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+    .sb-btn-ghost { background: none; color: var(--text-muted); border: 1px solid var(--border); margin-top: 6px; }
+    .sb-btn-ghost:hover { border-color: var(--text-muted); }
+
+    /* ── Draft Queue ── */
+    .draft-item {
+        display: flex; align-items: center; gap: 10px; padding: 10px;
+        background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; font-size: 12px;
+    }
+    .draft-item:last-child { margin-bottom: 0; }
+    .draft-detail { flex: 1; min-width: 0; }
+    .draft-names { font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .draft-arrow-icon { color: var(--text-muted); font-size: 11px; }
+    .draft-sub { font-size: 10px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+    .draft-remove {
+        width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+        background: var(--bg-card); color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; transition: all 0.15s;
+    }
+    .draft-remove:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+    .draft-empty { text-align: center; padding: 20px 12px; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+    .draft-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .draft-actions .sb-btn { flex: 1; }
+    .sb-pairing-handle { display: none; }
+
+    /* ── Trainee Insights ── */
+    .trainee-insights { background: var(--bg-body); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin: 10px 0; }
+    .insight-suggestion { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .insight-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; }
+    .insight-badge.roadmap { background: #fff7ed; color: #c2410c; border: 1px solid #fdba74; }
+    .insight-badge.rec { background: rgba(79, 70, 229, 0.08); color: var(--primary); border: 1px solid rgba(79, 70, 229, 0.15); }
+    .insight-pos-name { font-size: 14px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
+    .insight-history-title { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .insight-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 4px; }
+    .insight-row:last-child { margin-bottom: 0; }
+    .insight-pos { color: var(--text-main); font-weight: 600; }
+    .insight-count { color: var(--text-muted); font-size: 10px; font-weight: 500; }
+    .insight-avg { font-weight: 800; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+    .insight-avg.good { color: #166534; background: rgba(34, 197, 94, 0.1); }
+    .insight-avg.mid { color: #d97706; background: rgba(245, 158, 11, 0.1); }
+    .insight-avg.low { color: #b91c1c; background: rgba(239, 68, 68, 0.1); }
+
+    /* ── Toast ── */
+    .sb-toast {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+        padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 13px; color: white;
+        z-index: 1000; opacity: 0; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        white-space: nowrap; max-width: 90vw;
+    }
+    .sb-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .sb-toast.success { background: #22c55e; }
+    .sb-toast.error { background: #ef4444; }
+
+    /* ── Desktop ── */
+    @media (min-width: 900px) {
+        .sb-wrapper { padding: 20px 28px; }
+        .sb-layout { flex-direction: row; align-items: flex-start; }
+        .sb-board-col { flex: 1; min-width: 0; }
+        .sb-side-col { width: 320px; flex-shrink: 0; position: sticky; top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .emp-info { width: 140px; }
+        .time-axis { margin-left: 150px; }
+        .shift-row { gap: 12px; }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 899px) {
+        .sb-layout { flex-direction: column; gap: 12px; }
+        .sb-side-col { display: flex; flex-direction: column; gap: 12px; }
+        .sb-pairing-handle { display: flex; align-items: center; justify-content: center; padding: 8px 0 4px; cursor: pointer; }
+        .sb-pairing-handle::after { content: ''; width: 32px; height: 4px; border-radius: 2px; background: var(--border); }
+        .sb-board-col { order: 0; }
+        .sb-side-col { order: 1; }
+        .time-axis { margin-left: 100px; }
+        .emp-info { width: 90px; }
+        .bar { font-size: 8px; }
+    }
+    @media (max-width: 480px) {
+        .sb-wrapper { padding: 10px; }
+        .sb-header h2 { font-size: 17px; }
+        .day-tab { padding: 7px 10px; font-size: 11px; }
+        .emp-info { width: 72px; }
+        .emp-name { font-size: 11px; }
+        .time-axis { margin-left: 82px; }
+        .track { height: 28px; }
+        .bar { height: 18px; top: 4px; font-size: 7px; border-radius: 4px; }
+    }
+</style>
+
+<div class="sb-wrapper">
+    <div class="sb-header">
+        <h2>
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary); font-size: 16px;"></i>
+            Smart Builder
+        </h2>
+        <div class="sb-header-right">
+            <div class="day-tabs" id="dayTabs">
+                <button class="day-tab active" data-day="0">Sun</button>
+                <button class="day-tab" data-day="1">Mon</button>
+                <button class="day-tab" data-day="2">Tue</button>
+                <button class="day-tab" data-day="3">Wed</button>
+                <button class="day-tab" data-day="4">Thu</button>
+                <button class="day-tab" data-day="5">Fri</button>
+                <button class="day-tab" data-day="6">Sat</button>
+            </div>
+            <a href="{{ url_for('manager.smart_builder_clear') }}" class="sb-pill-btn danger">
+                <i class="fa-solid fa-arrow-rotate-left"></i> New Upload
+            </a>
+        </div>
+    </div>
+
+    <div class="sb-layout">
+        <div class="sb-board-col">
+            <div class="sb-card">
+                <div id="cardContent">
+                    <div class="time-axis" id="timeAxis">
+                        <span class="time-tick">6a</span><span class="time-tick">8a</span>
+                        <span class="time-tick">10a</span><span class="time-tick">12p</span>
+                        <span class="time-tick">2p</span><span class="time-tick">4p</span>
+                        <span class="time-tick">6p</span><span class="time-tick">8p</span>
+                        <span class="time-tick">10p</span>
+                    </div>
+                    <div class="shift-section">
+                        <div class="sb-card-title">Trainees <span class="sb-badge amber" id="traineeCount">0</span></div>
+                        <div id="traineeList"></div>
+                    </div>
+                    <div class="shift-section" style="margin-top: 16px;">
+                        <div class="sb-card-title">Trainers <span class="sb-badge" id="trainerCount">0</span></div>
+                        <div id="trainerList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sb-side-col">
+            <div class="sb-card sb-pairing-card" id="pairingCard">
+                <div class="sb-pairing-handle"></div>
+                <div class="sb-card-title">Pair Session</div>
+                <div class="pairing-slots">
+                    <div class="pairing-slot" id="traineeSlot">
+                        <span class="pairing-dot trainee"></span>
+                        <span class="pairing-placeholder">Tap a trainee shift</span>
+                    </div>
+                    <div class="pairing-arrow">&darr;</div>
+                    <div class="pairing-slot" id="trainerSlot">
+                        <span class="pairing-dot trainer"></span>
+                        <span class="pairing-placeholder">Tap a trainer shift</span>
+                    </div>
+                </div>
+                <div id="overlapBadge" style="display:none;"></div>
+                <div id="traineeInsights" class="trainee-insights" style="display:none;"></div>
+                <div id="formArea" style="display:none;">
+                    <div class="sb-field">
+                        <label class="sb-field-label">Position</label>
+                        <select id="posSelect" class="sb-select"></select>
+                    </div>
+                    <div class="sb-field">
+                        <label class="sb-field-label">Date</label>
+                        <input type="date" id="sessionDate" class="sb-select">
+                    </div>
+                    <button id="addDraftBtn" class="sb-btn sb-btn-amber" onclick="addToDraft()" disabled>+ Add to Draft</button>
+                    <button class="sb-btn sb-btn-ghost" onclick="resetSelections()">Clear</button>
+                </div>
+            </div>
+
+            <div class="sb-card" id="draftCard">
+                <div class="sb-card-title">Draft Queue <span class="sb-badge green" id="draftCount">0</span></div>
+                <div id="draftList">
+                    <div class="draft-empty">No sessions drafted yet.<br>Pair a trainee + trainer above.</div>
+                </div>
+                <div class="draft-actions" id="draftActions" style="display:none;">
+                    <button class="sb-btn sb-btn-ghost" onclick="clearDraft()">Clear All</button>
+                    <button class="sb-btn sb-btn-green" id="submitAllBtn" onclick="submitDraft()">Submit All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="sb-toast" id="sbToast"></div>
+
+<script>
+    document.body.classList.add('sb-active');
+
+    var currentDayIndex = 0;
+    var selectedTrainee = null;
+    var selectedTrainer = null;
+    var draftQueue = [];
+
+    /* Server-injected data — survives refresh */
+    var builderData = {{ builder_data | tojson }};
+    var allPositions = builderData.all_positions || [];
+    var traineeStats = builderData.trainee_stats || {};
+
+    /* Initial render */
+    renderDay(0);
+
+    /* Day tabs */
+    document.getElementById('dayTabs').addEventListener('click', function(e) {
+        if (e.target.classList.contains('day-tab')) {
+            var day = parseInt(e.target.dataset.day);
+            document.querySelectorAll('.day-tab').forEach(function(t) {
+                t.classList.toggle('active', parseInt(t.dataset.day) === day);
+            });
+            renderDay(day);
+        }
+    });
+
+    function renderDay(dayIndex) {
+        currentDayIndex = dayIndex;
+        var dayData = builderData.days[String(dayIndex)] || { trainers: [], trainees: [] };
+        renderUI(dayData);
+    }
+
+    function renderUI(data) {
+        var tList = document.getElementById('traineeList');
+        var trList = document.getElementById('trainerList');
+        tList.innerHTML = '';
+        trList.innerHTML = '';
+
+        document.getElementById('traineeCount').textContent = data.trainees.length;
+        document.getElementById('trainerCount').textContent = data.trainers.length;
+
+        if (!data.trainees.length) tList.innerHTML = '<div class="empty-state">No trainees scheduled</div>';
+        if (!data.trainers.length) trList.innerHTML = '<div class="empty-state">No trainers scheduled</div>';
+
+        data.trainees.forEach(function(t) { tList.appendChild(makeRow(t, 'trainee')); });
+        data.trainers.forEach(function(tr) { trList.appendChild(makeRow(tr, 'trainer')); });
+
+        document.querySelectorAll('.bar').forEach(function(bar) {
+            bar.addEventListener('click', function() { selectBar(bar); });
+        });
+        resetSelections();
+    }
+
+    function makeRow(person, role) {
+        var p = toPct(person.start_time, person.end_time);
+        var row = document.createElement('div');
+        row.className = 'shift-row';
+        var metaColor = role === 'trainee' ? '#f59e0b' : '#4285f4';
+        var metaText = role === 'trainee' ? 'Next: ' + esc(person.next_step) : 'Trainer';
+        row.innerHTML =
+            '<div class="emp-info">' +
+                '<span class="emp-name" title="' + esc(person.name) + '">' + esc(person.name) + '</span>' +
+                '<small class="emp-meta" style="color:' + metaColor + ';">' + metaText + '</small>' +
+            '</div>' +
+            '<div class="track">' +
+                '<div class="bar bar-' + role + '"' +
+                     ' style="left:' + p.left + '%; width:' + p.width + '%;"' +
+                     ' data-role="' + role + '"' +
+                     ' data-id="' + person.id + '"' +
+                     ' data-name="' + esc(person.name) + '"' +
+                     ' data-start="' + person.start_time + '"' +
+                     ' data-end="' + person.end_time + '"' +
+                     (role === 'trainee' ? ' data-next-step="' + esc(person.next_step) + '"' : '') +
+                     ' title="' + esc(person.name) + ': ' + person.start_time + ' – ' + person.end_time + '">' +
+                    person.start_time + ' – ' + person.end_time +
+                '</div>' +
+            '</div>';
+        return row;
+    }
+
+    function toPct(startStr, endStr) {
+        var s = toMin(startStr), e = toMin(endStr);
+        var lo = 360, hi = 1380;
+        var range = hi - lo;
+        var left = Math.max(0, ((s - lo) / range) * 100);
+        var right = Math.min(100, ((e - lo) / range) * 100);
+        return { left: left, width: Math.max(right - left, 3) };
+    }
+
+    function toMin(ts) {
+        var m = ts.match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!m) return 0;
+        var h = parseInt(m[1]);
+        var min = parseInt(m[2]), p = m[3].toUpperCase();
+        if (p === 'PM' && h !== 12) h += 12;
+        if (p === 'AM' && h === 12) h = 0;
+        return h * 60 + min;
+    }
+
+    /* Mobile scroll to pairing */
+    function scrollToPairing() {
+        if (window.innerWidth < 900) {
+            var card = document.getElementById('pairingCard');
+            if (card) setTimeout(function() { card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        }
+    }
+
+    /* Selection */
+    function selectBar(el) {
+        var role = el.dataset.role;
+        if (el.classList.contains('selected')) {
+            el.classList.remove('selected');
+            if (role === 'trainee') selectedTrainee = null; else selectedTrainer = null;
+            updateSidebar(); return;
+        }
+        document.querySelectorAll('.bar-' + role).forEach(function(b) { b.classList.remove('selected'); });
+        el.classList.add('selected');
+
+        var obj = { id: parseInt(el.dataset.id), name: el.dataset.name, start: el.dataset.start, end: el.dataset.end, nextStep: el.dataset.nextStep || '' };
+        if (role === 'trainee') selectedTrainee = obj; else selectedTrainer = obj;
+
+        scrollToPairing();
+        updateSidebar();
+    }
+
+    function updateSidebar() {
+        var ts = document.getElementById('traineeSlot');
+        if (selectedTrainee) {
+            ts.className = 'pairing-slot filled trainee-slot';
+            ts.innerHTML = '<span class="pairing-dot trainee"></span><div><div class="pairing-name">' + esc(selectedTrainee.name) + '</div><div class="pairing-time">' + selectedTrainee.start + ' – ' + selectedTrainee.end + '</div></div>';
+        } else {
+            ts.className = 'pairing-slot';
+            ts.innerHTML = '<span class="pairing-dot trainee"></span><span class="pairing-placeholder">Tap a trainee shift</span>';
+        }
+
+        var trs = document.getElementById('trainerSlot');
+        if (selectedTrainer) {
+            trs.className = 'pairing-slot filled trainer-slot';
+            trs.innerHTML = '<span class="pairing-dot trainer"></span><div><div class="pairing-name">' + esc(selectedTrainer.name) + '</div><div class="pairing-time">' + selectedTrainer.start + ' – ' + selectedTrainer.end + '</div></div>';
+        } else {
+            trs.className = 'pairing-slot';
+            trs.innerHTML = '<span class="pairing-dot trainer"></span><span class="pairing-placeholder">Tap a trainer shift</span>';
+        }
+
+        var ob = document.getElementById('overlapBadge');
+        var fa = document.getElementById('formArea');
+        var addBtn = document.getElementById('addDraftBtn');
+        var insightsDiv = document.getElementById('traineeInsights');
+
+        if (selectedTrainee) { renderTraineeInsights(selectedTrainee.id); } else { insightsDiv.style.display = 'none'; }
+
+        if (selectedTrainee && selectedTrainer) {
+            var overlap = calcOverlap(selectedTrainee.start, selectedTrainee.end, selectedTrainer.start, selectedTrainer.end);
+            ob.style.display = 'block';
+            fa.style.display = 'block';
+
+            if (overlap === 'No overlap') {
+                ob.className = 'overlap-badge no-overlap';
+                ob.textContent = 'No schedule overlap';
+                addBtn.disabled = true;
+            } else {
+                ob.className = 'overlap-badge has-overlap';
+                ob.textContent = 'Overlap: ' + overlap;
+                addBtn.disabled = false;
+            }
+
+            var ps = document.getElementById('posSelect');
+            ps.innerHTML = allPositions.map(function(p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
+
+            var stats = traineeStats[String(selectedTrainee.id)];
+            if (stats && stats.suggestion) { ps.value = stats.suggestion.id; }
+            else {
+                var match = allPositions.find(function(p) { return p.name === selectedTrainee.nextStep; });
+                if (match) ps.value = match.id;
+            }
+            setDefaultDate();
+        } else {
+            ob.style.display = 'none';
+            fa.style.display = 'none';
+        }
+    }
+
+    /* Draft Queue */
+    function addToDraft() {
+        if (!selectedTrainee || !selectedTrainer) return;
+        var overlap = calcOverlap(selectedTrainee.start, selectedTrainee.end, selectedTrainer.start, selectedTrainer.end);
+        if (overlap === 'No overlap') return;
+
+        var posSelect = document.getElementById('posSelect');
+        var sessionDate = document.getElementById('sessionDate').value;
+        if (!sessionDate) { showToast('Select a date', 'error'); return; }
+
+        var parts = overlap.split(' \u2013 ');
+        draftQueue.push({
+            trainee: Object.assign({}, selectedTrainee),
+            trainer: Object.assign({}, selectedTrainer),
+            position_id: posSelect.value,
+            position_name: posSelect.options[posSelect.selectedIndex].text,
+            session_date: sessionDate,
+            start_time: parts[0], end_time: parts[1], overlap: overlap
+        });
+
+        showToast('Added to draft', 'success');
+        resetSelections();
+        renderDraft();
+    }
+
+    function removeDraft(idx) { draftQueue.splice(idx, 1); renderDraft(); }
+    function clearDraft() { draftQueue = []; renderDraft(); }
+
+    function renderDraft() {
+        var list = document.getElementById('draftList');
+        var actions = document.getElementById('draftActions');
+        document.getElementById('draftCount').textContent = draftQueue.length;
+
+        if (draftQueue.length === 0) {
+            list.innerHTML = '<div class="draft-empty">No sessions drafted yet.<br>Pair a trainee + trainer above.</div>';
+            actions.style.display = 'none';
+            return;
+        }
+        actions.style.display = 'flex';
+        list.innerHTML = draftQueue.map(function(d, i) {
+            var dateObj = new Date(d.session_date + 'T12:00:00');
+            var dayLabel = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            return '<div class="draft-item"><div class="draft-detail"><div class="draft-names"><span>' + esc(d.trainee.name) + '</span><span class="draft-arrow-icon">\u2192</span><span>' + esc(d.trainer.name) + '</span></div><div class="draft-sub">' + esc(d.position_name) + ' \u00b7 ' + dayLabel + ' \u00b7 ' + d.overlap + '</div></div><button class="draft-remove" onclick="removeDraft(' + i + ')" title="Remove">\u00d7</button></div>';
+        }).join('');
+    }
+
+    async function submitDraft() {
+        if (draftQueue.length === 0) return;
+        var btn = document.getElementById('submitAllBtn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+
+        var successCount = 0, errors = [];
+        for (var i = 0; i < draftQueue.length; i++) {
+            var d = draftQueue[i];
+            try {
+                var res = await fetch('/manager/schedules/smart-builder/create-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trainee_id: d.trainee.id, trainer_id: d.trainer.id, position_id: d.position_id, session_date: d.session_date, start_time: d.start_time, end_time: d.end_time })
+                });
+                var result = await res.json();
+                if (result.success) successCount++; else errors.push(d.trainee.name + ': ' + (result.error || 'failed'));
+            } catch (e) { errors.push(d.trainee.name + ': ' + e.message); }
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Submit All';
+
+        if (errors.length === 0) {
+            showToast(successCount + ' session' + (successCount !== 1 ? 's' : '') + ' created!', 'success');
+            draftQueue = []; renderDraft();
+        } else if (successCount > 0) {
+            showToast(successCount + ' created, ' + errors.length + ' failed', 'error');
+            draftQueue = draftQueue.slice(successCount); renderDraft();
+        } else {
+            showToast('All failed: ' + errors[0], 'error');
+        }
+    }
+
+    /* Trainee Insights */
+    function renderTraineeInsights(traineeId) {
+        var div = document.getElementById('traineeInsights');
+        var stats = traineeStats[String(traineeId)];
+        if (!stats) { div.style.display = 'none'; return; }
+
+        var html = '';
+        if (stats.suggestion) {
+            var isRoadmap = stats.suggestion.reason === 'Roadmap Step';
+            var badgeClass = isRoadmap ? 'roadmap' : 'rec';
+            var label = isRoadmap ? 'Roadmap Target' : (stats.suggestion.reason || 'Recommended');
+            html += '<div class="insight-suggestion"><div class="insight-badge ' + badgeClass + '">' + (isRoadmap ? '\uD83D\uDDFA\uFE0F' : '\u2728') + ' ' + esc(label) + '</div><div class="insight-pos-name">' + esc(stats.suggestion.name) + (isRoadmap ? '<span style="font-size:9px; color:#c2410c; font-weight:800;">ACTIVE PATH</span>' : '') + '</div></div>';
+        }
+        if (stats.history && stats.history.length > 0) {
+            html += '<div class="insight-history-title">Completed Training</div>';
+            stats.history.forEach(function(h) {
+                var avgClass = h.avg >= 4 ? 'good' : (h.avg >= 3 ? 'mid' : 'low');
+                html += '<div class="insight-row"><span><span class="insight-pos">' + esc(h.name) + '</span> <span class="insight-count">(' + h.count + 'x)</span></span><span class="insight-avg ' + avgClass + '">' + h.avg + '</span></div>';
+            });
+        }
+        if (!stats.suggestion && (!stats.history || stats.history.length === 0)) {
+            html = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:4px 0;">No training history yet</div>';
+        }
+        div.innerHTML = html;
+        div.style.display = 'block';
+    }
+
+    /* Helpers */
+    function calcOverlap(ts, te, trs, tre) {
+        var a = toMin(ts), b = toMin(te), c = toMin(trs), d = toMin(tre);
+        var start = Math.max(a, c), end = Math.min(b, d);
+        if (start >= end) return 'No overlap';
+        return fmtMin(start) + ' \u2013 ' + fmtMin(end);
+    }
+    function fmtMin(m) {
+        var h = Math.floor(m / 60), min = m % 60, p = h >= 12 ? 'PM' : 'AM';
+        if (h > 12) h -= 12; if (h === 0) h = 12;
+        return h + ':' + (min < 10 ? '0' : '') + min + ' ' + p;
+    }
+    function setDefaultDate() {
+        var today = new Date();
+        var diff = currentDayIndex - today.getDay();
+        var target = new Date(today);
+        target.setDate(today.getDate() + diff);
+        document.getElementById('sessionDate').value = target.toISOString().split('T')[0];
+    }
+    function resetSelections() {
+        selectedTrainee = null; selectedTrainer = null;
+        document.querySelectorAll('.bar').forEach(function(b) { b.classList.remove('selected'); });
+        updateSidebar();
+    }
+    function showToast(msg, type) {
+        var t = document.getElementById('sbToast');
+        t.textContent = msg;
+        t.className = 'sb-toast ' + type + ' show';
+        setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+    function esc(text) { var d = document.createElement('div'); d.textContent = text || ''; return d.innerHTML; }
+</script>
+{% endblock %}

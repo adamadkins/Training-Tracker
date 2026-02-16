@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.graduation-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.graduation-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+    .graduation-wrapper {
+        background: linear-gradient(160deg, var(--bg-body) 0%, rgba(79, 70, 229, 0.06) 100%);
+        min-height: calc(100vh - 72px);
+        padding: 48px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .graduation-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 48px 40px;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    }
+    .graduation-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 28px;
+        font-size: 48px;
+        box-shadow: 0 12px 32px rgba(16, 185, 129, 0.35);
+    }
+    .graduation-title {
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0 0 12px;
+        letter-spacing: -0.02em;
+    }
+    .graduation-subtitle {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 20px;
+    }
+    .graduation-message {
+        font-size: 15px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+    .btn-logout {
+        display: inline-block;
+        padding: 14px 32px;
+        background: var(--primary);
+        color: white;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-logout:hover {
+        opacity: 0.95;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="graduation-wrapper">
+    <div class="graduation-card">
+        <div class="graduation-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+        <h1 class="graduation-title">Congratulations, {{ employee.first_name }}!</h1>
+        <p class="graduation-subtitle">You've graduated from training</p>
+        <p class="graduation-message">
+            Your manager has marked your training as complete. Thank you for your hard work. You can log out below—we wish you the best in your next chapter.
+        </p>
+        <a href="{{ url_for('auth.logout') }}" class="btn-logout">Log out</a>
+    </div>
+</div>
+{% endblock %}

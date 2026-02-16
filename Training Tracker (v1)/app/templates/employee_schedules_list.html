@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.schedule-list-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.schedule-list-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+
+    .schedule-list-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+    .list-container { max-width: 900px; margin: 0 auto; }
+
+    /* --- HEADER --- */
+    .page-header { margin-bottom: 36px; }
+    .page-header .back-link {
+        text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700;
+        display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; transition: color 0.2s;
+    }
+    .page-header .back-link:hover { color: var(--primary); }
+    .page-title {
+        font-size: 32px; font-weight: 900; color: var(--text-main);
+        letter-spacing: -0.02em; margin: 0 0 6px 0;
+        display: flex; align-items: center; gap: 14px;
+    }
+    .page-title-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        background: rgba(37, 99, 235, 0.1); color: var(--primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; flex-shrink: 0;
+    }
+    .page-subtitle { color: var(--text-muted); font-size: 15px; font-weight: 500; margin: 0; }
+
+    /* --- SCHEDULE CARDS --- */
+    .schedule-stack { display: flex; flex-direction: column; gap: 16px; }
+
+    .sched-card {
+        display: flex; align-items: center; gap: 20px;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 20px; padding: 24px;
+        text-decoration: none; color: inherit;
+        transition: all 0.2s; position: relative;
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+    .sched-card:hover {
+        border-color: var(--primary); transform: translateX(4px);
+        box-shadow: 0 8px 24px var(--shadow);
+    }
+
+    .sched-card.current-week {
+        border: 2px solid var(--primary);
+        background: linear-gradient(to right, rgba(37, 99, 235, 0.03), transparent);
+    }
+    .sched-card.past-week { opacity: 0.65; }
+    .sched-card.past-week:hover { opacity: 1; }
+
+    /* Date block on left */
+    .sched-date-block {
+        width: 72px; height: 72px; flex-shrink: 0;
+        border-radius: 16px; background: var(--bg-body);
+        border: 1px solid var(--border);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        text-align: center;
+    }
+    .sched-card.current-week .sched-date-block {
+        background: var(--primary); border-color: var(--primary);
+    }
+    .sched-date-month {
+        font-size: 10px; font-weight: 800; text-transform: uppercase;
+        color: var(--text-muted); letter-spacing: 0.05em;
+    }
+    .sched-date-day { font-size: 24px; font-weight: 900; color: var(--text-main); line-height: 1; }
+    .sched-card.current-week .sched-date-month,
+    .sched-card.current-week .sched-date-day { color: white; }
+
+    /* Info block */
+    .sched-info { flex: 1; min-width: 0; }
+    .sched-week-label {
+        font-size: 16px; font-weight: 800; color: var(--text-main);
+        margin-bottom: 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .sched-range { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+    .current-badge {
+        font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px;
+        background: rgba(37, 99, 235, 0.1); color: var(--primary); text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    /* Stats pills */
+    .sched-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .sched-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 20px;
+        font-size: 11px; font-weight: 700;
+        background: var(--bg-body); border: 1px solid var(--border);
+        color: var(--text-muted);
+    }
+    .sched-pill.mine { background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.2); color: var(--primary); }
+    .sched-pill.done { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); color: #059669; }
+
+    /* Chevron */
+    .sched-arrow {
+        color: var(--text-muted); font-size: 14px; flex-shrink: 0;
+        transition: transform 0.2s;
+    }
+    .sched-card:hover .sched-arrow { transform: translateX(4px); color: var(--primary); }
+
+    /* --- EMPTY STATE --- */
+    .empty-state {
+        text-align: center; padding: 64px 24px;
+        background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border);
+    }
+    .empty-state-icon { font-size: 48px; opacity: 0.12; margin-bottom: 16px; display: block; }
+    .empty-state-title { font-size: 17px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0; }
+    .empty-state-desc { font-size: 14px; color: var(--text-muted); margin: 0; font-weight: 500; }
+
+    /* --- RESPONSIVE --- */
+    @media (max-width: 768px) {
+        .schedule-list-wrapper { padding: 24px 16px; }
+        .page-title { font-size: 24px; }
+        .sched-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+        .sched-date-block { width: 100%; height: auto; flex-direction: row; gap: 8px; padding: 10px 16px; border-radius: 12px; }
+        .sched-date-day { font-size: 18px; }
+        .sched-arrow { display: none; }
+    }
+</style>
+
+<div class="schedule-list-wrapper">
+    <div class="list-container">
+
+        <div class="page-header">
+            <a href="{{ url_for('employee.dashboard') }}" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+            <h1 class="page-title">
+                <span class="page-title-icon"><i class="fa-solid fa-calendar-week"></i></span>
+                Training Schedules
+            </h1>
+            <p class="page-subtitle">Select a week to view your assigned training sessions.</p>
+        </div>
+
+        {% if schedules %}
+        <div class="schedule-stack">
+            {% for item in schedules %}
+                {% set s = item.schedule %}
+                <a href="{{ url_for('employee.weekly_schedule', schedule_id=s.id) }}"
+                   class="sched-card {{ 'current-week' if item.is_current else 'past-week' if item.is_past else '' }}">
+
+                    <div class="sched-date-block">
+                        <div class="sched-date-month">{{ s.start_date.strftime('%b') }}</div>
+                        <div class="sched-date-day">{{ s.start_date.strftime('%d') }}</div>
+                    </div>
+
+                    <div class="sched-info">
+                        <div class="sched-week-label">
+                            {{ s.start_date.strftime('%B %d') }} &ndash; {{ s.end_date.strftime('%B %d, %Y') }}
+                            {% if item.is_current %}
+                                <span class="current-badge">This Week</span>
+                            {% endif %}
+                        </div>
+                        <div class="sched-range">
+                            Published {{ s.published_at.strftime('%b %d') if s.published_at else 'N/A' }}
+                        </div>
+                        <div class="sched-pills">
+                            {% if item.my_count > 0 %}
+                                <span class="sched-pill mine">
+                                    <i class="fa-solid fa-user"></i> {{ item.my_count }} session{{ 's' if item.my_count != 1 else '' }}
+                                </span>
+                            {% endif %}
+                            {% if item.completed_count > 0 %}
+                                <span class="sched-pill done">
+                                    <i class="fa-solid fa-check"></i> {{ item.completed_count }}/{{ item.total_count }} done
+                                </span>
+                            {% endif %}
+                            {% if item.my_count == 0 %}
+                                <span class="sched-pill">
+                                    {{ item.total_count }} total session{{ 's' if item.total_count != 1 else '' }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <i class="fa-solid fa-chevron-right sched-arrow"></i>
+                </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-calendar-xmark empty-state-icon"></i>
+            <p class="empty-state-title">No schedules published yet</p>
+            <p class="empty-state-desc">When your manager publishes a training schedule, it will show up here.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.setup-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.setup-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+    .setup-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .setup-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 520px;
+        width: 100%;
+        box-shadow: 0 4px 24px var(--shadow);
+    }
+    .setup-progress {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 32px;
+    }
+    .setup-progress span {
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border);
+    }
+    .setup-progress span.done { background: var(--primary); }
+    .setup-progress span.current { background: var(--primary); opacity: 0.7; }
+    .setup-title { font-size: 24px; font-weight: 900; margin: 0 0 8px; color: var(--text-main); }
+    .setup-desc { color: var(--text-muted); font-size: 15px; margin-bottom: 28px; line-height: 1.5; }
+    .setup-form label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+    .setup-form select, .setup-form input[type="text"] {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-size: 14px;
+    }
+    .setup-form .form-row { margin-bottom: 16px; }
+    .location-rows .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .location-rows input { flex: 1; }
+    .btn-wizard {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .btn-wizard:hover { opacity: 0.95; transform: translateY(-1px); }
+    .btn-wizard-secondary {
+        background: var(--bg-body);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        margin-left: 10px;
+    }
+    .business-cards { display: flex; flex-wrap: wrap; gap: 10px; }
+    .business-cards label {
+        flex: 1;
+        min-width: 140px;
+        padding: 16px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 700;
+        transition: all 0.2s;
+    }
+    .business-cards input { display: none; }
+    .business-cards input:checked + label { border-color: var(--primary); background: rgba(79, 70, 229, 0.08); color: var(--primary); }
+    .setup-skip { margin-top: 24px; }
+    .setup-skip form { display: inline; }
+    .setup-skip button { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; text-decoration: underline; }
+</style>
+
+<div class="setup-wrapper">
+    <div class="setup-card">
+        <div class="setup-progress">
+            <span class="{{ 'done' if step >= 1 else 'current' if step == 0 else '' }}"></span>
+            <span class="{{ 'done' if step >= 2 else 'current' if step == 1 else '' }}"></span>
+            <span class="{{ 'done' if step >= 3 else 'current' if step == 2 else '' }}"></span>
+        </div>
+
+        {% if step == 0 %}
+        <h1 class="setup-title">Welcome to Training Tracker</h1>
+        <p class="setup-desc">Let's set up your organization in a few steps: choose your business type and add locations (e.g. FOH, BOH) so you can organize trainees and restrict managers by location.</p>
+        <form method="post" action="{{ url_for('manager.setup_wizard') }}">
+            <input type="hidden" name="step" value="0">
+            <button type="submit" class="btn-wizard">Get started</button>
+        </form>
+        <div class="setup-skip">
+            <form method="post" action="{{ url_for('manager.setup_skip') }}">
+                <button type="submit">Skip for now</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if step == 1 %}
+        <h1 class="setup-title">What type of business?</h1>
+        <p class="setup-desc">This helps us tailor defaults. You can change it later in Settings.</p>
+        <form method="post" action="{{ url_for('manager.setup_wizard') }}">
+            <input type="hidden" name="step" value="1">
+            <div class="form-row">
+                <label>Business type</label>
+                <div class="business-cards">
+                    {% for value, label in business_types %}
+                    <input type="radio" name="business_type" id="bt_{{ value }}" value="{{ value }}" {{ 'checked' if settings.business_type == value else '' }}>
+                    <label for="bt_{{ value }}">{{ label }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            <button type="submit" class="btn-wizard">Next</button>
+        </form>
+        {% endif %}
+
+        {% if step == 2 %}
+        <h1 class="setup-title">Add locations</h1>
+        <p class="setup-desc">Create locations like FOH (front of house) and BOH (back of house). You can assign trainees to locations and restrict managers to only see one location's data.</p>
+        <form method="post" action="{{ url_for('manager.setup_wizard') }}">
+            <input type="hidden" name="step" value="2">
+            <div class="form-row">
+                <label>Location names</label>
+                <div class="location-rows">
+                    <div class="form-row">
+                        <input type="text" name="location_name" placeholder="e.g. FOH" value="">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" name="location_name" placeholder="e.g. BOH" value="">
+                    </div>
+                    <div class="form-row">
+                        <input type="text" name="location_name" placeholder="Optional" value="">
+                    </div>
+                </div>
+            </div>
+            {% if locations %}
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Existing: {{ locations|map(attribute='name')|join(', ') }}</p>
+            {% endif %}
+            <button type="submit" class="btn-wizard">Add &amp; continue</button>
+        </form>
+        <form method="post" action="{{ url_for('manager.setup_wizard') }}" style="margin-top: 16px;">
+            <input type="hidden" name="step" value="3">
+            <button type="submit" class="btn-wizard btn-wizard-secondary">Finish setup</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

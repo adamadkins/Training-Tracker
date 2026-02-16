@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* --- BREAKOUT OVERRIDES --- */
+    body:has(.pos-detail-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.pos-detail-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .pos-detail-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 40px;
+    }
+
+    .pos-detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* --- HEADER --- */
+    .page-header {
+        margin-bottom: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .header-title { font-size: 32px; font-weight: 900; color: var(--text-main); margin: 0; letter-spacing: -0.03em; }
+    .header-subtitle { color: var(--text-muted); font-size: 16px; margin: 4px 0 0 0; font-weight: 500; }
+
+    /* --- SESSION CARDS --- */
+    .session-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .history-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 4px var(--shadow);
+    }
+
+    .history-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--primary);
+        box-shadow: 0 10px 15px -3px var(--shadow);
+    }
+
+    .score-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 18px;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    /* --- MOBILE REFINEMENTS --- */
+    @media (max-width: 768px) {
+        .pos-detail-wrapper { padding: 24px 16px; }
+        .history-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+        .score-circle { align-self: flex-end; }
+        .header-title { font-size: 24px; }
+    }
+</style>
+
+<div class="pos-detail-wrapper">
+    <div class="pos-detail-container">
+
+        {# --- NAVIGATION --- #}
+        <div style="margin-bottom: 32px;">
+            <a href="{{ url_for('manager.employee_detail', employee_id=employee.id) }}"
+               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'"
+               onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+                <i class="fa-solid fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        {# --- HEADER --- #}
+        <div class="page-header">
+            <div>
+                <h1 class="header-title">{{ position.name }} History</h1>
+                <p class="header-subtitle">Detailed session logs and performance metrics for {{ employee.first_name }} {{ employee.last_name }}.</p>
+            </div>
+        </div>
+
+        {# --- ACTIVITY LIST --- #}
+        <div class="session-grid">
+            {% for s in sessions %}
+                {# THE FIX: Changed 'employee.session_view' to 'employee.session_rating' #}
+                <a href="{{ url_for('employee.session_rating', session_id=s.id) }}" class="history-card">
+                    <div style="display: flex; align-items: center; gap: 24px;">
+                        <div style="text-align: center; min-width: 60px;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">{{ s.completed_at.strftime('%b') }}</div>
+                            <div style="font-size: 24px; font-weight: 900; color: var(--text-main); line-height: 1;">{{ s.completed_at.strftime('%d') }}</div>
+                        </div>
+
+                        <div style="border-left: 1px solid var(--border); padding-left: 24px;">
+                            <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+                                Instructor: {{ s.trainer.first_name }} {{ s.trainer.last_name }}
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-regular fa-calendar-check"></i> Finalized on {{ s.completed_at.strftime('%I:%M %p') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% set ratings = s.ratings|map(attribute='rating_value')|list %}
+                    {% set avg = (ratings|sum / ratings|length)|round(1) if ratings else 0 %}
+                    <div class="score-circle" style="background: {{ '#10b981' if avg >= 4 else '#f59e0b' if avg >= 3 else '#ef4444' }};">
+                        {{ avg }}
+                    </div>
+                </a>
+            {% else %}
+                <div style="text-align: center; padding: 80px 24px; background: var(--bg-card); border: 2px dashed var(--border); border-radius: 24px; color: var(--text-muted);">
+                    <i class="fa-solid fa-box-open" style="font-size: 48px; opacity: 0.2; margin-bottom: 16px; display: block; margin-left: auto; margin-right: auto;"></i>
+                    <p style="font-size: 16px; font-weight: 600; margin: 0;">No completed sessions found for this skill.</p>
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

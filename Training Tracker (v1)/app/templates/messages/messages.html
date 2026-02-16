@@ -1,0 +1,1049 @@
+{% extends "base.html" %}
+
+{% block body_class %}msg-active{% endblock %}
+
+{% block content %}
+<style>
+/* ══════════════════════════════════════════════════════════
+   SLACK-LIKE MESSAGING LAYOUT
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Reset base layout ── */
+body.msg-active .main-header,
+body.msg-active .site-footer,
+body:has(.slack-wrapper) .main-header,
+body:has(.slack-wrapper) .site-footer { display: none !important; }
+body.msg-active main.container,
+body:has(.slack-wrapper) main.container {
+    max-width: none !important; width: 100% !important;
+    padding: 0 !important; margin: 0 !important;
+}
+body.msg-active main,
+body:has(.slack-wrapper) main {
+    max-width: none !important; padding: 0 !important; margin: 0 !important;
+}
+body.msg-active { overflow: hidden; }
+
+/* ── Wrapper ── */
+.slack-wrapper {
+    position: fixed; inset: 0;
+    display: flex; height: 100dvh;
+    background: var(--bg-body);
+    z-index: 200;
+}
+
+/* ═══════════════════════ SIDEBAR ═══════════════════════ */
+.slack-sidebar {
+    width: 260px; min-width: 260px;
+    background: #1a1d21;
+    color: #ccc;
+    display: flex; flex-direction: column;
+    border-right: 1px solid #333;
+    overflow: hidden;
+}
+.sidebar-brand {
+    padding: 14px 16px;
+    border-bottom: 1px solid #333;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.sidebar-brand-name {
+    font-size: 16px; font-weight: 900; color: #fff;
+    text-decoration: none; letter-spacing: -0.02em;
+}
+.sidebar-brand-name b { color: #7c6bff; }
+.sidebar-close-btn { display: none; }
+
+/* Search */
+.sidebar-search {
+    padding: 8px 12px;
+}
+.sidebar-search-input {
+    width: 100%; padding: 7px 10px 7px 32px;
+    background: #2c2f33; border: 1px solid #444;
+    border-radius: 6px; color: #ddd; font-size: 12px;
+    outline: none; transition: border-color 0.15s;
+}
+.sidebar-search-input:focus { border-color: #7c6bff; }
+.sidebar-search-wrap { position: relative; }
+.sidebar-search-wrap i {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%); color: #777; font-size: 11px;
+    pointer-events: none;
+}
+
+/* Scrollable list */
+.sidebar-scroll {
+    flex: 1; overflow-y: auto; padding-bottom: 12px;
+}
+.sidebar-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+/* Section headers */
+.sidebar-section {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 4px; font-size: 11px; font-weight: 800;
+    color: #999; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.sidebar-section-btn {
+    background: none; border: none; color: #999;
+    font-size: 14px; cursor: pointer; line-height: 1;
+    padding: 0 2px; border-radius: 4px;
+}
+.sidebar-section-btn:hover { color: #fff; background: #333; }
+
+/* Channel / DM items */
+.sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 16px; text-decoration: none; color: #bbb;
+    font-size: 13px; font-weight: 500;
+    border-radius: 0; cursor: pointer;
+    transition: background 0.1s;
+    position: relative;
+}
+.sidebar-item:hover { background: #27292d; color: #fff; }
+.sidebar-item.active { background: #1264a3; color: #fff; font-weight: 700; }
+.sidebar-item.active:hover { background: #1264a3; }
+.sidebar-item.unread { color: #fff; font-weight: 700; }
+.sidebar-item-icon {
+    width: 20px; text-align: center; flex-shrink: 0;
+    font-size: 13px; color: #999;
+}
+.sidebar-item.active .sidebar-item-icon { color: #fff; }
+.sidebar-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-item-avatar {
+    width: 20px; height: 20px; border-radius: 4px;
+    object-fit: cover; flex-shrink: 0;
+}
+.sidebar-badge {
+    background: #e01e5a; color: #fff; font-size: 10px;
+    font-weight: 800; padding: 1px 6px; border-radius: 10px;
+    min-width: 16px; text-align: center;
+}
+
+/* ═══════════════════════ MAIN AREA ═══════════════════════ */
+.slack-main {
+    flex: 1; display: flex; flex-direction: column;
+    min-width: 0; background: var(--bg-body);
+}
+
+/* Channel header */
+.channel-header {
+    padding: 10px 20px; min-height: 50px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+}
+.channel-header-back {
+    display: none; align-items: center; gap: 4px;
+    background: none; border: none; color: var(--primary);
+    font-size: 14px; cursor: pointer; padding: 4px 6px;
+    text-decoration: none; font-weight: 600;
+}
+.channel-header-back i { font-size: 16px; }
+.channel-header-icon {
+    font-size: 16px; color: var(--text-muted);
+}
+.channel-header-avatar {
+    width: 28px; height: 28px; border-radius: 6px;
+    object-fit: cover;
+}
+.channel-header-info { flex: 1; min-width: 0; }
+.channel-header-name {
+    font-size: 15px; font-weight: 800; color: var(--text-main);
+    margin: 0; line-height: 1.2;
+}
+.channel-header-meta {
+    font-size: 11px; color: var(--text-muted); font-weight: 500;
+}
+.channel-header-actions { display: flex; gap: 8px; }
+.ch-action-btn {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 14px; cursor: pointer; padding: 4px 6px;
+    border-radius: 6px;
+}
+.ch-action-btn:hover { background: var(--bg-body); color: var(--text-main); }
+
+/* ── Empty state ── */
+.empty-channel {
+    flex: 1; display: flex; align-items: center;
+    justify-content: center; text-align: center;
+    color: var(--text-muted); padding: 40px;
+}
+.empty-channel i { font-size: 48px; opacity: 0.12; margin-bottom: 16px; display: block; }
+.empty-channel h2 { font-size: 18px; font-weight: 800; color: var(--text-main); margin: 0 0 6px; }
+.empty-channel p { font-size: 13px; margin: 0; }
+
+/* ═══════════════════════ MESSAGES ═══════════════════════ */
+.msg-viewport {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 16px 20px;
+}
+
+/* Date separator */
+.date-sep {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0 12px; font-size: 12px; font-weight: 700;
+    color: var(--text-main);
+}
+.date-sep::before, .date-sep::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* Message row (Slack-style flat) */
+.msg-row {
+    display: flex; gap: 10px; padding: 4px 8px;
+    border-radius: 8px; position: relative;
+    margin-bottom: 0;
+}
+.msg-row:hover { background: rgba(0,0,0,0.03); }
+.msg-row-avatar {
+    width: 36px; height: 36px; border-radius: 8px;
+    object-fit: cover; flex-shrink: 0; margin-top: 2px;
+}
+.msg-row-avatar-spacer {
+    width: 36px; flex-shrink: 0;
+}
+.msg-row-body { flex: 1; min-width: 0; }
+.msg-row-header {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 1px;
+}
+.msg-sender {
+    font-size: 14px; font-weight: 800; color: var(--text-main);
+}
+.msg-ts {
+    font-size: 11px; color: var(--text-muted); font-weight: 500;
+}
+.msg-text {
+    font-size: 14px; color: var(--text-main); line-height: 1.5;
+    word-break: break-word;
+}
+.msg-text-compact {
+    padding: 1px 0;
+}
+
+/* Reply quote */
+.msg-reply-quote {
+    font-size: 12px; color: var(--text-muted);
+    padding: 3px 8px; margin-bottom: 2px;
+    border-left: 3px solid var(--primary);
+    background: var(--bg-card); border-radius: 0 6px 6px 0;
+}
+
+/* Session attachment (reuse) */
+.msg-session-card {
+    display: inline-flex; gap: 10px; align-items: center;
+    padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: 10px; background: var(--bg-card);
+    text-decoration: none; margin-top: 4px;
+    transition: border-color 0.15s;
+}
+.msg-session-card:hover { border-color: var(--primary); }
+.session-icon-box {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+}
+.status-completed { background: rgba(16,185,129,0.1); color: #10b981; }
+.status-upcoming { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.status-locked { background: rgba(0,0,0,0.05); color: #999; }
+
+/* Hover actions toolbar */
+.msg-hover-actions {
+    display: none; position: absolute; top: -12px; right: 8px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: 0 2px 8px var(--shadow);
+    overflow: hidden;
+}
+.msg-row:hover .msg-hover-actions { display: flex; }
+.hover-btn {
+    background: none; border: none; padding: 6px 10px;
+    font-size: 14px; color: var(--text-muted); cursor: pointer;
+}
+.hover-btn:hover { background: var(--bg-body); color: var(--text-main); }
+
+/* Reactions row */
+.msg-reactions {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px;
+    padding-left: 0;
+}
+.reaction-pill {
+    font-size: 11px; background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 12px;
+    cursor: pointer; display: inline-flex; gap: 3px;
+    align-items: center;
+}
+.reaction-pill.active {
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.06);
+}
+
+/* Emoji picker inline */
+.emoji-popup {
+    display: none; position: absolute; top: 100%; left: 0;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px; gap: 2px; z-index: 50;
+    box-shadow: 0 4px 16px var(--shadow);
+}
+.emoji-btn {
+    width: 32px; height: 32px; display: flex; align-items: center;
+    justify-content: center; border-radius: 6px; border: none;
+    background: none; font-size: 18px; cursor: pointer;
+}
+.emoji-btn:hover { background: var(--bg-body); }
+
+/* ═══════════════════════ INPUT FOOTER ═══════════════════════ */
+.msg-footer {
+    padding: 0 20px 16px; flex-shrink: 0;
+}
+.msg-input-box {
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--bg-card); overflow: hidden;
+}
+.reply-bar {
+    display: none; padding: 8px 12px; font-size: 12px;
+    background: var(--bg-body); border-bottom: 1px solid var(--border);
+    align-items: center; gap: 8px;
+}
+.reply-bar-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.reply-bar-close {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 14px;
+}
+.attachment-bar {
+    display: none; padding: 8px 12px; font-size: 12px;
+    background: var(--bg-body); border-bottom: 1px solid var(--border);
+    align-items: center; gap: 8px;
+}
+.attachment-bar-close {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 14px;
+}
+.msg-input-row {
+    display: flex; align-items: flex-end; gap: 0;
+}
+.msg-input-btn {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 16px; cursor: pointer; padding: 10px 12px;
+    flex-shrink: 0;
+}
+.msg-input-btn:hover { color: var(--primary); }
+.msg-textarea {
+    flex: 1; border: none; background: transparent;
+    padding: 10px 4px; font-size: 14px; color: var(--text-main);
+    resize: none; outline: none; min-height: 22px; max-height: 120px;
+    font-family: inherit; line-height: 1.4;
+}
+.msg-send-btn {
+    background: none; border: none; color: var(--primary);
+    font-size: 18px; cursor: pointer; padding: 8px 12px;
+    flex-shrink: 0; opacity: 0.6;
+}
+.msg-send-btn:hover { opacity: 1; }
+
+/* ═══════════════════════ MODALS ═══════════════════════ */
+.msg-modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 300;
+    align-items: center; justify-content: center;
+}
+.msg-modal {
+    background: var(--bg-card); border-radius: 14px;
+    width: 90%; max-width: 420px; max-height: 80vh;
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.msg-modal-head {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+}
+.msg-modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; }
+.msg-modal-close {
+    background: none; border: none; font-size: 18px;
+    color: var(--text-muted); cursor: pointer;
+}
+.msg-modal-body {
+    padding: 16px 20px; overflow-y: auto; flex: 1;
+}
+.msg-modal-input {
+    width: 100%; padding: 9px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg-body);
+    font-size: 13px; color: var(--text-main); outline: none;
+    margin-bottom: 12px; box-sizing: border-box;
+}
+.msg-modal-input:focus { border-color: var(--primary); }
+.msg-modal-label {
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    margin-bottom: 6px; display: block;
+}
+.member-check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-radius: 8px; cursor: pointer;
+    width: 100%; box-sizing: border-box; min-width: 0;
+}
+.member-check-item:hover { background: var(--bg-body); }
+.member-check-item input[type="checkbox"] {
+    margin: 0; flex-shrink: 0; width: 16px; height: 16px;
+}
+.member-check-avatar { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; flex-shrink: 0; }
+.member-check-info { flex: 1; min-width: 0; overflow: hidden; }
+.member-check-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-check-role { font-size: 11px; color: var(--text-muted); }
+.msg-modal-submit {
+    width: 100%; padding: 12px; background: var(--primary);
+    color: #fff; border: none; border-radius: 8px; font-weight: 700;
+    font-size: 14px; cursor: pointer; margin-top: 12px;
+}
+.msg-modal-submit:hover { opacity: 0.9; }
+
+/* Session picker modal */
+.session-pick-list { display: flex; flex-direction: column; gap: 6px; }
+.session-pick-item {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px; border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; font-size: 12px;
+}
+.session-pick-item:hover { background: var(--bg-body); }
+
+/* ── "Add channel" button in sidebar ── */
+.sidebar-add-channel-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px; color: #999; font-size: 13px;
+    text-decoration: none; cursor: pointer;
+    background: none; border: none; width: 100%;
+    font-weight: 500;
+}
+.sidebar-add-channel-btn:hover { color: #fff; background: #27292d; }
+.sidebar-add-channel-btn i { font-size: 11px; width: 20px; text-align: center; }
+
+/* ═══════════════════════ MOBILE ═══════════════════════ */
+@media (max-width: 768px) {
+    .slack-wrapper { flex-direction: column; }
+
+    /* Sidebar = full-screen view on mobile */
+    .slack-sidebar {
+        width: 100%; min-width: 100%;
+        position: fixed; inset: 0; z-index: 250;
+        transition: transform 0.25s ease;
+    }
+    .slack-wrapper.has-conversation .slack-sidebar {
+        transform: translateX(-100%);
+        pointer-events: none;
+    }
+    .slack-wrapper:not(.has-conversation) .slack-main { display: none; }
+
+    .sidebar-close-btn { display: none; }
+
+    /* ── Bigger sidebar elements ── */
+    .sidebar-brand { padding: 16px 18px; }
+    .sidebar-brand-name { font-size: 20px; }
+
+    .sidebar-search { padding: 10px 14px; }
+    .sidebar-search-input { font-size: 15px; padding: 11px 12px 11px 36px; border-radius: 10px; }
+    .sidebar-search-wrap i { font-size: 14px; left: 12px; }
+
+    .sidebar-section { padding: 14px 18px 6px; font-size: 12px; }
+    .sidebar-section-btn { font-size: 18px; padding: 4px 6px; }
+
+    .sidebar-item {
+        padding: 10px 18px; font-size: 16px; gap: 12px;
+    }
+    .sidebar-item-icon { width: 24px; font-size: 16px; }
+    .sidebar-item-avatar { width: 28px; height: 28px; border-radius: 6px; }
+    .sidebar-badge { font-size: 12px; padding: 2px 8px; }
+
+    .sidebar-add-channel-btn {
+        padding: 10px 18px; font-size: 15px; gap: 12px;
+    }
+    .sidebar-add-channel-btn i { font-size: 13px; width: 24px; }
+
+    /* ── Chat area = full screen ── */
+    .slack-main {
+        position: fixed; inset: 0; z-index: 260;
+    }
+
+    .channel-header { padding: 12px 14px; min-height: 56px; }
+    .channel-header-avatar { width: 34px; height: 34px; }
+    .channel-header-name { font-size: 17px; }
+    .channel-header-meta { font-size: 12px; }
+    .channel-header-icon { font-size: 18px; }
+
+    /* ── Bigger messages ── */
+    .msg-viewport { padding: 14px; }
+    .msg-row { padding: 6px 8px; gap: 12px; }
+    .msg-row-avatar { width: 40px; height: 40px; }
+    .msg-row-avatar-spacer { width: 40px; }
+    .msg-sender { font-size: 15px; }
+    .msg-ts { font-size: 12px; }
+    .msg-text { font-size: 15px; line-height: 1.55; }
+    .date-sep { font-size: 13px; margin: 24px 0 14px; }
+    .msg-reply-quote { font-size: 13px; }
+    .msg-session-card { padding: 12px 16px; }
+
+    .reaction-pill { font-size: 13px; padding: 4px 8px; }
+    .hover-btn { padding: 8px 12px; font-size: 16px; }
+
+    /* ── Bigger input ── */
+    .msg-footer { padding: 0 12px 12px; }
+    .msg-textarea { font-size: 16px; padding: 12px 6px; }
+    .msg-input-btn { font-size: 18px; padding: 12px 14px; }
+    .msg-send-btn { font-size: 20px; padding: 10px 14px; }
+
+    /* ── Back button ── */
+    .channel-header-back {
+        display: flex !important; align-items: center; gap: 4px;
+        background: none; border: none; color: var(--primary);
+        font-size: 15px; cursor: pointer; padding: 4px 8px;
+        margin-right: 4px; font-weight: 600;
+    }
+    .channel-header-back i { font-size: 18px; }
+
+    /* ── Modals bigger on mobile ── */
+    .msg-modal { max-width: 100%; width: 100%; border-radius: 14px 14px 0 0;
+        max-height: 90vh; align-self: flex-end; }
+    .msg-modal-head h3 { font-size: 18px; }
+    .msg-modal-input { font-size: 16px; padding: 12px 14px; }
+    .msg-modal-label { font-size: 13px; }
+    .member-check-item { padding: 10px 8px; gap: 12px; }
+    .member-check-avatar { width: 36px; height: 36px; }
+    .member-check-name { font-size: 15px; }
+    .member-check-role { font-size: 12px; }
+    .msg-modal-submit { padding: 14px; font-size: 16px; }
+}
+@media (min-width: 769px) {
+    .channel-header-back { display: none !important; }
+}
+</style>
+
+<div class="slack-wrapper {{ 'has-conversation' if active_channel or active_partner else '' }}">
+
+    {# ═══════════════════════ SIDEBAR ═══════════════════════ #}
+    <aside class="slack-sidebar" id="slackSidebar">
+        <div class="sidebar-brand">
+            <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="sidebar-brand-name">Training<b>Tracker</b></a>
+        </div>
+        <div class="sidebar-search">
+            <div class="sidebar-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Search conversations..." oninput="filterSidebar()">
+            </div>
+        </div>
+        <div class="sidebar-scroll">
+            {# ── Channels section ── #}
+            <div class="sidebar-section">
+                <span>Channels</span>
+                <button class="sidebar-section-btn" title="Create channel" onclick="openCreateChannelModal()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            {% for item in sidebar_channels %}
+            <a href="{{ url_for('messages.channel_chat', channel_id=item.channel.id) }}"
+               class="sidebar-item sidebar-filterable {{ 'active' if active_channel and active_channel.id == item.channel.id else '' }} {{ 'unread' if item.unread > 0 else '' }}"
+               data-name="{{ item.display_name|lower }}">
+                <span class="sidebar-item-icon"><i class="fa-solid fa-hashtag"></i></span>
+                <span class="sidebar-item-name">{{ item.display_name }}</span>
+                {% if item.unread > 0 %}<span class="sidebar-badge">{{ item.unread }}</span>{% endif %}
+            </a>
+            {% endfor %}
+            <button class="sidebar-add-channel-btn" onclick="openCreateChannelModal()">
+                <i class="fa-solid fa-plus"></i> Add channel
+            </button>
+
+            {# ── Direct Messages section ── #}
+            <div class="sidebar-section" style="margin-top: 8px;">
+                <span>Direct Messages</span>
+                <button class="sidebar-section-btn" title="New message" onclick="openNewDmModal()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            {% for item in sidebar_dms %}
+            <a href="{{ url_for('messages.channel_chat', channel_id=item.channel.id) if item.type == 'channel' else url_for('messages.chat', partner_id=item.partner.id) }}"
+               class="sidebar-item sidebar-filterable {{ 'active' if (active_channel and item.type == 'channel' and active_channel.id == item.channel.id) or (active_partner and item.type == 'dm_legacy' and item.partner.id == active_partner.id) else '' }} {{ 'unread' if item.unread > 0 else '' }}"
+               data-name="{{ item.display_name|lower }}">
+                {% if item.avatar_employee %}
+                <img src="{{ item.avatar_employee.avatar(20) }}" class="sidebar-item-avatar" alt="">
+                {% else %}
+                <span class="sidebar-item-icon"><i class="fa-regular fa-user"></i></span>
+                {% endif %}
+                <span class="sidebar-item-name">{{ item.display_name }}</span>
+                {% if item.unread > 0 %}<span class="sidebar-badge">{{ item.unread }}</span>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </aside>
+
+    {# ═══════════════════════ MAIN AREA ═══════════════════════ #}
+    <div class="slack-main">
+
+        {% if active_channel or active_partner %}
+        {# ── Channel / DM header ── #}
+        <div class="channel-header">
+            <a href="{{ url_for('messages.inbox') }}" class="channel-header-back"><i class="fa-solid fa-chevron-left"></i></a>
+            {% if active_channel %}
+                {% if channel_avatar_employee %}
+                <img src="{{ channel_avatar_employee.avatar(28) }}" class="channel-header-avatar" alt="">
+                {% else %}
+                <span class="channel-header-icon"><i class="fa-solid fa-hashtag"></i></span>
+                {% endif %}
+                <div class="channel-header-info">
+                    <h1 class="channel-header-name">{{ channel_display_name }}</h1>
+                    <span class="channel-header-meta">{{ participants|length }} member{{ 's' if participants|length != 1 else '' }}{% if active_channel.name %} · {{ participants|map(attribute='first_name')|join(', ') }}{% endif %}</span>
+                </div>
+            {% elif active_partner %}
+                <img src="{{ active_partner.avatar(28) }}" class="channel-header-avatar" alt="">
+                <div class="channel-header-info">
+                    <h1 class="channel-header-name">{{ active_partner.first_name }} {{ active_partner.last_name }}</h1>
+                    <span class="channel-header-meta">{{ active_partner.role|capitalize }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        {# ── Message viewport ── #}
+        <div class="msg-viewport" id="msgViewport">
+            {% set ns = namespace(last_sender=None, last_ts=None, last_date=None) %}
+            {% for m in messages %}
+                {% set msg_date = m.timestamp.strftime('%Y-%m-%d') %}
+                {% if ns.last_date != msg_date %}
+                    <div class="date-sep">
+                        {% if msg_date == now_date %}Today
+                        {% elif msg_date == yesterday_date %}Yesterday
+                        {% else %}{{ m.timestamp.strftime('%b %d, %Y') }}
+                        {% endif %}
+                    </div>
+                    {% set ns.last_sender = None %}
+                    {% set ns.last_date = msg_date %}
+                {% endif %}
+
+                {% set sender = m.sender %}
+                {% set is_compact = (ns.last_sender == m.sender_id and ns.last_ts and (m.timestamp - ns.last_ts).total_seconds() < 300) %}
+
+                <div class="msg-row" id="msg-{{ m.id }}" data-id="{{ m.id }}" data-sender="{{ m.sender_id }}">
+                    {# Hover actions #}
+                    <div class="msg-hover-actions">
+                        <button class="hover-btn" title="React" onclick="togglePicker(event, '{{ m.id }}')"><i class="fa-regular fa-face-smile"></i></button>
+                        <button class="hover-btn" title="Reply" data-id="{{ m.id }}" data-sender="{{ sender.first_name ~ ' ' ~ sender.last_name if sender else 'Unknown' }}" onclick="event.stopPropagation(); setReplyFromRow(this)"><i class="fa-solid fa-reply"></i></button>
+                    </div>
+
+                    {% if is_compact %}
+                    <div class="msg-row-avatar-spacer"></div>
+                    <div class="msg-row-body">
+                    {% else %}
+                    <img src="{{ sender.avatar(36) if sender else '' }}" class="msg-row-avatar" alt="">
+                    <div class="msg-row-body">
+                        <div class="msg-row-header">
+                            <span class="msg-sender">{{ sender.first_name ~ ' ' ~ sender.last_name if sender else 'Unknown' }}</span>
+                            <span class="msg-ts" data-iso="{{ m.timestamp.isoformat() }}"></span>
+                        </div>
+                    {% endif %}
+
+                        {# Reply quote #}
+                        {% if m.reply_to_id and reply_to_map is defined and reply_to_map.get(m.reply_to_id) %}
+                            {% set rt = reply_to_map[m.reply_to_id] %}
+                            <div class="msg-reply-quote"><b>{{ rt.sender_name }}</b>: {{ rt.body }}</div>
+                        {% endif %}
+
+                        {# Message body or session attachment #}
+                        {% if '[SESSION_LINK:' in m.body %}
+                            {% set parts = m.body.split('[SESSION_LINK:') %}
+                            {% set text_part = parts[0].strip() %}
+                            {% set session_id = parts[1].replace(']', '').strip()|int %}
+                            {% set s = session_map.get(session_id) %}
+                            {% if text_part %}
+                                <div class="msg-text">{{ text_part }}</div>
+                            {% endif %}
+                            {% if s %}
+                                {% if s.is_locked %}
+                                <div class="msg-session-card" style="pointer-events:none; opacity:0.6;">
+                                    <div class="session-icon-box status-locked"><i class="fa-solid fa-lock"></i></div>
+                                    <div><div style="font-weight:700; font-size:13px;">Assignment Pending</div><div style="font-size:11px; color:var(--text-muted);">Hidden · {{ s.session_date.strftime('%b %d') }}</div></div>
+                                </div>
+                                {% else %}
+                                <a href="{{ url_for('employee.session_rating', session_id=session_id) }}" class="msg-session-card">
+                                    <div class="session-icon-box {{ 'status-completed' if s.completed_at else 'status-upcoming' }}"><i class="fa-solid {{ 'fa-circle-check' if s.completed_at else 'fa-clock' }}"></i></div>
+                                    <div><div style="font-weight:700; font-size:13px;">{{ s.position.name }}</div><div style="font-size:11px; color:var(--text-muted);">{{ 'Completed' if s.completed_at else 'Upcoming' }} · {{ s.session_date.strftime('%b %d') }}</div></div>
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <div class="msg-text {{ 'msg-text-compact' if is_compact else '' }}">{{ m.body }}</div>
+                        {% endif %}
+
+                        {# Reactions #}
+                        <div class="msg-reactions" id="reactions-{{ m.id }}">
+                            {% if reactions and m.id in reactions %}
+                                {% for r in reactions[m.id] %}
+                                <div class="reaction-pill {{ 'active' if r.me }}" title="{{ 'Click to remove' if r.me else 'Add reaction' }}" onclick="submitReaction('{{ m.id }}', '{{ r.emoji }}')">
+                                    <span>{{ r.emoji }}</span><span>{{ r.count }}</span>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        {# Emoji picker #}
+                        <div id="picker-{{ m.id }}" class="emoji-popup" onclick="event.stopPropagation()">
+                            {% for emoji in ['👍', '👎', '❤️', '😂', '😮', '😢'] %}
+                            <div class="emoji-btn" onclick="submitReaction('{{ m.id }}', '{{ emoji }}')">{{ emoji }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {% set ns.last_sender = m.sender_id %}
+                {% set ns.last_ts = m.timestamp %}
+            {% endfor %}
+        </div>
+
+        {# ── Message input ── #}
+        <div class="msg-footer">
+            <div class="msg-input-box">
+                <div class="attachment-bar" id="attachmentBar">
+                    <div class="session-icon-box" id="attachIcon" style="width:24px; height:24px; border-radius:6px;"></div>
+                    <div style="flex:1; min-width:0;">
+                        <div id="attachTitle" style="font-weight:700;"></div>
+                        <div id="attachSub" style="font-size:11px; color:var(--text-muted);"></div>
+                    </div>
+                    <button class="attachment-bar-close" onclick="clearAttachment()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="reply-bar" id="replyBar">
+                    <i class="fa-solid fa-reply" style="color:var(--primary);"></i>
+                    <div class="reply-bar-text"><b id="replySender"></b>: <span id="replyBody"></span></div>
+                    <button class="reply-bar-close" onclick="clearReply()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="msg-input-row">
+                    <button class="msg-input-btn" onclick="openSessionPicker()" title="Attach session"><i class="fa-solid fa-plus"></i></button>
+                    <textarea id="msgInput" class="msg-textarea" rows="1"
+                              placeholder="Message {{ channel_display_name if active_channel else (active_partner.first_name if active_partner else '') }}..."
+                              oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+                    <button class="msg-send-btn" onclick="sendMessage()" title="Send"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        {# ── No conversation selected ── #}
+        <div class="channel-header">
+            <div class="channel-header-info">
+                <h1 class="channel-header-name">Messages</h1>
+            </div>
+        </div>
+        <div class="empty-channel">
+            <div>
+                <i class="fa-regular fa-comments"></i>
+                <h2>Welcome to messaging</h2>
+                <p>Pick a conversation from the sidebar, or start a new one.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# ═══════════════════════ CREATE CHANNEL MODAL ═══════════════════════ #}
+<div id="createChannelModal" class="msg-modal-overlay" onclick="if(event.target===this) closeCreateChannelModal();">
+    <div class="msg-modal" onclick="event.stopPropagation()">
+        <div class="msg-modal-head">
+            <h3>Create a channel</h3>
+            <button class="msg-modal-close" onclick="closeCreateChannelModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="msg-modal-body">
+            <label class="msg-modal-label">Channel name</label>
+            <input type="text" id="newChannelName" class="msg-modal-input" placeholder="e.g. general">
+            <label class="msg-modal-label">Add members</label>
+            <div style="max-height: 200px; overflow-y: auto;">
+                {% for person in directory %}
+                <label class="member-check-item">
+                    <input type="checkbox" name="ch_member" value="{{ person.id }}">
+                    <img src="{{ person.avatar(28) }}" class="member-check-avatar" alt="">
+                    <div class="member-check-info">
+                        <div class="member-check-name">{{ person.first_name }} {{ person.last_name }}</div>
+                        <div class="member-check-role">{{ person.role|capitalize }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <button class="msg-modal-submit" onclick="submitCreateChannel()">Create channel</button>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════ NEW DM MODAL ═══════════════════════ #}
+<div id="newDmModal" class="msg-modal-overlay" onclick="if(event.target===this) closeNewDmModal();">
+    <div class="msg-modal" onclick="event.stopPropagation()">
+        <div class="msg-modal-head">
+            <h3>New message</h3>
+            <button class="msg-modal-close" onclick="closeNewDmModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="msg-modal-body">
+            <input type="text" id="dmSearchInput" class="msg-modal-input" placeholder="Search people..." oninput="filterDmList()">
+            <div id="dmUserList" style="max-height: 300px; overflow-y: auto;">
+                {% for person in directory %}
+                <a href="{{ url_for('messages.dm_redirect', partner_id=person.id) }}" class="member-check-item dm-person" data-name="{{ person.first_name|lower }} {{ person.last_name|lower }}" style="text-decoration: none; color: inherit;">
+                    <img src="{{ person.avatar(28) }}" class="member-check-avatar" alt="">
+                    <div class="member-check-info">
+                        <div class="member-check-name">{{ person.first_name }} {{ person.last_name }}</div>
+                        <div class="member-check-role">{{ person.role|capitalize }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ═══════════════════════ SESSION PICKER MODAL ═══════════════════════ #}
+<div id="sessionModal" class="msg-modal-overlay" onclick="if(event.target===this) closeSessionPicker();">
+    <div class="msg-modal" onclick="event.stopPropagation()">
+        <div class="msg-modal-head">
+            <h3>Attach Session</h3>
+            <button class="msg-modal-close" onclick="closeSessionPicker()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="msg-modal-body">
+            <input type="text" id="sessionSearch" class="msg-modal-input" placeholder="Search sessions..." oninput="filterSessions()">
+            <div id="sessionList" class="session-pick-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+var viewport = document.getElementById('msgViewport');
+var MY_ID = {{ current_user.employee_id }};
+var CHANNEL_ID = {{ active_channel.id if active_channel else 'null' }};
+var PARTNER_ID = {{ active_partner.id if active_partner else 'null' }};
+var DISPLAY_NAME = {{ (channel_display_name if active_channel else (active_partner.first_name + ' ' + active_partner.last_name if active_partner else ''))|tojson }};
+var activePickerId = null;
+var pendingSessionId = null;
+var replyToId = null;
+var allSessions = [];
+var pollInterval = null;
+
+/* ── Sidebar ── */
+function filterSidebar() {
+    var q = document.getElementById('sidebarSearchInput').value.toLowerCase();
+    var items = document.querySelectorAll('.sidebar-filterable');
+    for (var i = 0; i < items.length; i++) {
+        var name = items[i].getAttribute('data-name') || '';
+        items[i].style.display = name.indexOf(q) > -1 ? '' : 'none';
+    }
+}
+
+/* ── Create channel ── */
+function openCreateChannelModal() { document.getElementById('createChannelModal').style.display = 'flex'; }
+function closeCreateChannelModal() { document.getElementById('createChannelModal').style.display = 'none'; }
+function submitCreateChannel() {
+    var name = document.getElementById('newChannelName').value.trim();
+    if (!name) { alert('Enter a channel name'); return; }
+    var ids = [];
+    document.querySelectorAll('input[name="ch_member"]:checked').forEach(function(cb) { ids.push(parseInt(cb.value)); });
+    fetch('{{ url_for("messages.create_channel") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ name: name, member_ids: ids })
+    }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.url) { window.location.href = d.url; } else { alert(d.error || 'Failed'); }
+    });
+}
+
+/* ── New DM ── */
+function openNewDmModal() { document.getElementById('newDmModal').style.display = 'flex'; document.getElementById('dmSearchInput').value = ''; filterDmList(); }
+function closeNewDmModal() { document.getElementById('newDmModal').style.display = 'none'; }
+function filterDmList() {
+    var q = document.getElementById('dmSearchInput').value.toLowerCase();
+    document.querySelectorAll('.dm-person').forEach(function(el) {
+        el.style.display = (el.getAttribute('data-name') || '').indexOf(q) > -1 ? '' : 'none';
+    });
+}
+
+/* ── Messaging (only when conversation is active) ── */
+{% if active_channel or active_partner %}
+
+function autoResize(ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; }
+function handleEnter(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+
+function sendMessage() {
+    var input = document.getElementById('msgInput');
+    var body = input.value.trim();
+    if (!body && !pendingSessionId) return;
+    if (pendingSessionId) body = body + ' [SESSION_LINK:' + pendingSessionId + ']';
+    var formData = new FormData();
+    formData.append('body', body);
+    if (replyToId) formData.append('reply_to_id', replyToId);
+    input.value = ''; input.style.height = 'auto';
+    clearAttachment(); clearReply();
+    fetch(window.location.href, {
+        method: 'POST', body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function(res) {
+        if (res.ok) { pollMessages(); setTimeout(function() { viewport.scrollTop = viewport.scrollHeight; }, 100); }
+    });
+}
+
+function pollMessages() {
+    var rows = document.querySelectorAll('.msg-row');
+    var lastId = 0;
+    if (rows.length > 0) lastId = parseInt(rows[rows.length - 1].dataset.id);
+    var url = CHANNEL_ID
+        ? '{{ url_for("messages.channel_updates", channel_id=0) }}'.replace('/0/', '/' + CHANNEL_ID + '/')
+        : '{{ url_for("messages.chat_updates", partner_id=0) }}'.replace('/0/', '/' + PARTNER_ID + '/');
+    fetch(url + '?last_id=' + lastId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.messages && data.messages.length > 0) {
+                var wasBottom = (viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight) < 150;
+                data.messages.forEach(function(msg) {
+                    viewport.insertAdjacentHTML('beforeend', renderMsgHTML(msg));
+                });
+                if (wasBottom) viewport.scrollTop = viewport.scrollHeight;
+                localizeTimes();
+            }
+            if (data.reactions) {
+                for (var mid in data.reactions) {
+                    if (data.reactions.hasOwnProperty(mid)) updateReactions(mid, data.reactions[mid]);
+                }
+            }
+        });
+}
+
+function renderMsgHTML(msg) {
+    var isCompact = false;
+    var rows = document.querySelectorAll('.msg-row');
+    if (rows.length > 0) {
+        var last = rows[rows.length - 1];
+        if (parseInt(last.dataset.sender) === msg.sender_id) {
+            var lastTs = last.querySelector('.msg-ts');
+            if (lastTs && lastTs.dataset.iso) {
+                var diff = (new Date(msg.timestamp) - new Date(lastTs.dataset.iso)) / 1000;
+                if (diff < 300) isCompact = true;
+            }
+        }
+    }
+    var senderName = msg.sender_name || 'User';
+    var senderAvatar = msg.sender_avatar || '';
+    var contentHtml = '';
+    if (msg.reply_to) {
+        contentHtml += '<div class="msg-reply-quote"><b>' + esc(msg.reply_to.sender_name) + '</b>: ' + esc(msg.reply_to.body) + '</div>';
+    }
+    if (msg.body.indexOf('[SESSION_LINK:') !== -1 && msg.session_preview) {
+        var parts = msg.body.split('[SESSION_LINK:');
+        var text = parts[0].trim();
+        var s = msg.session_preview;
+        if (text) contentHtml += '<div class="msg-text">' + esc(text) + '</div>';
+        if (s.is_locked) {
+            contentHtml += '<div class="msg-session-card" style="pointer-events:none; opacity:0.6;"><div class="session-icon-box status-locked"><i class="fa-solid fa-lock"></i></div><div><div style="font-weight:700; font-size:13px;">Assignment Pending</div><div style="font-size:11px; color:var(--text-muted);">Hidden · ' + s.date + '</div></div></div>';
+        } else {
+            var icon = s.status === 'completed' ? 'fa-circle-check' : 'fa-clock';
+            var sc = s.status === 'completed' ? 'status-completed' : 'status-upcoming';
+            contentHtml += '<a href="/employee/sessions/' + s.id + '" class="msg-session-card"><div class="session-icon-box ' + sc + '"><i class="fa-solid ' + icon + '"></i></div><div><div style="font-weight:700; font-size:13px;">' + esc(s.position) + '</div><div style="font-size:11px; color:var(--text-muted);">' + capitalize(s.status) + ' · ' + s.date + '</div></div></a>';
+        }
+    } else {
+        contentHtml += '<div class="msg-text ' + (isCompact ? 'msg-text-compact' : '') + '">' + esc(msg.body) + '</div>';
+    }
+
+    var avatarHtml = isCompact
+        ? '<div class="msg-row-avatar-spacer"></div>'
+        : '<img src="' + senderAvatar + '" class="msg-row-avatar" alt="">';
+    var headerHtml = isCompact ? '' : '<div class="msg-row-header"><span class="msg-sender">' + esc(senderName) + '</span><span class="msg-ts" data-iso="' + msg.timestamp + '"></span></div>';
+    var hoverHtml = '<div class="msg-hover-actions"><button class="hover-btn" onclick="togglePicker(event, \'' + msg.id + '\')"><i class="fa-regular fa-face-smile"></i></button><button class="hover-btn" data-id="' + msg.id + '" data-sender="' + esc(senderName) + '" onclick="event.stopPropagation(); setReplyFromRow(this)"><i class="fa-solid fa-reply"></i></button></div>';
+    var emojis = ['👍','👎','❤️','😂','😮','😢'];
+    var pickerHtml = '<div id="picker-' + msg.id + '" class="emoji-popup" onclick="event.stopPropagation()">' + emojis.map(function(e) { return '<div class="emoji-btn" onclick="submitReaction(\'' + msg.id + '\', \'' + e + '\')">' + e + '</div>'; }).join('') + '</div>';
+
+    return '<div class="msg-row" id="msg-' + msg.id + '" data-id="' + msg.id + '" data-sender="' + msg.sender_id + '">' + hoverHtml + avatarHtml + '<div class="msg-row-body">' + headerHtml + contentHtml + '<div class="msg-reactions" id="reactions-' + msg.id + '"></div>' + pickerHtml + '</div></div>';
+}
+
+/* ── Reactions ── */
+function togglePicker(e, mid) {
+    e.stopPropagation();
+    var el = document.getElementById('picker-' + mid);
+    var was = el.style.display === 'flex';
+    closeAllPickers();
+    if (!was) { el.style.display = 'flex'; activePickerId = mid; }
+}
+function closeAllPickers() {
+    if (activePickerId) { var el = document.getElementById('picker-' + activePickerId); if (el) el.style.display = 'none'; activePickerId = null; }
+}
+function submitReaction(mid, emoji) {
+    fetch('/messages/react/' + mid, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emoji: emoji })
+    }).then(function() { pollMessages(); closeAllPickers(); });
+}
+function updateReactions(mid, reactions) {
+    var c = document.getElementById('reactions-' + mid);
+    if (!c || !Array.isArray(reactions)) return;
+    c.innerHTML = reactions.map(function(r) {
+        return '<div class="reaction-pill ' + (r.me ? 'active' : '') + '" title="' + (r.me ? 'Click to remove' : 'Add reaction') + '" onclick="submitReaction(\'' + mid + '\', \'' + r.emoji + '\')"><span>' + r.emoji + '</span><span>' + r.count + '</span></div>';
+    }).join('');
+}
+
+/* ── Reply ── */
+function setReplyTo(id, body, sender) {
+    replyToId = id;
+    document.getElementById('replySender').textContent = sender || 'Unknown';
+    document.getElementById('replyBody').textContent = body || '';
+    document.getElementById('replyBar').style.display = 'flex';
+}
+function clearReply() { replyToId = null; document.getElementById('replyBar').style.display = 'none'; }
+function setReplyFromRow(btn) {
+    var row = btn.closest('.msg-row');
+    var bubble = row ? row.querySelector('.msg-text') : null;
+    var text = bubble ? bubble.textContent.replace(/\s+/g, ' ').trim() : '';
+    var snippet = text.length > 60 ? text.slice(0, 60) + '\u2026' : text;
+    setReplyTo(btn.dataset.id, snippet, btn.dataset.sender);
+}
+
+/* ── Session picker ── */
+function openSessionPicker() {
+    document.getElementById('sessionModal').style.display = 'flex';
+    document.getElementById('sessionList').innerHTML = '<div style="text-align:center; padding:16px;"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+    fetch('/messages/api/sessions/' + (PARTNER_ID || MY_ID))
+        .then(function(r) { return r.json(); })
+        .then(function(data) { allSessions = data; renderSessionList(data); });
+}
+function closeSessionPicker() { document.getElementById('sessionModal').style.display = 'none'; }
+function renderSessionList(data) {
+    var el = document.getElementById('sessionList');
+    if (!data.length) { el.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:16px; font-size:12px;">No sessions found.</div>'; return; }
+    el.innerHTML = data.map(function(s) {
+        if (s.is_locked) return '<div class="session-pick-item" style="opacity:0.5; pointer-events:none;"><i class="fa-solid fa-lock"></i> Hidden · ' + s.date + '</div>';
+        var icon = s.status === 'completed' ? 'fa-circle-check' : 'fa-clock';
+        var sc = s.status === 'completed' ? 'status-completed' : 'status-upcoming';
+        return '<div class="session-pick-item" onclick="stageSession(\'' + s.id + '\', \'' + esc(s.position) + '\', \'' + s.date + '\', \'' + s.status + '\')"><div class="session-icon-box ' + sc + '" style="width:28px; height:28px;"><i class="fa-solid ' + icon + '"></i></div><div style="flex:1;"><div style="font-weight:700;">' + esc(s.position) + '</div><div style="font-size:10px; color:var(--text-muted);">' + s.date + '</div></div></div>';
+    }).join('');
+}
+function filterSessions() {
+    var q = document.getElementById('sessionSearch').value.toLowerCase();
+    renderSessionList(allSessions.filter(function(s) { return s.position.toLowerCase().indexOf(q) > -1 || s.date.indexOf(q) > -1; }));
+}
+function stageSession(id, title, date, status) {
+    pendingSessionId = id;
+    document.getElementById('attachmentBar').style.display = 'flex';
+    document.getElementById('attachTitle').textContent = title;
+    document.getElementById('attachSub').textContent = capitalize(status) + ' · ' + date;
+    var iconDiv = document.getElementById('attachIcon');
+    iconDiv.className = 'session-icon-box ' + (status === 'completed' ? 'status-completed' : 'status-upcoming');
+    iconDiv.innerHTML = '<i class="fa-solid ' + (status === 'completed' ? 'fa-circle-check' : 'fa-clock') + '"></i>';
+    closeSessionPicker();
+}
+function clearAttachment() { pendingSessionId = null; document.getElementById('attachmentBar').style.display = 'none'; }
+
+/* ── Init (conversation active) ── */
+if (viewport) {
+    localizeTimes();
+    viewport.scrollTop = viewport.scrollHeight;
+    pollInterval = setInterval(pollMessages, 3000);
+}
+{% endif %}
+
+/* ── Utilities ── */
+function localizeTimes() {
+    document.querySelectorAll('.msg-ts').forEach(function(el) {
+        if (el.dataset.iso && !el.textContent) {
+            var d = new Date(el.dataset.iso.slice(-1) === 'Z' ? el.dataset.iso : el.dataset.iso + 'Z');
+            el.textContent = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+    });
+}
+function esc(t) { if (!t) return ''; var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+document.addEventListener('click', function() { closeAllPickers(); });
+window.addEventListener('beforeunload', function() { if (pollInterval) clearInterval(pollInterval); });
+</script>
+{% endblock %}

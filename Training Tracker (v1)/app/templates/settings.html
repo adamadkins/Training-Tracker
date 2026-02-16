@@ -1,0 +1,570 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body.settings-active main.container,
+    body:has(.settings-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body.settings-active main,
+    body:has(.settings-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .settings-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 28px 20px 120px;
+    }
+    .settings-col {
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    /* ── Back + header ── */
+    .back-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text-main); }
+
+    .settings-hero {
+        margin-bottom: 24px;
+    }
+    .settings-title {
+        font-size: 24px;
+        font-weight: 900;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .settings-subtitle {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin: 3px 0 0;
+        font-weight: 500;
+    }
+
+    /* ── Section card ── */
+    .s-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+    .s-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .s-header-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+    }
+    .s-header-icon.blue { background: #eff6ff; color: #2563eb; }
+    .s-header-icon.violet { background: #f3e8ff; color: #7c3aed; }
+    .s-header-icon.amber { background: #fffbeb; color: #d97706; }
+    .s-header-icon.emerald { background: #ecfdf5; color: #059669; }
+    .s-header-icon.rose { background: #fff1f2; color: #e11d48; }
+
+    .s-header-text {
+        flex: 1;
+        min-width: 0;
+    }
+    .s-header-text h2 {
+        font-size: 14px;
+        font-weight: 800;
+        margin: 0;
+        overflow-wrap: break-word;
+    }
+    .s-header-text p {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin: 1px 0 0;
+        overflow-wrap: break-word;
+    }
+    .s-badge {
+        margin-left: auto;
+        background: #fef3c7;
+        color: #92400e;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .s-body { padding: 6px 18px; }
+
+    /* ── Setting row ── */
+    .s-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+        gap: 16px;
+    }
+    .s-row:last-child { border-bottom: none; }
+
+    .s-info {
+        flex: 1;
+        min-width: 200px;
+        overflow-wrap: break-word;
+    }
+    .s-label {
+        font-size: 13px;
+        font-weight: 700;
+        display: block;
+        margin-bottom: 2px;
+    }
+    .s-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.5;
+    }
+
+    /* ── Toggle ── */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 42px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: var(--border);
+        transition: 0.25s;
+        border-radius: 24px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        transition: 0.25s;
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    input:checked + .slider { background: var(--primary); }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    /* ── Select ── */
+    .s-select {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-size: 12px;
+        background: var(--bg-body);
+        color: var(--text-main);
+        font-weight: 600;
+        min-width: 130px;
+        outline: none;
+        cursor: pointer;
+    }
+    .s-select:focus { border-color: var(--primary); }
+
+    /* ── Save bar ── */
+    .save-bar {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 40px);
+        max-width: 500px;
+        background: var(--text-main);
+        padding: 12px 18px;
+        border-radius: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+        z-index: 1000;
+        animation: barUp 0.4s ease;
+        color: var(--bg-card);
+    }
+    .save-bar-text {
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .btn-save {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-save:not(:disabled):hover {
+        transform: scale(1.04);
+        box-shadow: 0 0 12px rgba(79, 70, 229, 0.4);
+    }
+    .btn-save:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    @keyframes barUp {
+        from { transform: translate(-50%, 80px); opacity: 0; }
+        to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    /* ── Danger zone ── */
+    .s-section.danger { border-color: rgba(239, 68, 68, 0.2); }
+    .s-section.danger .s-header { border-bottom-color: rgba(239, 68, 68, 0.15); }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+        .settings-wrapper { padding: 16px 12px 120px; }
+        .s-body { padding: 4px 14px; }
+        .s-header { padding: 12px 14px; }
+        .s-row { flex-wrap: wrap; gap: 12px; }
+        .s-info { min-width: 0; width: 100%; margin-bottom: 0; }
+    }
+</style>
+
+<div class="settings-wrapper">
+    <div class="settings-col">
+
+        <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="back-link" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"><i class="fa-solid fa-arrow-left"></i> Back</a>
+
+        <div class="settings-hero">
+            <h1 class="settings-title">Settings</h1>
+            <p class="settings-subtitle">Personal preferences{% if current_user.role == 'manager' %} & system configuration{% endif %}</p>
+        </div>
+
+        <form method="POST" id="settingsForm">
+
+            {# ── Notifications ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon blue"><i class="fa-solid fa-bell"></i></div>
+                    <div class="s-header-text">
+                        <h2>Notifications</h2>
+                        <p>How you receive updates</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Email Notifications</label>
+                            <span class="s-desc">Receive training updates and schedule changes via email.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="notify_email" {{ 'checked' if user_settings.notify_email }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">In-App Notifications</label>
+                            <span class="s-desc">Show toast messages and notification badges while browsing.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="notify_in_app" {{ 'checked' if user_settings.notify_in_app }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Appearance ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon violet"><i class="fa-solid fa-palette"></i></div>
+                    <div class="s-header-text">
+                        <h2>Appearance</h2>
+                        <p>Visual theme and display</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Theme</label>
+                            <span class="s-desc">Choose your preferred color scheme.</span>
+                        </div>
+                        <select name="theme_pref" class="s-select">
+                            <option value="light" {{ 'selected' if user_settings.theme_pref == 'light' }}>Light</option>
+                            <option value="dark" {{ 'selected' if user_settings.theme_pref == 'dark' }}>Dark</option>
+                            <option value="system" {{ 'selected' if user_settings.theme_pref == 'system' }}>System</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Help & Tutorial ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon" style="background: #f0fdf4; color: #10b981;"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="s-header-text">
+                        <h2>Help</h2>
+                        <p>Tutorials and guidance</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">App Tutorial</label>
+                            <span class="s-desc">Replay the guided walkthrough that highlights key features of the app.</span>
+                        </div>
+                        <button type="button" id="replayTutorialBtn" onclick="replayTutorial()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: all 0.2s;">
+                            <i class="fa-solid fa-play"></i> Replay Tutorial
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Organization (managers only) ── #}
+            {% if current_user.role == 'manager' %}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon blue"><i class="fa-solid fa-building"></i></div>
+                    <div class="s-header-text">
+                        <h2>Organization</h2>
+                        <p>Business type and locations from setup</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Business type</label>
+                            <span class="s-desc">Set during setup; change here if needed.</span>
+                        </div>
+                        <select name="business_type" class="s-select">
+                            <option value="">—</option>
+                            <option value="restaurant" {{ 'selected' if system_settings.business_type == 'restaurant' }}>Restaurant / F&amp;B</option>
+                            <option value="retail" {{ 'selected' if system_settings.business_type == 'retail' }}>Retail</option>
+                            <option value="healthcare" {{ 'selected' if system_settings.business_type == 'healthcare' }}>Healthcare</option>
+                            <option value="hospitality" {{ 'selected' if system_settings.business_type == 'hospitality' }}>Hospitality</option>
+                            <option value="other" {{ 'selected' if system_settings.business_type == 'other' }}>Other</option>
+                        </select>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Locations</label>
+                            <span class="s-desc">Manage FOH, BOH, etc. and assign employees.</span>
+                        </div>
+                        <a href="{{ url_for('manager.locations_list') }}" class="btn-save" style="text-decoration: none; display: inline-block;">Manage locations</a>
+                    </div>
+                    <div class="s-row" style="border-bottom: none;">
+                        <div class="s-info">
+                            <label class="s-label">Setup wizard</label>
+                            <span class="s-desc">Run the organization setup wizard (business type and locations).</span>
+                        </div>
+                        <a href="{{ url_for('manager.setup_wizard', run=1) }}" class="btn-save" style="text-decoration: none; display: inline-block; background: var(--bg-body); color: var(--primary); border: 1px solid var(--primary);">Run setup wizard</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ── Privacy ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon emerald"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="s-header-text">
+                        <h2>Privacy</h2>
+                        <p>Control what others see about you</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Online Status</label>
+                            <span class="s-desc">Let others see when you're active on the site.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="show_online_status" {{ 'checked' if user_settings.show_online_status }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Read Receipts</label>
+                            <span class="s-desc">Let others see when you've read their messages.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="allow_read_receipts" {{ 'checked' if user_settings.allow_read_receipts }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {% if current_user.role == 'manager' %}
+            {# ── Messaging (Manager) ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon amber"><i class="fa-solid fa-paper-plane"></i></div>
+                    <div class="s-header-text">
+                        <h2>Messaging</h2>
+                        <p>Team communication controls</p>
+                    </div>
+                    <span class="s-badge">Manager</span>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Direct Messaging</label>
+                            <span class="s-desc">Enable the messaging system for the entire team.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="dm_enabled" {{ 'checked' if system_settings.dm_enabled }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Trainee-to-Trainee DMs</label>
+                            <span class="s-desc">Allow trainees to message each other directly.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="allow_trainee_to_trainee_dm" {{ 'checked' if system_settings.allow_trainee_to_trainee_dm }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Share trainee data with trainees</label>
+                            <span class="s-desc">When off, trainees cannot see their own training data (profile, dashboard sessions, or progress).</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="share_trainee_data_with_trainees" {{ 'checked' if share_trainee_data_with_trainees }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Training (Manager) ── #}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon rose"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="s-header-text">
+                        <h2>Training Defaults</h2>
+                        <p>Session and schedule behavior</p>
+                    </div>
+                    <span class="s-badge">Manager</span>
+                </div>
+                <div class="s-body">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Blind Mode by Default</label>
+                            <span class="s-desc">New schedules default to "Hide Assignments" so trainees can't see their trainer until the session starts.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="default_hide_assignments" {{ 'checked' if system_settings.default_hide_assignments }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Require Notes on Completion</label>
+                            <span class="s-desc">Trainers must add notes when completing a training session.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="require_completion_notes" {{ 'checked' if system_settings.require_completion_notes }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Require Digital Sign-Off</label>
+                            <span class="s-desc">Trainees must sign on-screen to acknowledge their evaluation results before viewing scores.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" name="require_digital_signoff" {{ 'checked' if system_settings.require_digital_signoff }}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Default Rating Scale</label>
+                            <span class="s-desc">How trainers rate sessions: numeric scale or legacy sliders (1–10 with color).</span>
+                        </div>
+                        <select name="default_rating_scale" class="s-select">
+                            <option value="5" {{ 'selected' if system_settings.default_rating_scale == 5 }}>1–5</option>
+                            <option value="10" {{ 'selected' if system_settings.default_rating_scale == 10 }}>1–10</option>
+                            <option value="0" {{ 'selected' if system_settings.default_rating_scale == 0 }}>Legacy (sliders 1–10)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div id="saveBar" class="save-bar" style="display:none;">
+                <div class="save-bar-text">Unsaved changes</div>
+                <button type="submit" id="saveBtn" class="btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.body.classList.add('settings-active');
+
+    function replayTutorial() {
+        var btn = document.getElementById('replayTutorialBtn');
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Loading...';
+        btn.disabled = true;
+        fetch('{{ url_for("employee.api_tutorial_reset") }}', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+            .then(function() { window.location.href = '{{ url_for("manager.dashboard") if current_user.role == "manager" else url_for("employee.dashboard") }}'; })
+            .catch(function() { btn.innerHTML = '<i class="fa-solid fa-play"></i> Replay Tutorial'; btn.disabled = false; });
+    }
+
+    (function() {
+        var form = document.getElementById('settingsForm');
+        var saveBar = document.getElementById('saveBar');
+        var initial = {};
+        var inputs = form.querySelectorAll('input[type="checkbox"], select');
+
+        for (var i = 0; i < inputs.length; i++) {
+            var el = inputs[i];
+            initial[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+        }
+
+        form.addEventListener('input', function() {
+            var changed = false;
+            for (var i = 0; i < inputs.length; i++) {
+                var el = inputs[i];
+                var current = el.type === 'checkbox' ? el.checked : el.value;
+                if (current !== initial[el.name]) { changed = true; break; }
+            }
+            saveBar.style.display = changed ? 'flex' : 'none';
+        });
+
+        form.addEventListener('change', function() {
+            form.dispatchEvent(new Event('input'));
+        });
+    })();
+</script>
+{% endblock %}
