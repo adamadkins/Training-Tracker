@@ -58,6 +58,11 @@ schema_changes = [
     # Employee multiple locations (cross-training; managers see multiple)
     "CREATE TABLE IF NOT EXISTS employee_locations (employee_id INTEGER NOT NULL REFERENCES employees(id), location_id INTEGER NOT NULL REFERENCES locations(id), PRIMARY KEY (employee_id, location_id))",
     "INSERT OR IGNORE INTO employee_locations (employee_id, location_id) SELECT id, location_id FROM employees WHERE location_id IS NOT NULL",
+
+    # Channel settings: private, read-only, description
+    "ALTER TABLE channels ADD COLUMN description VARCHAR(255)",
+    "ALTER TABLE channels ADD COLUMN is_private BOOLEAN DEFAULT 0 NOT NULL",
+    "ALTER TABLE channels ADD COLUMN is_read_only BOOLEAN DEFAULT 0 NOT NULL",
 ]
 
 # --- 2. SETUP: Find the database ---

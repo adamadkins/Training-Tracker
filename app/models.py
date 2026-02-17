@@ -273,6 +273,9 @@ class Channel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=True)  # null for DM
     channel_type = db.Column(db.String(20), nullable=False, default="channel")  # 'channel' | 'dm'
+    description = db.Column(db.String(255), nullable=True)
+    is_private = db.Column(db.Boolean, default=False, nullable=False)
+    is_read_only = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
     created_by = db.relationship("Employee", foreign_keys=[created_by_id])

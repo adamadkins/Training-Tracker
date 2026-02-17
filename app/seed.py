@@ -1,25 +1,24 @@
+"""
+Seed the database with a coherent, demo-ready dataset.
+Uses realistic names, training progressions, and conversations
+so the app behaves like a real (but fake) team in action.
+"""
 import sys
 import os
-import glob
 import random
-from datetime import datetime, timedelta, time, date
+from datetime import datetime, timedelta, time, date, timezone
 from dotenv import load_dotenv
-from faker import Faker
 
-# Load environment variables
 load_dotenv()
-
-# Ensure the script can find the 'app' package
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app, db
 from app.models import (
     User, Employee, SystemSettings, Position, Daypart,
     Schedule, TrainingSession, PositionDescriptor,
-    SessionRating, Message, Notification
+    SessionRating, Message, Notification,
+    Channel, ChannelParticipant,
 )
-
-fake = Faker()
 
 
 def get_monday(d):
@@ -27,247 +26,320 @@ def get_monday(d):
     return d - timedelta(days=d.weekday())
 
 
+# ─── Realistic descriptor text per position (rubric criteria) ───
+POSITION_DESCRIPTORS = {
+    "Front Counter": [
+        "Greets guests promptly and with a smile",
+        "Handles cash and card payments accurately",
+        "Suggests add-ons and completes orders correctly",
+    ],
+    "Drive-Thru Order": [
+        "Takes order clearly and repeats back for accuracy",
+        "Maintains speed without sacrificing accuracy",
+        "Upsells appropriately and closes the order",
+    ],
+    "Drive-Thru Window": [
+        "Handles payment and hands out order efficiently",
+        "Keeps window area clean and organized",
+        "Verifies order with guest before sending them on",
+    ],
+    "Fries": [
+        "Maintains fry station and baskets properly",
+        "Portions fries consistently to standard",
+        "Keeps fry station clean and stocked",
+    ],
+    "Grill": [
+        "Follows safety procedures and cook times",
+        "Maintains grill temperature and cleanliness",
+        "Cooks to spec and restocks as needed",
+    ],
+    "Assembly": [
+        "Builds items to spec and in the correct order",
+        "Keeps assembly area organized and stocked",
+        "Works in sync with grill and expeditor",
+    ],
+    "Prep": [
+        "Completes prep list on time and to standard",
+        "Labels and dates all prepped items correctly",
+        "Keeps walk-in and prep area organized",
+    ],
+    "Expeditor": [
+        "Calls out orders clearly and coordinates flow",
+        "Quality-checks items before pass-out",
+        "Keeps pass-through organized and timely",
+    ],
+}
+
+
 def seed_data():
     app = create_app()
     with app.app_context():
         print("=" * 60)
-        print("SEEDING MODE: MASSIVE DATA INJECTION")
+        print("SEEDING: Demo-ready data (realistic, coherent)")
         print("=" * 60)
+        print(f"Target DB: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
 
-        # 1. Diagnostics
-        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI')
-        print(f"Target DB: {db_uri}")
-
-        # 2. Reset Database
-        print("⚠️  Dropping all tables and recreating... (Fresh Start)")
+        print("\n⚠️  Dropping all tables and recreating...")
         db.drop_all()
         db.create_all()
 
-        # --- 1. SYSTEM SETTINGS ---
-        print("⚙️  Initializing Settings...")
-        settings = SystemSettings(dm_enabled=True, allow_trainee_to_trainee_dm=True)
+        # ─── 1. System settings ───
+        print("⚙️  System settings...")
+        settings = SystemSettings(
+            dm_enabled=True,
+            allow_trainee_to_trainee_dm=True,
+            setup_completed=True,
+            default_rating_scale=5,
+        )
         db.session.add(settings)
+        db.session.commit()
 
-        # --- 2. STATIC DATA (Positions & Dayparts) ---
-        print("📋 Creating Positions & Dayparts...")
-        positions = [
-            "Front Counter", "Drive-Thru Order", "Drive-Thru Window",
-            "Fries", "Grill", "Assembly", "Prep", "Expeditor"
-        ]
+        # ─── 2. Positions & descriptors ───
+        print("📋 Positions & rubric descriptors...")
+        position_names = list(POSITION_DESCRIPTORS.keys())
         db_positions = []
-        for p in positions:
-            pos = Position(name=p, active=True)
+        for name in position_names:
+            pos = Position(name=name, active=True)
             db.session.add(pos)
+            db.session.flush()
             db_positions.append(pos)
-
-        # Add descriptors (rubric items) for positions
-        for pos in db_positions:
-            for _ in range(3):
-                desc = PositionDescriptor(position=pos, text=fake.sentence(nb_words=6), active=True)
+            for text in POSITION_DESCRIPTORS[name]:
+                desc = PositionDescriptor(position_id=pos.id, text=text, active=True)
                 db.session.add(desc)
+        db.session.commit()
 
-        dayparts = [
+        # ─── 3. Dayparts ───
+        dayparts_data = [
             ("Morning", time(6, 0), time(11, 0)),
             ("Lunch", time(11, 0), time(14, 0)),
             ("Afternoon", time(14, 0), time(17, 0)),
-            ("Dinner", time(17, 0), time(21, 0))
+            ("Dinner", time(17, 0), time(21, 0)),
         ]
         db_dayparts = []
-        for name, start, end in dayparts:
+        for name, start, end in dayparts_data:
             dp = Daypart(name=name, start_time=start, end_time=end)
             db.session.add(dp)
             db_dayparts.append(dp)
-
         db.session.commit()
 
-        # --- 3. KEY USERS (The ones you log in with) ---
-        print("👤 Creating Key Accounts...")
-
-        # Admin
-        admin_profile = Employee(first_name="System", last_name="Admin", role="manager", status="active",
-                                 start_date=date(2020, 1, 1))
-        db.session.add(admin_profile)
-        db.session.flush()
-        admin_user = User(email="admin@local", role="manager", employee_id=admin_profile.id)
-        admin_user.set_password("admin1234")
-        db.session.add(admin_user)
-
-        # Trainer
-        trainer_profile = Employee(first_name="Terry", last_name="Trainer", role="trainer", status="active",
-                                   start_date=date(2021, 5, 15))
-        db.session.add(trainer_profile)
-        db.session.flush()
-        trainer_user = User(email="trainer@local", role="trainer", employee_id=trainer_profile.id)
-        trainer_user.set_password("password123")
-        db.session.add(trainer_user)
-
-        # Trainee
-        trainee_profile = Employee(first_name="Tim", last_name="Trainee", role="trainee", status="active",
-                                   start_date=date(2023, 8, 20))
-        db.session.add(trainee_profile)
-        db.session.flush()
-        trainee_user = User(email="trainee@local", role="trainee", employee_id=trainee_profile.id)
-        trainee_user.set_password("password123")
-        db.session.add(trainee_user)
-
-        # --- 4. BULK EMPLOYEES ---
-        print("👥 Generating Bulk Staff...")
-        all_employees = [admin_profile, trainer_profile, trainee_profile]
-
-        roles = ['manager'] * 2 + ['trainer'] * 5 + ['trainee'] * 15
-
-        for role in roles:
-            first = fake.first_name()
-            last = fake.last_name()
+        # ─── 4. Curated team (fixed names for a readable demo) ───
+        print("👤 Building team...")
+        team_data = [
+            # (first, last, role) — first three use admin@local, trainer@local, trainee@local
+            ("System", "Admin", "manager"),
+            ("Terry", "Trainer", "trainer"),
+            ("Tim", "Trainee", "trainee"),
+            # Additional staff (firstname.lastname@demo.local)
+            ("Morgan", "Lee", "manager"),
+            ("Jordan", "Smith", "trainer"),
+            ("Alex", "Rivera", "trainer"),
+            ("Casey", "Jones", "trainer"),
+            ("Riley", "Clark", "trainee"),
+            ("Jamie", "Wright", "trainee"),
+            ("Quinn", "Martinez", "trainee"),
+            ("Avery", "Taylor", "trainee"),
+            ("Parker", "Brown", "trainee"),
+            ("Blake", "Davis", "trainee"),
+        ]
+        all_employees = []
+        for first, last, role in team_data:
+            start = date(2022, 1, 1) if role in ("manager", "trainer") else date(2023, 6, 1) + timedelta(days=random.randint(0, 200))
             emp = Employee(
                 first_name=first,
                 last_name=last,
                 role=role,
                 status="active",
-                start_date=fake.date_between(start_date='-2y', end_date='today')
+                start_date=start,
             )
             db.session.add(emp)
             db.session.flush()
-
-            # Create Login for them
-            u = User(email=f"{first.lower()}.{last.lower()}@local", role=role, employee_id=emp.id)
-            u.set_password("password123")
-            db.session.add(u)
+            login_emails = ["admin@local", "trainer@local", "trainee@local"]
+            idx = len(all_employees)
+            email = login_emails[idx] if idx < 3 else f"{first.lower()}.{last.lower()}@demo.local"
+            user = User(email=email, role=role, employee_id=emp.id)
+            user.set_password("admin1234" if email == "admin@local" else "password123")
+            db.session.add(user)
             all_employees.append(emp)
-
         db.session.commit()
 
-        # Separate into groups for easy access
-        trainers = [e for e in all_employees if e.role in ['manager', 'trainer']]
-        trainees = [e for e in all_employees if e.role == 'trainee']
+        managers = [e for e in all_employees if e.role == "manager"]
+        trainers = [e for e in all_employees if e.role == "trainer"]
+        trainees = [e for e in all_employees if e.role == "trainee"]
 
-        # --- 5. SCHEDULES & SESSIONS ---
-        print("📅 Creating Schedules & Sessions...")
-
+        # ─── 5. Schedules & training sessions (coherent story) ───
+        print("📅 Schedules & training sessions...")
         today = date.today()
         last_monday = get_monday(today - timedelta(days=7))
         this_monday = get_monday(today)
         next_monday = get_monday(today + timedelta(days=7))
 
-        schedules_data = [
-            (last_monday, "published"),
-            (this_monday, "published"),
-            (next_monday, "draft")
-        ]
-
-        for start_dt, status in schedules_data:
+        for start_dt, status in [(last_monday, "published"), (this_monday, "published"), (next_monday, "draft")]:
             end_dt = start_dt + timedelta(days=6)
             sched = Schedule(start_date=start_dt, end_date=end_dt, status=status)
             db.session.add(sched)
             db.session.flush()
 
-            # Create random sessions for this week
-            for _ in range(random.randint(10, 15)):
-                session_day = start_dt + timedelta(days=random.randint(0, 6))
-                t_r = random.choice(trainers)
-                t_e = random.choice(trainees)
-                pos = random.choice(db_positions)
+            # Assign sessions so trainees have a logical progression (e.g. same position a few times, then next)
+            positions_ordered = db_positions[:5]  # Front Counter -> Drive-Thru Order -> Window -> Fries -> Grill
+            for ti, trainee in enumerate(trainees):
+                for _ in range(2):
+                    session_day = start_dt + timedelta(days=random.randint(0, 6))
+                    pos = positions_ordered[ti % len(positions_ordered)]
+                    tr = random.choice(trainers)
+                    use_dp = random.choice([True, True, False])
+                    dp_id = random.choice(db_dayparts).id if use_dp else None
+                    c_start = time(9, 0) if not use_dp else None
+                    c_end = time(13, 0) if not use_dp else None
 
-                use_daypart = random.choice([True, True, False])
-                dp_id = random.choice(db_dayparts).id if use_daypart else None
-                c_start = None
-                c_end = None
-
-                if not use_daypart:
-                    hour = random.randint(8, 16)
-                    c_start = time(hour, 0)
-                    c_end = time(hour + 4, 0)
-
-                session = TrainingSession(
-                    schedule_id=sched.id,
-                    trainer_employee_id=t_r.id,
-                    trainee_employee_id=t_e.id,
-                    position_id=pos.id,
-                    session_date=session_day,
-                    daypart_id=dp_id,
-                    custom_start_time=c_start,
-                    custom_end_time=c_end
-                )
-
-                if start_dt == last_monday:
-                    session.completed_at = datetime.combine(session_day, time(17, 0))
-                    session.overall_notes = fake.paragraph(nb_sentences=2)
-                    db.session.add(session)
-                    db.session.flush()
-
-                    descriptors = PositionDescriptor.query.filter_by(position_id=pos.id).all()
-                    for desc in descriptors:
-                        rating = SessionRating(
-                            training_session_id=session.id,
-                            descriptor_id=desc.id,
-                            rating_value=random.randint(2, 5),
-                            comment=fake.sentence() if random.choice([True, False]) else None
-                        )
-                        db.session.add(rating)
-
-                elif start_dt == this_monday:
-                    if session_day < today:
-                        session.completed_at = datetime.combine(session_day, time(17, 0))
-                        session.overall_notes = "Training completed successfully."
+                    session = TrainingSession(
+                        schedule_id=sched.id,
+                        trainer_employee_id=tr.id,
+                        trainee_employee_id=trainee.id,
+                        position_id=pos.id,
+                        session_date=session_day,
+                        daypart_id=dp_id,
+                        custom_start_time=c_start,
+                        custom_end_time=c_end,
+                    )
+                    if start_dt == last_monday or (start_dt == this_monday and session_day < today):
+                        session.completed_at = datetime.combine(session_day, time(16, 30))
+                        session.overall_notes = random.choice([
+                            "Solid shift. Ready to move on next week.",
+                            "Did great. No issues.",
+                            "Good progress on speed. Will repeat once more then advance.",
+                        ])
                         db.session.add(session)
                         db.session.flush()
-
-                        descriptors = PositionDescriptor.query.filter_by(position_id=pos.id).all()
-                        for desc in descriptors:
-                            rating = SessionRating(
+                        for desc in PositionDescriptor.query.filter_by(position_id=pos.id).all():
+                            r = SessionRating(
                                 training_session_id=session.id,
                                 descriptor_id=desc.id,
-                                rating_value=random.randint(3, 5)
+                                rating_value=random.randint(3, 5),
+                                comment=random.choice([None, None, "Good.", "Nailed it."]),
                             )
-                            db.session.add(rating)
+                            db.session.add(r)
                     else:
                         db.session.add(session)
-                else:
-                    db.session.add(session)
+        db.session.commit()
 
-        # --- 6. MESSAGES ---
-        print("💬 Generating Conversations...")
-        for _ in range(20):
-            sender = random.choice(all_employees)
-            recipient = random.choice(all_employees)
-            if sender.id == recipient.id: continue
+        # ─── 6. Channels & messages (realistic conversations) ───
+        print("💬 Channels & messages...")
+        now = datetime.now(timezone.utc)
 
-            base_time = datetime.now() - timedelta(days=random.randint(0, 5))
+        # General channel (everyone)
+        ch_general = Channel(
+            name="general",
+            channel_type="channel",
+            description="Store-wide announcements and chat.",
+            is_private=False,
+            is_read_only=False,
+            created_by_id=managers[0].id,
+        )
+        db.session.add(ch_general)
+        db.session.flush()
+        for emp in all_employees:
+            db.session.add(ChannelParticipant(channel_id=ch_general.id, employee_id=emp.id))
+        general_messages = [
+            (managers[0], "Hey everyone — the new schedule is posted. Please check your shifts and let a manager know if you need any swaps.", now - timedelta(days=2, hours=10)),
+            (trainers[0], "Thanks! I'll take a look.", now - timedelta(days=2, hours=9, minutes=30)),
+            (managers[1], "Reminder: shift swap requests need to be in by Friday noon.", now - timedelta(days=1, hours=8)),
+            (trainers[1], "Who's covering the close on Saturday? I might need to swap.", now - timedelta(hours=5)),
+            (managers[0], "I'll post the closing roster by tomorrow.", now - timedelta(hours=4, minutes=45)),
+        ]
+        general_messages.sort(key=lambda x: x[2])
+        for sender, body, ts in general_messages:
+            msg = Message(sender_id=sender.id, recipient_id=None, channel_id=ch_general.id, body=body, timestamp=ts)
+            db.session.add(msg)
+        db.session.flush()
+        for cp in ChannelParticipant.query.filter_by(channel_id=ch_general.id).all():
+            cp.last_read_at = now - timedelta(hours=1)
+        db.session.commit()
 
-            for i in range(random.randint(2, 6)):
-                msg_time = base_time + timedelta(minutes=i * 10)
-                msg = Message(
-                    sender_id=sender.id,
-                    recipient_id=recipient.id,
-                    body=fake.sentence(nb_words=10),
-                    timestamp=msg_time,
-                    read_at=msg_time + timedelta(minutes=5) if i < 2 else None
-                )
-                db.session.add(msg)
-                sender, recipient = recipient, sender
+        # Managers-only (private)
+        ch_managers = Channel(
+            name="managers",
+            channel_type="channel",
+            description="Manager-only discussions.",
+            is_private=True,
+            is_read_only=False,
+            created_by_id=managers[0].id,
+        )
+        db.session.add(ch_managers)
+        db.session.flush()
+        for emp in managers:
+            db.session.add(ChannelParticipant(channel_id=ch_managers.id, employee_id=emp.id))
+        msg_m = Message(
+            sender_id=managers[0].id, recipient_id=None, channel_id=ch_managers.id,
+            body="Quick heads up — we're doing inventory Tuesday night. Can one of you stay late?",
+            timestamp=now - timedelta(days=1, hours=14),
+        )
+        db.session.add(msg_m)
 
-        # --- 7. NOTIFICATIONS ---
-        print("🔔 Queuing Notifications...")
-        for user in all_employees[:10]:
-            if user.user_account:
-                # REMOVED 'type' argument entirely
-                note = Notification(
-                    user_id=user.user_account.id,
-                    title="New Schedule Posted",
-                    body=f"The schedule for {next_monday.strftime('%b %d')} is now available.",
-                    created_at=datetime.now() - timedelta(hours=2)
-                )
-                db.session.add(note)
+        # Schedule updates (read-only for trainees)
+        ch_schedule = Channel(
+            name="schedule-updates",
+            channel_type="channel",
+            description="Schedule and roster updates. Only managers post here.",
+            is_private=False,
+            is_read_only=True,
+            created_by_id=managers[0].id,
+        )
+        db.session.add(ch_schedule)
+        db.session.flush()
+        for emp in all_employees:
+            db.session.add(ChannelParticipant(channel_id=ch_schedule.id, employee_id=emp.id))
+        msg_s = Message(
+            sender_id=managers[0].id, recipient_id=None, channel_id=ch_schedule.id,
+            body="Week of " + this_monday.strftime("%B %d") + " schedule is live. Check the app for your assignments.",
+            timestamp=now - timedelta(days=3, hours=9),
+        )
+        db.session.add(msg_s)
+
+        # DM channel: Terry (trainer) <-> Tim (trainee)
+        terry = next(e for e in all_employees if e.first_name == "Terry" and e.role == "trainer")
+        tim = next(e for e in all_employees if e.first_name == "Tim" and e.role == "trainee")
+        ch_dm = Channel(name=None, channel_type="dm", created_by_id=terry.id)
+        db.session.add(ch_dm)
+        db.session.flush()
+        db.session.add(ChannelParticipant(channel_id=ch_dm.id, employee_id=terry.id))
+        db.session.add(ChannelParticipant(channel_id=ch_dm.id, employee_id=tim.id))
+        dm_messages = [
+            (terry, "You're on Front Counter with me Tuesday lunch. We'll work on speed.", now - timedelta(days=2, hours=12)),
+            (tim, "Sounds good, see you then.", now - timedelta(days=2, hours=11, minutes=30)),
+            (terry, "Great job today — you're ready for drive-thru order next week.", now - timedelta(days=1, hours=15)),
+            (tim, "Thanks! I'll check the schedule.", now - timedelta(days=1, hours=16)),
+        ]
+        for sender, body, ts in dm_messages:
+            db.session.add(Message(sender_id=sender.id, recipient_id=None, channel_id=ch_dm.id, body=body, timestamp=ts))
 
         db.session.commit()
 
+        # ─── 7. Notifications (realistic, with links where useful) ───
+        print("🔔 Notifications...")
+        schedule_path = "/manager/schedules"
+        for emp in all_employees[:8]:
+            u = getattr(emp, "user_account", None)
+            if not u:
+                continue
+            note = Notification(
+                user_id=u.id,
+                title="New schedule posted",
+                body=f"The schedule for the week of {next_monday.strftime('%b %d')} is now available. Check your assignments.",
+                category="schedule",
+                link_url=schedule_path,
+                created_at=now - timedelta(hours=2),
+            )
+            db.session.add(note)
+        db.session.commit()
+
         print("\n" + "=" * 60)
-        print("✅  SEED COMPLETE")
+        print("✅  SEED COMPLETE — Demo-ready data")
         print("=" * 60)
-        print("1. Manager: admin@local   / admin1234")
-        print("2. Trainer: trainer@local / password123")
-        print("3. Trainee: trainee@local / password123")
-        print(f"4. Plus {len(all_employees) - 3} extra users (pass: password123)")
+        print("Log in with (password for all: password123):")
+        print("  • Manager:  admin@local  / admin1234  (System Admin)")
+        print("  • Trainer:  trainer@local / password123 (Terry Trainer)")
+        print("  • Trainee:  trainee@local / password123 (Tim Trainee)")
+        print("  • Others:  firstname.lastname@demo.local / password123")
         print("=" * 60)
 
 

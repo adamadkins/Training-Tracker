@@ -232,12 +232,15 @@ def _build_sidebar_data(my_id):
     sidebar_channels.sort(key=lambda x: x['display_name'].lower())
     sidebar_dms.sort(key=lambda x: x['timestamp'] or _min_ts, reverse=True)
 
+    unreads = [item for item in sidebar_channels + sidebar_dms if item.get('unread', 0) > 0]
+    unreads.sort(key=lambda x: x.get('timestamp') or _min_ts, reverse=True)
+
     directory = Employee.query.filter(
         Employee.id != my_id,
         Employee.status == 'active'
     ).order_by(Employee.first_name).all()
 
-    return sidebar_channels, sidebar_dms, directory
+    return sidebar_channels, sidebar_dms, unreads, directory
 
 
 # ── Routes ───────────────────────────────────────────────
@@ -249,11 +252,12 @@ def inbox():
         flash("Link your account to an employee profile to chat.", "warning")
         return redirect(url_for('main.index'))
     my_id = current_user.employee_id
-    sidebar_channels, sidebar_dms, directory = _build_sidebar_data(my_id)
+    sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
+        sidebar_unreads=sidebar_unreads,
         directory=directory,
         active_channel=None,
         active_partner=None,
@@ -266,6 +270,7 @@ def inbox():
         reply_to_map={},
         now_date='',
         yesterday_date='',
+        can_edit_channel=False,
     )
 
 
@@ -348,11 +353,12 @@ def chat(partner_id):
     today = datetime.now(timezone.utc).date()
     yesterday = today - timedelta(days=1)
 
-    sidebar_channels, sidebar_dms, directory = _build_sidebar_data(my_id)
+    sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
+        sidebar_unreads=sidebar_unreads,
         directory=directory,
         active_channel=None,
         active_partner=partner,
@@ -365,6 +371,7 @@ def chat(partner_id):
         reply_to_map=reply_to_map,
         now_date=today.strftime('%Y-%m-%d'),
         yesterday_date=yesterday.strftime('%Y-%m-%d'),
+        can_edit_channel=False,
     )
 
 
@@ -405,6 +412,16 @@ def channel_chat(channel_id):
     if request.method == 'POST':
         body = request.form.get('body', '').strip()
         if body:
+            if getattr(ch, 'is_read_only', False):
+                can_post = (
+                    current_user.role == 'manager' or
+                    (ch.created_by_id and ch.created_by_id == my_id)
+                )
+                if not can_post:
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return jsonify({'error': 'This channel is read-only. Only the channel creator and managers can post.'}), 403
+                    flash('This channel is read-only. Only the channel creator and managers can post.', 'warning')
+                    return redirect(url_for('messages.channel_chat', channel_id=channel_id))
             reply_to_id = request.form.get('reply_to_id') or (request.get_json(silent=True) or {}).get('reply_to_id')
             if reply_to_id is not None:
                 try:
@@ -462,12 +479,17 @@ def channel_chat(channel_id):
     channel_avatar_employee = others[0] if len(others) == 1 else None
     today = datetime.now(timezone.utc).date()
     yesterday = today - timedelta(days=1)
+    can_edit_channel = (
+        ch.channel_type == 'channel' and
+        (current_user.role == 'manager' or (ch.created_by_id and ch.created_by_id == my_id))
+    )
 
-    sidebar_channels, sidebar_dms, directory = _build_sidebar_data(my_id)
+    sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
+        sidebar_unreads=sidebar_unreads,
         directory=directory,
         active_channel=ch,
         active_partner=None,
@@ -480,6 +502,7 @@ def channel_chat(channel_id):
         reply_to_map=reply_to_map,
         now_date=today.strftime('%Y-%m-%d'),
         yesterday_date=yesterday.strftime('%Y-%m-%d'),
+        can_edit_channel=can_edit_channel,
     )
 
 
@@ -543,13 +566,23 @@ def create_channel():
         return jsonify({'error': 'Messaging is disabled'}), 400
     data = request.get_json() or request.form
     name = (data.get('name') or '').strip()
+    description = (data.get('description') or '').strip() or None
+    is_private = data.get('is_private') in (True, 'true', '1', 1)
+    is_read_only = data.get('is_read_only') in (True, 'true', '1', 1)
     member_ids = data.get('member_ids') or data.get('member_ids[]') or []
     if isinstance(member_ids, str):
         member_ids = [member_ids]
     member_ids = [int(x) for x in member_ids if x]
     if not name:
         return jsonify({'error': 'Channel name is required'}), 400
-    ch = Channel(name=name, channel_type='channel', created_by_id=current_user.employee_id)
+    ch = Channel(
+        name=name,
+        channel_type='channel',
+        description=description,
+        is_private=is_private,
+        is_read_only=is_read_only,
+        created_by_id=current_user.employee_id,
+    )
     db.session.add(ch)
     db.session.flush()
     db.session.add(ChannelParticipant(channel_id=ch.id, employee_id=current_user.employee_id))
@@ -558,6 +591,44 @@ def create_channel():
             db.session.add(ChannelParticipant(channel_id=ch.id, employee_id=eid))
     db.session.commit()
     return jsonify({'channel_id': ch.id, 'url': url_for('messages.channel_chat', channel_id=ch.id)})
+
+
+@messages_bp.route('/channel/<int:channel_id>/update', methods=['POST'])
+@login_required
+def channel_update(channel_id):
+    if not current_user.employee_id:
+        return jsonify({'error': 'Not allowed'}), 403
+    ch = Channel.query.get_or_404(channel_id)
+    if ch.channel_type != 'channel':
+        return jsonify({'error': 'Only group channels can be edited'}), 400
+    participation = ChannelParticipant.query.filter_by(channel_id=channel_id, employee_id=current_user.employee_id).first()
+    if not participation:
+        return jsonify({'error': 'You are not in this channel'}), 403
+    can_edit = current_user.role == 'manager' or (ch.created_by_id == current_user.employee_id)
+    if not can_edit:
+        return jsonify({'error': 'Only the channel creator or managers can edit settings'}), 403
+
+    data = request.get_json() or request.form
+    name = (data.get('name') or '').strip()
+    if name:
+        ch.name = name
+    ch.description = (data.get('description') or '').strip() or None
+    ch.is_private = data.get('is_private') in (True, 'true', '1', 1)
+    ch.is_read_only = data.get('is_read_only') in (True, 'true', '1', 1)
+
+    member_ids = data.get('member_ids') or data.get('member_ids[]') or []
+    if isinstance(member_ids, str):
+        member_ids = [member_ids]
+    member_ids = [int(x) for x in member_ids if x]
+    current_ids = {p.employee_id for p in ch.participants}
+    new_ids = set(member_ids)
+    for eid in new_ids - current_ids:
+        db.session.add(ChannelParticipant(channel_id=ch.id, employee_id=eid))
+    for cp in list(ch.participants):
+        if cp.employee_id not in new_ids and cp.employee_id != ch.created_by_id:
+            db.session.delete(cp)
+    db.session.commit()
+    return jsonify({'status': 'ok', 'url': url_for('messages.channel_chat', channel_id=ch.id)})
 
 
 @messages_bp.route('/<int:partner_id>/updates')
