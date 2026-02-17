@@ -13,5 +13,5 @@ COPY . .
 
 EXPOSE 8080
 
-# Bind to 8080 so we don't depend on $PORT expansion (Railway proxies to this)
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "run:app"]
+# Longer timeout so heavy pages (schedule detail, seed+emails) don't hit WORKER TIMEOUT (default 30s)
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "--timeout", "120", "run:app"]
