@@ -44,4 +44,11 @@ def create_app():
         db.create_all()
         print("Database tables verified/created.")
 
+    # 7. If DB is empty (e.g. first deploy on Railway), seed with demo data
+    try:
+        from app.seed import seed_if_empty
+        seed_if_empty(app)
+    except Exception as e:
+        print(f"Seed-if-empty skipped: {e}")
+
     return app

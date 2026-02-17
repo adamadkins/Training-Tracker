@@ -71,17 +71,20 @@ POSITION_DESCRIPTORS = {
 }
 
 
-def seed_data():
-    app = create_app()
+def _run_seed(app, drop_first=True):
+    """Run seed logic. If drop_first=True, drop and recreate tables then insert. Otherwise only insert (tables must exist)."""
     with app.app_context():
         print("=" * 60)
         print("SEEDING: Demo-ready data (realistic, coherent)")
         print("=" * 60)
         print(f"Target DB: {app.config.get('SQLALCHEMY_DATABASE_URI')}")
 
-        print("\n⚠️  Dropping all tables and recreating...")
-        db.drop_all()
-        db.create_all()
+        if drop_first:
+            print("\n⚠️  Dropping all tables and recreating...")
+            db.drop_all()
+            db.create_all()
+        else:
+            print("\n📥 Database empty — inserting demo data...")
 
         # ─── 1. System settings ───
         print("⚙️  System settings...")
@@ -341,6 +344,20 @@ def seed_data():
         print("  • Trainee:  trainee@local / password123 (Tim Trainee)")
         print("  • Others:  firstname.lastname@demo.local / password123")
         print("=" * 60)
+
+
+def seed_if_empty(app):
+    """If the database has no system settings (empty), run seed without dropping. Call from app startup."""
+    with app.app_context():
+        if SystemSettings.query.first() is not None:
+            return
+        _run_seed(app, drop_first=False)
+
+
+def seed_data():
+    """CLI entrypoint: create app and run full seed (drop + recreate + insert)."""
+    app = create_app()
+    _run_seed(app, drop_first=True)
 
 
 if __name__ == "__main__":
