@@ -1578,14 +1578,14 @@ def schedule_publish(schedule_id):
     sch.status = 'published'
     sch.published_at = datetime.now(timezone.utc)
     sessions = TrainingSession.query.filter_by(schedule_id=sch.id).all()
-    users_to_notify = set()
+    # One query for all users to notify (avoid N+1)
+    emp_ids = set()
     for s in sessions:
         if s.trainer_employee_id:
-            u = User.query.filter_by(employee_id=s.trainer_employee_id).first()
-            if u: users_to_notify.add(u)
+            emp_ids.add(s.trainer_employee_id)
         if s.trainee_employee_id:
-            u = User.query.filter_by(employee_id=s.trainee_employee_id).first()
-            if u: users_to_notify.add(u)
+            emp_ids.add(s.trainee_employee_id)
+    users_to_notify = list(User.query.filter(User.employee_id.in_(emp_ids)).all()) if emp_ids else []
     link = url_for('employee.weekly_schedule', schedule_id=sch.id, _external=True)
     for user in users_to_notify:
         notify(

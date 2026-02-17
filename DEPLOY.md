@@ -12,6 +12,18 @@ The Dockerfile runs gunicorn on port **8080** (no `$PORT`). If you still see thi
 
 ---
 
+## If you see: WORKER TIMEOUT when publishing a schedule
+
+The Dockerfile uses **`--timeout 120`**. If workers still timeout at ~30s, Railway may be **overriding** the start command.
+
+1. In Railway → your **service** → **Settings**.
+2. Find **Start Command** / **Custom start command**.
+3. Either **clear it** (so the Dockerfile CMD is used), or set it to:
+   `gunicorn -b 0.0.0.0:8080 --timeout 120 run:app`
+4. Redeploy.
+
+---
+
 ## If deploy fails with "No module named 'psycopg2'"
 
 1. **Use the Dockerfile.** In Railway → your service → **Variables**, set:
