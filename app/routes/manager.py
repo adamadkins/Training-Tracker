@@ -171,8 +171,10 @@ def dashboard():
         active_ids = [eid for eid in visible_ids if eid in non_graduated_ids]
         employees = Employee.query.filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
-            selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
-            selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+            selectinload(Employee.trainee_sessions).options(
+                joinedload(TrainingSession.position),
+                selectinload(TrainingSession.ratings),
+            ),
         ).all()
         sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids)
@@ -188,8 +190,10 @@ def dashboard():
     else:
         employees = Employee.query.filter(Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
-            selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
-            selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+            selectinload(Employee.trainee_sessions).options(
+                joinedload(TrainingSession.position),
+                selectinload(TrainingSession.ratings),
+            ),
         ).all()
         sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids)
@@ -1512,11 +1516,13 @@ def schedule_detail(schedule_id):
     trainee_ids = [t.id for t in active_trainees]
     trainee_stats = {}
     if trainee_ids:
-        # Single query with ratings eager-loaded (no per-session rating query)
+        # Recent history only (limit rows to avoid timeout on large DBs)
+        cutoff = date.today() - timedelta(days=365)
         all_history = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(trainee_ids),
             TrainingSession.completed_at != None,
-        ).options(selectinload(TrainingSession.ratings)).all()
+            TrainingSession.session_date >= cutoff,
+        ).options(selectinload(TrainingSession.ratings)).order_by(TrainingSession.completed_at.desc()).limit(2000).all()
 
         history_map = {}
         for s in all_history:
