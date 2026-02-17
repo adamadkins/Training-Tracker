@@ -47,14 +47,16 @@ def dashboard():
         (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
     ).options(*session_opts).order_by(TrainingSession.session_date.asc(), TrainingSession.id.asc()).all()
 
-    # 2. FLOOR COVERAGE (trainers/managers only)
+    # 2. FLOOR COVERAGE (trainers/managers only) — limit to recent + cap rows
     floor_coverage = []
     if current_user.role in ['trainer', 'manager']:
+        coverage_cutoff = today - timedelta(days=30)
         floor_coverage = TrainingSession.query.filter(
             TrainingSession.completed_at == None,
             TrainingSession.trainee_employee_id != me,
-            TrainingSession.trainer_employee_id != me
-        ).options(*session_opts).order_by(TrainingSession.session_date.asc()).all()
+            TrainingSession.trainer_employee_id != me,
+            TrainingSession.session_date >= coverage_cutoff,
+        ).options(*session_opts).order_by(TrainingSession.session_date.asc()).limit(50).all()
 
     # 3. HISTORY
     recent_sessions = TrainingSession.query.filter(

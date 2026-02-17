@@ -138,6 +138,7 @@ def setup_wizard():
         settings.setup_completed = True
         settings.setup_step = 0
         db.session.commit()
+        cache.delete('system_settings')
         flash("Setup complete! You can change business type and locations later in Settings.", "success")
         return redirect(url_for("manager.dashboard"))
     # step 0: just advance to step 1
@@ -154,6 +155,7 @@ def setup_skip():
         settings.setup_completed = True
         settings.setup_step = 0
         db.session.commit()
+        cache.delete('system_settings')
     return redirect(url_for("manager.dashboard"))
 
 
@@ -181,13 +183,15 @@ def dashboard():
                 selectinload(TrainingSession.ratings),
             ),
         ).all()
+        dash_cutoff = date.today() - timedelta(days=90)
         sessions = TrainingSession.query.filter(
-            TrainingSession.trainee_employee_id.in_(active_ids)
+            TrainingSession.trainee_employee_id.in_(active_ids),
+            TrainingSession.session_date >= dash_cutoff,
         ).options(
             joinedload(TrainingSession.position),
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.desc()).all()
+        ).order_by(TrainingSession.session_date.desc()).limit(200).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
@@ -200,13 +204,15 @@ def dashboard():
                 selectinload(TrainingSession.ratings),
             ),
         ).all()
+        dash_cutoff = date.today() - timedelta(days=90)
         sessions = TrainingSession.query.filter(
-            TrainingSession.trainee_employee_id.in_(non_graduated_ids)
+            TrainingSession.trainee_employee_id.in_(non_graduated_ids),
+            TrainingSession.session_date >= dash_cutoff,
         ).options(
             joinedload(TrainingSession.position),
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.desc()).all()
+        ).order_by(TrainingSession.session_date.desc()).limit(200).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.completed_at == None,
@@ -1725,6 +1731,7 @@ def settings():
             if 'business_type' in request.form:
                 system_settings.business_type = request.form.get('business_type') or None
         db.session.commit()
+        cache.delete('system_settings')
         flash("Settings updated successfully!", "success")
         return redirect(url_for('manager.settings'))
     share_trainee_data = getattr(system_settings, 'share_trainee_data_with_trainees', True)
