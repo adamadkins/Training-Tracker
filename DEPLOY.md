@@ -40,13 +40,13 @@ The Dockerfile runs gunicorn on port **8080** (no `$PORT`). If you still see thi
    railway login
    railway link
    ```
-   Choose the project and environment (e.g. production) when prompted.
+   Choose the project, **production** (or desired) environment, and **Postgres** (so the CLI injects DB vars). The app uses `DATABASE_PUBLIC_URL` when you run from your machine so the seed can connect (private host only works inside Railway).
 
 3. **Run the seed against Railway’s database**:
    ```bash
    railway run python -m app.seed
    ```
-   This uses Railway’s `DATABASE_URL` (and other env vars), so the seed runs against the live DB.
+   This uses Railway’s DB env vars (public URL when running locally), so the seed runs against the live DB.
 
 4. Log in at your site with e.g. **admin@local** / **admin1234**.
 

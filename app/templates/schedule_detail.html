@@ -616,7 +616,7 @@
                                 <option value="" disabled selected>Select trainee...</option>
                                 {% for emp in employees %}
                                     {% if emp.role == 'trainee' %}
-                                    <option value="{{ emp.id }}" data-location-ids="{{ emp.location_ids() | join(',') }}">{{ emp.first_name }} {{ emp.last_name }}</option>
+                                    <option value="{{ emp.id }}" data-location-ids="{{ (employee_location_ids.get(emp.id, []) | join(',')) }}">{{ emp.first_name }} {{ emp.last_name }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>

@@ -9,10 +9,12 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
     # --- Database Configuration ---
-    # FIXED: Pointing to 'instance/training_tracker.db' instead of 'app.db'
-    # We use os.path.join to handle the 'instance' folder correctly if needed,
-    # but for simplicity in local dev, this often works best:
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    # Prefer public URL when DATABASE_URL is Railway's private host (*.railway.internal),
+    # which only resolves inside Railway. Lets "railway run python -m app.seed" work from local.
+    _db_url = os.environ.get('DATABASE_URL')
+    if _db_url and 'railway.internal' in _db_url and os.environ.get('DATABASE_PUBLIC_URL'):
+        _db_url = os.environ.get('DATABASE_PUBLIC_URL')
+    SQLALCHEMY_DATABASE_URI = _db_url or \
                               'sqlite:///' + os.path.join(basedir, 'instance', 'training_tracker.db')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False

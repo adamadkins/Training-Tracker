@@ -348,10 +348,20 @@ def _run_seed(app, drop_first=True):
 
 def seed_if_empty(app):
     """If the database has no system settings (empty), run seed without dropping. Call from app startup."""
+    from sqlalchemy.exc import OperationalError, IntegrityError
     with app.app_context():
-        if SystemSettings.query.first() is not None:
+        try:
+            if SystemSettings.query.first() is not None:
+                return
+        except OperationalError:
+            # Tables might not exist yet (e.g. fresh Postgres); ensure they do
+            db.create_all()
+        try:
+            _run_seed(app, drop_first=False)
+        except IntegrityError:
+            # Another worker/process already seeded
+            db.session.rollback()
             return
-        _run_seed(app, drop_first=False)
 
 
 def seed_data():

@@ -6,6 +6,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload, selectinload
 from app.models import (
     User, Employee, Position, PositionDescriptor, Schedule,
     TrainingSession, SessionRating, Notification, Daypart, EmployeeNote,
@@ -1430,16 +1432,28 @@ def schedule_delete(schedule_id):
 def schedule_detail(schedule_id):
     sch = Schedule.query.get_or_404(schedule_id)
     visible_ids = get_visible_employee_ids()
+
+    # Eager-load sessions with position, trainer, trainee (avoids N+1 in template)
+    session_query = TrainingSession.query.filter_by(schedule_id=sch.id).options(
+        joinedload(TrainingSession.position),
+        joinedload(TrainingSession.trainer),
+        joinedload(TrainingSession.trainee),
+    ).order_by(TrainingSession.session_date)
     if visible_ids is not None:
-        sessions = TrainingSession.query.filter_by(schedule_id=sch.id).filter(
-            TrainingSession.trainee_employee_id.in_(visible_ids)
-        ).order_by(TrainingSession.session_date).all()
-        employees = Employee.query.filter(Employee.status == 'active', Employee.id.in_(visible_ids), Employee.graduated_at == None).all()
+        session_query = session_query.filter(TrainingSession.trainee_employee_id.in_(visible_ids))
+    sessions = session_query.all()
+
+    # Eager-load employees with locations, roadmaps+steps, trainee_sessions+ratings (for trainee_stats and form)
+    employee_query = Employee.query.filter(Employee.status == 'active', Employee.graduated_at == None).options(
+        selectinload(Employee.locations),
+        selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
+        selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+    )
+    if visible_ids is not None:
+        employee_query = employee_query.filter(Employee.id.in_(visible_ids))
         if not sessions and TrainingSession.query.filter_by(schedule_id=sch.id).first():
             abort(403)
-    else:
-        sessions = TrainingSession.query.filter_by(schedule_id=sch.id).order_by(TrainingSession.session_date).all()
-        employees = Employee.query.filter(Employee.status == 'active', Employee.graduated_at == None).all()
+    employees = employee_query.all()
 
     days = []
     curr = sch.start_date
@@ -1450,56 +1464,77 @@ def schedule_detail(schedule_id):
     all_active_positions = Position.query.filter_by(active=True).all()
     dayparts = Daypart.query.filter_by(active=True).all()
 
-    trainee_stats = {}
     active_trainees = [e for e in employees if e.role == 'trainee']
-    all_history = TrainingSession.query.filter(
-        TrainingSession.trainee_employee_id.in_([t.id for t in active_trainees]),
-        TrainingSession.completed_at != None
-    ).all()
+    trainee_ids = [t.id for t in active_trainees]
+    trainee_stats = {}
+    if trainee_ids:
+        # Single query with ratings eager-loaded (no per-session rating query)
+        all_history = TrainingSession.query.filter(
+            TrainingSession.trainee_employee_id.in_(trainee_ids),
+            TrainingSession.completed_at != None,
+        ).options(selectinload(TrainingSession.ratings)).all()
 
-    history_map = {}
-    for s in all_history:
-        if not s.ratings: continue
-        sess_avg = sum(r.rating_value for r in s.ratings) / len(s.ratings)
-        if s.trainee_employee_id not in history_map: history_map[s.trainee_employee_id] = {}
-        if s.position_id not in history_map[s.trainee_employee_id]: history_map[s.trainee_employee_id][
-            s.position_id] = {'sum': 0, 'count': 0}
-        history_map[s.trainee_employee_id][s.position_id]['sum'] += sess_avg
-        history_map[s.trainee_employee_id][s.position_id]['count'] += 1
+        history_map = {}
+        for s in all_history:
+            if not s.ratings:
+                continue
+            sess_avg = sum(r.rating_value for r in s.ratings) / len(s.ratings)
+            if s.trainee_employee_id not in history_map:
+                history_map[s.trainee_employee_id] = {}
+            if s.position_id not in history_map[s.trainee_employee_id]:
+                history_map[s.trainee_employee_id][s.position_id] = {'sum': 0, 'count': 0}
+            history_map[s.trainee_employee_id][s.position_id]['sum'] += sess_avg
+            history_map[s.trainee_employee_id][s.position_id]['count'] += 1
 
-    for t in active_trainees:
-        t_data = {'history': [], 'suggestion': None}
-        t_history = history_map.get(t.id, {})
-        # Filter positions to only those matching the trainee's location(s) (or global)
-        t_loc_ids = t.location_ids()
-        t_positions = [p for p in all_active_positions
-                       if p.location_id is None or p.location_id in t_loc_ids]
-        for pos in t_positions:
-            if pos.id in t_history:
-                stats = t_history[pos.id]
-                final_avg = round(stats['sum'] / stats['count'], 1)
-                t_data['history'].append({'id': pos.id, 'name': pos.name, 'avg': final_avg, 'count': stats['count']})
+        for t in active_trainees:
+            t_data = {'history': [], 'suggestion': None}
+            t_history = history_map.get(t.id, {})
+            t_loc_ids = t.location_ids()  # uses preloaded .locations
+            t_positions = [p for p in all_active_positions
+                          if p.location_id is None or p.location_id in t_loc_ids]
+            for pos in t_positions:
+                if pos.id in t_history:
+                    stats = t_history[pos.id]
+                    final_avg = round(stats['sum'] / stats['count'], 1)
+                    t_data['history'].append({'id': pos.id, 'name': pos.name, 'avg': final_avg, 'count': stats['count']})
 
-        roadmap_data = t.get_roadmap_progress()
-        if roadmap_data and roadmap_data['target_position']:
-            t_data['suggestion'] = {
-                'id': roadmap_data['target_position'].id,
-                'name': roadmap_data['target_position'].name,
-                'reason': 'Roadmap Step'
-            }
-        else:
-            trained_ids = [h['id'] for h in t_data['history']]
-            untrained = [p for p in t_positions if p.id not in trained_ids]
-            if untrained:
-                t_data['suggestion'] = {'id': untrained[0].id, 'name': untrained[0].name, 'reason': 'New Skill'}
-            elif t_data['history']:
-                lowest = min(t_data['history'], key=lambda x: x['avg'])
-                t_data['suggestion'] = {'id': lowest['id'], 'name': lowest['name'],
-                                        'reason': f"Needs Improvement ({lowest['avg']})"}
-        trainee_stats[t.id] = t_data
+            roadmap_data = t.get_roadmap_progress()  # uses preloaded active_roadmap, steps, trainee_sessions, ratings
+            if roadmap_data and roadmap_data['target_position']:
+                t_data['suggestion'] = {
+                    'id': roadmap_data['target_position'].id,
+                    'name': roadmap_data['target_position'].name,
+                    'reason': 'Roadmap Step'
+                }
+            else:
+                trained_ids = [h['id'] for h in t_data['history']]
+                untrained = [p for p in t_positions if p.id not in trained_ids]
+                if untrained:
+                    t_data['suggestion'] = {'id': untrained[0].id, 'name': untrained[0].name, 'reason': 'New Skill'}
+                elif t_data['history']:
+                    lowest = min(t_data['history'], key=lambda x: x['avg'])
+                    t_data['suggestion'] = {'id': lowest['id'], 'name': lowest['name'],
+                                           'reason': f"Needs Improvement ({lowest['avg']})"}
+            trainee_stats[t.id] = t_data
+
+    # Precompute location_ids for template dropdown (one query instead of N for emp.locations)
+    employee_location_ids = {}
+    if employees:
+        emp_ids = [e.id for e in employees]
+        rows = db.session.execute(
+            select(employee_locations.c.employee_id, employee_locations.c.location_id).where(
+                employee_locations.c.employee_id.in_(emp_ids)
+            )
+        ).fetchall()
+        for eid, lid in rows:
+            employee_location_ids.setdefault(eid, []).append(lid)
+        for emp in employees:
+            if emp.id not in employee_location_ids and getattr(emp, 'location_id', None):
+                employee_location_ids[emp.id] = [emp.location_id]
+            employee_location_ids.setdefault(emp.id, [])
 
     return render_template("schedule_detail.html", schedule=sch, days=days, positions=all_active_positions,
-                           employees=employees, dayparts=dayparts, sessions=sessions, trainee_stats=trainee_stats)
+                           employees=employees, dayparts=dayparts, sessions=sessions, trainee_stats=trainee_stats,
+                           employee_location_ids=employee_location_ids)
 
 
 @manager_bp.route("/schedules/<int:schedule_id>/publish", methods=['POST'])

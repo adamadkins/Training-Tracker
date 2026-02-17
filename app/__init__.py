@@ -49,6 +49,8 @@ def create_app():
         from app.seed import seed_if_empty
         seed_if_empty(app)
     except Exception as e:
-        print(f"Seed-if-empty skipped: {e}")
+        import traceback
+        print("Seed-if-empty skipped:", e)
+        traceback.print_exc()
 
     return app
