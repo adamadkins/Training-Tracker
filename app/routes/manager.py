@@ -1597,7 +1597,8 @@ def schedule_publish(schedule_id):
         )
     db.session.commit()
     flash("Schedule published and staff notified.")
-    return redirect(url_for('manager.schedule_detail', schedule_id=sch.id))
+    # Redirect to list (light) instead of schedule_detail (heavy) to avoid worker timeout after publish
+    return redirect(url_for('manager.schedules_list'))
 
 
 @manager_bp.route("/schedules/<int:schedule_id>/sessions/new", methods=['POST'])
