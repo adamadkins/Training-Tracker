@@ -1,0 +1,3 @@
+# Force Railway to use this Dockerfile (installs psycopg2-binary from requirements.txt)
+[build]
+dockerfilePath = "Dockerfile"
