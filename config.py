@@ -28,3 +28,9 @@ class Config:
     MAIL_PASSWORD = 'scvvkhtuwpugiums'
     MAIL_DEFAULT_SENDER = 'donotreply.trainingtracker@gmail.com'
     MAIL_TIMEOUT = 15  # seconds; avoid hanging the request if SMTP is slow
+
+    # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.
+    REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')
+    CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'
+    CACHE_REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL') or ''
+    CACHE_DEFAULT_TIMEOUT = 90  # seconds for view caches

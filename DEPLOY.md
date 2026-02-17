@@ -64,4 +64,12 @@ The Dockerfile uses **`--timeout 120`**. If workers still timeout at ~30s, Railw
 
 ---
 
+## Production: Redis (queue + cache) for speed
+
+1. **Add Redis** in Railway and link it to your web service so **REDIS_URL** is set.
+2. **Run an RQ worker**: New service, same repo; Start Command: `python run_worker.py`; add **REDIS_URL** to its variables.
+3. **Without Redis**: App still runs; email uses a thread and cache is in-memory.
+
+---
+
 If you don’t use the CLI, you can run the same command from a **shell** in the Railway dashboard (if your plan supports it), or add a one-off **Run** step that executes `python -m app.seed` in the same environment as your service.

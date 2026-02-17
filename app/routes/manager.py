@@ -14,7 +14,7 @@ from app.models import (
     UserSettings, SystemSettings, TrainingRoadmap, RoadmapStep, Location,
     employee_locations,
 )
-from app import db
+from app import db, cache
 from app.utils.notifications import send_notification_email, notify
 from app.utils.schedule_parser import parse_schedule_pdf
 from app.routes.helpers import manager_required, staff_required
@@ -157,9 +157,14 @@ def setup_skip():
     return redirect(url_for("manager.dashboard"))
 
 
+def _dashboard_cache_key():
+    return f"manager_dashboard/{getattr(current_user, 'id', None)}/{request.args.get('location_id', '')}"
+
+
 # --- DASHBOARD ---
 @manager_bp.route("/dashboard")
 @manager_required
+@cache.cached(timeout=60, key_prefix=_dashboard_cache_key)
 def dashboard():
     sys_settings = SystemSettings.query.first()
     if sys_settings and getattr(sys_settings, "setup_completed", True) is False:
@@ -1435,6 +1440,7 @@ def schedule_edit(schedule_id):
             sch.status = request.form.get("status")
             sch.hide_assignments = ('hide_assignments' in request.form)
             db.session.commit()
+            cache.delete_memoized(schedule_detail)
             flash("Schedule settings updated.")
             return redirect(url_for('manager.schedules_list'))
         except Exception as e:
@@ -1460,8 +1466,13 @@ def schedule_delete(schedule_id):
     return redirect(url_for('manager.schedules_list'))
 
 
+def _schedule_detail_cache_key():
+    return f"schedule_detail/{request.view_args.get('schedule_id')}/{getattr(current_user, 'id', None)}"
+
+
 @manager_bp.route("/schedules/<int:schedule_id>")
 @manager_required
+@cache.cached(timeout=90, key_prefix=_schedule_detail_cache_key)
 def schedule_detail(schedule_id):
     sch = Schedule.query.get_or_404(schedule_id)
     visible_ids = get_visible_employee_ids()
@@ -1596,8 +1607,8 @@ def schedule_publish(schedule_id):
             link_url=link,
         )
     db.session.commit()
+    cache.delete_memoized(schedule_detail)
     flash("Schedule published and staff notified.")
-    # Redirect to list (light) instead of schedule_detail (heavy) to avoid worker timeout after publish
     return redirect(url_for('manager.schedules_list'))
 
 
@@ -1649,6 +1660,7 @@ def session_create(schedule_id):
                        category='session', link_url=sess_link)
         db.session.commit()
 
+        cache.delete_memoized(schedule_detail)
         flash("Session added.")
     except Exception as e:
         flash(f"Error: {str(e)}")
@@ -1672,6 +1684,7 @@ def session_delete(session_id):
         if u: users_to_notify.add(u)
 
     db.session.delete(sess)
+    cache.delete_memoized(schedule_detail)
     for u in users_to_notify:
         notify(u, "Training Session Cancelled",
                f"Your training session for {pos_name} on {sess_date} has been cancelled.",

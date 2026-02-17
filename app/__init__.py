@@ -1,24 +1,25 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_migrate import Migrate  # 1. Import Migrate
+from flask_migrate import Migrate
+from flask_caching import Cache
 from config import Config
 
-# 2. Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'auth.login'
-migrate = Migrate()  # 2. Initialize Migrate instance
+migrate = Migrate()
+cache = Cache()
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # 3. Init database, login manager, and migrate
     db.init_app(app)
     login_manager.init_app(app)
-    migrate.init_app(app, db)  # 3. Bind Migrate to app and db
+    migrate.init_app(app, db)
+    cache.init_app(app)
 
     # 4. Register Blueprints
     from app.routes.auth import auth_bp

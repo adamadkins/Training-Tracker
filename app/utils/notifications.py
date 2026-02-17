@@ -1,3 +1,6 @@
+"""
+Notifications: in-app + email. Email is sent via RQ (Redis) when available, else a background thread.
+"""
 import smtplib
 import threading
 from email.mime.text import MIMEText
@@ -11,17 +14,12 @@ from app.models import Notification
 
 def notify(user, title, body, category='general', link_url=None, email_only=False):
     """
-    Central notification dispatcher.
-
-    - Creates an in-app Notification record (unless user disabled or email_only)
-    - Sends an HTML email in a background thread (unless user disabled) so the request doesn't block
-    - Respects user.settings preferences for notify_in_app / notify_email
+    In-app notification (sync) + email. Email is enqueued (RQ) or sent in a thread so the request returns immediately.
     """
     settings = getattr(user, 'settings', None)
     wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
     wants_email = getattr(settings, 'notify_email', True) if settings else True
 
-    # In-app notification
     if wants_in_app and not email_only:
         db.session.add(Notification(
             user_id=user.id,
@@ -31,32 +29,48 @@ def notify(user, title, body, category='general', link_url=None, email_only=Fals
             link_url=link_url,
         ))
 
-    # Email notification: send in background so we don't hit worker timeout
     if wants_email and user.email:
-        app = current_app._get_current_object()
         to_email = str(user.email)
-        thread = threading.Thread(
-            target=_send_email_background,
-            args=(app, to_email, title, body, category, link_url),
-            daemon=True,
-        )
-        thread.start()
+        _enqueue_or_send_email(to_email, title, body, category, link_url)
+
+
+def _enqueue_or_send_email(to_email, title, body, category='general', link_url=None):
+    """Use RQ if Redis is configured; otherwise send in a daemon thread (no Redis)."""
+    try:
+        redis_url = current_app.config.get('REDIS_URL')
+    except Exception:
+        redis_url = None
+    if redis_url:
+        try:
+            from redis import Redis
+            from rq import Queue
+            redis_conn = Redis.from_url(redis_url)
+            q = Queue(connection=redis_conn, default_timeout='2m')
+            q.enqueue(
+                'app.tasks.send_email_task',
+                to_email, title, body, category, link_url,
+                job_timeout=60,
+            )
+            return
+        except Exception:
+            pass
+    # Fallback: background thread (no Redis or enqueue failed)
+    app = current_app._get_current_object()
+    t = threading.Thread(
+        target=_send_email_background,
+        args=(app, to_email, title, body, category, link_url),
+        daemon=True,
+    )
+    t.start()
 
 
 def _send_email_background(app, to_email, title, body, category='general', link_url=None):
-    """Run in background thread with app context so we have config and templates."""
     with app.app_context():
         _send_html_email_impl(to_email, title, body, category, link_url)
 
 
 def _send_html_email_impl(to_email, title, body, category='general', link_url=None):
-    """Send a branded HTML email. Uses MAIL_TIMEOUT so SMTP doesn't hang the worker."""
-    print(f"\n--- EMAIL OUTBOUND ---")
-    print(f"To: {to_email}")
-    print(f"Subject: {title}")
-    print(f"Body: {body}")
-    print(f"----------------------\n")
-
+    timeout = current_app.config.get('MAIL_TIMEOUT', 15)
     try:
         html_content = render_template(
             'email/notification.html',
@@ -65,20 +79,17 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
             category=category,
             link_url=link_url,
         )
-    except Exception as e:
-        print(f"Template render failed, falling back to plain text: {e}")
+    except Exception:
         html_content = None
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = title
     msg['From'] = current_app.config.get('MAIL_DEFAULT_SENDER')
     msg['To'] = to_email
-
     msg.attach(MIMEText(body, 'plain'))
     if html_content:
         msg.attach(MIMEText(html_content, 'html'))
 
-    timeout = current_app.config.get('MAIL_TIMEOUT', 15)
     try:
         with smtplib.SMTP_SSL(
             current_app.config['MAIL_SERVER'],
@@ -90,24 +101,12 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
                 current_app.config['MAIL_PASSWORD']
             )
             server.send_message(msg)
-        print(f"SMTP Success: Email sent to {to_email}")
     except Exception as e:
-        print(f"SMTP Failure: {str(e)}")
-
-
-def _send_html_email(user, title, body, category='general', link_url=None):
-    """Send email synchronously (used by legacy send_notification_email)."""
-    _send_html_email_impl(user.email, title, body, category, link_url)
+        print(f"SMTP Failure: {e}")
 
 
 def send_notification_email(user, title, body):
-    """Legacy wrapper -- send email in background with email_only semantics (no in-app record)."""
+    """Legacy: email only, no in-app record. Uses queue or thread."""
     if not user.email:
         return
-    app = current_app._get_current_object()
-    thread = threading.Thread(
-        target=_send_email_background,
-        args=(app, str(user.email), title, body, 'general', None),
-        daemon=True,
-    )
-    thread.start()
+    _enqueue_or_send_email(str(user.email), title, body, 'general', None)

@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from flask import current_app
 import hashlib
+from sqlalchemy import Index
 from app import db
 
 
@@ -180,6 +181,10 @@ class Schedule(db.Model):
 
 class TrainingSession(db.Model):
     __tablename__ = "training_sessions"
+    __table_args__ = (
+        Index("ix_training_sessions_schedule_date", "schedule_id", "session_date"),
+        Index("ix_training_sessions_trainee_completed", "trainee_employee_id", "completed_at"),
+    )
     id = db.Column(db.Integer, primary_key=True)
     schedule_id = db.Column(db.Integer, db.ForeignKey("schedules.id"), nullable=False)
     session_date = db.Column(db.Date, nullable=False)
@@ -256,6 +261,7 @@ class EmployeeNote(db.Model):
 
 class Notification(db.Model):
     __tablename__ = "notifications"
+    __table_args__ = (Index("ix_notifications_user_read", "user_id", "read_at"),)
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     title = db.Column(db.String(140), nullable=False)
@@ -306,6 +312,7 @@ class ChannelParticipant(db.Model):
 
 class Message(db.Model):
     __tablename__ = "messages"
+    __table_args__ = (Index("ix_messages_channel_timestamp", "channel_id", "timestamp"),)
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)  # null when channel_id set
