@@ -105,6 +105,45 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
         print(f"SMTP Failure: {e}")
 
 
+def batch_enqueue_emails(email_list, title, body, category='general', link_url=None):
+    """Enqueue emails for multiple recipients using a single Redis connection (or one thread for all)."""
+    if not email_list:
+        return
+    try:
+        redis_url = current_app.config.get('REDIS_URL')
+    except Exception:
+        redis_url = None
+    if redis_url:
+        try:
+            from redis import Redis
+            from rq import Queue
+            redis_conn = Redis.from_url(redis_url)
+            q = Queue(connection=redis_conn, default_timeout='2m')
+            for to_email in email_list:
+                q.enqueue(
+                    'app.tasks.send_email_task',
+                    to_email, title, body, category, link_url,
+                    job_timeout=60,
+                )
+            return
+        except Exception:
+            pass
+    # Fallback: single background thread sends all emails sequentially
+    app = current_app._get_current_object()
+    t = threading.Thread(
+        target=_send_batch_emails_background,
+        args=(app, email_list, title, body, category, link_url),
+        daemon=True,
+    )
+    t.start()
+
+
+def _send_batch_emails_background(app, email_list, title, body, category='general', link_url=None):
+    with app.app_context():
+        for to_email in email_list:
+            _send_html_email_impl(to_email, title, body, category, link_url)
+
+
 def send_notification_email(user, title, body):
     """Legacy: email only, no in-app record. Uses queue or thread."""
     if not user.email:
