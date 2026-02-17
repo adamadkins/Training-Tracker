@@ -27,3 +27,4 @@ class Config:
     MAIL_USERNAME = 'donotreply.trainingtracker@gmail.com'
     MAIL_PASSWORD = 'scvvkhtuwpugiums'
     MAIL_DEFAULT_SENDER = 'donotreply.trainingtracker@gmail.com'
+    MAIL_TIMEOUT = 15  # seconds; avoid hanging the request if SMTP is slow
