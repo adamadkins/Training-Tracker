@@ -1,14 +1,29 @@
 # Deploy & seed (Railway)
 
+## If you see: `'$PORT' is not a valid port number`
+
+The Dockerfile runs gunicorn on port **8080** (no `$PORT`). If you still see this error, Railway is likely **overriding** the container start command.
+
+1. In Railway → your **service** → **Settings** (or **Deploy**).
+2. Find **Start Command** / **Custom start command**. If it’s set (e.g. `gunicorn -b 0.0.0.0:$PORT run:app`), either:
+   - **Clear it** so the image uses the Dockerfile `CMD`, or  
+   - Set it to: `gunicorn -b 0.0.0.0:8080 run:app`
+3. Redeploy.
+
+---
+
 ## If deploy fails with "No module named 'psycopg2'"
 
-Railpack caches the `pip install` step. If the cache is from before `psycopg2-binary` was in `requirements.txt`, the app will crash at runtime.
+1. **Use the Dockerfile.** In Railway → your service → **Variables**, set:
+   - **Name:** `RAILWAY_DOCKERFILE_PATH`
+   - **Value:** `Dockerfile`  
+   The Dockerfile explicitly installs `psycopg2-binary`, so the image will have it.
 
-**Fix:** In Railway → your service → **Variables**, add:
-- **Name:** `RAILPACK_DISABLE_CACHES`
-- **Value:** `*`
+2. **Force a clean build** (so no old cached layer is used):
+   - Redeploy and use **“Clear build cache”** / **“Redeploy without cache”** if Railway shows it, or  
+   - Add a temporary variable (e.g. `CACHEBUST=1`) and redeploy, then remove it.
 
-Redeploy. The build will run without cache and install all deps (including psycopg2-binary). After a successful deploy you can remove this variable to use cache again.
+3. If you were using **Railpack** (no Dockerfile), add **Variables**: `RAILPACK_DISABLE_CACHES` = `*`, then redeploy.
 
 ---
 
