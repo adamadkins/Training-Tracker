@@ -10,8 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code (repo root = app root)
 COPY . .
 
-# Use PORT from host (Render/Railway/etc. set this)
+# PORT is set by Railway at runtime; default 8080 if not set
 ENV PORT=8080
 EXPOSE 8080
 
-CMD gunicorn -b 0.0.0.0:${PORT} run:app
+# Shell expands $PORT at runtime; use 8080 if Railway doesn't set PORT
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-8080} run:app"]
