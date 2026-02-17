@@ -1,6 +1,7 @@
 """
 Notifications: in-app + email. Email is sent via RQ (Redis) when available, else a background thread.
 """
+import logging
 import smtplib
 import threading
 from email.mime.text import MIMEText
@@ -10,6 +11,8 @@ from flask import current_app, render_template
 
 from app import db
 from app.models import Notification
+
+log = logging.getLogger(__name__)
 
 
 def notify(user, title, body, category='general', link_url=None, email_only=False):
@@ -81,7 +84,20 @@ def _send_email_background(app, to_email, title, body, category='general', link_
 
 
 def _send_html_email_impl(to_email, title, body, category='general', link_url=None):
+    username = current_app.config.get('MAIL_USERNAME', '')
+    password = current_app.config.get('MAIL_PASSWORD', '')
+    server_host = current_app.config.get('MAIL_SERVER', '')
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', '') or username
+
+    if not all([username, password, server_host]):
+        log.warning("Email not configured (MAIL_USERNAME/MAIL_PASSWORD/MAIL_SERVER missing) — skipping email to %s", to_email)
+        return
+
     timeout = current_app.config.get('MAIL_TIMEOUT', 15)
+    port = int(current_app.config.get('MAIL_PORT', 587))
+    use_ssl = current_app.config.get('MAIL_USE_SSL', False)
+    use_tls = current_app.config.get('MAIL_USE_TLS', True)
+
     try:
         html_content = render_template(
             'email/notification.html',
@@ -95,25 +111,28 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
 
     msg = MIMEMultipart('alternative')
     msg['Subject'] = title
-    msg['From'] = current_app.config.get('MAIL_DEFAULT_SENDER')
+    msg['From'] = sender
     msg['To'] = to_email
     msg.attach(MIMEText(body, 'plain'))
     if html_content:
         msg.attach(MIMEText(html_content, 'html'))
 
     try:
-        with smtplib.SMTP_SSL(
-            current_app.config['MAIL_SERVER'],
-            current_app.config['MAIL_PORT'],
-            timeout=timeout,
-        ) as server:
-            server.login(
-                current_app.config['MAIL_USERNAME'],
-                current_app.config['MAIL_PASSWORD']
-            )
+        if use_ssl:
+            # SSL wraps the connection immediately (typically port 465)
+            server = smtplib.SMTP_SSL(server_host, port, timeout=timeout)
+        else:
+            # Plain connection + optional STARTTLS upgrade (typically port 587)
+            server = smtplib.SMTP(server_host, port, timeout=timeout)
+            if use_tls:
+                server.starttls()
+
+        with server:
+            server.login(username, password)
             server.send_message(msg)
+        log.info("Email sent to %s: %s", to_email, title)
     except Exception as e:
-        print(f"SMTP Failure: {e}")
+        log.error("SMTP Failure sending to %s: %s", to_email, e, exc_info=True)
 
 
 def batch_enqueue_emails(email_list, title, body, category='general', link_url=None):
