@@ -34,3 +34,4 @@ class Config:
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'
     CACHE_REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL') or ''
     CACHE_DEFAULT_TIMEOUT = 90  # seconds for view caches
+    CACHE_OPTIONS = {'socket_connect_timeout': 3, 'socket_timeout': 3}  # fail fast if Redis is down

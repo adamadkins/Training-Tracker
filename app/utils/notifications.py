@@ -34,18 +34,29 @@ def notify(user, title, body, category='general', link_url=None, email_only=Fals
         _enqueue_or_send_email(to_email, title, body, category, link_url)
 
 
-def _enqueue_or_send_email(to_email, title, body, category='general', link_url=None):
-    """Use RQ if Redis is configured; otherwise send in a daemon thread (no Redis)."""
+def _get_redis_queue():
+    """Get an RQ Queue with a short socket timeout, or None if Redis is unavailable."""
     try:
         redis_url = current_app.config.get('REDIS_URL')
     except Exception:
-        redis_url = None
-    if redis_url:
+        return None
+    if not redis_url:
+        return None
+    try:
+        from redis import Redis
+        from rq import Queue
+        redis_conn = Redis.from_url(redis_url, socket_connect_timeout=3, socket_timeout=3)
+        redis_conn.ping()  # fail fast if unreachable
+        return Queue(connection=redis_conn, default_timeout='2m')
+    except Exception:
+        return None
+
+
+def _enqueue_or_send_email(to_email, title, body, category='general', link_url=None):
+    """Use RQ if Redis is configured; otherwise send in a daemon thread (no Redis)."""
+    q = _get_redis_queue()
+    if q:
         try:
-            from redis import Redis
-            from rq import Queue
-            redis_conn = Redis.from_url(redis_url)
-            q = Queue(connection=redis_conn, default_timeout='2m')
             q.enqueue(
                 'app.tasks.send_email_task',
                 to_email, title, body, category, link_url,
@@ -109,16 +120,9 @@ def batch_enqueue_emails(email_list, title, body, category='general', link_url=N
     """Enqueue emails for multiple recipients using a single Redis connection (or one thread for all)."""
     if not email_list:
         return
-    try:
-        redis_url = current_app.config.get('REDIS_URL')
-    except Exception:
-        redis_url = None
-    if redis_url:
+    q = _get_redis_queue()
+    if q:
         try:
-            from redis import Redis
-            from rq import Queue
-            redis_conn = Redis.from_url(redis_url)
-            q = Queue(connection=redis_conn, default_timeout='2m')
             for to_email in email_list:
                 q.enqueue(
                     'app.tasks.send_email_task',

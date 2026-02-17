@@ -24,10 +24,16 @@ messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
 def load_system_settings():
     """Load system-wide settings into g, cached to avoid a query every request."""
     from app import cache
-    settings = cache.get('system_settings')
+    try:
+        settings = cache.get('system_settings')
+    except Exception:
+        settings = None
     if settings is None:
         settings = SystemSettings.query.first()
-        cache.set('system_settings', settings, timeout=60)
+        try:
+            cache.set('system_settings', settings, timeout=60)
+        except Exception:
+            pass  # cache down — just use the DB result
     flask.g.system_settings = settings
 
 
