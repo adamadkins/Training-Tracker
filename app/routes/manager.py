@@ -1602,18 +1602,35 @@ def schedule_publish(schedule_id):
             emp_ids.add(s.trainer_employee_id)
         if s.trainee_employee_id:
             emp_ids.add(s.trainee_employee_id)
-    users_to_notify = list(User.query.filter(User.employee_id.in_(emp_ids)).all()) if emp_ids else []
+    users_to_notify = list(
+        User.query.filter(User.employee_id.in_(emp_ids))
+        .options(joinedload(User.settings))
+        .all()
+    ) if emp_ids else []
     link = url_for('employee.weekly_schedule', schedule_id=sch.id, _external=True)
+    title = "New Schedule Published"
+    body = f"A training schedule for {sch.start_date.strftime('%b %d')} has been published. Check your upcoming sessions."
+    # Create in-app notifications in bulk (no email yet)
     for user in users_to_notify:
-        notify(
-            user,
-            "New Schedule Published",
-            f"A training schedule for {sch.start_date.strftime('%b %d')} has been published. Check your upcoming sessions.",
-            category='schedule',
-            link_url=link,
-        )
+        settings = getattr(user, 'settings', None)
+        wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
+        if wants_in_app:
+            db.session.add(Notification(
+                user_id=user.id, title=title, body=body,
+                category='schedule', link_url=link,
+            ))
     db.session.commit()
-    cache.delete_memoized(schedule_detail)
+    # Enqueue emails in batch (single Redis connection)
+    from app.utils.notifications import batch_enqueue_emails
+    email_recipients = []
+    for user in users_to_notify:
+        settings = getattr(user, 'settings', None)
+        wants_email = getattr(settings, 'notify_email', True) if settings else True
+        if wants_email and user.email:
+            email_recipients.append(str(user.email))
+    if email_recipients:
+        batch_enqueue_emails(email_recipients, title, body, 'schedule', link)
+    cache.delete(f"schedule_detail/{schedule_id}/{current_user.id}")
     flash("Schedule published and staff notified.")
     return redirect(url_for('manager.schedules_list'))
 
