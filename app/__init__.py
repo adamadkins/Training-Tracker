@@ -39,19 +39,4 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # 6. Create tables if they don't exist
-    # (Note: With Flask-Migrate, this is less critical, but good for safety in dev)
-    with app.app_context():
-        db.create_all()
-        print("Database tables verified/created.")
-
-    # 7. If DB is empty (e.g. first deploy on Railway), seed with demo data
-    try:
-        from app.seed import seed_if_empty
-        seed_if_empty(app)
-    except Exception as e:
-        import traceback
-        print("Seed-if-empty skipped:", e)
-        traceback.print_exc()
-
     return app

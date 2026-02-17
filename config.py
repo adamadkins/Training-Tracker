@@ -9,10 +9,10 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
     # --- Database Configuration ---
-    # Prefer public URL when DATABASE_URL is Railway's private host (*.railway.internal),
-    # which only resolves inside Railway. Lets "railway run python -m app.seed" work from local.
+    # Use DATABASE_URL as-is so production (Railway) uses the internal URL (fast, private).
+    # For "railway run ..." from your machine, set DATABASE_PUBLIC_URL in env and use it locally if needed.
     _db_url = os.environ.get('DATABASE_URL')
-    if _db_url and 'railway.internal' in _db_url and os.environ.get('DATABASE_PUBLIC_URL'):
+    if not _db_url and os.environ.get('DATABASE_PUBLIC_URL'):
         _db_url = os.environ.get('DATABASE_PUBLIC_URL')
     SQLALCHEMY_DATABASE_URI = _db_url or \
                               'sqlite:///' + os.path.join(basedir, 'instance', 'training_tracker.db')

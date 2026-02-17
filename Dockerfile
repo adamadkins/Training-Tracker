@@ -13,5 +13,7 @@ COPY . .
 
 EXPOSE 8080
 
-# Longer timeout so heavy pages (schedule detail, seed+emails) don't hit WORKER TIMEOUT (default 30s)
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "--timeout", "120", "run:app"]
+# Run migrations + one-time init (create_all + seed if empty), then start app. Init runs once, not in every worker.
+ENV FLASK_APP=run:app
+# Longer timeout so heavy pages don't hit WORKER TIMEOUT (default 30s)
+CMD ["sh", "-c", "flask db upgrade && python init_db.py && exec gunicorn -b 0.0.0.0:8080 --timeout 120 run:app"]

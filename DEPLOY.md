@@ -1,5 +1,21 @@
 # Deploy & seed (Railway)
 
+## Startup: migrations + init once, then Gunicorn
+
+The Dockerfile runs **one** init sequence before starting workers:
+
+1. `flask db upgrade` — apply migrations (creates/updates tables).
+2. `python init_db.py` — ensure tables exist and seed if DB is empty (no-op after first run).
+3. `gunicorn ...` — start the app. **No** `db.create_all()` or seeding runs inside workers, so startup is fast and you avoid DB locking.
+
+If you override **Start Command** in Railway, use the same sequence so init runs once:
+
+`flask db upgrade && python init_db.py && exec gunicorn -b 0.0.0.0:8080 --timeout 120 run:app`
+
+Set **FLASK_APP** = `run:app` in Railway variables if you override the start command (the Dockerfile sets it via ENV).
+
+---
+
 ## If you see: `'$PORT' is not a valid port number`
 
 The Dockerfile runs gunicorn on port **8080** (no `$PORT`). If you still see this error, Railway is likely **overriding** the container start command.
@@ -7,7 +23,7 @@ The Dockerfile runs gunicorn on port **8080** (no `$PORT`). If you still see thi
 1. In Railway → your **service** → **Settings** (or **Deploy**).
 2. Find **Start Command** / **Custom start command**. If it’s set (e.g. `gunicorn -b 0.0.0.0:$PORT run:app`), either:
    - **Clear it** so the image uses the Dockerfile `CMD`, or  
-   - Set it to: `gunicorn -b 0.0.0.0:8080 run:app`
+   - Set it to: `flask db upgrade && python init_db.py && exec gunicorn -b 0.0.0.0:8080 --timeout 120 run:app`
 3. Redeploy.
 
 ---
@@ -19,7 +35,7 @@ The Dockerfile uses **`--timeout 120`**. If workers still timeout at ~30s, Railw
 1. In Railway → your **service** → **Settings**.
 2. Find **Start Command** / **Custom start command**.
 3. Either **clear it** (so the Dockerfile CMD is used), or set it to:
-   `gunicorn -b 0.0.0.0:8080 --timeout 120 run:app`
+   `flask db upgrade && python init_db.py && exec gunicorn -b 0.0.0.0:8080 --timeout 120 run:app`
 4. Redeploy.
 
 ---
@@ -52,7 +68,7 @@ The Dockerfile uses **`--timeout 120`**. If workers still timeout at ~30s, Railw
    railway login
    railway link
    ```
-   Choose the project, **production** (or desired) environment, and **Postgres** (so the CLI injects DB vars). The app uses `DATABASE_PUBLIC_URL` when you run from your machine so the seed can connect (private host only works inside Railway).
+   Choose the project, **production** (or desired) environment, and **Postgres** (so the CLI injects DB vars). If `railway run` uses the internal DB URL and can’t connect from your machine, set `DATABASE_URL` to your Postgres **public** URL in Railway variables for the environment, or run the seed from Railway’s shell. The app in production uses the internal URL for speed.
 
 3. **Run the seed against Railway’s database**:
    ```bash
