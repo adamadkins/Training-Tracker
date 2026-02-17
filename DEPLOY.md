@@ -1,5 +1,17 @@
 # Deploy & seed (Railway)
 
+## If deploy fails with "No module named 'psycopg2'"
+
+Railpack caches the `pip install` step. If the cache is from before `psycopg2-binary` was in `requirements.txt`, the app will crash at runtime.
+
+**Fix:** In Railway → your service → **Variables**, add:
+- **Name:** `RAILPACK_DISABLE_CACHES`
+- **Value:** `*`
+
+Redeploy. The build will run without cache and install all deps (including psycopg2-binary). After a successful deploy you can remove this variable to use cache again.
+
+---
+
 ## Seed production with demo data
 
 **Warning:** The seed script **drops all tables** and recreates them, then fills them with demo data. Any existing production data will be lost.
