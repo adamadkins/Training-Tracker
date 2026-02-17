@@ -166,21 +166,37 @@ def dashboard():
         return redirect(url_for("manager.setup_wizard"))
     location_filter = request.args.get("location_id")
     visible_ids = get_visible_employee_ids(location_filter=location_filter)
-    non_graduated_ids = [e.id for e in Employee.query.filter(Employee.graduated_at == None).all()]
+    non_graduated_ids = [r[0] for r in Employee.query.filter(Employee.graduated_at == None).with_entities(Employee.id).all()]
     if visible_ids is not None:
         active_ids = [eid for eid in visible_ids if eid in non_graduated_ids]
-        employees = Employee.query.filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).all()
+        employees = Employee.query.filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).options(
+            selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
+            selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
+            selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+        ).all()
         sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids)
+        ).options(
+            joinedload(TrainingSession.position),
+            joinedload(TrainingSession.trainer),
+            joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
         ).count()
     else:
-        employees = Employee.query.filter(Employee.graduated_at == None).all()
+        employees = Employee.query.filter(Employee.graduated_at == None).options(
+            selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
+            selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
+            selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+        ).all()
         sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids)
+        ).options(
+            joinedload(TrainingSession.position),
+            joinedload(TrainingSession.trainer),
+            joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
@@ -197,6 +213,10 @@ def dashboard():
     flagged_sessions = TrainingSession.query.filter(
         TrainingSession.flagged == True,
         TrainingSession.flag_cleared_at == None
+    ).options(
+        joinedload(TrainingSession.position),
+        joinedload(TrainingSession.trainer),
+        joinedload(TrainingSession.trainee),
     ).order_by(TrainingSession.completed_at.desc()).all()
 
     manager_loc_ids = _get_manager_location_ids()
@@ -878,7 +898,12 @@ def employee_delete(employee_id):
 @manager_bp.route("/employees/<int:employee_id>")
 @login_required
 def employee_detail(employee_id):
-    emp = Employee.query.get_or_404(employee_id)
+    emp = Employee.query.options(
+        selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
+        selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
+        selectinload(Employee.trainer_sessions).joinedload(TrainingSession.position),
+        selectinload(Employee.trainer_sessions).joinedload(TrainingSession.trainee),
+    ).get_or_404(employee_id)
     is_self = (current_user.employee_id == employee_id)
     is_staff = (current_user.role in ['manager', 'trainer'])
 
@@ -906,9 +931,13 @@ def employee_detail(employee_id):
     roadmaps = TrainingRoadmap.query.order_by(TrainingRoadmap.name).all() if current_user.role == 'manager' else []
 
     if emp.role == 'trainee':
-        # Active positions matching the employee's location(s) (or global)
+        # Active positions matching the employee's location(s) (or global) — one query for locations
+        emp_loc_ids = [r[0] for r in db.session.execute(
+            select(employee_locations.c.location_id).where(employee_locations.c.employee_id == emp.id)
+        ).fetchall()]
+        if not emp_loc_ids and getattr(emp, 'location_id', None):
+            emp_loc_ids = [emp.location_id]
         pos_query = Position.query.filter_by(active=True)
-        emp_loc_ids = emp.location_ids()
         if emp_loc_ids:
             pos_query = pos_query.filter(
                 db.or_(Position.location_id == None, Position.location_id.in_(emp_loc_ids))
@@ -1443,9 +1472,8 @@ def schedule_detail(schedule_id):
         session_query = session_query.filter(TrainingSession.trainee_employee_id.in_(visible_ids))
     sessions = session_query.all()
 
-    # Eager-load employees with locations, roadmaps+steps, trainee_sessions+ratings (for trainee_stats and form)
+    # Eager-load employees with roadmaps+steps, trainee_sessions+ratings (Employee.locations is dynamic - cannot eager load)
     employee_query = Employee.query.filter(Employee.status == 'active', Employee.graduated_at == None).options(
-        selectinload(Employee.locations),
         selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
         selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
     )
@@ -1463,6 +1491,22 @@ def schedule_detail(schedule_id):
 
     all_active_positions = Position.query.filter_by(active=True).all()
     dayparts = Daypart.query.filter_by(active=True).all()
+
+    # Precompute location_ids (one query; Employee.locations is dynamic so we can't eager-load it)
+    employee_location_ids = {}
+    if employees:
+        emp_ids = [e.id for e in employees]
+        rows = db.session.execute(
+            select(employee_locations.c.employee_id, employee_locations.c.location_id).where(
+                employee_locations.c.employee_id.in_(emp_ids)
+            )
+        ).fetchall()
+        for eid, lid in rows:
+            employee_location_ids.setdefault(eid, []).append(lid)
+        for emp in employees:
+            if emp.id not in employee_location_ids and getattr(emp, 'location_id', None):
+                employee_location_ids[emp.id] = [emp.location_id]
+            employee_location_ids.setdefault(emp.id, [])
 
     active_trainees = [e for e in employees if e.role == 'trainee']
     trainee_ids = [t.id for t in active_trainees]
@@ -1489,7 +1533,7 @@ def schedule_detail(schedule_id):
         for t in active_trainees:
             t_data = {'history': [], 'suggestion': None}
             t_history = history_map.get(t.id, {})
-            t_loc_ids = t.location_ids()  # uses preloaded .locations
+            t_loc_ids = employee_location_ids.get(t.id, [])
             t_positions = [p for p in all_active_positions
                           if p.location_id is None or p.location_id in t_loc_ids]
             for pos in t_positions:
@@ -1515,22 +1559,6 @@ def schedule_detail(schedule_id):
                     t_data['suggestion'] = {'id': lowest['id'], 'name': lowest['name'],
                                            'reason': f"Needs Improvement ({lowest['avg']})"}
             trainee_stats[t.id] = t_data
-
-    # Precompute location_ids for template dropdown (one query instead of N for emp.locations)
-    employee_location_ids = {}
-    if employees:
-        emp_ids = [e.id for e in employees]
-        rows = db.session.execute(
-            select(employee_locations.c.employee_id, employee_locations.c.location_id).where(
-                employee_locations.c.employee_id.in_(emp_ids)
-            )
-        ).fetchall()
-        for eid, lid in rows:
-            employee_location_ids.setdefault(eid, []).append(lid)
-        for emp in employees:
-            if emp.id not in employee_location_ids and getattr(emp, 'location_id', None):
-                employee_location_ids[emp.id] = [emp.location_id]
-            employee_location_ids.setdefault(emp.id, [])
 
     return render_template("schedule_detail.html", schedule=sch, days=days, positions=all_active_positions,
                            employees=employees, dayparts=dayparts, sessions=sessions, trainee_stats=trainee_stats,

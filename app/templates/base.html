@@ -448,6 +448,7 @@
 
         {% if current_user.is_authenticated %}
         function checkUpdates() {
+            if (document.hidden) return;  // skip when tab is in background
             {% if g.system_settings and g.system_settings.dm_enabled %}
             fetch("{{ url_for('messages.api_unread_count') }}")
                 .then(function(res) { return res.json(); })
@@ -472,7 +473,7 @@
                 })
                 .catch(function() {});
         }
-        setInterval(checkUpdates, 15000);
+        setInterval(checkUpdates, 45000);  // 45s to reduce server load (was 15s)
         checkUpdates();
         {% endif %}
     });

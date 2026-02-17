@@ -739,19 +739,27 @@ def api_unread_count():
     if not current_user.employee_id:
         return jsonify({'count': 0})
     my_id = current_user.employee_id
-    # Legacy 1:1 unread
+    # Legacy 1:1 unread (one query)
     count = Message.query.filter(
         Message.recipient_id == my_id,
         Message.read_at == None,
         Message.channel_id == None,
     ).count()
-    # Channel unread (messages after my last_read_at in channels I'm in)
-    for cp in ChannelParticipant.query.filter_by(employee_id=my_id).all():
-        q = Message.query.filter(Message.channel_id == cp.channel_id, Message.sender_id != my_id)
-        if cp.last_read_at:
-            q = q.filter(Message.timestamp > cp.last_read_at)
-        count += q.count()
-    return jsonify({'count': count})
+    # Channel unread in one query (join instead of N+1)
+    channel_unread = db.session.query(Message.id).join(
+        ChannelParticipant,
+        and_(
+            Message.channel_id == ChannelParticipant.channel_id,
+            ChannelParticipant.employee_id == my_id,
+        )
+    ).filter(
+        Message.sender_id != my_id,
+        or_(
+            ChannelParticipant.last_read_at == None,
+            Message.timestamp > ChannelParticipant.last_read_at,
+        )
+    ).count()
+    return jsonify({'count': count + channel_unread})
 
 
 @messages_bp.route('/react/<int:message_id>', methods=['POST'])

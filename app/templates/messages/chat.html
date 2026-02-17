@@ -943,7 +943,7 @@
         document.body.appendChild(document.getElementById('sessionModal'));
         localizeTimes();
         viewport.scrollTop = viewport.scrollHeight;
-        pollInterval = setInterval(pollMessages, 3000);
+        pollInterval = setInterval(pollMessages, 10000);  // 10s to reduce load (was 3s)
     });
     window.addEventListener('beforeunload', function() { clearInterval(pollInterval); });
 </script>

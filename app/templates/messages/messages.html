@@ -1269,7 +1269,7 @@ function clearAttachment() { pendingSessionId = null; document.getElementById('a
 if (viewport) {
     localizeTimes();
     viewport.scrollTop = viewport.scrollHeight;
-    pollInterval = setInterval(pollMessages, 3000);
+    pollInterval = setInterval(pollMessages, 10000);  // 10s to reduce load (was 3s)
 }
 {% endif %}
 

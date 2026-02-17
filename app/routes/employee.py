@@ -4,6 +4,7 @@ import flask
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 import pytz
+from sqlalchemy.orm import joinedload
 from app import db
 from app.models import (
     Employee, TrainingSession, SessionRating, Schedule,
@@ -39,11 +40,12 @@ def dashboard():
     tz = pytz.timezone('US/Eastern')
     today = datetime.now(tz).date()
 
-    # 1. YOUR UPCOMING
+    # 1. YOUR UPCOMING (eager load to avoid N+1 in template)
+    session_opts = (joinedload(TrainingSession.position), joinedload(TrainingSession.trainer), joinedload(TrainingSession.trainee))
     my_upcoming = TrainingSession.query.filter(
         TrainingSession.completed_at == None,
         (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
-    ).order_by(TrainingSession.session_date.asc(), TrainingSession.id.asc()).all()
+    ).options(*session_opts).order_by(TrainingSession.session_date.asc(), TrainingSession.id.asc()).all()
 
     # 2. FLOOR COVERAGE (trainers/managers only)
     floor_coverage = []
@@ -52,13 +54,13 @@ def dashboard():
             TrainingSession.completed_at == None,
             TrainingSession.trainee_employee_id != me,
             TrainingSession.trainer_employee_id != me
-        ).order_by(TrainingSession.session_date.asc()).all()
+        ).options(*session_opts).order_by(TrainingSession.session_date.asc()).all()
 
     # 3. HISTORY
     recent_sessions = TrainingSession.query.filter(
         TrainingSession.completed_at != None,
         (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
-    ).order_by(TrainingSession.completed_at.desc()).limit(5).all()
+    ).options(*session_opts).order_by(TrainingSession.completed_at.desc()).limit(5).all()
 
     # 4. STATS
     stats = {
