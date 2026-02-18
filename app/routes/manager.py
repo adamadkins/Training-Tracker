@@ -138,6 +138,7 @@ def setup_wizard():
         settings.setup_completed = True
         settings.setup_step = 0
         db.session.commit()
+        cache.delete('system_settings')
         flash("Setup complete! You can change business type and locations later in Settings.", "success")
         return redirect(url_for("manager.dashboard"))
     # step 0: just advance to step 1
@@ -154,6 +155,7 @@ def setup_skip():
         settings.setup_completed = True
         settings.setup_step = 0
         db.session.commit()
+        cache.delete('system_settings')
     return redirect(url_for("manager.dashboard"))
 
 
@@ -181,13 +183,15 @@ def dashboard():
                 selectinload(TrainingSession.ratings),
             ),
         ).all()
+        dash_cutoff = date.today() - timedelta(days=90)
         sessions = TrainingSession.query.filter(
-            TrainingSession.trainee_employee_id.in_(active_ids)
+            TrainingSession.trainee_employee_id.in_(active_ids),
+            TrainingSession.session_date >= dash_cutoff,
         ).options(
             joinedload(TrainingSession.position),
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.desc()).all()
+        ).order_by(TrainingSession.session_date.desc()).limit(200).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
@@ -200,13 +204,15 @@ def dashboard():
                 selectinload(TrainingSession.ratings),
             ),
         ).all()
+        dash_cutoff = date.today() - timedelta(days=90)
         sessions = TrainingSession.query.filter(
-            TrainingSession.trainee_employee_id.in_(non_graduated_ids)
+            TrainingSession.trainee_employee_id.in_(non_graduated_ids),
+            TrainingSession.session_date >= dash_cutoff,
         ).options(
             joinedload(TrainingSession.position),
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.desc()).all()
+        ).order_by(TrainingSession.session_date.desc()).limit(200).all()
         pending_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.completed_at == None,
@@ -1596,18 +1602,35 @@ def schedule_publish(schedule_id):
             emp_ids.add(s.trainer_employee_id)
         if s.trainee_employee_id:
             emp_ids.add(s.trainee_employee_id)
-    users_to_notify = list(User.query.filter(User.employee_id.in_(emp_ids)).all()) if emp_ids else []
+    users_to_notify = list(
+        User.query.filter(User.employee_id.in_(emp_ids))
+        .options(joinedload(User.settings))
+        .all()
+    ) if emp_ids else []
     link = url_for('employee.weekly_schedule', schedule_id=sch.id, _external=True)
+    title = "New Schedule Published"
+    body = f"A training schedule for {sch.start_date.strftime('%b %d')} has been published. Check your upcoming sessions."
+    # Create in-app notifications in bulk (no email yet)
     for user in users_to_notify:
-        notify(
-            user,
-            "New Schedule Published",
-            f"A training schedule for {sch.start_date.strftime('%b %d')} has been published. Check your upcoming sessions.",
-            category='schedule',
-            link_url=link,
-        )
+        settings = getattr(user, 'settings', None)
+        wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
+        if wants_in_app:
+            db.session.add(Notification(
+                user_id=user.id, title=title, body=body,
+                category='schedule', link_url=link,
+            ))
     db.session.commit()
-    cache.delete_memoized(schedule_detail)
+    # Enqueue emails in batch (single Redis connection)
+    from app.utils.notifications import batch_enqueue_emails
+    email_recipients = []
+    for user in users_to_notify:
+        settings = getattr(user, 'settings', None)
+        wants_email = getattr(settings, 'notify_email', True) if settings else True
+        if wants_email and user.email:
+            email_recipients.append(str(user.email))
+    if email_recipients:
+        batch_enqueue_emails(email_recipients, title, body, 'schedule', link)
+    cache.delete(f"schedule_detail/{schedule_id}/{current_user.id}")
     flash("Schedule published and staff notified.")
     return redirect(url_for('manager.schedules_list'))
 
@@ -1725,6 +1748,7 @@ def settings():
             if 'business_type' in request.form:
                 system_settings.business_type = request.form.get('business_type') or None
         db.session.commit()
+        cache.delete('system_settings')
         flash("Settings updated successfully!", "success")
         return redirect(url_for('manager.settings'))
     share_trainee_data = getattr(system_settings, 'share_trainee_data_with_trainees', True)

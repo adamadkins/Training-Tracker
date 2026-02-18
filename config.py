@@ -19,12 +19,12 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # --- Email Configuration (Gmail) ---
-    # Override MAIL_USERNAME and MAIL_PASSWORD in .env on the server if needed.
+    # --- Email Configuration ---
+    # Override in .env on the server (e.g. MAIL_USERNAME, MAIL_PASSWORD, MAIL_SERVER, MAIL_PORT).
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 465))
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = True
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'True').lower() in ('true', '1', 'yes')
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'donotreply.trainingtracker@gmail.com'
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'scvvkhtuwpugiums'
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
@@ -35,3 +35,6 @@ class Config:
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'
     CACHE_REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL') or ''
     CACHE_DEFAULT_TIMEOUT = 90  # seconds for view caches
+    # Only pass Redis socket options when actually using RedisCache (SimpleCache rejects them)
+    if CACHE_TYPE == 'RedisCache':
+        CACHE_OPTIONS = {'socket_connect_timeout': 3, 'socket_timeout': 3}

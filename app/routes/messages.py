@@ -22,8 +22,19 @@ messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
 
 @messages_bp.before_app_request
 def load_system_settings():
-    """Load system-wide settings into g for every request."""
-    flask.g.system_settings = SystemSettings.query.first()
+    """Load system-wide settings into g, cached to avoid a query every request."""
+    from app import cache
+    try:
+        settings = cache.get('system_settings')
+    except Exception:
+        settings = None
+    if settings is None:
+        settings = SystemSettings.query.first()
+        try:
+            cache.set('system_settings', settings, timeout=60)
+        except Exception:
+            pass  # cache down — just use the DB result
+    flask.g.system_settings = settings
 
 
 # ── Helpers ──────────────────────────────────────────────
@@ -159,25 +170,57 @@ def _build_sidebar_data(my_id):
     Partner = aliased(Employee)
     _min_ts = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
-    # ── Channels I'm in (DM + group) ──
+    # ── Channels I'm in (DM + group) — batched queries ──
     my_participations = ChannelParticipant.query.filter_by(employee_id=my_id).all()
+    channel_ids = [cp.channel_id for cp in my_participations]
+    cp_map = {cp.channel_id: cp for cp in my_participations}
+
+    # Batch: last message per channel (single query)
+    if channel_ids:
+        last_msg_sq = db.session.query(
+            Message.channel_id,
+            func.max(Message.id).label('max_id')
+        ).filter(Message.channel_id.in_(channel_ids)).group_by(Message.channel_id).subquery()
+        last_msgs = db.session.query(Message).join(
+            last_msg_sq, Message.id == last_msg_sq.c.max_id
+        ).all()
+        last_msg_map = {m.channel_id: m for m in last_msgs}
+
+        # Batch: unread counts per channel (single query)
+        unread_rows = db.session.query(
+            Message.channel_id,
+            func.count(Message.id)
+        ).join(
+            ChannelParticipant,
+            and_(
+                Message.channel_id == ChannelParticipant.channel_id,
+                ChannelParticipant.employee_id == my_id,
+            )
+        ).filter(
+            Message.channel_id.in_(channel_ids),
+            Message.sender_id != my_id,
+            or_(
+                ChannelParticipant.last_read_at == None,
+                Message.timestamp > ChannelParticipant.last_read_at,
+            )
+        ).group_by(Message.channel_id).all()
+        unread_map = dict(unread_rows)
+    else:
+        last_msg_map = {}
+        unread_map = {}
+
+    # Eagerly load channels with participants + employees for display name / avatar
+    channels = Channel.query.filter(Channel.id.in_(channel_ids)).all() if channel_ids else []
+    ch_map = {ch.id: ch for ch in channels}
+
     sidebar_channels = []
     sidebar_dms = []
-    for cp in my_participations:
-        ch = cp.channel
-        last_msg = Message.query.filter_by(channel_id=ch.id).order_by(Message.timestamp.desc()).first()
-        unread = 0
-        if cp.last_read_at:
-            unread = Message.query.filter(
-                Message.channel_id == ch.id,
-                Message.timestamp > cp.last_read_at,
-                Message.sender_id != my_id,
-            ).count()
-        else:
-            unread = Message.query.filter(
-                Message.channel_id == ch.id,
-                Message.sender_id != my_id,
-            ).count()
+    for ch_id in channel_ids:
+        ch = ch_map.get(ch_id)
+        if not ch:
+            continue
+        last_msg = last_msg_map.get(ch_id)
+        unread = unread_map.get(ch_id, 0)
         item = {
             'type': 'channel',
             'channel_type': ch.channel_type,

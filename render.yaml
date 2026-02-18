@@ -1,11 +1,12 @@
 # Render.com blueprint: build and run from repo root
-# After adding this: Redeploy and use "Clear build cache" if your changes still don't appear.
 services:
   - type: web
     name: training-tracker
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -b 0.0.0.0:$PORT run:app
+    startCommand: flask db upgrade && python init_db.py && gunicorn -b 0.0.0.0:$PORT --timeout 60 -w 1 --threads 4 run:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
+      - key: FLASK_APP
+        value: run:app
