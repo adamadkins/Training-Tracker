@@ -20,13 +20,14 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # --- Email Configuration (Gmail) ---
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 465
+    # Override MAIL_USERNAME and MAIL_PASSWORD in .env on the server if needed.
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 465))
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
-    MAIL_USERNAME = 'donotreply.trainingtracker@gmail.com'
-    MAIL_PASSWORD = 'scvvkhtuwpugiums'
-    MAIL_DEFAULT_SENDER = 'donotreply.trainingtracker@gmail.com'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME') or 'donotreply.trainingtracker@gmail.com'
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD') or 'scvvkhtuwpugiums'
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
     MAIL_TIMEOUT = 15  # seconds; avoid hanging the request if SMTP is slow
 
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.

@@ -1,10 +1,13 @@
 """
 Notifications: in-app + email. Email is sent via RQ (Redis) when available, else a background thread.
 """
+import logging
 import smtplib
 import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+logger = logging.getLogger(__name__)
 
 from flask import current_app, render_template
 
@@ -101,8 +104,9 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
                 current_app.config['MAIL_PASSWORD']
             )
             server.send_message(msg)
+        logger.info("Email sent to %s: %s", to_email, title)
     except Exception as e:
-        print(f"SMTP Failure: {e}")
+        logger.exception("SMTP failure sending to %s: %s", to_email, e)
 
 
 def send_notification_email(user, title, body):
