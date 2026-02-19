@@ -30,6 +30,9 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
     MAIL_TIMEOUT = 15  # seconds; avoid hanging the request if SMTP is slow
 
+    # SendGrid (email via HTTPS — no SMTP port needed). Set in .env on the server.
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.
     REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'
