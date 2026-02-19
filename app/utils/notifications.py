@@ -2,6 +2,7 @@
 Notifications: in-app + email. Email is sent via RQ (Redis) when available, else a background thread.
 """
 import logging
+import socket
 import smtplib
 import threading
 from email.mime.text import MIMEText
@@ -118,19 +119,28 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
         msg.attach(MIMEText(html_content, 'html'))
 
     try:
-        if use_ssl:
-            # SSL wraps the connection immediately (typically port 465)
-            server = smtplib.SMTP_SSL(server_host, port, timeout=timeout)
-        else:
-            # Plain connection + optional STARTTLS upgrade (typically port 587)
-            server = smtplib.SMTP(server_host, port, timeout=timeout)
-            if use_tls:
-                server.starttls()
-
-        with server:
-            server.login(username, password)
-            server.send_message(msg)
-        logger.info("Email sent to %s: %s", to_email, title)
+        # Prefer IPv4 so we don't get "Network is unreachable" on hosts with no IPv6 (e.g. some VPS)
+        _orig_getaddrinfo = socket.getaddrinfo
+        def _ipv4_first(host, port, family=0, type=0, proto=0, flags=0):
+            if family in (0, socket.AF_UNSPEC):
+                res = _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+                if res:
+                    return res
+            return _orig_getaddrinfo(host, port, family, type, proto, flags)
+        socket.getaddrinfo = _ipv4_first
+        try:
+            if use_ssl:
+                server = smtplib.SMTP_SSL(server_host, port, timeout=timeout)
+            else:
+                server = smtplib.SMTP(server_host, port, timeout=timeout)
+                if use_tls:
+                    server.starttls()
+            with server:
+                server.login(username, password)
+                server.send_message(msg)
+            logger.info("Email sent to %s: %s", to_email, title)
+        finally:
+            socket.getaddrinfo = _orig_getaddrinfo
     except Exception as e:
         logger.exception("SMTP failure sending to %s: %s", to_email, e)
 
