@@ -85,10 +85,41 @@ def _send_email_background(app, to_email, title, body, category='general', link_
 
 
 def _send_html_email_impl(to_email, title, body, category='general', link_url=None):
+    # Use SendGrid if API key is set (works over HTTPS, no SMTP port needed)
+    sendgrid_key = current_app.config.get('SENDGRID_API_KEY', '')
+    sender = current_app.config.get('MAIL_DEFAULT_SENDER', '') or current_app.config.get('MAIL_USERNAME', '')
+    if sendgrid_key and sender:
+        try:
+            html_content = None
+            try:
+                html_content = render_template(
+                    'email/notification.html',
+                    title=title, body=body, category=category, link_url=link_url,
+                )
+            except Exception:
+                pass
+            from sendgrid import SendGridAPIClient
+            from sendgrid.helpers.mail import Mail, Content
+            sg_mail = Mail(
+                from_email=sender,
+                to_emails=to_email,
+                subject=title,
+                plain_text_content=body,
+            )
+            if html_content:
+                sg_mail.add_content(Content('text/html', html_content))
+            sg = SendGridAPIClient(sendgrid_key)
+            response = sg.send(sg_mail)
+            logger.info("SendGrid sent to %s: %s (status %s)", to_email, title, response.status_code)
+            return
+        except Exception as e:
+            logger.exception("SendGrid failure sending to %s: %s", to_email, e)
+            return
+
     username = current_app.config.get('MAIL_USERNAME', '')
     password = current_app.config.get('MAIL_PASSWORD', '')
     server_host = current_app.config.get('MAIL_SERVER', '')
-    sender = current_app.config.get('MAIL_DEFAULT_SENDER', '') or username
+    sender = sender or username
 
     if not all([username, password, server_host]):
         logger.warning("Email not configured (MAIL_USERNAME/MAIL_PASSWORD/MAIL_SERVER missing) — skipping email to %s", to_email)
