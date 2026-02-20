@@ -354,6 +354,7 @@ class SystemSettings(db.Model):
     # Branding
     primary_color = db.Column(db.String(20), default='indigo', nullable=False)
     custom_logo_url = db.Column(db.String(500), nullable=True)
+    business_name = db.Column(db.String(120), nullable=True)  # e.g. "Raising Cane's" — shown in navbar and login
     # Setup wizard
     setup_completed = db.Column(db.Boolean, default=False, nullable=False)
     setup_step = db.Column(db.Integer, default=0, nullable=False)

@@ -394,10 +394,8 @@
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
                 <img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer">
-                <span class="brand-logo-text">Training<b>Tracker</b></span>
-                {% else %}
-                <span class="brand-logo-text">Training<b>Tracker</b></span>
                 {% endif %}
+                <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
             </a>
 
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>

@@ -337,6 +337,13 @@
                     <input type="hidden" name="custom_logo_url" id="customLogoUrl" value="{{ system_settings.custom_logo_url or '' }}">
                     <input type="hidden" name="custom_logo_fallback_url" id="customLogoFallbackUrl" value="">
                     <div class="s-row" style="flex-wrap: wrap; align-items: center; gap: 12px;">
+                        <div class="s-info" style="flex: 1 1 100%;">
+                            <label class="s-label">Business name</label>
+                            <span class="s-desc">Shown in the app header and on the login page so it feels like your brand.</span>
+                        </div>
+                        <input type="text" name="business_name" id="businessNameInput" class="s-select" placeholder="e.g. Raising Cane's, Acme Coffee" value="{{ system_settings.business_name or '' }}" maxlength="120" style="max-width: 280px;">
+                    </div>
+                    <div class="s-row" style="flex-wrap: wrap; align-items: center; gap: 12px;">
                         <div class="s-info">
                             <label class="s-label">Accent color</label>
                             <span class="s-desc">Primary color for buttons, links, and highlights.</span>
@@ -798,7 +805,7 @@
         var form = document.getElementById('settingsForm');
         var saveBar = document.getElementById('saveBar');
         var initial = {};
-        var inputs = form.querySelectorAll('input[type="checkbox"], input[type="hidden"][name="custom_logo_url"], input[type="hidden"][name="primary_color"], select');
+        var inputs = form.querySelectorAll('input[type="checkbox"], input[type="hidden"][name="custom_logo_url"], input[type="hidden"][name="primary_color"], input[name="business_name"], select');
         var fileInput = form.querySelector('input[name="logo_file"]');
 
         for (var i = 0; i < inputs.length; i++) {

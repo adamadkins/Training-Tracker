@@ -110,10 +110,14 @@
         {% endif %}
 
         {% if step == 1 %}
-        <h1 class="setup-title">What type of business?</h1>
-        <p class="setup-desc">This helps us tailor defaults. You can change it later in Settings.</p>
+        <h1 class="setup-title">Name your business</h1>
+        <p class="setup-desc">This name appears in the app (e.g. in the header and login) so it feels like yours. You can change it later in Settings.</p>
         <form method="post" action="{{ url_for('manager.setup_wizard') }}">
             <input type="hidden" name="step" value="1">
+            <div class="form-row">
+                <label>Business name</label>
+                <input type="text" name="business_name" placeholder="e.g. Raising Cane's, Acme Coffee" value="{{ settings.business_name or '' }}" maxlength="120">
+            </div>
             <div class="form-row">
                 <label>Business type</label>
                 <div class="business-cards">

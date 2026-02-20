@@ -290,6 +290,7 @@ def setup_wizard():
     # POST: advance step
     step = int(request.form.get("step", 0))
     if step == 1:
+        settings.business_name = (request.form.get("business_name") or "").strip() or None
         settings.business_type = request.form.get("business_type") or None
         settings.setup_step = 2
         db.session.commit()
@@ -2141,6 +2142,8 @@ def settings():
             system_settings.default_rating_scale = raw_scale if raw_scale in (0, 5, 10) else 5
             if 'business_type' in request.form:
                 system_settings.business_type = request.form.get('business_type') or None
+            if 'business_name' in request.form:
+                system_settings.business_name = (request.form.get('business_name') or '').strip() or None
             if 'primary_color' in request.form:
                 raw = request.form.get('primary_color', 'indigo').strip()
                 if raw in ('indigo', 'blue', 'violet', 'green', 'amber', 'rose', 'sky'):

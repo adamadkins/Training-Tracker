@@ -243,7 +243,11 @@
 
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">
+                {% if g.system_settings and g.system_settings.business_name %}
+                Sign in to {{ g.system_settings.business_name }}'s training portal.
+                {% else %}
                 Please sign in to access your training tracker portal.
+                {% endif %}
             </p>
         </div>
 
