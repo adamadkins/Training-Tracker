@@ -131,6 +131,7 @@
             display: flex;
             align-items: center;
             max-width: 140px;
+            background: var(--header-bg);
         }
         .brand-logo-img {
             height: 32px;
@@ -139,6 +140,11 @@
             object-fit: contain;
             display: block;
             vertical-align: middle;
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+        .brand-logo-img.loaded {
+            opacity: 1;
         }
         .brand-logo span, .brand-logo .brand-logo-text {
             font-family: 'Inter', sans-serif;
@@ -404,7 +410,7 @@
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
-                <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="async"></span>
+                <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="async" id="navLogoImg"></span>
                 {% endif %}
                 <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
             </a>
@@ -476,6 +482,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        var navLogo = document.getElementById('navLogoImg');
+        if (navLogo) {
+            if (navLogo.complete) navLogo.classList.add('loaded');
+            else navLogo.addEventListener('load', function() { navLogo.classList.add('loaded'); });
+        }
         var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};
 
         window.createToast = function(message) {
