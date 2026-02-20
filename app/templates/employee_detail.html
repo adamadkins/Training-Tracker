@@ -506,7 +506,7 @@
                             <i class="fa-solid fa-user-pen"></i> Edit
                         </a>
                         {% if employee.role == 'trainee' and not employee.graduated_at %}
-                        <form method="post" action="{{ url_for('manager.employee_graduate', employee_id=employee.id) }}" style="display: inline;" onsubmit="return confirm('Graduate {{ employee.first_name }}? They will see the graduation screen on next login and no longer use the trainee dashboard.');">
+                        <form method="post" action="{{ url_for('manager.employee_graduate', employee_id=employee.id) }}" style="display: contents;" onsubmit="return confirm('Graduate {{ employee.first_name }}? They will see the graduation screen on next login and no longer use the trainee dashboard.');">
                             <button type="submit" class="hero-btn" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none;">
                                 <i class="fa-solid fa-graduation-cap"></i> Graduate
                             </button>
