@@ -121,7 +121,7 @@
         /* ── HERO ── */
         .hero {
             background: linear-gradient(160deg, var(--navy) 0%, #1a1040 55%, #0f2b1e 100%);
-            padding: 140px 24px 100px;
+            padding: 140px 24px 80px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -223,6 +223,39 @@
         .btn-outline:hover {
             background: rgba(255,255,255,0.06);
             border-color: rgba(255,255,255,0.4);
+        }
+
+        /* ── DEMO SECTION ── */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .demo-section {
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 48px 24px 56px;
+        }
+        .demo-inner {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+        .demo-label-row {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .demo-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 5px 14px;
+            border-radius: 20px;
+            letter-spacing: 0.02em;
         }
 
         /* ── APP MOCKUP (Interactive Demo) ── */
@@ -1507,7 +1540,14 @@
             <i class="fa-solid fa-play"></i> See Features
         </a>
     </div>
+</section>
 
+<!-- ── LIVE DEMO ── -->
+<div class="demo-section">
+    <div class="demo-inner">
+        <div class="demo-label-row">
+            <span class="demo-eyebrow"><i class="fa-solid fa-circle" style="color:#22c55e; font-size:8px; animation: pulse 2s infinite;"></i> Interactive Preview &mdash; click the tabs</span>
+        </div>
     <!-- Interactive App Demo -->
     <div class="m-demo" id="appDemo">
         <!-- Browser chrome -->
@@ -2036,7 +2076,8 @@
         });
     })();
     </script>
-</section>
+    </div><!-- /demo-inner -->
+</div><!-- /demo-section -->
 
 <!-- ── SOCIAL PROOF ── -->
 <div class="social-proof">
