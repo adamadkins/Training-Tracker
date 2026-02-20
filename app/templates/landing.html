@@ -225,337 +225,483 @@
             border-color: rgba(255,255,255,0.4);
         }
 
-        /* ── APP MOCKUP ── */
-        .hero-mockup {
-            max-width: 940px;
+        /* ── APP MOCKUP (Interactive Demo) ── */
+        .m-demo {
+            max-width: 960px;
             margin: 0 auto;
-            background: #fff;
-            border-radius: 16px;
-            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            border: 1px solid #cbd5e1;
             overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.35);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+            background: #f8fafc;
+            user-select: none;
         }
 
-        .mockup-bar {
-            background: #ffffff;
-            padding: 10px 16px;
+        /* Browser chrome */
+        .m-chrome {
+            background: #f1f3f4;
+            padding: 9px 14px;
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #dde1e7;
         }
-
-        .mockup-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        .mockup-url {
+        .m-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .m-url-bar {
             flex: 1;
-            background: #f1f5f9;
+            background: #fff;
+            border: 1px solid #dde1e7;
             border-radius: 6px;
-            padding: 4px 12px;
+            padding: 3px 12px;
             font-size: 11px;
-            color: #94a3b8;
+            color: #64748b;
             text-align: center;
             font-family: 'Courier New', monospace;
         }
-
-        /* App nav bar */
-        .mockup-nav {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            height: 44px;
-        }
-
-        .mockup-nav-logo {
-            font-size: 13px;
-            font-weight: 900;
-            color: #4f46e5;
-            letter-spacing: -0.02em;
-        }
-
-        .mockup-nav-links {
-            display: flex;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .mockup-nav-link {
-            font-size: 11px;
-            font-weight: 700;
-            color: #64748b;
-            padding: 4px 10px;
-            border-radius: 6px;
-        }
-
-        .mockup-nav-link.active {
-            background: #ede9fe;
-            color: #4f46e5;
-        }
-
-        .mockup-nav-avatar {
-            width: 26px;
-            height: 26px;
-            background: #4f46e5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        /* Dashboard body */
-        .mockup-content {
-            background: #f8fafc;
-            padding: 20px;
-        }
-
-        /* Page title */
-        .mockup-page-title {
-            font-size: 16px;
-            font-weight: 900;
-            color: #1e293b;
-            margin-bottom: 4px;
-            letter-spacing: -0.02em;
-        }
-
-        .mockup-page-sub {
-            font-size: 10px;
-            color: #94a3b8;
-            margin-bottom: 16px;
-            font-weight: 500;
-        }
-
-        /* KPI row */
-        .mockup-kpi-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-
-        .mockup-kpi {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 10px 16px;
-            text-align: center;
-            flex: 1;
-            min-width: 70px;
-        }
-
-        .mockup-kpi-val {
-            font-size: 20px;
-            font-weight: 900;
-            color: #4f46e5;
-            display: block;
-            line-height: 1;
-            margin-bottom: 3px;
-        }
-
-        .mockup-kpi-val.warn { color: #f59e0b; }
-        .mockup-kpi-val.danger { color: #ef4444; }
-        .mockup-kpi-val.good { color: #10b981; }
-
-        .mockup-kpi-label {
-            font-size: 8px;
+        .m-demo-label {
+            font-size: 9px;
             font-weight: 800;
             color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-
-        /* Two-column layout */
-        .mockup-cols {
-            display: grid;
-            grid-template-columns: 1fr 220px;
-            gap: 12px;
-        }
-
-        .mockup-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .mockup-card-head {
-            padding: 10px 14px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .mockup-card-head-icon {
-            color: #4f46e5;
-            font-size: 11px;
-        }
-
-        .mockup-card-title {
-            font-size: 11px;
-            font-weight: 900;
-            color: #1e293b;
-            letter-spacing: -0.01em;
-        }
-
-        /* Activity table */
-        .mockup-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .mockup-table th {
-            padding: 7px 14px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #94a3b8;
-            font-weight: 800;
-            text-align: left;
-            letter-spacing: 0.06em;
-        }
-
-        .mockup-table td {
-            padding: 9px 14px;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-        }
-
-        .mockup-table tr:last-child td { border-bottom: none; }
-
-        .mockup-pos-name {
-            font-size: 12px;
-            font-weight: 800;
-            color: #1e293b;
-        }
-
-        .mockup-pos-sub {
-            font-size: 10px;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .mockup-trainer-cell {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .mockup-avatar {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            font-weight: 800;
-            color: #fff;
+            letter-spacing: 0.08em;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 4px;
             flex-shrink: 0;
         }
 
-        .mockup-trainer-name {
-            font-size: 11px;
-            font-weight: 700;
-            color: #334155;
-        }
-
-        .mockup-score {
-            font-size: 10px;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 5px;
-            color: #fff;
-            display: inline-block;
-        }
-
-        .mockup-date {
-            font-size: 10px;
-            font-weight: 700;
-            color: #94a3b8;
-        }
-
-        /* Launchpad sidebar */
-        .mockup-launch-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            padding: 12px;
-        }
-
-        .mockup-launch-btn {
+        /* App header */
+        .m-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 5px;
-            padding: 10px 6px;
+            height: 56px;
+            padding: 0 20px;
+            gap: 32px;
+        }
+        .m-brand {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .m-brand-img {
+            height: 22px;
+            width: auto;
+        }
+        .m-brand-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.02em;
+        }
+        .m-nav {
+            display: flex;
+            align-items: stretch;
+            gap: 24px;
+            flex: 1;
+            height: 100%;
+        }
+        .m-nav-link {
+            position: relative;
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.15s;
+            white-space: nowrap;
+            padding: 0;
+            background: none;
+            border: none;
+        }
+        .m-nav-link:hover { color: #4f46e5; }
+        .m-nav-link.active {
+            color: #1e293b;
+            font-weight: 600;
+        }
+        .m-nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0; right: 0;
+            height: 2px;
+            background: #4f46e5;
+            border-radius: 2px 2px 0 0;
+        }
+        .m-header-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: auto;
+        }
+        .m-bell {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #64748b; font-size: 13px;
+            position: relative;
+        }
+        .m-bell-dot {
+            position: absolute; top: 7px; right: 7px;
+            width: 6px; height: 6px;
+            background: #ef4444; border-radius: 50%;
+            border: 1.5px solid #fff;
+        }
+        .m-user-pill {
+            display: flex; align-items: center; gap: 7px;
+            padding: 3px 10px 3px 3px;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .m-user-avatar {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: #4f46e5;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 800; color: #fff;
+        }
+        .m-user-name { font-size: 11px; font-weight: 600; color: #1e293b; }
+
+        /* Screen container */
+        .m-screens { position: relative; overflow: hidden; }
+        .m-screen { display: none; }
+        .m-screen.active { display: block; }
+
+        /* ── DASHBOARD SCREEN ── */
+        .m-dash-body {
             background: #f8fafc;
+            padding: 22px 24px;
+        }
+        .m-page-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .m-page-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: -0.03em;
+            margin: 0 0 2px;
+        }
+        .m-page-sub { font-size: 12px; color: #64748b; font-weight: 500; margin: 0; }
+        .m-kpi-row {
+            display: flex; gap: 8px; margin-bottom: 18px;
+        }
+        .m-kpi {
+            background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
+            padding: 10px 18px;
             text-align: center;
+            flex: 1;
         }
-
-        .mockup-launch-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #fff;
+        .m-kpi-val {
+            font-size: 20px; font-weight: 900;
+            color: #4f46e5; display: block; line-height: 1; margin-bottom: 2px;
         }
-
-        .mockup-launch-label {
-            font-size: 9px;
-            font-weight: 800;
-            color: #334155;
+        .m-kpi-val.warn { color: #f59e0b; }
+        .m-kpi-val.danger { color: #ef4444; }
+        .m-kpi-label {
+            font-size: 8px; font-weight: 800; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 0.07em;
         }
-
-        /* Overdue section */
-        .mockup-overdue-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 14px;
+        /* Overdue banner */
+        .m-overdue-section {
+            margin-bottom: 18px;
+        }
+        .m-section-head {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        }
+        .m-section-title {
+            font-size: 14px; font-weight: 900; color: #1e293b; margin: 0;
+        }
+        .m-count-badge {
+            font-size: 10px; font-weight: 800;
+            background: rgba(239,68,68,0.1); color: #ef4444;
+            border-radius: 5px; padding: 1px 7px;
+        }
+        .m-activity-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;
+        }
+        .m-table { width: 100%; border-collapse: collapse; }
+        .m-table th {
+            padding: 7px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9px; text-transform: uppercase;
+            color: #64748b; font-weight: 800;
+            text-align: left; letter-spacing: 0.07em;
+        }
+        .m-table td {
+            padding: 10px 14px;
             border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .m-table tr:last-child td { border-bottom: none; }
+        .m-pos { font-size: 12px; font-weight: 800; color: #1e293b; }
+        .m-sub  { font-size: 10px; color: #94a3b8; font-weight: 500; }
+        .m-trainer-cell { display: flex; align-items: center; gap: 6px; }
+        .m-av {
+            width: 20px; height: 20px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .m-score {
+            font-size: 10px; font-weight: 800; padding: 2px 8px;
+            border-radius: 5px; color: #fff; display: inline-block;
+        }
+        .m-date-lbl { font-size: 10px; font-weight: 700; color: #64748b; }
+        .m-date-ago { font-size: 9px; color: #ef4444; font-weight: 700; }
+        .m-nudge {
+            font-size: 9px; font-weight: 800; padding: 3px 9px;
+            border-radius: 6px; background: #fef3c7; color: #92400e;
+            border: 1px solid #f59e0b; white-space: nowrap; cursor: pointer;
+        }
+        /* Cockpit 2-col */
+        .m-cockpit { display: grid; grid-template-columns: 1fr 210px; gap: 12px; }
+        .m-section-title-sm { font-size: 13px; font-weight: 900; color: #1e293b; margin: 0 0 10px; }
+        .m-section-title-sm i { color: #f59e0b; margin-right: 4px; }
+        .m-launchpad-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;
+        }
+        .m-launchpad-title { font-size: 13px; font-weight: 900; color: #1e293b; margin: 0 0 10px; }
+        .m-launch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .m-launch-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 10px 6px;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center;
+        }
+        .m-launch-icon {
+            width: 30px; height: 30px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: #fff;
+        }
+        .m-launch-label { font-size: 9px; font-weight: 800; color: #334155; }
+        .m-tip {
+            margin-top: 10px; padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 10px; color: #64748b; line-height: 1.5;
+        }
+        .m-tip i { color: #4f46e5; }
+
+        /* ── SCHEDULES SCREEN ── */
+        .m-sched-body { background: #f8fafc; padding: 24px 28px; }
+        .m-page-header-row {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .m-btn-smart {
+            background: linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%);
+            color: #fff; border: none; padding: 8px 14px;
+            border-radius: 10px; font-size: 11px; font-weight: 800;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .m-btn-primary {
+            background: #4f46e5; color: #fff; border: none;
+            padding: 8px 14px; border-radius: 10px;
+            font-size: 11px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .m-btn-row { display: flex; gap: 8px; }
+        .m-controls-row {
+            display: flex; gap: 8px; margin-bottom: 16px;
+        }
+        .m-search-wrap {
+            flex: 1; position: relative;
+        }
+        .m-search-icon {
+            position: absolute; left: 11px; top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8; font-size: 11px; pointer-events: none;
+        }
+        .m-search-input {
+            width: 100%; padding: 8px 12px 8px 30px;
+            border: 1px solid #e2e8f0; border-radius: 8px;
+            background: #fff; color: #1e293b; font-size: 12px; outline: none;
+        }
+        .m-filter-select {
+            padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 8px;
+            background: #fff; color: #64748b; font-size: 11px;
+        }
+        .m-table-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+        .m-icon-box {
+            width: 34px; height: 34px; border-radius: 8px;
+            background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+        }
+        .m-pill-pub {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+            font-size: 9px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.04em; padding: 2px 8px; border-radius: 20px;
+        }
+        .m-pill-draft {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #fffbeb; color: #92400e; border: 1px solid #fde68a;
+            font-size: 9px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.04em; padding: 2px 8px; border-radius: 20px;
+        }
+        .m-action-icons { display: flex; gap: 4px; }
+        .m-action-icon {
+            width: 28px; height: 28px; border-radius: 6px;
+            border: 1px solid #e2e8f0; background: #fff;
+            color: #64748b; font-size: 11px;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
         }
 
-        .mockup-overdue-row:last-child { border-bottom: none; }
-
-        .mockup-overdue-info { flex: 1; }
-
-        .mockup-overdue-pos {
-            font-size: 11px;
-            font-weight: 800;
-            color: #1e293b;
+        /* ── EMPLOYEES SCREEN ── */
+        .m-emp-body { background: #f8fafc; padding: 24px 28px; }
+        .m-filter-pills { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .m-pill {
+            padding: 6px 14px; border-radius: 8px;
+            border: 1px solid #e2e8f0; background: #fff;
+            color: #64748b; font-size: 10px; font-weight: 700; cursor: pointer;
+        }
+        .m-pill.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+        .m-trainee-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+        }
+        .m-trainee-card {
+            background: #fff; border: 1px solid #e2e8f0;
+            border-radius: 12px; overflow: hidden;
+        }
+        .m-card-top {
+            padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+        }
+        .m-card-av {
+            width: 38px; height: 38px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .m-card-name { font-size: 13px; font-weight: 800; color: #1e293b; margin: 0 0 2px; }
+        .m-card-role { font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .m-card-body { padding: 10px 16px; border-top: 1px solid #e2e8f0; }
+        .m-progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+        .m-progress-label { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+        .m-progress-pct { font-size: 15px; font-weight: 900; color: #1e293b; }
+        .m-progress-bg {
+            height: 5px; background: #f1f5f9; border-radius: 4px;
+            border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 8px;
+        }
+        .m-progress-fill { height: 100%; border-radius: 4px; }
+        .m-next-step { font-size: 10px; color: #64748b; font-weight: 500; }
+        .m-next-step strong { color: #4f46e5; font-weight: 700; }
+        .m-mastery-list { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 6px; }
+        .m-mastery-pill {
+            font-size: 8px; font-weight: 800; padding: 2px 7px;
+            border-radius: 5px; background: #dcfce7; color: #166534;
+            border: 1px solid #bbf7d0; text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 2px;
         }
 
-        .mockup-overdue-who {
-            font-size: 10px;
-            color: #94a3b8;
+        /* ── MESSAGES SCREEN ── */
+        .m-msg-body { display: flex; height: 440px; }
+        .m-msg-sidebar {
+            width: 220px; min-width: 220px;
+            background: #1a1d21; color: #ccc;
+            display: flex; flex-direction: column;
+            border-right: 1px solid #2d2d2d;
+        }
+        .m-msg-brand {
+            padding: 12px 14px;
+            border-bottom: 1px solid #2d2d2d;
+            font-size: 14px; font-weight: 900; color: #fff;
+            letter-spacing: -0.02em;
+        }
+        .m-msg-user-bar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px; border-bottom: 1px solid #2d2d2d;
+        }
+        .m-msg-av {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #4f46e5; display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .m-msg-user-name { font-size: 12px; font-weight: 600; color: #e0e0e0; }
+        .m-msg-status { font-size: 10px; color: #22c55e; display: flex; align-items: center; gap: 4px; }
+        .m-status-dot { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; }
+        .m-msg-section-lbl {
+            font-size: 10px; font-weight: 800; color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            padding: 10px 14px 4px;
+        }
+        .m-msg-ch {
+            display: flex; align-items: center; gap: 7px;
+            padding: 5px 14px; cursor: pointer;
+            font-size: 12px; font-weight: 500; color: #9ca3af;
+            border-radius: 4px; margin: 0 6px;
+            transition: background 0.1s;
+        }
+        .m-msg-ch:hover { background: #27292d; color: #fff; }
+        .m-msg-ch.active { background: #4f46e5; color: #fff; font-weight: 600; }
+        .m-msg-ch-icon { font-size: 12px; }
+        .m-unread {
+            margin-left: auto; background: #ef4444; color: #fff;
+            font-size: 8px; font-weight: 800; padding: 1px 5px; border-radius: 10px;
+        }
+        .m-dm-av {
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 7px; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .m-online-dot { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; }
+        /* Chat area */
+        .m-msg-main {
+            flex: 1; display: flex; flex-direction: column;
+            background: #fff;
+        }
+        .m-chat-header {
+            padding: 10px 16px; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .m-chat-name { font-size: 14px; font-weight: 800; color: #1e293b; }
+        .m-chat-members { font-size: 11px; color: #64748b; font-weight: 500; }
+        .m-messages-list { flex: 1; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .m-message { display: flex; gap: 10px; }
+        .m-msg-sender-av {
+            width: 30px; height: 30px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; color: #fff; flex-shrink: 0; margin-top: 1px;
+        }
+        .m-msg-body-text { flex: 1; }
+        .m-msg-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+        .m-msg-sender-name { font-size: 12px; font-weight: 800; color: #1e293b; }
+        .m-msg-time { font-size: 10px; color: #94a3b8; }
+        .m-msg-text { font-size: 12px; color: #334155; line-height: 1.5; }
+        .m-chat-input-wrap {
+            padding: 10px 16px 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .m-chat-input-box {
+            display: flex; align-items: center; gap: 8px;
+            border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 8px 12px; background: #f8fafc;
+        }
+        .m-chat-input-fake {
+            flex: 1; font-size: 12px; color: #94a3b8;
+        }
+        .m-chat-send {
+            width: 28px; height: 28px; border-radius: 7px;
+            background: #4f46e5; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; cursor: pointer;
         }
 
-        .mockup-nudge-btn {
-            font-size: 9px;
-            font-weight: 800;
-            padding: 3px 9px;
-            border-radius: 6px;
-            background: #fef3c7;
-            color: #92400e;
-            border: 1px solid #f59e0b;
-            white-space: nowrap;
+        /* Responsive */
+        .m-cockpit { grid-template-columns: 1fr 200px; }
+        @media (max-width: 780px) {
+            .m-cockpit { grid-template-columns: 1fr; }
+            .m-trainee-grid { grid-template-columns: 1fr; }
+            .m-nav .m-nav-link:nth-child(n+3) { display: none; }
+            .m-msg-sidebar { width: 160px; min-width: 160px; }
         }
 
 
@@ -1316,10 +1462,9 @@
             .nav-mobile-toggle { display: block; }
             .hero { padding: 110px 20px 72px; }
             .features-grid { grid-template-columns: 1fr; }
-            .mockup-kpi-row { flex-wrap: wrap; }
-            .mockup-kpi { min-width: 60px; }
-            .mockup-cols { grid-template-columns: 1fr; }
-            .mockup-nav-link:nth-child(n+3) { display: none; }
+            .m-kpi-row { gap: 4px; }
+            .m-kpi { padding: 8px 10px; }
+            .m-trainee-grid { grid-template-columns: 1fr; }
             .footer-top { grid-template-columns: 1fr; gap: 28px; }
             .footer-bottom { flex-direction: column; align-items: flex-start; }
         }
@@ -1363,173 +1508,534 @@
         </a>
     </div>
 
-    <!-- App Mockup -->
-    <div class="hero-mockup">
+    <!-- Interactive App Demo -->
+    <div class="m-demo" id="appDemo">
         <!-- Browser chrome -->
-        <div class="mockup-bar">
-            <div class="mockup-dot" style="background:#ff5f57;"></div>
-            <div class="mockup-dot" style="background:#ffbd2e;"></div>
-            <div class="mockup-dot" style="background:#28c941;"></div>
-            <div class="mockup-url">trainingtracker.me/manager/dashboard</div>
+        <div class="m-chrome">
+            <div class="m-dot" style="background:#ff5f57;"></div>
+            <div class="m-dot" style="background:#ffbd2e;"></div>
+            <div class="m-dot" style="background:#28c941;"></div>
+            <div class="m-url-bar" id="demoUrl">trainingtracker.me/manager/dashboard</div>
+            <div class="m-demo-label">Live Demo</div>
         </div>
-        <!-- App nav -->
-        <div class="mockup-nav">
-            <div class="mockup-nav-logo"><i class="fa-solid fa-bolt" style="font-size:10px;"></i> Training Tracker</div>
-            <div class="mockup-nav-links">
-                <div class="mockup-nav-link active">Dashboard</div>
-                <div class="mockup-nav-link">Schedule</div>
-                <div class="mockup-nav-link">Employees</div>
-                <div class="mockup-nav-link">Messages</div>
+        <!-- App header (real nav) -->
+        <div class="m-header">
+            <div class="m-brand">
+                <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="" class="m-brand-img">
+                <span class="m-brand-text">Training Tracker</span>
             </div>
-            <div class="mockup-nav-avatar">A</div>
-        </div>
-        <!-- Dashboard content -->
-        <div class="mockup-content">
-            <!-- Page heading -->
-            <div class="mockup-page-title">Dashboard</div>
-            <div class="mockup-page-sub">Sunday, Feb 15 &mdash; Good morning, Adam</div>
-            <!-- KPI row -->
-            <div class="mockup-kpi-row">
-                <div class="mockup-kpi">
-                    <span class="mockup-kpi-val">12</span>
-                    <div class="mockup-kpi-label">Active Trainees</div>
+            <nav class="m-nav">
+                <button class="m-nav-link active" data-tab="dashboard" data-url="trainingtracker.me/manager/dashboard">Dashboard</button>
+                <button class="m-nav-link" data-tab="employees" data-url="trainingtracker.me/manager/employees">Employees</button>
+                <button class="m-nav-link" data-tab="schedules" data-url="trainingtracker.me/manager/schedules">Schedules</button>
+                <button class="m-nav-link" data-tab="messages" data-url="trainingtracker.me/messages">Messages</button>
+            </nav>
+            <div class="m-header-right">
+                <div class="m-bell">
+                    <i class="fa-solid fa-bell"></i>
+                    <div class="m-bell-dot"></div>
                 </div>
-                <div class="mockup-kpi">
-                    <span class="mockup-kpi-val good">8</span>
-                    <div class="mockup-kpi-label">Sessions This Week</div>
-                </div>
-                <div class="mockup-kpi">
-                    <span class="mockup-kpi-val" style="color:#4f46e5;">4.2</span>
-                    <div class="mockup-kpi-label">Avg. Rating</div>
-                </div>
-                <div class="mockup-kpi">
-                    <span class="mockup-kpi-val danger">2</span>
-                    <div class="mockup-kpi-label">Overdue</div>
-                </div>
-                <div class="mockup-kpi">
-                    <span class="mockup-kpi-val warn">3</span>
-                    <div class="mockup-kpi-label">On Roadmap</div>
+                <div class="m-user-pill">
+                    <div class="m-user-avatar">A</div>
+                    <span class="m-user-name">Adam A.</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size:9px; color:#94a3b8;"></i>
                 </div>
             </div>
-            <!-- Two-column layout -->
-            <div class="mockup-cols">
-                <!-- Recent activity table -->
-                <div class="mockup-card">
-                    <div class="mockup-card-head">
-                        <i class="fa-solid fa-chart-line mockup-card-head-icon"></i>
-                        <span class="mockup-card-title">Recent Activity</span>
+        </div>
+
+        <!-- All screens -->
+        <div class="m-screens">
+
+            <!-- ── DASHBOARD ── -->
+            <div class="m-screen active" id="tab-dashboard">
+                <div class="m-dash-body">
+                    <div class="m-page-hero">
+                        <div>
+                            <h1 class="m-page-title">Dashboard</h1>
+                            <p class="m-page-sub">Overview of training operations and team progress.</p>
+                        </div>
                     </div>
-                    <table class="mockup-table">
-                        <thead>
-                            <tr>
-                                <th>Position / Trainee</th>
-                                <th>Trainer</th>
-                                <th>Score</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div class="mockup-pos-name">Front Counter</div>
-                                    <div class="mockup-pos-sub">Jordan R.</div>
-                                </td>
-                                <td>
-                                    <div class="mockup-trainer-cell">
-                                        <div class="mockup-avatar" style="background:#4f46e5;">CM</div>
-                                        <span class="mockup-trainer-name">Chris M.</span>
-                                    </div>
-                                </td>
-                                <td><span class="mockup-score" style="background:#10b981;">4.8</span></td>
-                                <td><span class="mockup-date">Today</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="mockup-pos-name">Drive Thru</div>
-                                    <div class="mockup-pos-sub">Morgan L.</div>
-                                </td>
-                                <td>
-                                    <div class="mockup-trainer-cell">
-                                        <div class="mockup-avatar" style="background:#7c3aed;">SR</div>
-                                        <span class="mockup-trainer-name">Sara R.</span>
-                                    </div>
-                                </td>
-                                <td><span class="mockup-score" style="background:#4f46e5;">3.9</span></td>
-                                <td><span class="mockup-date">Yesterday</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="mockup-pos-name">Kitchen</div>
-                                    <div class="mockup-pos-sub">Alex K.</div>
-                                </td>
-                                <td>
-                                    <div class="mockup-trainer-cell">
-                                        <div class="mockup-avatar" style="background:#059669;">JT</div>
-                                        <span class="mockup-trainer-name">Jamie T.</span>
-                                    </div>
-                                </td>
-                                <td><span class="mockup-score" style="background:#f59e0b;">3.2</span></td>
-                                <td><span class="mockup-date">Mon</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <!-- Overdue section -->
-                    <div style="padding: 8px 14px 6px; background:#fff7ed; border-top: 1px solid #fed7aa;">
-                        <div style="font-size:9px; font-weight:800; color:#c2410c; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"><i class="fa-solid fa-clock" style="margin-right:4px;"></i>Overdue &mdash; Awaiting Submission</div>
-                        <div class="mockup-overdue-row" style="padding: 5px 0;">
-                            <div class="mockup-overdue-info">
-                                <div class="mockup-overdue-pos">Nuggets Station</div>
-                                <div class="mockup-overdue-who">Sam T. &rarr; Trainer: Chris M.</div>
+                    <!-- KPI row -->
+                    <div class="m-kpi-row">
+                        <div class="m-kpi">
+                            <span class="m-kpi-val">12</span>
+                            <div class="m-kpi-label">Trainees</div>
+                        </div>
+                        <div class="m-kpi">
+                            <span class="m-kpi-val">18</span>
+                            <div class="m-kpi-label">Total Staff</div>
+                        </div>
+                        <div class="m-kpi">
+                            <span class="m-kpi-val">47</span>
+                            <div class="m-kpi-label">Completed</div>
+                        </div>
+                        <div class="m-kpi">
+                            <span class="m-kpi-val warn">2</span>
+                            <div class="m-kpi-label">Overdue</div>
+                        </div>
+                    </div>
+                    <!-- Overdue sessions -->
+                    <div class="m-overdue-section">
+                        <div class="m-section-head">
+                            <h2 class="m-section-title"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Overdue Sessions</h2>
+                            <span class="m-count-badge">2</span>
+                        </div>
+                        <div class="m-activity-card">
+                            <table class="m-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Session</th>
+                                        <th>Trainer</th>
+                                        <th style="text-align:right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="m-date-lbl" style="color:#ef4444;">Feb 12</div>
+                                            <div class="m-date-ago">3d ago</div>
+                                        </td>
+                                        <td>
+                                            <div class="m-pos">Nuggets Station</div>
+                                            <div class="m-sub">Sam T.</div>
+                                        </td>
+                                        <td>
+                                            <div class="m-trainer-cell">
+                                                <div class="m-av" style="background:#4f46e5;">CM</div>
+                                                <span style="font-size:11px; font-weight:700; color:#334155;">Chris M.</span>
+                                            </div>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <div class="m-nudge"><i class="fa-solid fa-bell" style="margin-right:3px;"></i>Nudge</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="m-date-lbl" style="color:#ef4444;">Feb 11</div>
+                                            <div class="m-date-ago">4d ago</div>
+                                        </td>
+                                        <td>
+                                            <div class="m-pos">Drive Thru Window</div>
+                                            <div class="m-sub">Casey W.</div>
+                                        </td>
+                                        <td>
+                                            <div class="m-trainer-cell">
+                                                <div class="m-av" style="background:#059669;">SR</div>
+                                                <span style="font-size:11px; font-weight:700; color:#334155;">Sara R.</span>
+                                            </div>
+                                        </td>
+                                        <td style="text-align:right;">
+                                            <div class="m-nudge"><i class="fa-solid fa-bell" style="margin-right:3px;"></i>Nudge</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Cockpit grid -->
+                    <div class="m-cockpit">
+                        <!-- Recent activity -->
+                        <div>
+                            <h2 class="m-section-title-sm"><i class="fa-solid fa-bolt"></i> Recent Activity</h2>
+                            <div class="m-activity-card">
+                                <table class="m-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Session</th>
+                                            <th>Trainer</th>
+                                            <th style="text-align:right;">Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="m-date-lbl">Feb 15</span></td>
+                                            <td><div class="m-pos">Front Counter</div><div class="m-sub">Jordan R.</div></td>
+                                            <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                            <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.8 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="m-date-lbl">Feb 14</span></td>
+                                            <td><div class="m-pos">Drive Thru</div><div class="m-sub">Morgan L.</div></td>
+                                            <td><div class="m-trainer-cell"><div class="m-av" style="background:#7c3aed;">SR</div><span style="font-size:11px;font-weight:700;color:#334155;">Sara R.</span></div></td>
+                                            <td style="text-align:right;"><span class="m-score" style="background:#4f46e5;">3.9 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="m-date-lbl">Feb 13</span></td>
+                                            <td><div class="m-pos">Kitchen</div><div class="m-sub">Alex K.</div></td>
+                                            <td><div class="m-trainer-cell"><div class="m-av" style="background:#059669;">JT</div><span style="font-size:11px;font-weight:700;color:#334155;">Jamie T.</span></div></td>
+                                            <td style="text-align:right;"><span class="m-score" style="background:#f59e0b;">3.2 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div class="mockup-nudge-btn"><i class="fa-solid fa-bell" style="margin-right:3px;"></i>Nudge</div>
                         </div>
-                    </div>
-                </div>
-                <!-- Launchpad sidebar -->
-                <div class="mockup-card">
-                    <div class="mockup-card-head">
-                        <i class="fa-solid fa-rocket mockup-card-head-icon"></i>
-                        <span class="mockup-card-title">Quick Actions</span>
-                    </div>
-                    <div class="mockup-launch-grid">
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#4f46e5;"><i class="fa-solid fa-bolt"></i></div>
-                            <span class="mockup-launch-label">Quick Train</span>
+                        <!-- Launchpad -->
+                        <div>
+                            <h2 class="m-section-title-sm">Launchpad</h2>
+                            <div class="m-launchpad-card">
+                                <div class="m-launch-grid">
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#10b981;"><i class="fa-solid fa-users-gear"></i></div>
+                                        <span class="m-launch-label">Staff</span>
+                                    </div>
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#3b82f6;"><i class="fa-solid fa-calendar-days"></i></div>
+                                        <span class="m-launch-label">Schedules</span>
+                                    </div>
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-layer-group"></i></div>
+                                        <span class="m-launch-label">Positions</span>
+                                    </div>
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#f43f5e;"><i class="fa-solid fa-map-location-dot"></i></div>
+                                        <span class="m-launch-label">Roadmaps</span>
+                                    </div>
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#f59e0b;"><i class="fa-solid fa-clock"></i></div>
+                                        <span class="m-launch-label">Shifts</span>
+                                    </div>
+                                    <div class="m-launch-btn">
+                                        <div class="m-launch-icon" style="background:#64748b;"><i class="fa-solid fa-sliders"></i></div>
+                                        <span class="m-launch-label">Settings</span>
+                                    </div>
+                                </div>
+                                <div class="m-tip">
+                                    <i class="fa-solid fa-lightbulb"></i> Tip: Use <strong style="color:#4f46e5;">Smart Schedule</strong> to auto-build your week with one click.
+                                </div>
+                            </div>
                         </div>
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#0ea5e9;"><i class="fa-solid fa-calendar-plus"></i></div>
-                            <span class="mockup-launch-label">Schedule</span>
-                        </div>
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#10b981;"><i class="fa-solid fa-user-plus"></i></div>
-                            <span class="mockup-launch-label">Add Employee</span>
-                        </div>
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-map"></i></div>
-                            <span class="mockup-launch-label">Roadmaps</span>
-                        </div>
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#f59e0b;"><i class="fa-solid fa-qrcode"></i></div>
-                            <span class="mockup-launch-label">Guest Trainer</span>
-                        </div>
-                        <div class="mockup-launch-btn">
-                            <div class="mockup-launch-icon" style="background:#ef4444;"><i class="fa-solid fa-chart-bar"></i></div>
-                            <span class="mockup-launch-label">Reports</span>
-                        </div>
-                    </div>
-                    <div style="padding: 10px 12px; border-top: 1px solid #e2e8f0; background:#f8fafc;">
-                        <div style="font-size:9px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">This Week's Schedule</div>
-                        <div style="font-size:10px; color:#334155; font-weight:700; margin-bottom:3px;">Feb 10 &ndash; Feb 16</div>
-                        <div style="font-size:9px; color:#64748b; font-weight:600; margin-bottom:6px;">8 sessions &bull; 5 trainers assigned</div>
-                        <div style="height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden;">
-                            <div style="width:62%; height:100%; background:linear-gradient(90deg,#4f46e5,#818cf8); border-radius:2px;"></div>
-                        </div>
-                        <div style="font-size:9px; color:#94a3b8; margin-top:3px;">62% of sessions completed</div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <!-- ── EMPLOYEES ── -->
+            <div class="m-screen" id="tab-employees">
+                <div class="m-emp-body">
+                    <div class="m-page-header-row">
+                        <div>
+                            <h1 class="m-page-title">Our Team</h1>
+                            <p class="m-page-sub">Manage trainees, trainers, and staff profiles.</p>
+                        </div>
+                        <div class="m-btn-row">
+                            <button class="m-btn-primary"><i class="fa-solid fa-user-plus"></i> Add Employee</button>
+                        </div>
+                    </div>
+                    <div class="m-filter-pills">
+                        <div class="m-pill active">All Staff</div>
+                        <div class="m-pill">Trainees</div>
+                        <div class="m-pill">Trainers</div>
+                        <div class="m-pill">Active</div>
+                    </div>
+                    <div class="m-trainee-grid">
+                        <!-- Card 1 -->
+                        <div class="m-trainee-card">
+                            <div class="m-card-top">
+                                <div class="m-card-av" style="background:#4f46e5;">JR</div>
+                                <div>
+                                    <div class="m-card-name">Jordan R.</div>
+                                    <div class="m-card-role">Front Counter Roadmap</div>
+                                </div>
+                            </div>
+                            <div class="m-card-body">
+                                <div class="m-progress-header">
+                                    <span class="m-progress-label">Overall Progress</span>
+                                    <span class="m-progress-pct">75%</span>
+                                </div>
+                                <div class="m-progress-bg">
+                                    <div class="m-progress-fill" style="width:75%; background:linear-gradient(90deg,#4f46e5,#818cf8);"></div>
+                                </div>
+                                <div class="m-next-step"><i class="fa-solid fa-arrow-right" style="font-size:9px; margin-right:3px;"></i>Next: <strong>Speed &amp; Accuracy</strong></div>
+                                <div class="m-mastery-list">
+                                    <span class="m-mastery-pill"><i class="fa-solid fa-check" style="font-size:7px;"></i> Register Basics</span>
+                                    <span class="m-mastery-pill"><i class="fa-solid fa-check" style="font-size:7px;"></i> Order Taking</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="m-trainee-card">
+                            <div class="m-card-top">
+                                <div class="m-card-av" style="background:#7c3aed;">ML</div>
+                                <div>
+                                    <div class="m-card-name">Morgan L.</div>
+                                    <div class="m-card-role">Drive Thru Roadmap</div>
+                                </div>
+                            </div>
+                            <div class="m-card-body">
+                                <div class="m-progress-header">
+                                    <span class="m-progress-label">Overall Progress</span>
+                                    <span class="m-progress-pct">45%</span>
+                                </div>
+                                <div class="m-progress-bg">
+                                    <div class="m-progress-fill" style="width:45%; background:linear-gradient(90deg,#7c3aed,#a78bfa);"></div>
+                                </div>
+                                <div class="m-next-step"><i class="fa-solid fa-arrow-right" style="font-size:9px; margin-right:3px;"></i>Next: <strong>Taking Orders</strong></div>
+                                <div class="m-mastery-list">
+                                    <span class="m-mastery-pill"><i class="fa-solid fa-check" style="font-size:7px;"></i> Window Basics</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="m-trainee-card">
+                            <div class="m-card-top">
+                                <div class="m-card-av" style="background:#059669;">AK</div>
+                                <div>
+                                    <div class="m-card-name">Alex K.</div>
+                                    <div class="m-card-role">No roadmap assigned</div>
+                                </div>
+                            </div>
+                            <div class="m-card-body">
+                                <div style="font-size:11px; color:#64748b; font-weight:500; margin-bottom:8px;">3 sessions completed &bull; Avg. 4.1</div>
+                                <div class="m-mastery-list">
+                                    <span class="m-mastery-pill"><i class="fa-solid fa-check" style="font-size:7px;"></i> Front Counter</span>
+                                    <span class="m-mastery-pill"><i class="fa-solid fa-check" style="font-size:7px;"></i> Drive Thru</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="m-trainee-card">
+                            <div class="m-card-top">
+                                <div class="m-card-av" style="background:#b45309;">ST</div>
+                                <div>
+                                    <div class="m-card-name">Sam T.</div>
+                                    <div class="m-card-role">Kitchen Roadmap</div>
+                                </div>
+                            </div>
+                            <div class="m-card-body">
+                                <div class="m-progress-header">
+                                    <span class="m-progress-label">Overall Progress</span>
+                                    <span class="m-progress-pct">20%</span>
+                                </div>
+                                <div class="m-progress-bg">
+                                    <div class="m-progress-fill" style="width:20%; background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+                                </div>
+                                <div class="m-next-step"><i class="fa-solid fa-arrow-right" style="font-size:9px; margin-right:3px;"></i>Next: <strong>Safety &amp; Hygiene</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SCHEDULES ── -->
+            <div class="m-screen" id="tab-schedules">
+                <div class="m-sched-body">
+                    <div class="m-page-header-row">
+                        <div>
+                            <h1 class="m-page-title">Training Schedules</h1>
+                            <p class="m-page-sub">Manage weekly training assignments for your team.</p>
+                        </div>
+                        <div class="m-btn-row">
+                            <button class="m-btn-smart"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Schedule</button>
+                            <button class="m-btn-primary"><i class="fa-solid fa-plus"></i> New Manual</button>
+                        </div>
+                    </div>
+                    <div class="m-controls-row">
+                        <div class="m-search-wrap">
+                            <i class="fa-solid fa-magnifying-glass m-search-icon"></i>
+                            <input class="m-search-input" placeholder="Search schedules..." readonly>
+                        </div>
+                        <select class="m-filter-select">
+                            <option>All Statuses</option>
+                            <option>Published</option>
+                            <option>Draft</option>
+                        </select>
+                    </div>
+                    <div class="m-table-card">
+                        <table class="m-table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Week</th>
+                                    <th>Status</th>
+                                    <th>Sessions</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="width:50px;"><div class="m-icon-box"><i class="fa-solid fa-calendar-days"></i></div></td>
+                                    <td>
+                                        <div style="font-size:13px; font-weight:800; color:#1e293b;">Feb 10 &ndash; Feb 16</div>
+                                        <div style="font-size:11px; color:#64748b; font-weight:500;">Current week</div>
+                                    </td>
+                                    <td><span class="m-pill-pub"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Published</span></td>
+                                    <td><span style="font-size:13px; font-weight:700; color:#1e293b;">8</span><span style="font-size:11px; color:#64748b;"> sessions</span></td>
+                                    <td style="text-align:right;">
+                                        <div class="m-action-icons" style="justify-content:flex-end;">
+                                            <div class="m-action-icon"><i class="fa-solid fa-eye"></i></div>
+                                            <div class="m-action-icon"><i class="fa-solid fa-pen"></i></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><div class="m-icon-box"><i class="fa-solid fa-calendar-days"></i></div></td>
+                                    <td>
+                                        <div style="font-size:13px; font-weight:800; color:#1e293b;">Feb 17 &ndash; Feb 23</div>
+                                        <div style="font-size:11px; color:#64748b; font-weight:500;">Next week</div>
+                                    </td>
+                                    <td><span class="m-pill-draft"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Draft</span></td>
+                                    <td><span style="font-size:13px; font-weight:700; color:#1e293b;">5</span><span style="font-size:11px; color:#64748b;"> sessions</span></td>
+                                    <td style="text-align:right;">
+                                        <div class="m-action-icons" style="justify-content:flex-end;">
+                                            <div class="m-action-icon"><i class="fa-solid fa-eye"></i></div>
+                                            <div class="m-action-icon"><i class="fa-solid fa-pen"></i></div>
+                                            <div class="m-action-icon"><i class="fa-solid fa-paper-plane" style="color:#4f46e5;"></i></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><div class="m-icon-box"><i class="fa-solid fa-calendar-days"></i></div></td>
+                                    <td>
+                                        <div style="font-size:13px; font-weight:800; color:#1e293b;">Feb 3 &ndash; Feb 9</div>
+                                        <div style="font-size:11px; color:#64748b; font-weight:500;">Last week</div>
+                                    </td>
+                                    <td><span class="m-pill-pub"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Published</span></td>
+                                    <td><span style="font-size:13px; font-weight:700; color:#1e293b;">6</span><span style="font-size:11px; color:#64748b;"> sessions</span></td>
+                                    <td style="text-align:right;">
+                                        <div class="m-action-icons" style="justify-content:flex-end;">
+                                            <div class="m-action-icon"><i class="fa-solid fa-eye"></i></div>
+                                            <div class="m-action-icon"><i class="fa-solid fa-trash" style="color:#ef4444;"></i></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><div class="m-icon-box"><i class="fa-solid fa-calendar-days"></i></div></td>
+                                    <td>
+                                        <div style="font-size:13px; font-weight:800; color:#1e293b;">Jan 27 &ndash; Feb 2</div>
+                                        <div style="font-size:11px; color:#64748b; font-weight:500;">2 weeks ago</div>
+                                    </td>
+                                    <td><span class="m-pill-pub"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Published</span></td>
+                                    <td><span style="font-size:13px; font-weight:700; color:#1e293b;">9</span><span style="font-size:11px; color:#64748b;"> sessions</span></td>
+                                    <td style="text-align:right;">
+                                        <div class="m-action-icons" style="justify-content:flex-end;">
+                                            <div class="m-action-icon"><i class="fa-solid fa-eye"></i></div>
+                                            <div class="m-action-icon"><i class="fa-solid fa-trash" style="color:#ef4444;"></i></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── MESSAGES ── -->
+            <div class="m-screen" id="tab-messages">
+                <div class="m-msg-body">
+                    <!-- Sidebar -->
+                    <div class="m-msg-sidebar">
+                        <div class="m-msg-brand"><i class="fa-solid fa-bolt" style="color:#4f46e5; font-size:12px; margin-right:4px;"></i>Training Tracker</div>
+                        <div class="m-msg-user-bar">
+                            <div class="m-msg-av">A</div>
+                            <div>
+                                <div class="m-msg-user-name">Adam A.</div>
+                                <div class="m-msg-status"><div class="m-status-dot"></div> Active</div>
+                            </div>
+                        </div>
+                        <div class="m-msg-section-lbl">Channels</div>
+                        <div class="m-msg-ch active"><span class="m-msg-ch-icon">#</span> general</div>
+                        <div class="m-msg-ch"><span class="m-msg-ch-icon">#</span> managers-only</div>
+                        <div class="m-msg-ch"><span class="m-msg-ch-icon">#</span> schedule-updates <span class="m-unread">3</span></div>
+                        <div class="m-msg-section-lbl" style="margin-top:6px;">Direct Messages</div>
+                        <div class="m-msg-ch">
+                            <div class="m-dm-av" style="background:#4f46e5;">JR</div>
+                            Jordan R.
+                            <div class="m-online-dot" style="background:#22c55e;"></div>
+                        </div>
+                        <div class="m-msg-ch">
+                            <div class="m-dm-av" style="background:#7c3aed;">ML</div>
+                            Morgan L.
+                            <span class="m-unread">1</span>
+                        </div>
+                        <div class="m-msg-ch">
+                            <div class="m-dm-av" style="background:#059669;">AK</div>
+                            Alex K.
+                            <div class="m-online-dot" style="background:#94a3b8;"></div>
+                        </div>
+                    </div>
+                    <!-- Chat area -->
+                    <div class="m-msg-main">
+                        <div class="m-chat-header">
+                            <span style="font-size:16px; color:#64748b; font-weight:400;">#</span>
+                            <span class="m-chat-name">general</span>
+                            <span class="m-chat-members">8 members</span>
+                        </div>
+                        <div class="m-messages-list">
+                            <div class="m-message">
+                                <div class="m-msg-sender-av" style="background:#4f46e5;">JR</div>
+                                <div class="m-msg-body-text">
+                                    <div class="m-msg-meta">
+                                        <span class="m-msg-sender-name">Jordan R.</span>
+                                        <span class="m-msg-time">10:42 AM</span>
+                                    </div>
+                                    <div class="m-msg-text">Hey everyone! Who's got me on Front Counter this week?</div>
+                                </div>
+                            </div>
+                            <div class="m-message">
+                                <div class="m-msg-sender-av" style="background:#10b981;">A</div>
+                                <div class="m-msg-body-text">
+                                    <div class="m-msg-meta">
+                                        <span class="m-msg-sender-name">Adam A.</span>
+                                        <span class="m-msg-time" style="color:#4f46e5;">10:45 AM</span>
+                                    </div>
+                                    <div class="m-msg-text">You're with Chris M. on Tuesday and Thursday @Jordan &mdash; check the schedule!</div>
+                                </div>
+                            </div>
+                            <div class="m-message">
+                                <div class="m-msg-sender-av" style="background:#7c3aed;">ML</div>
+                                <div class="m-msg-body-text">
+                                    <div class="m-msg-meta">
+                                        <span class="m-msg-sender-name">Morgan L.</span>
+                                        <span class="m-msg-time">10:47 AM</span>
+                                    </div>
+                                    <div class="m-msg-text">Same! Can't wait. Chris is a great trainer 👍</div>
+                                </div>
+                            </div>
+                            <div class="m-message">
+                                <div class="m-msg-sender-av" style="background:#b45309;">ST</div>
+                                <div class="m-msg-body-text">
+                                    <div class="m-msg-meta">
+                                        <span class="m-msg-sender-name">Sam T.</span>
+                                        <span class="m-msg-time">11:02 AM</span>
+                                    </div>
+                                    <div class="m-msg-text">Reminder that I have Saturday off this week, I won't be able to do my session until Sunday.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="m-chat-input-wrap">
+                            <div class="m-chat-input-box">
+                                <span class="m-chat-input-fake">Message #general&hellip;</span>
+                                <div class="m-chat-send"><i class="fa-solid fa-paper-plane"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /m-screens -->
+    </div><!-- /m-demo -->
+
+    <script>
+    (function() {
+        var demo = document.getElementById('appDemo');
+        if (!demo) return;
+        var links = demo.querySelectorAll('.m-nav-link');
+        var screens = demo.querySelectorAll('.m-screen');
+        var urlBar = document.getElementById('demoUrl');
+        links.forEach(function(link) {
+            link.addEventListener('click', function() {
+                var tab = this.dataset.tab;
+                links.forEach(function(l) { l.classList.remove('active'); });
+                screens.forEach(function(s) { s.classList.remove('active'); });
+                this.classList.add('active');
+                var target = document.getElementById('tab-' + tab);
+                if (target) target.classList.add('active');
+                if (urlBar && this.dataset.url) urlBar.textContent = this.dataset.url;
+            });
+        });
+    })();
+    </script>
 </section>
 
 <!-- ── SOCIAL PROOF ── -->
