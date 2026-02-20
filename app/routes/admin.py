@@ -2,7 +2,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import Organization, SystemSettings, User, Employee
+from app.models import (
+    Organization, SystemSettings, User, Employee, Location, Position, PositionDescriptor,
+    Daypart, Schedule, TrainingSession, Channel, Message, Notification, TrainingRoadmap,
+    RoadmapStep, ChannelParticipant, MessageReaction, SessionRating, GuestTrainerToken,
+    EmployeeNote, UserSettings,
+)
 from app.utils.notifications import send_notification_email
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -27,26 +32,54 @@ def admin_before_request():
         return r
 
 
+def _org_stats(org_id):
+    """Return dict with user_count, employee_count for an org."""
+    return {
+        "user_count": User.query.filter_by(organization_id=org_id).count(),
+        "employee_count": Employee.query.filter_by(organization_id=org_id).count(),
+    }
+
+
 @admin_bp.route("/")
 def index():
-    """Dashboard: list organizations."""
-    orgs = Organization.query.order_by(Organization.name).all()
-    return render_template("admin/index.html", organizations=orgs)
+    """Dashboard: key metrics and org list."""
+    orgs = Organization.query.order_by(Organization.created_at.desc()).all()
+    total_orgs = len(orgs)
+    active_orgs = sum(1 for o in orgs if o.status == "active")
+    total_users = User.query.filter(User.organization_id.isnot(None)).count()
+    total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
+    orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs[:20]]
+    return render_template(
+        "admin/index.html",
+        organizations=orgs_with_stats,
+        total_orgs=total_orgs,
+        active_orgs=active_orgs,
+        total_users=total_users,
+        total_employees=total_employees,
+    )
 
 
 @admin_bp.route("/organizations")
 def organizations_list():
-    """List all organizations."""
+    """List all organizations with stats."""
     orgs = Organization.query.order_by(Organization.name).all()
-    return render_template("admin/organizations.html", organizations=orgs)
+    orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs]
+    return render_template("admin/organizations.html", organizations=orgs_with_stats)
 
 
 @admin_bp.route("/organizations/<int:org_id>")
 def organization_detail(org_id):
-    """View one organization."""
+    """View one organization with full stats."""
     org = Organization.query.get_or_404(org_id)
-    user_count = User.query.filter_by(organization_id=org_id).count()
-    return render_template("admin/organization_detail.html", org=org, has_users=user_count > 0)
+    stats = _org_stats(org_id)
+    has_users = stats["user_count"] > 0
+    return render_template(
+        "admin/organization_detail.html",
+        org=org,
+        has_users=has_users,
+        user_count=stats["user_count"],
+        employee_count=stats["employee_count"],
+    )
 
 
 @admin_bp.route("/organizations/new", methods=["GET", "POST"])
@@ -161,3 +194,58 @@ def organization_invite_first_user(org_id):
             return render_template("admin/invite_first_user.html", org=org)
 
     return render_template("admin/invite_first_user.html", org=org)
+
+
+@admin_bp.route("/organizations/<int:org_id>/delete", methods=["POST"])
+def organization_delete(org_id):
+    """Permanently delete an organization and all its data. Requires confirmation."""
+    org = Organization.query.get_or_404(org_id)
+    confirm = (request.form.get("confirm") or "").strip().lower()
+    if confirm != "delete":
+        flash("Deletion not confirmed. Type 'delete' in the confirmation field.", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+    name, subdomain = org.name, org.subdomain
+    try:
+        user_ids = [u.id for u in User.query.filter_by(organization_id=org_id).all()]
+        employee_ids = [e.id for e in Employee.query.filter_by(organization_id=org_id).all()]
+        channel_ids = [c.id for c in Channel.query.filter_by(organization_id=org_id).all()]
+
+        if user_ids:
+            Notification.query.filter(Notification.user_id.in_(user_ids)).delete(synchronize_session=False)
+            UserSettings.query.filter(UserSettings.user_id.in_(user_ids)).delete(synchronize_session=False)
+        if channel_ids:
+            msg_ids = db.session.query(Message.id).filter(Message.channel_id.in_(channel_ids))
+            MessageReaction.query.filter(MessageReaction.message_id.in_(msg_ids)).delete(synchronize_session=False)
+            Message.query.filter(Message.channel_id.in_(channel_ids)).delete(synchronize_session=False)
+            ChannelParticipant.query.filter(ChannelParticipant.channel_id.in_(channel_ids)).delete(synchronize_session=False)
+        Channel.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        session_ids = [s.id for s in TrainingSession.query.filter_by(organization_id=org_id).all()]
+        if session_ids:
+            SessionRating.query.filter(SessionRating.training_session_id.in_(session_ids)).delete(synchronize_session=False)
+        TrainingSession.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        if employee_ids:
+            GuestTrainerToken.query.filter(GuestTrainerToken.trainee_id.in_(employee_ids)).delete(synchronize_session=False)
+            EmployeeNote.query.filter(EmployeeNote.trainee_employee_id.in_(employee_ids)).delete(synchronize_session=False)
+        roadmap_ids = [r.id for r in TrainingRoadmap.query.filter_by(organization_id=org_id).all()]
+        if roadmap_ids:
+            RoadmapStep.query.filter(RoadmapStep.roadmap_id.in_(roadmap_ids)).delete(synchronize_session=False)
+        TrainingRoadmap.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        Employee.query.filter_by(organization_id=org_id).update({Employee.current_roadmap_id: None}, synchronize_session=False)
+        Schedule.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        User.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        Employee.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        Location.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        position_ids = [p.id for p in Position.query.filter_by(organization_id=org_id).all()]
+        if position_ids:
+            PositionDescriptor.query.filter(PositionDescriptor.position_id.in_(position_ids)).delete(synchronize_session=False)
+        Position.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        Daypart.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        SystemSettings.query.filter_by(organization_id=org_id).delete(synchronize_session=False)
+        db.session.delete(org)
+        db.session.commit()
+        flash(f"Organization '{name}' ({subdomain}) has been permanently deleted.", "success")
+        return redirect(url_for("admin.organizations_list"))
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Delete failed: {str(e)}", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))

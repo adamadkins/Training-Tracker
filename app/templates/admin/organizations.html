@@ -8,18 +8,29 @@
     <div class="table-card">
         <table class="admin-table">
             <thead>
-                <tr><th>Name</th><th>Subdomain</th><th>Status</th><th></th></tr>
+                <tr>
+                    <th>Name</th>
+                    <th>Subdomain</th>
+                    <th>Status</th>
+                    <th>Users</th>
+                    <th>Employees</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
             </thead>
             <tbody>
-                {% for org in organizations %}
+                {% for org, stats in organizations %}
                 <tr>
                     <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a></td>
                     <td><code>{{ org.subdomain }}</code></td>
                     <td><span class="status status-{{ org.status }}">{{ org.status }}</span></td>
-                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">View</a></td>
+                    <td>{{ stats.user_count }}</td>
+                    <td>{{ stats.employee_count }}</td>
+                    <td>{{ org.created_at.strftime('%Y-%m-%d') if org.created_at else '—' }}</td>
+                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
                 </tr>
                 {% else %}
-                <tr><td colspan="4">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
+                <tr><td colspan="7">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -43,5 +54,6 @@
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { opacity: 0.9; }
+.link-view { font-size: 13px; }
 </style>
 {% endblock %}
