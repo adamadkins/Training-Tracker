@@ -53,7 +53,10 @@ class Config:
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
     STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
     STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
-    # Price ID for subscription (e.g. price_xxx from Stripe Dashboard)
+    # Price IDs for subscription plans (from Stripe Product catalog)
+    STRIPE_PRICE_ID_STANDARD = os.environ.get('STRIPE_PRICE_ID_STANDARD', '')   # $40/mo
+    STRIPE_PRICE_ID_PRO = os.environ.get('STRIPE_PRICE_ID_PRO', '')             # $50/mo
+    # Fallback if only one plan configured
     STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
 
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.

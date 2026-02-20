@@ -37,7 +37,12 @@
                 {% endif %}
                 <div class="billing-actions">
                     <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
-                        <button type="submit" class="btn btn-primary btn-sm">{{ 'Update subscription' if org.stripe_customer_id else 'Set up billing' }}</button>
+                        <input type="hidden" name="plan" value="standard">
+                        <button type="submit" class="btn btn-primary btn-sm">Standard $40/mo</button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
+                        <input type="hidden" name="plan" value="pro">
+                        <button type="submit" class="btn btn-outline btn-sm">Pro $50/mo</button>
                     </form>
                     {% if org.stripe_customer_id %}
                     <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}" style="display:inline;">

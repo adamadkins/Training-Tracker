@@ -8,6 +8,12 @@ from app.models import Organization
 billing_bp = Blueprint("billing", __name__, url_prefix="/webhooks")
 
 
+@billing_bp.route("/stripe", methods=["GET"])
+def stripe_webhook_get():
+    """Browser-friendly response; Stripe sends POST only."""
+    return "Stripe webhook endpoint. Use POST (e.g. from Stripe Dashboard or Send test webhook).", 200
+
+
 @billing_bp.route("/stripe", methods=["POST"])
 def stripe_webhook():
     """Handle Stripe webhook events. Must use raw body for signature verification."""

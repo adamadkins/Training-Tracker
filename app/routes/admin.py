@@ -140,12 +140,16 @@ def organization_activate(org_id):
 
 @admin_bp.route("/organizations/<int:org_id>/create-checkout", methods=["POST"])
 def organization_create_checkout(org_id):
-    """Redirect to Stripe Checkout to start a subscription for this org."""
+    """Redirect to Stripe Checkout to start a subscription for this org. Plan: standard | pro."""
     org = Organization.query.get_or_404(org_id)
     secret = current_app.config.get("STRIPE_SECRET_KEY")
-    price_id = current_app.config.get("STRIPE_PRICE_ID")
+    plan = (request.form.get("plan") or "standard").strip().lower()
+    if plan == "pro":
+        price_id = current_app.config.get("STRIPE_PRICE_ID_PRO")
+    else:
+        price_id = current_app.config.get("STRIPE_PRICE_ID_STANDARD") or current_app.config.get("STRIPE_PRICE_ID")
     if not secret or not price_id:
-        flash("Stripe is not configured (STRIPE_SECRET_KEY, STRIPE_PRICE_ID).", "error")
+        flash("Stripe is not configured (STRIPE_SECRET_KEY and STRIPE_PRICE_ID_STANDARD or STRIPE_PRICE_ID).", "error")
         return redirect(url_for("admin.organization_detail", org_id=org_id))
     stripe.api_key = secret
     base = _base_domain()
