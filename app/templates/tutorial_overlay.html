@@ -18,27 +18,28 @@
 
     .tutorial-tooltip {
         position: fixed; z-index: 10002;
-        background: white; color: #1e293b;
+        background: var(--bg-card, #fff); color: var(--text-main, #1e293b);
+        border: 1px solid var(--border, #e2e8f0);
         border-radius: 20px;
         padding: 28px;
-        max-width: 360px; width: calc(100vw - 40px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 380px; width: calc(100vw - 40px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
         transition: top 0.35s ease, left 0.35s ease, opacity 0.25s;
     }
 
     .tutorial-step-counter {
-        font-size: 11px; font-weight: 800; color: #94a3b8;
+        font-size: 11px; font-weight: 800; color: var(--text-muted, #94a3b8);
         text-transform: uppercase; letter-spacing: 0.08em;
         margin-bottom: 8px;
     }
 
     .tutorial-title {
-        font-size: 18px; font-weight: 800; color: #1e293b;
+        font-size: 18px; font-weight: 800; color: var(--text-main, #1e293b);
         margin: 0 0 8px 0;
     }
 
     .tutorial-desc {
-        font-size: 14px; color: #64748b; line-height: 1.6;
+        font-size: 14px; color: var(--text-muted, #64748b); line-height: 1.65;
         margin: 0 0 24px 0;
     }
 
@@ -47,40 +48,60 @@
     }
 
     .tutorial-btn-skip {
-        background: none; border: none; color: #94a3b8;
+        background: none; border: none; color: var(--text-muted, #94a3b8);
         font-size: 13px; font-weight: 700; cursor: pointer;
-        padding: 8px 0; transition: color 0.2s;
+        padding: 10px 0; min-height: 44px;
+        transition: color 0.2s; -webkit-tap-highlight-color: transparent;
     }
-    .tutorial-btn-skip:hover { color: #64748b; }
+    .tutorial-btn-skip:hover { color: var(--text-main, #64748b); }
 
     .tutorial-btn-next {
-        background: #4f46e5; color: white; border: none;
-        padding: 12px 24px; border-radius: 12px;
+        background: var(--primary, #4f46e5); color: white; border: none;
+        padding: 12px 24px; min-height: 44px;
+        border-radius: 12px;
         font-size: 14px; font-weight: 700; cursor: pointer;
         display: flex; align-items: center; gap: 8px;
         transition: all 0.2s;
         box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        -webkit-tap-highlight-color: transparent;
     }
     .tutorial-btn-next:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); }
 
     .tutorial-dots {
-        display: flex; gap: 6px; align-items: center;
+        display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
     }
     .tutorial-dot {
         width: 8px; height: 8px; border-radius: 50%;
-        background: #e2e8f0; transition: all 0.3s;
+        background: var(--border, #e2e8f0); transition: all 0.3s;
     }
-    .tutorial-dot.active { background: #4f46e5; width: 20px; border-radius: 4px; }
+    .tutorial-dot.active { background: var(--primary, #4f46e5); width: 20px; border-radius: 4px; }
 
     @media (max-width: 900px) {
         .tutorial-spotlight { display: none !important; }
         .tutorial-tooltip {
             top: 50% !important; left: 50% !important;
             transform: translate(-50%, -50%) !important;
-            padding: 24px; max-width: calc(100vw - 32px);
+            padding: 24px 20px; max-width: calc(100vw - 32px);
+            width: calc(100vw - 32px);
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            margin: 0;
+            border-radius: 16px;
         }
-        .tutorial-title { font-size: 16px; }
-        .tutorial-desc { font-size: 13px; margin-bottom: 16px; }
+        .tutorial-title { font-size: 17px; }
+        .tutorial-desc { font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .tutorial-actions { margin-top: 20px; }
+        .tutorial-btn-skip, .tutorial-btn-next { min-height: 48px; }
+    }
+
+    @supports (padding: max(0px)) {
+        @media (max-width: 900px) {
+            .tutorial-tooltip {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+                padding-bottom: max(24px, env(safe-area-inset-bottom));
+            }
+        }
     }
 </style>
 
@@ -92,8 +113,8 @@
     <p class="tutorial-desc" id="tutorialDesc"></p>
     <div class="tutorial-dots" id="tutorialDots"></div>
     <div class="tutorial-actions" style="margin-top: 16px;">
-        <button class="tutorial-btn-skip" id="tutorialSkip">Skip</button>
-        <button class="tutorial-btn-next" id="tutorialNext">Next <i class="fa-solid fa-arrow-right" style="font-size: 12px;"></i></button>
+        <button class="tutorial-btn-skip" id="tutorialSkip" type="button">Skip</button>
+        <button class="tutorial-btn-next" id="tutorialNext" type="button">Next <i class="fa-solid fa-arrow-right" style="font-size: 12px;"></i></button>
     </div>
 </div>
 
@@ -102,26 +123,31 @@
     var role = '{{ current_user.role }}';
 
     var managerSteps = [
-        { target: '[data-tutorial="staff"]', title: 'Your Team', desc: 'Manage all employees here -- add new hires, view profiles, and track individual progress.' },
-        { target: '[data-tutorial="positions"]', title: 'Positions & Checklists', desc: 'Define training positions and the competency checklist used to evaluate each one.' },
-        { target: '[data-tutorial="roadmaps"]', title: 'Training Roadmaps', desc: 'Create structured learning paths that guide trainees through positions in order.' },
-        { target: '[data-tutorial="schedule"]', title: 'Schedules', desc: 'Build and publish weekly training schedules. Assign trainers to trainees for each session.' },
-        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Chat with your team in real time -- direct messages and group channels.' },
-        { target: '[data-tutorial="settings"]', title: 'Settings', desc: 'Configure system-wide preferences like rating scales, sign-off requirements, and more.' }
+        { target: null, title: 'Welcome, Manager', desc: 'This quick tour shows you where everything lives. On desktop we\'ll highlight each part of the nav; on mobile, tap the menu icon (☰) at the top to open the same links. You can replay this anytime from Settings.' },
+        { target: '[data-tutorial="staff"]', title: 'People', desc: 'Add team members, view profiles, and track progress. Assign roles (manager, trainer, trainee), attach employees to locations, and graduate trainees when they\'re ready.' },
+        { target: '[data-tutorial="positions"]', title: 'Positions & Checklists', desc: 'Define each training position (e.g. Front Counter, Drive Thru) and the competency checklist used when rating a session. Edit criteria and order so evaluations stay consistent.' },
+        { target: '[data-tutorial="roadmaps"]', title: 'Training Roadmaps', desc: 'Build step-by-step learning paths for each position. Trainees complete steps in order; progress is tracked automatically and shows on dashboards and schedules.' },
+        { target: '[data-tutorial="dayparts"]', title: 'Dayparts', desc: 'Set up dayparts (e.g. Breakfast, Lunch, Dinner) for your locations. Used by the smart scheduler to match trainees with trainers on the same shift.' },
+        { target: '[data-tutorial="locations"]', title: 'Locations', desc: 'Manage your locations and assign employees to them. Schedules and roadmaps can be scoped by location.' },
+        { target: '[data-tutorial="schedule"]', title: 'Schedules', desc: 'Create weekly training schedules: use Smart Schedule to auto-build from a work schedule PDF, or build manually. Publish when ready so trainers and trainees see their sessions.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Team channels and direct messages live here. Use them for training updates, quick questions, and announcements without leaving the app.' },
+        { target: '[data-tutorial="settings"]', title: 'Settings', desc: 'Configure rating scales, sign-off rules, notifications, and other system-wide options. You can also replay this tour from here.' }
     ];
 
     var trainerSteps = [
-        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'See your upcoming training sessions and track your activity at a glance.' },
-        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'View your assigned training sessions. Click any session to begin evaluating.' },
-        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Communicate with managers and fellow trainers via direct messages or channels.' },
-        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'Stay on top of schedule changes, new assignments, and important updates.' }
+        { target: null, title: 'Welcome, Trainer', desc: 'This short tour shows you the main areas. On desktop we\'ll highlight each link; on mobile, tap the menu icon (☰) to open the same navigation. You can replay this from Settings.' },
+        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'Your home base: see how many sessions you have scheduled and completed, your next session, and any overdue evaluations. Use Quick Train for on-the-fly ratings.' },
+        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'View all your assigned training sessions. Tap a session to open the rating form and submit an evaluation. Overdue sessions are highlighted so you can stay on top of them.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Chat with managers and teammates in channels or DMs. Great for coordinating training or asking questions without leaving Training Tracker.' },
+        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'New schedule assignments, nudges from managers, and other updates show up here. Check this when you get a notification so nothing slips through.' }
     ];
 
     var traineeSteps = [
-        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'Track your training progress, see upcoming sessions, and view your scores.' },
-        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'See when and where your next training sessions are. Review the rubric before each one.' },
-        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Reach out to your trainers or team members with questions.' },
-        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'Get notified when sessions are completed, scores are posted, or schedules change.' }
+        { target: null, title: 'Welcome, Trainee', desc: 'This quick tour points you to the main areas. On desktop we\'ll highlight each link; on mobile, tap the menu icon (☰) to open the same navigation. You can replay this from your profile or Settings.' },
+        { target: '[data-tutorial="dashboard"]', title: 'Your Dashboard', desc: 'See your training at a glance: upcoming sessions, completed sessions, and roadmap progress. You\'ll always know what\'s next and how you\'re doing.' },
+        { target: '[data-tutorial="schedule"]', title: 'My Schedule', desc: 'View when and where your training sessions are and who your trainer is. Tap a session to see details. Come back after a session to see your scores once your trainer submits.' },
+        { target: '[data-tutorial="messages"]', title: 'Messages', desc: 'Reach out to your trainer or team with questions. Handy when you need a quick answer without tracking someone down in person.' },
+        { target: '[data-tutorial="notifications"]', title: 'Notifications', desc: 'When schedules are published, sessions are completed, or scores are posted, you\'ll see it here. Check this so you never miss an update.' }
     ];
 
     var steps = role === 'manager' ? managerSteps : (role === 'trainer' ? trainerSteps : traineeSteps);
@@ -147,12 +173,11 @@
     }
 
     function positionTooltip(rect) {
-        var tw = Math.min(360, window.innerWidth - 40);
-        var th = tooltip.offsetHeight || 220;
+        var tw = Math.min(380, window.innerWidth - 40);
+        var th = tooltip.offsetHeight || 240;
         var pad = 16;
         var top, left;
 
-        /* Try below the spotlight */
         if (rect.bottom + pad + th < window.innerHeight) {
             top = rect.bottom + pad;
         } else if (rect.top - pad - th > 0) {
@@ -170,7 +195,7 @@
         if (idx >= steps.length) { finish(); return; }
         currentStep = idx;
         var step = steps[idx];
-        var el = document.querySelector(step.target);
+        var el = step.target ? document.querySelector(step.target) : null;
 
         counterEl.textContent = 'Step ' + (idx + 1) + ' of ' + steps.length;
         titleEl.textContent = step.title;
@@ -185,9 +210,11 @@
 
         if (el && !isMobile) {
             var rect = el.getBoundingClientRect();
-            /* Skip elements that are hidden (collapsed mobile nav) */
             if (rect.width === 0 && rect.height === 0) {
                 spotlight.style.display = 'none';
+                tooltip.style.top = '50%';
+                tooltip.style.left = '50%';
+                tooltip.style.transform = 'translate(-50%, -50%)';
             } else {
                 var sp = 6;
                 spotlight.style.top = (rect.top - sp) + 'px';
@@ -195,11 +222,14 @@
                 spotlight.style.width = (rect.width + sp * 2) + 'px';
                 spotlight.style.height = (rect.height + sp * 2) + 'px';
                 spotlight.style.display = 'block';
+                tooltip.style.transform = '';
                 positionTooltip(rect);
             }
         } else {
-            /* Mobile or missing element: hide spotlight, center tooltip via CSS */
             spotlight.style.display = 'none';
+            tooltip.style.top = '50%';
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translate(-50%, -50%)';
         }
 
         tooltip.style.opacity = '1';
@@ -221,13 +251,11 @@
     skipBtn.addEventListener('click', finish);
     backdrop.addEventListener('click', function(e) { if (e.target === backdrop) finish(); });
 
-    /* Start after a brief delay so page finishes rendering */
     setTimeout(function() {
         backdrop.classList.add('active');
         showStep(0);
     }, 600);
 
-    /* Reposition on resize */
     window.addEventListener('resize', function() { showStep(currentStep); });
 })();
 </script>
