@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from datetime import datetime, timezone
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
@@ -36,6 +38,8 @@ def login():
             flash("Invalid email or password.")
             return render_template("login.html"), 401
 
+        session.permanent = True
+        session['_last_active'] = datetime.now(timezone.utc).timestamp()
         login_user(user)
 
         if user.role == "manager":

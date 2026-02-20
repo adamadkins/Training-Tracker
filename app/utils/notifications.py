@@ -16,9 +16,10 @@ from app import db
 from app.models import Notification
 
 
-def notify(user, title, body, category='general', link_url=None, email_only=False):
+def notify(user, title, body, category='general', link_url=None, email_only=False, send_email=True):
     """
-    In-app notification (sync) + email. Email is enqueued (RQ) or sent in a thread so the request returns immediately.
+    In-app notification (sync) + optional email.
+    Pass send_email=False to create only an in-app notification without consuming an email credit.
     """
     settings = getattr(user, 'settings', None)
     wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
@@ -33,7 +34,7 @@ def notify(user, title, body, category='general', link_url=None, email_only=Fals
             link_url=link_url,
         ))
 
-    if wants_email and user.email:
+    if send_email and wants_email and user.email:
         to_email = str(user.email)
         _enqueue_or_send_email(to_email, title, body, category, link_url)
 

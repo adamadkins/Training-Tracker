@@ -211,6 +211,9 @@
         <h2>
             <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary); font-size: 16px;"></i>
             Smart Builder
+            {% if week_label %}
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-left: 4px;">— {{ week_label }}</span>
+            {% endif %}
         </h2>
         <div class="sb-header-right">
             <div class="day-tabs" id="dayTabs">

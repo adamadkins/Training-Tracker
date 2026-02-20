@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 # Get the base directory of this folder
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -7,6 +8,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     # --- General Security ---
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+
+    # --- Session ---
+    # Sessions are permanent so Flask respects PERMANENT_SESSION_LIFETIME.
+    # Before-request logic in __init__.py enforces idle timeout independently.
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get('SESSION_LIFETIME_HOURS', 12)))
+    SESSION_IDLE_TIMEOUT = int(os.environ.get('SESSION_IDLE_TIMEOUT', 7200))  # seconds (default 2 h)
 
     # --- Database Configuration ---
     # Use DATABASE_URL as-is so production (Railway) uses the internal URL (fast, private).

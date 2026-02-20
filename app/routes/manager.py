@@ -494,10 +494,26 @@ def smart_builder_build():
         return redirect(url_for('manager.roadmap_smart_builder'))
     with open(path, 'r') as f:
         data = json.load(f)
+
+    # Build a human-readable week label, e.g. "Feb. 16 – Feb. 22"
+    week_label = ''
+    week_start_str = data.get('week_start', '')
+    if week_start_str:
+        try:
+            from datetime import date as _date
+            ws = _date.fromisoformat(week_start_str)
+            we = ws + timedelta(days=6)
+            def _fmt(d):
+                return d.strftime('%b. ') + str(d.day)
+            week_label = f"{_fmt(ws)} – {_fmt(we)}"
+        except Exception:
+            pass
+
     return render_template('roadmaps/smart_builder.html',
                            builder_data=data,
                            all_positions=data.get('all_positions', []),
-                           trainee_stats=data.get('trainee_stats', {}))
+                           trainee_stats=data.get('trainee_stats', {}),
+                           week_label=week_label)
 
 
 @manager_bp.route('/schedules/smart-builder/clear')
@@ -654,12 +670,14 @@ def process_smart_schedule():
             pass
 
         # Store parsed data in a per-user cache file (avoids cookie size limits)
+        week_start_str = request.form.get('week_start', '')
         cache_data = {
             'days': days_data,
             'all_positions': all_positions,
             'trainee_stats': {str(k): v for k, v in trainee_stats.items()},
             'file_size': file_size,
-            'file_name': file.filename
+            'file_name': file.filename,
+            'week_start': week_start_str,
         }
         with open(_sb_data_path(), 'w') as f:
             json.dump(cache_data, f)
@@ -768,7 +786,7 @@ def create_smart_session():
         db.session.add(new_session)
         db.session.commit()
 
-        # Notify trainee and trainer
+        # In-app notifications only (no email) — emails are saved for schedule publish
         sess_link = url_for('employee.session_rating', session_id=new_session.id, _external=True)
         pos_name = position.name
         sess_date_str = new_session.session_date.strftime('%b %d')
@@ -776,12 +794,12 @@ def create_smart_session():
         if u_trainee:
             notify(u_trainee, "New Training Session",
                    f"You have a new training session for {pos_name} on {sess_date_str}.",
-                   category='session', link_url=sess_link)
+                   category='session', link_url=sess_link, send_email=False)
         u_trainer = User.query.filter_by(employee_id=trainer_id).first()
         if u_trainer:
             notify(u_trainer, "New Training Assignment",
                    f"You've been assigned to train {pos_name} on {sess_date_str}.",
-                   category='session', link_url=sess_link)
+                   category='session', link_url=sess_link, send_email=False)
         db.session.commit()
 
         return jsonify({
@@ -825,10 +843,14 @@ def employee_create():
         if location_id:
             location_id = int(location_id) if location_id.isdigit() else None
 
-        if not first_name or not last_name or not email or not role:
-            flash("All fields including Email and Role are required.")
+        # Email is required for managers/trainers (they need to log in), optional for trainees
+        if not first_name or not last_name or not role:
+            flash("First name, last name, and role are required.")
             return redirect(url_for('manager.employee_create'))
-        if User.query.filter_by(email=email).first():
+        if role in ('manager', 'trainer') and not email:
+            flash("Email is required for managers and trainers.")
+            return redirect(url_for('manager.employee_create'))
+        if email and User.query.filter_by(email=email).first():
             flash("A user with that email already exists.")
             return redirect(url_for('manager.employee_create'))
 
@@ -844,11 +866,15 @@ def employee_create():
             db.session.add(new_emp)
             db.session.flush()
 
-            new_user = User(email=email, role=role, employee_id=new_emp.id)
-            db.session.add(new_user)
-            db.session.commit()
-            send_invite_email(new_user)
-            flash(f"Employee {first_name} created and invitation sent.")
+            if email:
+                new_user = User(email=email, role=role, employee_id=new_emp.id)
+                db.session.add(new_user)
+                db.session.commit()
+                send_invite_email(new_user)
+                flash(f"{first_name} has been added and an invitation email was sent.")
+            else:
+                db.session.commit()
+                flash(f"{first_name} has been added (no email — login access not enabled).")
             return redirect(url_for('manager.employees_list'))
         except Exception as e:
             db.session.rollback()
@@ -1664,7 +1690,7 @@ def session_create(schedule_id):
         db.session.add(new_session)
         db.session.commit()
 
-        # Notify trainee and trainer
+        # In-app notifications only (no email) — emails are saved for schedule publish
         sess_link = url_for('employee.session_rating', session_id=new_session.id, _external=True)
         position = Position.query.get(new_session.position_id)
         pos_name = position.name if position else 'a position'
@@ -1674,13 +1700,13 @@ def session_create(schedule_id):
             if u:
                 notify(u, "New Training Session",
                        f"You have a new training session for {pos_name} on {sess_date}.",
-                       category='session', link_url=sess_link)
+                       category='session', link_url=sess_link, send_email=False)
         if new_session.trainer_employee_id:
             u = User.query.filter_by(employee_id=new_session.trainer_employee_id).first()
             if u:
                 notify(u, "New Training Assignment",
                        f"You've been assigned to train {pos_name} on {sess_date}.",
-                       category='session', link_url=sess_link)
+                       category='session', link_url=sess_link, send_email=False)
         db.session.commit()
 
         cache.delete_memoized(schedule_detail)
@@ -1711,7 +1737,7 @@ def session_delete(session_id):
     for u in users_to_notify:
         notify(u, "Training Session Cancelled",
                f"Your training session for {pos_name} on {sess_date} has been cancelled.",
-               category='session')
+               category='session', send_email=False)
     db.session.commit()
     flash("Session removed.")
     return redirect(url_for('manager.schedule_detail', schedule_id=sch_id))

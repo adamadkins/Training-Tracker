@@ -223,7 +223,7 @@
             <h1 class="form-title">
                 {% if mode == "new" %}Add Employee{% else %}Edit Profile{% endif %}
             </h1>
-            <p class="form-subtitle">
+            <p class="form-subtitle" id="formSubtitle">
                 {% if mode == "new" %}
                     An invitation will be sent to the provided email to finalize their secure account setup.
                 {% else %}
@@ -256,17 +256,18 @@
                 </div>
 
                 <div>
-                    <label class="form-label">Email Address</label>
-                    <input type="email" id="email" name="email" required
+                    <label class="form-label" id="emailLabel">Email Address</label>
+                    <input type="email" id="email" name="email"
+                           {% if mode == "edit" or (employee and employee.role in ('manager', 'trainer')) %}required{% endif %}
                            value="{{ employee.user_account.email if employee and employee.user_account else '' }}"
                            placeholder="name@company.com"
                            class="input-style"
                            {% if mode == "edit" %}readonly{% endif %}>
-                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500; font-style: italic;">
+                    <p id="emailHint" style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500; font-style: italic;">
                         {% if mode == "edit" %}
                             Email is the primary identifier and cannot be changed after creation.
                         {% else %}
-                            This email is used to sync profile photos automatically via Gravatar.
+                            Required for managers &amp; trainers. Optional for trainees — leave blank to add them without login access.
                         {% endif %}
                     </p>
                 </div>
@@ -331,5 +332,29 @@
             btn.disabled = true;
         }
     });
+
+    {% if mode == "new" %}
+    (function() {
+        var roleSelect = document.getElementById('role');
+        var emailInput = document.getElementById('email');
+        var emailLabel = document.getElementById('emailLabel');
+        var subtitle = document.getElementById('formSubtitle');
+
+        function updateEmailRequired() {
+            var role = roleSelect.value;
+            var isTrainee = role === 'trainee' || role === '';
+            emailInput.required = !isTrainee;
+            emailLabel.textContent = isTrainee ? 'Email Address (optional)' : 'Email Address';
+            if (isTrainee) {
+                subtitle.textContent = 'Email is optional for trainees. Leave it blank to add them without login access.';
+            } else {
+                subtitle.textContent = 'An invitation will be sent to the provided email to finalize their secure account setup.';
+            }
+        }
+
+        roleSelect.addEventListener('change', updateEmailRequired);
+        updateEmailRequired();
+    })();
+    {% endif %}
 </script>
 {% endblock %}
