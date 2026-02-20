@@ -368,8 +368,9 @@
                             <span class="s-desc">e.g. chickfila, chick-fil-a.com, mcdonalds</span>
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-                            <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="">
-                            <button type="button" onclick="tryLogoSearch()" class="btn-save" style="padding: 8px 16px; font-size: 13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Try</button>
+                            <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="" data-logo-search-url="{{ url_for('manager.api_logo_search') }}">
+                            <button type="button" id="logoSearchTryBtn" onclick="tryLogoSearch()" class="btn-save" style="padding: 8px 16px; font-size: 13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Try</button>
+                            <span id="logoSearchStatus" class="s-desc" style="display: none; margin-left: 4px;"></span>
                             <div id="logoSearchPreview" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <span class="s-desc" style="margin-right: 4px;">Preview:</span>
                                 <img id="logoSearchImg" src="" alt="" style="height: 40px; width: auto; min-width: 48px; max-width: 120px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body);">
@@ -632,54 +633,62 @@
     var searchedLogoUrl = null;
 
     function tryLogoSearch() {
-        var q = (document.getElementById('logoSearchInput').value || '').trim();
-        if (!q) return;
+        var input = document.getElementById('logoSearchInput');
         var preview = document.getElementById('logoSearchPreview');
         var img = document.getElementById('logoSearchImg');
-        img.dataset.triedFallback = '';
-        var msg = document.getElementById('logoSearchMsg');
-        if (msg) msg.remove();
-        preview.style.display = 'flex';
-        preview.classList.remove('logo-error');
-        img.style.display = 'none';
-        var statusEl = document.createElement('span');
-        statusEl.id = 'logoSearchMsg';
-        statusEl.className = 's-desc';
-        statusEl.textContent = 'Searching...';
-        preview.appendChild(statusEl);
+        var statusSpan = document.getElementById('logoSearchStatus');
+        var tryBtn = document.getElementById('logoSearchTryBtn');
+        if (!input) return;
+        var q = (input.value || '').trim();
+        if (!q) {
+            if (statusSpan) { statusSpan.style.display = 'inline'; statusSpan.textContent = 'Enter a company name first.'; }
+            return;
+        }
         searchedLogoUrl = null;
-        fetch('{{ url_for("manager.api_logo_search") }}?q=' + encodeURIComponent(q))
-            .then(function(r) { return r.json(); })
+        if (statusSpan) { statusSpan.style.display = 'inline'; statusSpan.textContent = 'Searching...'; statusSpan.className = 's-desc'; }
+        if (tryBtn) tryBtn.disabled = true;
+        if (preview) {
+            preview.style.display = 'flex';
+            preview.classList.remove('logo-error');
+            var oldMsg = document.getElementById('logoSearchMsg');
+            if (oldMsg) oldMsg.remove();
+        }
+        if (img) { img.style.display = 'none'; img.dataset.triedFallback = ''; }
+        var apiUrl = (input.getAttribute('data-logo-search-url') || '{{ url_for("manager.api_logo_search") }}') + '?q=' + encodeURIComponent(q);
+        fetch(apiUrl)
+            .then(function(r) { if (!r.ok) throw new Error('Search failed'); return r.json(); })
             .then(function(data) {
-                if (statusEl.parentNode) statusEl.remove();
-                if (data.url) {
+                if (statusSpan) { statusSpan.style.display = 'none'; statusSpan.textContent = ''; }
+                if (tryBtn) tryBtn.disabled = false;
+                if (!preview) return;
+                if (data && data.url) {
                     searchedLogoUrl = data.url;
-                    img.alt = q;
-                    var fallbackUrl = data.fallback_url || null;
-                    function showLogoError() {
-                        var m = document.createElement('span');
-                        m.id = 'logoSearchMsg';
-                        m.className = 's-desc logo-error';
-                        m.textContent = 'Logo could not be loaded.';
-                        preview.appendChild(m);
-                        img.style.display = 'none';
-                    }
-                    img.onerror = function() {
-                        if (fallbackUrl && !img.dataset.triedFallback) {
-                            img.dataset.triedFallback = '1';
-                            img.onerror = showLogoError;
-                            img.src = fallbackUrl;
-                            return;
+                    if (img) {
+                        img.alt = q;
+                        var fallbackUrl = data.fallback_url || null;
+                        function showLogoError() {
+                            var m = document.getElementById('logoSearchMsg');
+                            if (!m) { m = document.createElement('span'); m.id = 'logoSearchMsg'; m.className = 's-desc logo-error'; preview.appendChild(m); }
+                            m.textContent = 'Logo could not be loaded.';
+                            img.style.display = 'none';
                         }
-                        showLogoError();
-                    };
-                    img.onload = function() {
+                        img.onerror = function() {
+                            if (fallbackUrl && !img.dataset.triedFallback) {
+                                img.dataset.triedFallback = '1';
+                                img.onerror = showLogoError;
+                                img.src = fallbackUrl;
+                                return;
+                            }
+                            showLogoError();
+                        };
+                        img.onload = function() {
+                            img.style.display = 'block';
+                            var errMsg = document.getElementById('logoSearchMsg');
+                            if (errMsg && errMsg.textContent === 'Logo could not be loaded.') errMsg.remove();
+                        };
+                        img.src = data.url;
                         img.style.display = 'block';
-                        var errMsg = document.getElementById('logoSearchMsg');
-                        if (errMsg && errMsg.textContent === 'Logo could not be loaded.') errMsg.remove();
-                    };
-                    img.src = data.url;
-                    img.style.display = 'block';
+                    }
                     var useBtn = document.getElementById('useSearchedLogoBtn');
                     if (useBtn) useBtn.style.display = '';
                 } else {
@@ -693,16 +702,22 @@
                 }
             })
             .catch(function() {
-                if (statusEl.parentNode) statusEl.remove();
-                var m = document.createElement('span');
-                m.id = 'logoSearchMsg';
-                m.className = 's-desc logo-error';
-                m.textContent = 'Search failed. Try again or upload your own.';
-                preview.appendChild(m);
-                var useBtn = document.getElementById('useSearchedLogoBtn');
-                if (useBtn) useBtn.style.display = 'none';
+                if (statusSpan) { statusSpan.style.display = 'inline'; statusSpan.textContent = 'Search failed.'; statusSpan.className = 's-desc logo-error'; }
+                if (tryBtn) tryBtn.disabled = false;
+                if (preview) {
+                    var m = document.getElementById('logoSearchMsg');
+                    if (!m) { m = document.createElement('span'); m.id = 'logoSearchMsg'; m.className = 's-desc logo-error'; preview.appendChild(m); }
+                    m.textContent = 'Search failed. Try again or upload your own.';
+                    var useBtn = document.getElementById('useSearchedLogoBtn');
+                    if (useBtn) useBtn.style.display = 'none';
+                }
             });
     }
+
+    (function() {
+        var btn = document.getElementById('logoSearchTryBtn');
+        if (btn) btn.addEventListener('click', tryLogoSearch);
+    })();
 
     function useSearchedLogo() {
         if (!searchedLogoUrl) return;
