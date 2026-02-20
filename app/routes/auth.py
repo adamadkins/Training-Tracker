@@ -305,26 +305,29 @@ def change_password():
 
 @auth_bp.route("/waitlist", methods=["POST"])
 def waitlist():
-    """Capture landing page interest form submissions and email the admin."""
+    """Capture landing page interest form submissions and email the admin. Plan = Standard or Pro they clicked."""
     data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     business = data.get("business", "").strip()
     size = data.get("size", "").strip()
+    plan = (data.get("plan") or "").strip().lower()  # 'standard' | 'pro' when they clicked a plan CTA
 
     if email:
         try:
             from app.utils.notifications import send_notification_email
             import os
             admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
-            subject = f"New Training Tracker Interest: {business or email}"
+            subject = f"Training Tracker signup: {business or email}" + (f" ({plan})" if plan else "")
             body = (
-                f"<h2>New Waitlist Signup</h2>"
+                f"<h2>New signup request</h2>"
                 f"<p><strong>Name:</strong> {name}</p>"
                 f"<p><strong>Email:</strong> {email}</p>"
                 f"<p><strong>Business:</strong> {business}</p>"
                 f"<p><strong>Team size:</strong> {size}</p>"
             )
+            if plan:
+                body += f"<p><strong>Plan interested in:</strong> {plan.capitalize()}</p>"
             send_notification_email(admin_email, subject, body)
         except Exception:
             pass

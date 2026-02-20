@@ -42,6 +42,15 @@ def _org_id():
     return oid
 
 
+def _org_has_pro():
+    """True if current org has Pro plan (free or paid)."""
+    oid = _org_id()
+    org = Organization.query.get(oid)
+    if not org:
+        return False
+    return (org.billing_plan == "pro") or (org.free_plan == "pro")
+
+
 def _google_favicon_url(domain):
     """Return Google's favicon URL for a domain (works for any site)."""
     if not domain or "." not in domain:
@@ -841,6 +850,9 @@ def _sb_data_path():
 @manager_bp.route('/schedules/smart-builder')
 @manager_required
 def roadmap_smart_builder():
+    if not _org_has_pro():
+        flash("PDF schedule upload is a Pro feature. Upgrade in Settings → Billing to use it.", "info")
+        return redirect(url_for("manager.schedules_list"))
     path = _sb_data_path()
     if os.path.exists(path):
         return redirect(url_for('manager.smart_builder_build'))
@@ -893,7 +905,10 @@ def smart_builder_clear():
 @manager_bp.route('/schedules/smart-builder/process', methods=['POST'])
 @manager_required
 def process_smart_schedule():
-    """Process uploaded schedule PDF for ALL 7 days, store in session, redirect to builder"""
+    """Process uploaded schedule PDF for ALL 7 days, store in session, redirect to builder. Pro only."""
+    if not _org_has_pro():
+        flash("PDF schedule upload is a Pro feature. Upgrade in Settings → Billing.", "info")
+        return redirect(url_for("manager.schedules_list"))
     try:
         # Validate file upload
         if 'file' not in request.files:

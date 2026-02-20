@@ -3023,7 +3023,7 @@
                     <li class="disabled"><i class="fa-solid fa-xmark"></i> Guest trainer mode</li>
                     <li class="disabled"><i class="fa-solid fa-xmark"></i> Team messaging</li>
                 </ul>
-                <a href="#" class="pricing-btn pricing-btn-outline" onclick="openModal(); return false;">Get Started</a>
+                <a href="#" class="pricing-btn pricing-btn-outline" onclick="openModal('standard'); return false;">Get Started</a>
             </div>
 
             <div class="pricing-card featured">
@@ -3044,10 +3044,10 @@
                     <li><i class="fa-solid fa-check"></i> PDF schedule upload</li>
                     <li><i class="fa-solid fa-check"></i> Priority support</li>
                 </ul>
-                <a href="#" class="pricing-btn pricing-btn-primary" onclick="openModal(); return false;">Get Started</a>
+                <a href="#" class="pricing-btn pricing-btn-primary" onclick="openModal('pro'); return false;">Get Started</a>
             </div>
         </div>
-        <p class="pricing-note">Both plans include a <strong>14-day free trial</strong>, no credit card required. &nbsp;<a href="#" onclick="openModal(); return false;">Start your trial today.</a></p>
+        <p class="pricing-note">Request access and we'll get you set up on Standard or Pro. &nbsp;<a href="#" onclick="openModal(); return false;">Contact us</a></p>
     </div>
 </section>
 
@@ -3102,8 +3102,8 @@
         <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
 
         <div id="modalForm">
-            <h2>Get early access</h2>
-            <p>Training Tracker is currently invite-only while we prepare for public launch. Drop your info and we will reach out shortly.</p>
+            <h2>Request access</h2>
+            <p>Tell us a bit about your team and which plan you're interested in. We'll reach out to get you set up.</p>
             <form class="modal-form" onsubmit="handleSignup(event)">
                 <div>
                     <label>Your name</label>
@@ -3126,6 +3126,7 @@
                         <option value="51+">51+</option>
                     </select>
                 </div>
+                <input type="hidden" name="plan" id="modalPlan" value="">
                 <button type="submit" class="modal-submit">
                     <i class="fa-solid fa-paper-plane"></i> Request Access
                 </button>
@@ -3160,9 +3161,11 @@
     });
 
     // Modal
-    function openModal() {
+    function openModal(plan) {
         document.getElementById('modalOverlay').classList.add('active');
         document.body.style.overflow = 'hidden';
+        var planInput = document.getElementById('modalPlan');
+        if (planInput) planInput.value = plan || '';
     }
 
     function closeModal() {
@@ -3182,6 +3185,7 @@
             email: form.email.value,
             business: form.business.value,
             size: form.size.value,
+            plan: (form.plan && form.plan.value) || '',
         };
         fetch('/waitlist', {
             method: 'POST',

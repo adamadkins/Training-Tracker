@@ -146,6 +146,7 @@ def organization_set_free_plan(org_id, plan):
         flash("Invalid plan.", "error")
         return redirect(url_for("admin.organization_detail", org_id=org_id))
     org.free_plan = plan
+    org.billing_plan = plan
     db.session.commit()
     flash(f"Organization '{org.name}' now has {plan.capitalize()} plan (free).", "success")
     return redirect(url_for("admin.organization_detail", org_id=org_id))
@@ -156,6 +157,8 @@ def organization_remove_free_plan(org_id):
     """Remove free plan; org will need a paid subscription or to be set up again."""
     org = Organization.query.get_or_404(org_id)
     org.free_plan = None
+    if not org.stripe_subscription_id:
+        org.billing_plan = None
     db.session.commit()
     flash(f"Free plan removed for '{org.name}'.", "info")
     return redirect(url_for("admin.organization_detail", org_id=org_id))

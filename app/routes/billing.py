@@ -5,6 +5,18 @@ from flask import Blueprint, request, current_app, abort
 from app import db
 from app.models import Organization
 
+
+def _billing_plan_from_price_id(price_id):
+    if not price_id:
+        return None
+    pro_id = current_app.config.get("STRIPE_PRICE_ID_PRO") or ""
+    std_id = current_app.config.get("STRIPE_PRICE_ID_STANDARD") or current_app.config.get("STRIPE_PRICE_ID") or ""
+    if price_id == pro_id:
+        return "pro"
+    if price_id == std_id:
+        return "standard"
+    return None
+
 billing_bp = Blueprint("billing", __name__, url_prefix="/webhooks")
 
 
@@ -71,6 +83,17 @@ def _handle_checkout_completed(session):
                 org.stripe_customer_id = sub.customer
         except Exception:
             pass
+    if subscription_id:
+        try:
+            sub = stripe.Subscription.retrieve(subscription_id)
+            items = sub.get("items", {}).get("data", [])
+            if items:
+                price = items[0].get("price")
+                price_id = price.get("id") if isinstance(price, dict) else price
+                if price_id:
+                    org.billing_plan = _billing_plan_from_price_id(price_id)
+        except Exception:
+            pass
     db.session.commit()
 
 
@@ -87,7 +110,12 @@ def _handle_subscription_updated(subscription):
     org.stripe_subscription_id = sub_id
     if customer_id:
         org.stripe_customer_id = customer_id
-    # Auto-suspend if unpaid (optional: only suspend on past_due/canceled/unpaid)
+    items = subscription.get("items", {}).get("data", [])
+    if items:
+        price = items[0].get("price")
+        price_id = price.get("id") if isinstance(price, dict) else price
+        if price_id:
+            org.billing_plan = _billing_plan_from_price_id(price_id)
     if status in ("past_due", "canceled", "unpaid", "incomplete_expired"):
         org.status = "suspended"
     db.session.commit()
@@ -100,6 +128,7 @@ def _handle_subscription_deleted(subscription):
     if not org:
         return
     org.stripe_subscription_id = None
+    org.billing_plan = None
     org.status = "suspended"
     db.session.commit()
 
