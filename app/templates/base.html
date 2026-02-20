@@ -29,8 +29,8 @@
             'sky': '#0369a1'
         } %}
         {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
-        {% set _hex = primary_hex.get(_primary, primary_hex['indigo']) %}
-        {% set _hover = primary_hover.get(_primary, primary_hover['indigo']) %}
+        {% set _hex = _primary if (_primary or '')|length and (_primary or '')[:1] == '#' else primary_hex.get(_primary, primary_hex['indigo']) %}
+        {% set _hover = _hex if (_primary or '')[:1] == '#' else primary_hover.get(_primary, primary_hover['indigo']) %}
         :root {
             --primary: {{ _hex }};
             --primary-hover: {{ _hover }};

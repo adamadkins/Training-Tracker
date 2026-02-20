@@ -335,20 +335,26 @@
                 </div>
                 <div class="s-body">
                     <input type="hidden" name="custom_logo_url" id="customLogoUrl" value="{{ system_settings.custom_logo_url or '' }}">
-                    <div class="s-row">
+                    <div class="s-row" style="flex-wrap: wrap; align-items: center; gap: 12px;">
                         <div class="s-info">
                             <label class="s-label">Accent color</label>
                             <span class="s-desc">Primary color for buttons, links, and highlights.</span>
                         </div>
-                        <select name="primary_color" id="primaryColorSelect" class="s-select">
-                            <option value="indigo" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
-                            <option value="blue" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'blue' }}>Blue</option>
-                            <option value="violet" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'violet' }}>Violet</option>
-                            <option value="green" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'green' }}>Green</option>
-                            <option value="amber" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'amber' }}>Amber</option>
-                            <option value="rose" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'rose' }}>Rose</option>
-                            <option value="sky" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'sky' }}>Sky</option>
-                        </select>
+                        <input type="hidden" name="primary_color" id="primaryColorValue" value="{{ system_settings.primary_color or 'indigo' }}">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span id="primaryColorSwatch" class="color-swatch" style="width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--border); flex-shrink: 0;" title="Current color"></span>
+                            <select id="primaryColorSelect" class="s-select" style="min-width: 140px;">
+                                <option value="indigo" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
+                                <option value="blue" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'blue' }}>Blue</option>
+                                <option value="violet" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'violet' }}>Violet</option>
+                                <option value="green" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'green' }}>Green</option>
+                                <option value="amber" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'amber' }}>Amber</option>
+                                <option value="rose" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'rose' }}>Rose</option>
+                                <option value="sky" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'sky' }}>Sky</option>
+                                <option value="custom" {{ 'selected' if system_settings.primary_color and (system_settings.primary_color or '')[:1] == '#' }}>Custom…</option>
+                            </select>
+                            <input type="color" id="primaryColorPicker" value="#4f46e5" style="width: 40px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: none;" title="Pick a color">
+                        </div>
                     </div>
                     <div class="s-row" style="flex-wrap: wrap;">
                         <div class="s-info" style="flex: 1 1 100%; margin-bottom: 8px;">
@@ -609,16 +615,52 @@
     (function() {
         var primaryHex = { indigo: '#4f46e5', blue: '#2563eb', violet: '#7c3aed', green: '#059669', amber: '#d97706', rose: '#e11d48', sky: '#0284c7' };
         var primaryHover = { indigo: '#4338ca', blue: '#1d4ed8', violet: '#6d28d9', green: '#047857', amber: '#b45309', rose: '#be123c', sky: '#0369a1' };
-        function applyPrimaryColor(key) {
-            var hex = primaryHex[key] || primaryHex.indigo;
-            var hover = primaryHover[key] || primaryHover.indigo;
+        var hidden = document.getElementById('primaryColorValue');
+        var swatch = document.getElementById('primaryColorSwatch');
+        var sel = document.getElementById('primaryColorSelect');
+        var picker = document.getElementById('primaryColorPicker');
+
+        function hexFor(val) {
+            if (!val) return primaryHex.indigo;
+            if (val.charAt(0) === '#') return val.length >= 7 ? val : (val.length === 4 ? '#' + val[1]+val[1]+val[2]+val[2]+val[3]+val[3] : primaryHex.indigo);
+            return primaryHex[val] || primaryHex.indigo;
+        }
+
+        function applyPrimaryColor(val) {
+            var hex = hexFor(val);
+            var hover = (val && val.charAt(0) === '#') ? hex : (primaryHover[val] || primaryHover.indigo);
             document.documentElement.style.setProperty('--primary', hex);
             document.documentElement.style.setProperty('--primary-hover', hover);
+            if (swatch) swatch.style.backgroundColor = hex;
         }
-        var sel = document.getElementById('primaryColorSelect');
+
+        function syncFromHidden() {
+            var val = hidden ? hidden.value : (sel ? sel.value : 'indigo');
+            if (val && val.charAt(0) === '#') {
+                if (sel) sel.value = 'custom';
+                if (picker) { picker.value = val; picker.style.display = ''; }
+            } else {
+                if (sel) sel.value = val || 'indigo';
+                if (picker) picker.style.display = 'none';
+            }
+            applyPrimaryColor(val);
+        }
+
         if (sel) {
-            sel.addEventListener('change', function() { applyPrimaryColor(this.value); });
+            sel.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    if (picker) { picker.style.display = ''; picker.value = hexFor(hidden ? hidden.value : 'indigo'); hidden.value = picker.value; }
+                } else {
+                    if (picker) picker.style.display = 'none';
+                    if (hidden) hidden.value = this.value;
+                }
+                syncFromHidden();
+            });
         }
+        if (picker) {
+            picker.addEventListener('input', function() { if (hidden) hidden.value = this.value; applyPrimaryColor(this.value); });
+        }
+        syncFromHidden();
     })();
 
     function replayTutorial() {
@@ -687,7 +729,13 @@
                             if (errMsg && errMsg.textContent === 'Logo could not be loaded.') errMsg.remove();
                         };
                         var proxyUrl = input.getAttribute('data-logo-proxy-url') || '';
-                        img.src = proxyUrl ? (proxyUrl + '?url=' + encodeURIComponent(data.url)) : data.url;
+                        if (proxyUrl) {
+                            var qs = '?url=' + encodeURIComponent(data.url);
+                            if (data.fallback_url) qs += '&fallback=' + encodeURIComponent(data.fallback_url);
+                            img.src = proxyUrl + qs;
+                        } else {
+                            img.src = data.url;
+                        }
                         img.style.display = 'block';
                     }
                     var useBtn = document.getElementById('useSearchedLogoBtn');
@@ -742,7 +790,7 @@
         var form = document.getElementById('settingsForm');
         var saveBar = document.getElementById('saveBar');
         var initial = {};
-        var inputs = form.querySelectorAll('input[type="checkbox"], input[type="hidden"][name="custom_logo_url"], select');
+        var inputs = form.querySelectorAll('input[type="checkbox"], input[type="hidden"][name="custom_logo_url"], input[type="hidden"][name="primary_color"], select');
         var fileInput = form.querySelector('input[name="logo_file"]');
 
         for (var i = 0; i < inputs.length; i++) {

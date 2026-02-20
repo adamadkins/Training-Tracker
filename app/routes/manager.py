@@ -204,6 +204,13 @@ def _download_logo_to_uploads(url):
         return None
 
 
+def _hex_expand_3(hex3):
+    """Expand #rgb to #rrggbb."""
+    if not hex3 or len(hex3) != 4 or hex3[0] != "#":
+        return hex3
+    return "#" + hex3[1] * 2 + hex3[2] * 2 + hex3[3] * 2
+
+
 def _get_manager_location_id():
     """If the current user is a manager with a location restriction, return that location_id; else None."""
     if not current_user.is_authenticated or current_user.role != "manager" or not current_user.employee_id:
@@ -307,9 +314,11 @@ def setup_wizard():
         return redirect(url_for("manager.setup_wizard"))
     if step == 2:
         # Branding: primary color and logo
-        raw = (request.form.get("primary_color") or "indigo").strip().lower()
-        if raw in ("indigo", "blue", "violet", "green", "amber", "rose", "sky"):
-            settings.primary_color = raw
+        raw = (request.form.get("primary_color") or "indigo").strip()
+        if raw.lower() in ("indigo", "blue", "violet", "green", "amber", "rose", "sky"):
+            settings.primary_color = raw.lower()
+        elif raw.startswith("#") and re.match(r"^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$", raw):
+            settings.primary_color = raw if len(raw) == 7 else _hex_expand_3(raw)
         logo_url = request.form.get("custom_logo_url", "").strip() or None
         logo_file = request.files.get("logo_file")
         if logo_file and logo_file.filename:
@@ -2059,33 +2068,43 @@ def api_logo_search():
     return jsonify({"url": url, "fallback_url": fallback_url})
 
 
+def _proxy_fetch_image(url):
+    """Fetch image from allowed URL; return (data, content_type) or (None, None)."""
+    allowed_hosts = ("logo.clearbit.com", "www.google.com")
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            return None, None
+        if not any(parsed.netloc == h or parsed.netloc.endswith("." + h) for h in allowed_hosts):
+            return None, None
+    except Exception:
+        return None, None
+    try:
+        req = Request(url, headers={"User-Agent": "TrainingTracker/1.0"})
+        with urlopen(req, timeout=8) as r:
+            data = r.read()
+            ctype = (r.headers.get("Content-Type") or "image/png").split(";")[0].strip()
+            if data and len(data) <= 2 * 1024 * 1024:
+                return data, ctype
+    except (HTTPError, URLError, OSError):
+        pass
+    return None, None
+
+
 @manager_bp.route("/api/logo-proxy", methods=["GET"])
 @login_required
 @manager_required
 def api_logo_proxy():
-    """Proxy logo image so the browser loads from our domain (avoids ad-blocker blocking Clearbit/favicon)."""
+    """Proxy logo image; try fallback URL if primary returns 404 (avoids ad-blocker + Clearbit sunset)."""
     raw = request.args.get("url", "").strip()
-    if not raw:
-        abort(404)
-    allowed_hosts = ("logo.clearbit.com", "www.google.com")
-    try:
-        parsed = urlparse(raw)
-        if parsed.scheme not in ("http", "https") or not parsed.netloc:
-            abort(404)
-        if not any(parsed.netloc == h or parsed.netloc.endswith("." + h) for h in allowed_hosts):
-            abort(404)
-    except Exception:
-        abort(404)
-    try:
-        req = Request(raw, headers={"User-Agent": "TrainingTracker/1.0"})
-        with urlopen(req, timeout=8) as r:
-            data = r.read()
-            ctype = r.headers.get("Content-Type") or "image/png"
-    except (HTTPError, URLError, OSError):
-        abort(404)
-    if not data or len(data) > 2 * 1024 * 1024:
-        abort(404)
-    return Response(data, mimetype=ctype.split(";")[0].strip(), direct_passthrough=True)
+    fallback_raw = request.args.get("fallback", "").strip()
+    for candidate in (raw, fallback_raw):
+        if not candidate:
+            continue
+        data, ctype = _proxy_fetch_image(candidate)
+        if data and ctype:
+            return Response(data, mimetype=ctype, direct_passthrough=True)
+    abort(404)
 
 
 @manager_bp.route("/settings", methods=['GET', 'POST'])
@@ -2119,9 +2138,11 @@ def settings():
             if 'business_type' in request.form:
                 system_settings.business_type = request.form.get('business_type') or None
             if 'primary_color' in request.form:
-                raw = request.form.get('primary_color', 'indigo').strip().lower()
+                raw = request.form.get('primary_color', 'indigo').strip()
                 if raw in ('indigo', 'blue', 'violet', 'green', 'amber', 'rose', 'sky'):
-                    system_settings.primary_color = raw
+                    system_settings.primary_color = raw.lower()
+                elif raw.startswith('#') and re.match(r'^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$', raw):
+                    system_settings.primary_color = raw if len(raw) == 7 else _hex_expand_3(raw)
             logo_url = request.form.get('custom_logo_url', '').strip() or None
             logo_file = request.files.get('logo_file')
             if logo_file and logo_file.filename:

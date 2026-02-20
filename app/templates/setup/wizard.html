@@ -135,15 +135,21 @@
             <input type="hidden" name="custom_logo_url" id="setupCustomLogoUrl" value="{{ settings.custom_logo_url or '' }}">
             <div class="form-row">
                 <label>Accent color</label>
-                <select name="primary_color" id="setupPrimaryColor">
-                    <option value="indigo" {{ 'selected' if (settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
-                    <option value="blue" {{ 'selected' if settings.primary_color == 'blue' }}>Blue</option>
-                    <option value="violet" {{ 'selected' if settings.primary_color == 'violet' }}>Violet</option>
-                    <option value="green" {{ 'selected' if settings.primary_color == 'green' }}>Green</option>
-                    <option value="amber" {{ 'selected' if settings.primary_color == 'amber' }}>Amber</option>
-                    <option value="rose" {{ 'selected' if settings.primary_color == 'rose' }}>Rose</option>
-                    <option value="sky" {{ 'selected' if settings.primary_color == 'sky' }}>Sky</option>
-                </select>
+                <input type="hidden" name="primary_color" id="setupPrimaryColorValue" value="{{ settings.primary_color or 'indigo' }}">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span id="setupColorSwatch" style="width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--border); flex-shrink: 0; background: var(--primary);"></span>
+                    <select id="setupPrimaryColor" style="min-width: 120px;">
+                        <option value="indigo" {{ 'selected' if (settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
+                        <option value="blue" {{ 'selected' if settings.primary_color == 'blue' }}>Blue</option>
+                        <option value="violet" {{ 'selected' if settings.primary_color == 'violet' }}>Violet</option>
+                        <option value="green" {{ 'selected' if settings.primary_color == 'green' }}>Green</option>
+                        <option value="amber" {{ 'selected' if settings.primary_color == 'amber' }}>Amber</option>
+                        <option value="rose" {{ 'selected' if settings.primary_color == 'rose' }}>Rose</option>
+                        <option value="sky" {{ 'selected' if settings.primary_color == 'sky' }}>Sky</option>
+                        <option value="custom" {{ 'selected' if settings.primary_color and (settings.primary_color or '')[:1] == '#' }}>Custom…</option>
+                    </select>
+                    <input type="color" id="setupColorPicker" value="#4f46e5" style="width: 36px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: none;">
+                </div>
             </div>
             <div class="form-row">
                 <label>Logo (optional)</label>
@@ -200,14 +206,32 @@
 (function() {
     var primaryHex = { indigo: '#4f46e5', blue: '#2563eb', violet: '#7c3aed', green: '#059669', amber: '#d97706', rose: '#e11d48', sky: '#0284c7' };
     var primaryHover = { indigo: '#4338ca', blue: '#1d4ed8', violet: '#6d28d9', green: '#047857', amber: '#b45309', rose: '#be123c', sky: '#0369a1' };
+    var hidden = document.getElementById('setupPrimaryColorValue');
+    var swatch = document.getElementById('setupColorSwatch');
     var colorSel = document.getElementById('setupPrimaryColor');
-    if (colorSel) {
-        colorSel.addEventListener('change', function() {
-            var k = this.value;
-            document.documentElement.style.setProperty('--primary', primaryHex[k] || primaryHex.indigo);
-            document.documentElement.style.setProperty('--primary-hover', primaryHover[k] || primaryHover.indigo);
-        });
+    var picker = document.getElementById('setupColorPicker');
+    function hexFor(v) { if (!v) return primaryHex.indigo; if (v.charAt(0) === '#') return v.length >= 7 ? v : primaryHex.indigo; return primaryHex[v] || primaryHex.indigo; }
+    function apply(v) {
+        var hex = hexFor(v);
+        var hover = (v && v.charAt(0) === '#') ? hex : (primaryHover[v] || primaryHover.indigo);
+        document.documentElement.style.setProperty('--primary', hex);
+        document.documentElement.style.setProperty('--primary-hover', hover);
+        if (swatch) swatch.style.backgroundColor = hex;
     }
+    function sync() {
+        var val = hidden ? hidden.value : (colorSel ? colorSel.value : 'indigo');
+        if (val && val.charAt(0) === '#') {
+            if (colorSel) colorSel.value = 'custom';
+            if (picker) { picker.value = val; picker.style.display = ''; }
+        } else { if (colorSel) colorSel.value = val || 'indigo'; if (picker) picker.style.display = 'none'; }
+        apply(val);
+    }
+    if (colorSel) colorSel.addEventListener('change', function() {
+        if (this.value === 'custom') { if (picker) { picker.style.display = ''; picker.value = hexFor(hidden ? hidden.value : 'indigo'); hidden.value = picker.value; } } else { if (picker) picker.style.display = 'none'; if (hidden) hidden.value = this.value; }
+        sync();
+    });
+    if (picker) picker.addEventListener('input', function() { if (hidden) hidden.value = this.value; apply(this.value); });
+    sync();
 })();
 (function() {
     var input = document.getElementById('setupLogoSearchInput');
@@ -259,7 +283,13 @@
                         var msg = preview.querySelector('.logo-msg');
                         if (msg && msg.textContent.indexOf('couldn\'t load') !== -1) msg.remove();
                     };
-                    img.src = logoProxyUrl ? (logoProxyUrl + '?url=' + encodeURIComponent(data.url)) : data.url;
+                    if (logoProxyUrl) {
+                        var qs = '?url=' + encodeURIComponent(data.url);
+                        if (data.fallback_url) qs += '&fallback=' + encodeURIComponent(data.fallback_url);
+                        img.src = logoProxyUrl + qs;
+                    } else {
+                        img.src = data.url;
+                    }
                     img.style.display = 'block';
                     if (useBtn) useBtn.style.display = '';
                 } else {
