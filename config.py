@@ -9,6 +9,13 @@ class Config:
     # --- General Security ---
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
 
+    # --- URL generation ---
+    # Set SERVER_NAME in .env (e.g. trainingtracker.me) so url_for(_external=True) in emails
+    # and background tasks produces the correct domain instead of the raw IP.
+    # ProxyFix in __init__.py handles scheme (http→https) for live requests automatically.
+    SERVER_NAME = os.environ.get('SERVER_NAME') or None
+    PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'https')
+
     # --- Session ---
     # Sessions are permanent so Flask respects PERMANENT_SESSION_LIFETIME.
     # Before-request logic in __init__.py enforces idle timeout independently.

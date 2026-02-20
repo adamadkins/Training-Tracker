@@ -18,6 +18,11 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # Trust reverse-proxy headers (Nginx sets X-Forwarded-Proto and X-Forwarded-Host).
+    # This ensures url_for(_external=True) produces https://trainingtracker.me/...
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
