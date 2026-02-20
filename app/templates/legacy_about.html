@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Training Tracker Classic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            font-weight: bold;
+            background: #fff;
+            color: #111;
+        }
+
+        /* ══ HEADER ══ */
+        header {
+            background-color: #004f72;
+            box-shadow: -1px -5px 24px 4px rgba(0,0,0,0.75);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            height: 90px;
+            position: relative;
+        }
+        .logo-wrap {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            pointer-events: none;
+        }
+        .logo-img {
+            height: 64px;
+            width: auto;
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+        }
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.75);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .back-btn:hover { color: #fff; background: rgba(255,255,255,0.1); text-decoration: none; }
+        .header-spacer { flex: 1; }
+        .exit-btn {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: color 0.15s, background 0.15s;
+            white-space: nowrap;
+        }
+        .exit-btn:hover { color: #fff; background: rgba(255,255,255,0.1); text-decoration: none; }
+
+        /* ══ RIBBON ══ */
+        .legacy-ribbon {
+            background: #003a55;
+            text-align: center;
+            padding: 5px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            letter-spacing: 0.1em;
+        }
+        .legacy-ribbon b { color: rgba(255,255,255,0.7); }
+
+        /* ══ PAGE ══ */
+        .page {
+            max-width: 720px;
+            margin: 40px auto 60px;
+            padding: 0 24px;
+        }
+
+        .page-eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #004f72;
+            margin-bottom: 8px;
+        }
+        .page-title {
+            font-size: 26px;
+            font-weight: bold;
+            color: #111;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .page-subtitle {
+            font-size: 13px;
+            color: #888;
+            font-weight: normal;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px dashed #ddd;
+        }
+
+        /* ══ BODY TEXT ══ */
+        .story {
+            font-size: 14px;
+            font-weight: normal;
+            color: #333;
+            line-height: 1.9;
+        }
+        .story p {
+            margin-bottom: 18px;
+        }
+        .story b { color: #004f72; font-weight: bold; }
+
+        /* ══ ISSUES GRID ══ */
+        .issues-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+        }
+        .issues-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        .issue-tag {
+            background: #ffe4e4;
+            border: 1px solid #fbb;
+            color: #b00;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+
+        /* ══ CLOSING ══ */
+        .closing {
+            margin-top: 32px;
+            padding: 20px 22px;
+            background: #004f72;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            line-height: 1.75;
+            font-weight: normal;
+        }
+        .closing b { font-weight: bold; color: #7dd3fc; }
+
+        /* ══ BACK LINK ══ */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 32px;
+            color: #004f72;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 8px 16px;
+            border: 1px solid #004f72;
+            border-radius: 8px;
+            transition: background 0.15s;
+        }
+        .back-link:hover { background: #004f72; color: #fff; text-decoration: none; }
+
+        @media (max-width: 600px) {
+            .page { padding: 0 16px; margin-top: 28px; }
+            .page-title { font-size: 21px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a class="back-btn" href="{{ url_for('legacy.index') }}">
+            &larr; Back to Classic
+        </a>
+        <div class="logo-wrap">
+            <img src="{{ url_for('static', filename='tt_logo.png') }}" class="logo-img" alt="Training Tracker" draggable="false">
+        </div>
+        <div class="header-spacer"></div>
+        <a class="exit-btn" href="{{ url_for('manager.dashboard') }}">
+            Exit Classic
+        </a>
+    </div>
+</header>
+
+<div class="legacy-ribbon">
+    <b>Training Tracker Classic - v1.0</b> &nbsp;·&nbsp; Origin Story
+</div>
+
+<div class="page">
+
+    <div class="page-eyebrow">Origin Story</div>
+    <h1 class="page-title">About Training Tracker Classic</h1>
+    <p class="page-subtitle">The app that started it all, and why it almost didn't.</p>
+
+    <div class="story">
+
+        <p>
+            Training Tracker Classic - <b>v1.0</b> - was built out of genuine need and a lot of ambition
+            for someone who barely knew HTML and CSS at the time. The idea was simple: help managers at a
+            <b>Chick-fil-A</b> store track how new hires were progressing through positions like iPads,
+            Register, Drive Through, Staging, and more.
+        </p>
+
+        <p>
+            The honest truth? <b>It was pretty scuffed.</b> Instead of a real database, all the data lived
+            in a <b>JSON file</b> sitting on the server. SQL and databases felt way too intimidating to even
+            try. That meant every single person on the team was reading from and writing to
+            <b>the same flat file</b> at the same time, with zero concurrency handling. Race conditions
+            were basically a feature.
+        </p>
+
+        <p>
+            It was hosted on a free service called <b>Glitch</b>, which would spin the server completely
+            down after a few minutes of inactivity. Every time someone opened it up during a shift, they
+            had to wait for a cold start. No profiles, no real accounts, no authentication.
+            Anyone with the link could open it and change anything.
+        </p>
+
+        <p>
+            On mobile? Forget it. The layout was built for a desktop and a desktop only. Floats,
+            hardcoded widths, pixel-specific margins that broke the moment you opened it on a phone.
+            It was clearly put together by someone watching YouTube tutorials at midnight and hoping
+            for the best.
+        </p>
+
+        <div class="issues-label">Known issues at launch</div>
+        <div class="issues-grid">
+            <span class="issue-tag">No mobile support</span>
+            <span class="issue-tag">JSON file as the "database"</span>
+            <span class="issue-tag">No user profiles</span>
+            <span class="issue-tag">Everyone editing the same file</span>
+            <span class="issue-tag">Glitch hosting (cold starts)</span>
+            <span class="issue-tag">No authentication</span>
+            <span class="issue-tag">No real-time updates</span>
+            <span class="issue-tag">Painfully slow on any network</span>
+            <span class="issue-tag">Poor design</span>
+            <span class="issue-tag">No data backups</span>
+        </div>
+
+        <p>
+            It took <b>months</b> to build. This was pre-AI, pre-Copilot, pre-anything that would help
+            you get unstuck in five minutes. Every bug meant digging through Stack Overflow threads and
+            rewatching tutorial videos to find what went wrong. Every feature felt like a small victory.
+        </p>
+
+        <p>
+            The app was <b>abandoned shortly after</b> it was tried in the store. The real world exposed
+            every crack immediately. It couldn't handle multiple people using it at once, it was too slow
+            to be practical during a rush, and nobody wanted to open a laptop just to log a training
+            session.
+        </p>
+
+    </div>
+
+    <div class="closing">
+        But that failure wasn't wasted. Every frustration, every workaround, every "why doesn't this work"
+        moment became a lesson. The app that exists now - with a <b>real database</b>, proper
+        authentication, mobile-first design, roadmaps, smart scheduling, session ratings, and everything
+        else - exists because this one failed in exactly the right ways at exactly the right time.
+        <br><br>
+        <b>Sometimes the best thing a project can do is fall apart and show you what to build next. 🐔</b>
+    </div>
+
+    <a href="{{ url_for('legacy.index') }}" class="back-link">
+        &larr; Back to Classic
+    </a>
+
+</div>
+
+</body>
+</html>

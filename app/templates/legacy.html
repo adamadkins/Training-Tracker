@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training Tracker — Classic</title>
+    <title>Training Tracker Classic</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
@@ -459,7 +459,8 @@
 
 <!-- ══ LEGACY RIBBON ══ -->
 <div class="legacy-ribbon">
-    <b>Training Tracker Classic — v1.0</b> &nbsp;·&nbsp; Read-only view &nbsp;·&nbsp; Data sourced live from the current system
+    <b>Training Tracker Classic - v1.0</b> &nbsp;·&nbsp; Read-only view &nbsp;·&nbsp; Data sourced live from the current system &nbsp;·&nbsp;
+    <a href="{{ url_for('legacy.about') }}" style="color:rgba(0,180,216,0.9); text-decoration:none; font-weight:bold;">About Classic &rarr;</a>
 </div>
 
 <!-- ══ BODY ══ -->
@@ -468,14 +469,14 @@
     {% if trainees %}
 
     {% if groups|length > 1 %}
-    {# Multiple locations — show one collapsible per location #}
+    {# Multiple locations - show one collapsible per location #}
     {% for location, members in groups.items() %}
     <div class="location-group">
     <div class="collapsible section-collapsible"
          onclick="toggleCollapse('loc-{{ loop.index }}')">
         {{ location }}
         <span class="overall-progress" style="margin-left:10px; font-size:12px; color:#666;">
-            — {{ members|length }} member{{ 's' if members|length != 1 else '' }}
+            - {{ members|length }} member{{ 's' if members|length != 1 else '' }}
         </span>
     </div>
     <div class="content" id="loc-{{ loop.index }}">
@@ -486,7 +487,7 @@
             {% set color = '#16a34a' if pct >= 80 else '#afa500' if pct >= 70 else '#f97316' if pct >= 50 else '#D60206' %}
             <li>
                 <div class="collapsible member-collapsible" onclick="toggleCollapse('member-{{ t.id }}')">
-                    {{ t.first_name }} {{ t.last_name }} — Start: {{ t.start_date }}
+                    {{ t.first_name }} {{ t.last_name }} - Start: {{ t.start_date }}
                     <br>
                     <span class="overall-progress" style="color: {{ color }};">
                         Overall Progress: {{ t.overall_pct }}%
@@ -508,7 +509,7 @@
                         <li>
                             <div class="collapsible pos-collapsible"
                                  onclick="toggleCollapse('pos-{{ t.id }}-{{ loop.index }}')">
-                                {{ pos.name }} &nbsp;—&nbsp; Progress:
+                                {{ pos.name }} - Progress:
                                 <span class="overall-progress" style="color: {{ pc }};">{{ pos.pct }}%</span>
                             </div>
                             <div class="content" id="pos-{{ t.id }}-{{ loop.index }}">
@@ -551,11 +552,11 @@
     {% endfor %}
 
     {% else %}
-    {# Single group — show all members directly under one "Team Members" section #}
+    {# Single group - show all members directly under one "Team Members" section #}
     <div class="collapsible section-collapsible" onclick="toggleCollapse('teamMembers')">
         Team Members
         <span class="overall-progress" style="margin-left:10px; font-size:12px; color:#666;">
-            — {{ trainees|length }} active trainee{{ 's' if trainees|length != 1 else '' }}
+            - {{ trainees|length }} active trainee{{ 's' if trainees|length != 1 else '' }}
         </span>
     </div>
     <div class="content" id="teamMembers">
@@ -565,7 +566,7 @@
             {% set color = '#16a34a' if pct >= 80 else '#afa500' if pct >= 70 else '#f97316' if pct >= 50 else '#D60206' %}
             <li>
                 <div class="collapsible member-collapsible" onclick="toggleCollapse('member-{{ t.id }}')">
-                    {{ t.first_name }} {{ t.last_name }} — Start: {{ t.start_date }}
+                    {{ t.first_name }} {{ t.last_name }} - Start: {{ t.start_date }}
                     <br>
                     <span class="overall-progress" style="color: {{ color }};">
                         Overall Progress: {{ t.overall_pct }}%
@@ -587,7 +588,7 @@
                         <li>
                             <div class="collapsible pos-collapsible"
                                  onclick="toggleCollapse('pos-{{ t.id }}-{{ loop.index }}')">
-                                {{ pos.name }} &nbsp;—&nbsp; Progress:
+                                {{ pos.name }} - Progress:
                                 <span class="overall-progress" style="color: {{ pc }};">{{ pos.pct }}%</span>
                             </div>
                             <div class="content" id="pos-{{ t.id }}-{{ loop.index }}">
@@ -636,62 +637,6 @@
     </div>
     {% endif %}
 
-    <!-- ══ ABOUT CLASSIC ══ -->
-    <div class="about-classic">
-        <div class="about-header">
-            <span class="about-badge">Origin Story</span>
-            <span class="about-title">About Training Tracker Classic</span>
-        </div>
-        <div class="about-body">
-            <p>
-                Training Tracker Classic — <b>v1.0</b> — was born out of a genuine need and a lot of
-                ambition for someone who barely knew HTML and CSS at the time. It was built to be used at a
-                <b>Chick-fil-A</b> store, designed to help managers track how new hires were progressing
-                through positions like iPads, Register, Drive Through, and more.
-            </p>
-            <p>
-                The honest truth? <b>It was pretty scuffed.</b> Instead of a real database, all the data
-                was stored in a <b>JSON file</b> — because SQL and databases felt way too intimidating back
-                then. That meant every single person on the team was reading from and writing to
-                <em>the same flat file</em> at the same time, with no real concurrency handling. Race conditions
-                were basically built-in.
-            </p>
-            <p>
-                It was hosted on a cheap service called <b>Glitch</b>, which would spin down the server
-                after a few minutes of inactivity. No profiles, no authentication, no mobile layout —
-                just a wall of gray accordions that looked fine on a desktop and like a disaster on a phone.
-                The design was functional at best; there were floats, hardcoded widths, and CSS that was
-                clearly written by someone watching YouTube tutorials at midnight.
-            </p>
-            <p>
-                Known issues at launch:
-                <br>
-                <span class="about-tag bad">No mobile support</span>
-                <span class="about-tag bad">JSON "database"</span>
-                <span class="about-tag bad">No user profiles</span>
-                <span class="about-tag bad">Everyone edits the same file</span>
-                <span class="about-tag bad">Glitch hosting (goes to sleep)</span>
-                <span class="about-tag bad">No authentication</span>
-                <span class="about-tag bad">No real-time updates</span>
-                <span class="about-tag bad">Slow on any network</span>
-            </p>
-            <p>
-                It took <b>months</b> to piece together — pre-AI, pre-GitHub Copilot, pre-anything helpful.
-                Stack Overflow threads and YouTube tutorials were the only tools available. Every bug was
-                a deep dive. Every feature felt like climbing a mountain.
-            </p>
-            <p>
-                The app was <b>abandoned shortly after</b> it was tried in the store. It just couldn't hold up
-                under real-world use. But that failure wasn't wasted — it was the spark that eventually led
-                to the Training Tracker you're using today: a proper database, real authentication,
-                mobile-first design, roadmaps, smart scheduling, and everything else that the original
-                never had.
-            </p>
-            <p style="color:#004f72; font-weight:bold; margin-top:4px;">
-                Sometimes the best thing a project can do is fail in exactly the right way. 🐔
-            </p>
-        </div>
-    </div>
 
 </div>
 

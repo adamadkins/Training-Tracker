@@ -77,6 +77,13 @@ def index():
     return render_template('legacy.html', trainees=trainees, groups=groups)
 
 
+@legacy_bp.route('/about')
+@login_required
+def about():
+    _require_manager()
+    return render_template('legacy_about.html')
+
+
 @legacy_bp.route('/export')
 @login_required
 def export_excel():
