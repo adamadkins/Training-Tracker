@@ -1155,10 +1155,32 @@ def position_edit(position_id):
         pos.location_id = loc_id
         was_active = pos.active
         pos.active = 'active' in request.form
-        PositionDescriptor.query.filter_by(position_id=pos.id).delete()
-        descriptor_texts = request.form.getlist("descriptors[]")
-        for text in descriptor_texts:
-            if text.strip(): db.session.add(PositionDescriptor(position_id=pos.id, text=text.strip(), active=True))
+
+        submitted_texts = [t.strip() for t in request.form.getlist("descriptors[]") if t.strip()]
+        existing = PositionDescriptor.query.filter_by(position_id=pos.id).all()
+        existing_texts = {d.text for d in existing}
+
+        # Remove descriptors no longer in the submitted list
+        for d in existing:
+            if d.text not in submitted_texts:
+                has_ratings = db.session.query(
+                    db.exists().where(SessionRating.descriptor_id == d.id)
+                ).scalar()
+                if has_ratings:
+                    d.active = False   # preserve history, just hide from new sessions
+                else:
+                    db.session.delete(d)
+
+        # Add brand-new descriptors
+        for text in submitted_texts:
+            if text not in existing_texts:
+                db.session.add(PositionDescriptor(position_id=pos.id, text=text, active=True))
+
+        # Re-activate any that were previously soft-deleted and are back in the list
+        for d in existing:
+            if d.text in submitted_texts and not d.active:
+                d.active = True
+
         db.session.commit()
 
         if was_active and not pos.active:
