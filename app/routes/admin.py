@@ -1,6 +1,7 @@
 """Platform admin: manage organizations. Only on main domain, superuser only."""
 import stripe
 from urllib.parse import quote
+from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -42,16 +43,28 @@ def _org_stats(org_id):
     }
 
 
+def _org_trial_and_payment(org):
+    """Return dict with trial_days_left (None if no trial, int days else) and payment_overdue (bool)."""
+    trial_days_left = None
+    if org.trial_ends_at:
+        delta = (org.trial_ends_at - datetime.now(timezone.utc)).days
+        trial_days_left = max(0, delta)
+    payment_overdue = org.stripe_subscription_status in ("past_due", "unpaid")
+    return {"trial_days_left": trial_days_left, "payment_overdue": payment_overdue}
+
+
 def _signup_request_email_content(signup_request):
     """Return (subject, body) for the signup request based on plan."""
     r = signup_request
     subject = "Your Training Tracker access request"
     name_part = (" " + r.name) if r.name else ""
+    trial_line = "I'm going to set you up with a 14-day free trial, then you'll be on the plan you chose.\n\n"
     if r.plan == "standard":
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for your interest in Training Tracker Standard. I'd love to get you set up.\n\n"
-            "Standard includes everything you need to manage training and schedules for your team. "
+            + trial_line
+            + "Standard includes everything you need to manage training and schedules for your team. "
             "I'll send you an invite to create your organization shortly.\n\n"
             "Best,"
         )
@@ -59,7 +72,8 @@ def _signup_request_email_content(signup_request):
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for your interest in Training Tracker Pro. I'd love to get you set up.\n\n"
-            "Pro includes PDF schedule upload and advanced features on top of everything in Standard. "
+            + trial_line
+            + "Pro includes PDF schedule upload and advanced features on top of everything in Standard. "
             "I'll send you an invite to create your organization shortly.\n\n"
             "Best,"
         )
@@ -67,7 +81,8 @@ def _signup_request_email_content(signup_request):
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for reaching out about Training Tracker. I'd be happy to help you get started.\n\n"
-            "I'll follow up with next steps shortly.\n\n"
+            + trial_line
+            + "I'll follow up with next steps shortly.\n\n"
             "Best,"
         )
     return subject, body
@@ -107,7 +122,7 @@ def index():
     active_orgs = sum(1 for o in orgs if o.status == "active")
     total_users = User.query.filter(User.organization_id.isnot(None)).count()
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
-    orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs[:20]]
+    orgs_with_stats = [(org, _org_stats(org.id), _org_trial_and_payment(org)) for org in orgs[:20]]
     signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(50).all()
     signup_requests_with_mailto = [
         (r, _signup_request_mailto(r), _signup_request_gmail_url(r)) for r in signup_requests
@@ -127,7 +142,7 @@ def index():
 def organizations_list():
     """List all organizations with stats."""
     orgs = Organization.query.order_by(Organization.name).all()
-    orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs]
+    orgs_with_stats = [(org, _org_stats(org.id), _org_trial_and_payment(org)) for org in orgs]
     return render_template("admin/organizations.html", organizations=orgs_with_stats)
 
 
@@ -141,12 +156,15 @@ def organization_detail(org_id):
         flash("Billing set up successfully.", "success")
     elif request.args.get("billing") == "canceled":
         flash("Checkout was canceled.", "info")
+    trial_payment = _org_trial_and_payment(org)
     return render_template(
         "admin/organization_detail.html",
         org=org,
         has_users=has_users,
         user_count=stats["user_count"],
         employee_count=stats["employee_count"],
+        trial_days_left=trial_payment["trial_days_left"],
+        payment_overdue=trial_payment["payment_overdue"],
     )
 
 
@@ -158,17 +176,29 @@ def organization_create():
         subdomain = (request.form.get("subdomain") or "").strip().lower()
         if not name or not subdomain:
             flash("Name and subdomain are required.", "error")
-            return render_template("admin/organization_form.html")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
         # Normalize subdomain: alphanumeric + hyphen
         subdomain = "".join(c for c in subdomain if c.isalnum() or c == "-").strip("-") or subdomain
         if not subdomain:
             flash("Subdomain must contain at least one letter or number.", "error")
-            return render_template("admin/organization_form.html")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
         existing = Organization.query.filter_by(subdomain=subdomain).first()
         if existing:
             flash(f"Subdomain '{subdomain}' is already in use.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain)
-        org = Organization(name=name, subdomain=subdomain, status="active")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
+        trial_plan = (request.form.get("trial_plan") or "standard").strip().lower()
+        if trial_plan not in ("standard", "pro"):
+            trial_plan = "standard"
+        now = datetime.now(timezone.utc)
+        trial_ends_at = now + timedelta(days=14)
+        org = Organization(
+            name=name,
+            subdomain=subdomain,
+            status="active",
+            trial_ends_at=trial_ends_at,
+            trial_plan=trial_plan,
+            billing_plan=trial_plan,
+        )
         db.session.add(org)
         db.session.flush()
         settings = SystemSettings(organization_id=org.id)
@@ -176,7 +206,7 @@ def organization_create():
         db.session.commit()
         host = request.host.split(":")[0]
         base_domain = host[4:] if host.startswith("www.") else host
-        flash(f"Organization '{org.name}' created. Users can sign in at {subdomain}.{base_domain}.", "success")
+        flash(f"Organization '{org.name}' created with 14-day {trial_plan.capitalize()} trial. Users can sign in at {subdomain}.{base_domain}.", "success")
         return redirect(url_for("admin.organization_detail", org_id=org.id))
     return render_template("admin/organization_form.html")
 

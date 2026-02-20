@@ -86,6 +86,7 @@ def _handle_checkout_completed(session):
     if subscription_id:
         try:
             sub = stripe.Subscription.retrieve(subscription_id)
+            org.stripe_subscription_status = sub.get("status")
             items = sub.get("items", {}).get("data", [])
             if items:
                 price = items[0].get("price")
@@ -108,6 +109,7 @@ def _handle_subscription_updated(subscription):
     if not org:
         return
     org.stripe_subscription_id = sub_id
+    org.stripe_subscription_status = status
     if customer_id:
         org.stripe_customer_id = customer_id
     items = subscription.get("items", {}).get("data", [])
@@ -128,6 +130,7 @@ def _handle_subscription_deleted(subscription):
     if not org:
         return
     org.stripe_subscription_id = None
+    org.stripe_subscription_status = "canceled"
     org.billing_plan = None
     org.status = "suspended"
     db.session.commit()

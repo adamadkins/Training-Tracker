@@ -12,6 +12,12 @@
             <label for="subdomain">Subdomain</label>
             <input type="text" id="subdomain" name="subdomain" value="{{ subdomain or '' }}" required placeholder="acme">
             <p class="form-hint">Users will sign in at <strong><span id="subdomain-preview">subdomain</span>.{% set h = request.host.split(':')[0] %}{{ h[4:] if h[:4] == 'www.' else h }}</strong></p>
+            <label for="trial_plan">Plan (14-day trial)</label>
+            <select id="trial_plan" name="trial_plan">
+                <option value="standard" {{ 'selected' if (trial_plan or 'standard') == 'standard' else '' }}>Standard</option>
+                <option value="pro" {{ 'selected' if (trial_plan or '') == 'pro' else '' }}>Pro</option>
+            </select>
+            <p class="form-hint">They get this plan during the trial and will be on this plan after trial (they add payment).</p>
             <button type="submit" class="btn btn-primary">Create</button>
         </form>
     </div>
@@ -27,6 +33,7 @@
 .admin-form label { font-size: 13px; font-weight: 700; color: var(--text-main); }
 .admin-form input { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
 .admin-form input:focus { outline: none; border-color: var(--primary); }
+.admin-form select { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
 .form-hint { font-size: 13px; color: var(--text-muted); margin: 0; }
 .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; background: var(--primary); color: white; width: fit-content; }
 .btn:hover { opacity: 0.9; }
