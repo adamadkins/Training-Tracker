@@ -153,7 +153,8 @@
                     <button type="button" id="setupLogoSearchBtn" class="btn-wizard" style="padding: 10px 16px;">Try</button>
                 </div>
                 <div id="setupLogoPreview" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <img id="setupLogoImg" src="" alt="" style="height: 32px; max-width: 100px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px;">
+                    <span class="setup-desc" style="margin-right: 4px;">Preview:</span>
+                    <img id="setupLogoImg" src="" alt="" style="height: 40px; width: auto; min-width: 48px; max-width: 120px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body);">
                     <button type="button" id="setupUseLogoBtn" class="btn-wizard btn-wizard-secondary" style="padding: 8px 14px;">Use this logo</button>
                 </div>
                 <p class="setup-desc" style="margin-top: 10px;">Or upload:</p>
@@ -232,6 +233,20 @@
                 if (btn) { btn.disabled = false; btn.textContent = 'Try'; }
                 if (data.url) {
                     searchedUrl = data.url;
+                    img.alt = q || 'Logo';
+                    img.onerror = function() {
+                        img.style.display = 'none';
+                        var m = document.createElement('span');
+                        m.className = 'logo-msg setup-desc';
+                        m.style.color = 'var(--text-muted)';
+                        m.textContent = 'Image couldn\'t load (you can still click "Use this logo" or upload your own).';
+                        if (!preview.querySelector('.logo-msg')) preview.appendChild(m);
+                    };
+                    img.onload = function() {
+                        img.style.display = 'block';
+                        var msg = preview.querySelector('.logo-msg');
+                        if (msg && msg.textContent.indexOf('couldn\'t load') !== -1) msg.remove();
+                    };
                     img.src = data.url;
                     img.style.display = 'block';
                     if (useBtn) useBtn.style.display = '';
