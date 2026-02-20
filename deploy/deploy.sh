@@ -4,7 +4,8 @@
 
 set -e
 cd /opt/training-tracker
-git pull origin main
+BRANCH=$(git branch --show-current)
+git pull --no-rebase origin "$BRANCH"
 .venv/bin/pip install -r requirements.txt --quiet
 set -a
 source .env
