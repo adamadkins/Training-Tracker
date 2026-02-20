@@ -181,9 +181,10 @@ def organization_invite_first_user(org_id):
             title = "Set up your Training Tracker account"
             body = (
                 f"Welcome to {org.name}!\n\n"
-                f"You've been set up as a manager. Set your password by clicking the link below:\n\n"
+                f"You've been set up as a manager. Click the link below to set your password. "
+                f"You'll then be taken to your sign-in page to log in.\n\n"
                 f"{set_password_url}\n\n"
-                f"This link expires in 30 minutes. After setting your password, log in at:\n{login_url}"
+                f"This link expires in 30 minutes."
             )
             send_notification_email(user, title, body)
             flash(f"Invitation sent to {email}. They can set their password and then log in at {org.subdomain}.{base}.", "success")

@@ -596,7 +596,7 @@
         {% endif %}
     });
 </script>
-{% if current_user.is_authenticated and not current_user.has_seen_tutorial %}
+{% if current_user.is_authenticated and not current_user.has_seen_tutorial and request.endpoint != 'manager.setup_wizard' %}
 {% include 'tutorial_overlay.html' %}
 {% endif %}
 

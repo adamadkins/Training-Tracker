@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort, g
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, SystemSettings
+from app.models import User, SystemSettings, Organization
 from app import db
 # ADDED: Import your notification helper
 from app.utils.notifications import send_notification_email
@@ -265,6 +265,14 @@ def reset_token(token):
         user.set_password(password)
         db.session.commit()
 
+        # If tenant user, send them to their org's login page so they can sign in right away
+        if getattr(user, "organization_id", None) and user.organization_id:
+            org = Organization.query.get(user.organization_id)
+            if org:
+                host = request.host.split(":")[0]
+                base_domain = host[4:] if host.startswith("www.") else host
+                login_url = f"https://{org.subdomain}.{base_domain}/login?password_set=1"
+                return redirect(login_url)
         flash('Your password has been updated! You can now log in.', 'success')
         return redirect(url_for('auth.login'))
 

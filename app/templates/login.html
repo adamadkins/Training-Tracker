@@ -100,6 +100,16 @@
         width: 100%;
     }
 
+    .password-set-msg {
+        background: #dcfce7;
+        color: #166534;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
     .form-label {
         font-size: 12px;
         font-weight: 800;
@@ -255,6 +265,9 @@
 
         {# --- Login Card --- #}
         <div class="auth-card">
+            {% if request.args.get('password_set') %}
+            <p class="password-set-msg">Your password has been set. Sign in below with your email and new password.</p>
+            {% endif %}
             <form method="POST" action="{{ url_for('auth.login') }}" style="display: flex; flex-direction: column; gap: 20px;">
 
                 <div>
