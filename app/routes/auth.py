@@ -96,6 +96,7 @@ def logo():
             mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
             return send_file(path, mimetype=mimetype, as_attachment=False)
         return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+    # Serve local logo via static URL so path resolution matches Flask/nginx exactly
     static_folder = current_app.static_folder
     if not static_folder:
         return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
@@ -107,9 +108,7 @@ def logo():
             return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
     except (ValueError, OSError):
         return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
-    ext = os.path.splitext(logo_url)[1].lower()
-    mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
-    return send_file(path, mimetype=mimetype, as_attachment=False)
+    return redirect(url_for("static", filename=logo_url))
 
 
 @auth_bp.get("/")

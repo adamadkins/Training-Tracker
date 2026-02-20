@@ -322,13 +322,14 @@ def setup_wizard():
         logo_url = request.form.get("custom_logo_url", "").strip() or None
         logo_file = request.files.get("logo_file")
         if logo_file and logo_file.filename:
-            allowed = ("image/png", "image/jpeg", "image/gif", "image/webp")
-            if logo_file.content_type in allowed:
+            ctype = (logo_file.content_type or "").lower()
+            ext = os.path.splitext(secure_filename(logo_file.filename))[1] or ".png"
+            if ext.lower() not in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
+                ext = ".png"
+            allowed_ct = ("image/png", "image/jpeg", "image/gif", "image/webp", "image/x-png", "image/pjpeg")
+            if ctype in allowed_ct or ctype.startswith("image/"):
                 upload_dir = os.path.join(current_app.static_folder, "uploads", "logos")
                 os.makedirs(upload_dir, exist_ok=True)
-                ext = os.path.splitext(secure_filename(logo_file.filename))[1] or ".png"
-                if ext.lower() not in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
-                    ext = ".png"
                 name = str(uuid.uuid4()) + ext
                 path = os.path.join(upload_dir, name)
                 logo_file.save(path)
@@ -2162,13 +2163,15 @@ def settings():
             logo_url = request.form.get('custom_logo_url', '').strip() or None
             logo_file = request.files.get('logo_file')
             if logo_file and logo_file.filename:
-                allowed = ('image/png', 'image/jpeg', 'image/gif', 'image/webp')
-                if logo_file.content_type in allowed:
+                # Accept any image/* or by extension (browsers send varying content_type e.g. image/x-png)
+                ctype = (logo_file.content_type or '').lower()
+                ext = os.path.splitext(secure_filename(logo_file.filename))[1] or '.png'
+                if ext.lower() not in ('.png', '.jpg', '.jpeg', '.gif', '.webp'):
+                    ext = '.png'
+                allowed_ct = ('image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/x-png', 'image/pjpeg')
+                if ctype in allowed_ct or ctype.startswith('image/'):
                     upload_dir = os.path.join(current_app.static_folder, 'uploads', 'logos')
                     os.makedirs(upload_dir, exist_ok=True)
-                    ext = os.path.splitext(secure_filename(logo_file.filename))[1] or '.png'
-                    if ext.lower() not in ('.png', '.jpg', '.jpeg', '.gif', '.webp'):
-                        ext = '.png'
                     name = str(uuid.uuid4()) + ext
                     path = os.path.join(upload_dir, name)
                     logo_file.save(path)
