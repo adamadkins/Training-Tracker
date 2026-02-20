@@ -225,23 +225,24 @@
             border-color: rgba(255,255,255,0.4);
         }
 
+        /* ── APP MOCKUP ── */
         .hero-mockup {
-            max-width: 900px;
+            max-width: 940px;
             margin: 0 auto;
-            background: var(--navy-mid);
+            background: #fff;
             border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid #e2e8f0;
             overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.35);
         }
 
         .mockup-bar {
-            background: var(--navy);
-            padding: 12px 16px;
+            background: #ffffff;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .mockup-dot {
@@ -252,116 +253,56 @@
 
         .mockup-url {
             flex: 1;
-            background: rgba(255,255,255,0.07);
+            background: #f1f5f9;
             border-radius: 6px;
             padding: 4px 12px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.4);
+            font-size: 11px;
+            color: #94a3b8;
             text-align: center;
             font-family: 'Courier New', monospace;
         }
 
-        .mockup-content {
-            padding: 28px 24px;
+        /* App nav bar */
+        .mockup-nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            height: 44px;
         }
 
-        .mockup-stat-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .mockup-stat {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            padding: 14px;
-        }
-
-        .mockup-stat-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 6px;
-        }
-
-        .mockup-stat-value {
-            font-size: 22px;
+        .mockup-nav-logo {
+            font-size: 13px;
             font-weight: 900;
-            color: #fff;
+            color: #4f46e5;
+            letter-spacing: -0.02em;
         }
 
-        .mockup-stat-sub {
-            font-size: 10px;
-            color: rgba(255,255,255,0.35);
-            margin-top: 2px;
-        }
-
-        .mockup-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .mockup-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 10px;
-            padding: 14px;
-        }
-
-        .mockup-card-title {
-            font-size: 11px;
-            font-weight: 800;
-            color: rgba(255,255,255,0.5);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 10px;
-        }
-
-        .mockup-bar-row {
+        .mockup-nav-links {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .mockup-bar-label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.55);
-            width: 72px;
-            flex-shrink: 0;
-        }
-
-        .mockup-bar-track {
+            gap: 4px;
             flex: 1;
-            height: 6px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
-            overflow: hidden;
         }
 
-        .mockup-bar-fill {
-            height: 100%;
-            border-radius: 3px;
+        .mockup-nav-link {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
-        .mockup-session-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+        .mockup-nav-link.active {
+            background: #ede9fe;
+            color: #4f46e5;
         }
 
-        .mockup-session-row:last-child { border-bottom: none; }
-
-        .mockup-avatar {
-            width: 24px;
-            height: 24px;
+        .mockup-nav-avatar {
+            width: 26px;
+            height: 26px;
+            background: #4f46e5;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -369,27 +310,254 @@
             font-size: 10px;
             font-weight: 800;
             color: #fff;
+        }
+
+        /* Dashboard body */
+        .mockup-content {
+            background: #f8fafc;
+            padding: 20px;
+        }
+
+        /* Page title */
+        .mockup-page-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .mockup-page-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        /* KPI row */
+        .mockup-kpi-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .mockup-kpi {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            text-align: center;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .mockup-kpi-val {
+            font-size: 20px;
+            font-weight: 900;
+            color: #4f46e5;
+            display: block;
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
+        .mockup-kpi-val.warn { color: #f59e0b; }
+        .mockup-kpi-val.danger { color: #ef4444; }
+        .mockup-kpi-val.good { color: #10b981; }
+
+        .mockup-kpi-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* Two-column layout */
+        .mockup-cols {
+            display: grid;
+            grid-template-columns: 1fr 220px;
+            gap: 12px;
+        }
+
+        .mockup-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mockup-card-head {
+            padding: 10px 14px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-card-head-icon {
+            color: #4f46e5;
+            font-size: 11px;
+        }
+
+        .mockup-card-title {
+            font-size: 11px;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: -0.01em;
+        }
+
+        /* Activity table */
+        .mockup-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mockup-table th {
+            padding: 7px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            font-weight: 800;
+            text-align: left;
+            letter-spacing: 0.06em;
+        }
+
+        .mockup-table td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .mockup-table tr:last-child td { border-bottom: none; }
+
+        .mockup-pos-name {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .mockup-pos-sub {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .mockup-trainer-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 800;
+            color: #fff;
             flex-shrink: 0;
         }
 
-        .mockup-session-name {
-            font-size: 12px;
-            color: rgba(255,255,255,0.75);
-            font-weight: 600;
-            flex: 1;
+        .mockup-trainer-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
         }
 
-        .mockup-session-pos {
+        .mockup-score {
             font-size: 10px;
-            color: rgba(255,255,255,0.35);
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 5px;
+            color: #fff;
+            display: inline-block;
         }
 
-        .mockup-badge {
+        .mockup-date {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+
+        /* Launchpad sidebar */
+        .mockup-launch-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding: 12px;
+        }
+
+        .mockup-launch-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 6px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .mockup-launch-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .mockup-launch-label {
             font-size: 9px;
             font-weight: 800;
-            padding: 2px 7px;
-            border-radius: 6px;
+            color: #334155;
         }
+
+        /* Overdue section */
+        .mockup-overdue-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .mockup-overdue-row:last-child { border-bottom: none; }
+
+        .mockup-overdue-info { flex: 1; }
+
+        .mockup-overdue-pos {
+            font-size: 11px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .mockup-overdue-who {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .mockup-nudge-btn {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+            white-space: nowrap;
+        }
+
 
         /* ── SOCIAL PROOF ── */
         .social-proof {
@@ -624,32 +792,34 @@
         }
 
         .highlight-visual {
-            background: var(--navy-mid);
+            background: #ffffff;
             border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
         }
 
         .roadmap-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
         }
 
         .roadmap-title {
             font-size: 13px;
             font-weight: 800;
-            color: rgba(255,255,255,0.8);
+            color: #1e293b;
         }
 
         .roadmap-badge {
             font-size: 10px;
             font-weight: 800;
-            background: rgba(16,185,129,0.15);
-            color: #34d399;
-            border: 1px solid rgba(16,185,129,0.2);
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
             padding: 2px 10px;
             border-radius: 20px;
         }
@@ -657,17 +827,19 @@
         .roadmap-steps {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 0;
+            padding: 8px 14px;
         }
 
         .roadmap-step {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
+            padding: 9px 10px;
             border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.03);
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            margin-bottom: 6px;
         }
 
         .roadmap-step-icon {
@@ -684,8 +856,8 @@
         .roadmap-step-name {
             flex: 1;
             font-size: 12px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.75);
+            font-weight: 700;
+            color: #334155;
         }
 
         .roadmap-step-score {
@@ -694,29 +866,29 @@
         }
 
         .roadmap-progress-bar {
-            height: 4px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 2px;
-            margin-top: 16px;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 0;
+            margin-top: 0;
             overflow: hidden;
         }
 
         .roadmap-progress-fill {
             height: 100%;
             background: linear-gradient(90deg, var(--primary), #34d399);
-            border-radius: 2px;
+            border-radius: 0;
             width: 62%;
         }
 
         .roadmap-progress-label {
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
+            padding: 6px 18px 14px;
         }
 
         .roadmap-progress-label span {
             font-size: 10px;
-            color: rgba(255,255,255,0.35);
+            color: #94a3b8;
             font-weight: 600;
         }
 
@@ -1144,8 +1316,10 @@
             .nav-mobile-toggle { display: block; }
             .hero { padding: 110px 20px 72px; }
             .features-grid { grid-template-columns: 1fr; }
-            .mockup-stat-row { grid-template-columns: repeat(2, 1fr); }
-            .mockup-row { grid-template-columns: 1fr; }
+            .mockup-kpi-row { flex-wrap: wrap; }
+            .mockup-kpi { min-width: 60px; }
+            .mockup-cols { grid-template-columns: 1fr; }
+            .mockup-nav-link:nth-child(n+3) { display: none; }
             .footer-top { grid-template-columns: 1fr; gap: 28px; }
             .footer-bottom { flex-direction: column; align-items: flex-start; }
         }
@@ -1191,84 +1365,166 @@
 
     <!-- App Mockup -->
     <div class="hero-mockup">
+        <!-- Browser chrome -->
         <div class="mockup-bar">
             <div class="mockup-dot" style="background:#ff5f57;"></div>
             <div class="mockup-dot" style="background:#ffbd2e;"></div>
             <div class="mockup-dot" style="background:#28c941;"></div>
             <div class="mockup-url">trainingtracker.me/manager/dashboard</div>
         </div>
+        <!-- App nav -->
+        <div class="mockup-nav">
+            <div class="mockup-nav-logo"><i class="fa-solid fa-bolt" style="font-size:10px;"></i> Training Tracker</div>
+            <div class="mockup-nav-links">
+                <div class="mockup-nav-link active">Dashboard</div>
+                <div class="mockup-nav-link">Schedule</div>
+                <div class="mockup-nav-link">Employees</div>
+                <div class="mockup-nav-link">Messages</div>
+            </div>
+            <div class="mockup-nav-avatar">A</div>
+        </div>
+        <!-- Dashboard content -->
         <div class="mockup-content">
-            <div class="mockup-stat-row">
-                <div class="mockup-stat">
-                    <div class="mockup-stat-label">Active Trainees</div>
-                    <div class="mockup-stat-value">12</div>
-                    <div class="mockup-stat-sub">3 on roadmap</div>
+            <!-- Page heading -->
+            <div class="mockup-page-title">Dashboard</div>
+            <div class="mockup-page-sub">Sunday, Feb 15 &mdash; Good morning, Adam</div>
+            <!-- KPI row -->
+            <div class="mockup-kpi-row">
+                <div class="mockup-kpi">
+                    <span class="mockup-kpi-val">12</span>
+                    <div class="mockup-kpi-label">Active Trainees</div>
                 </div>
-                <div class="mockup-stat">
-                    <div class="mockup-stat-label">This Week</div>
-                    <div class="mockup-stat-value" style="color:#34d399;">8</div>
-                    <div class="mockup-stat-sub">sessions logged</div>
+                <div class="mockup-kpi">
+                    <span class="mockup-kpi-val good">8</span>
+                    <div class="mockup-kpi-label">Sessions This Week</div>
                 </div>
-                <div class="mockup-stat">
-                    <div class="mockup-stat-label">Avg. Rating</div>
-                    <div class="mockup-stat-value" style="color:#818cf8;">4.2</div>
-                    <div class="mockup-stat-sub">out of 5</div>
+                <div class="mockup-kpi">
+                    <span class="mockup-kpi-val" style="color:#4f46e5;">4.2</span>
+                    <div class="mockup-kpi-label">Avg. Rating</div>
                 </div>
-                <div class="mockup-stat">
-                    <div class="mockup-stat-label">Overdue</div>
-                    <div class="mockup-stat-value" style="color:#f87171;">2</div>
-                    <div class="mockup-stat-sub">need submission</div>
+                <div class="mockup-kpi">
+                    <span class="mockup-kpi-val danger">2</span>
+                    <div class="mockup-kpi-label">Overdue</div>
+                </div>
+                <div class="mockup-kpi">
+                    <span class="mockup-kpi-val warn">3</span>
+                    <div class="mockup-kpi-label">On Roadmap</div>
                 </div>
             </div>
-            <div class="mockup-row">
+            <!-- Two-column layout -->
+            <div class="mockup-cols">
+                <!-- Recent activity table -->
                 <div class="mockup-card">
-                    <div class="mockup-card-title">Position Progress</div>
-                    <div class="mockup-bar-row">
-                        <span class="mockup-bar-label">Front Counter</span>
-                        <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:85%; background: linear-gradient(90deg, #4f46e5, #818cf8);"></div></div>
-                        <span style="font-size:10px; color:rgba(255,255,255,0.4); width:26px; text-align:right;">85%</span>
+                    <div class="mockup-card-head">
+                        <i class="fa-solid fa-chart-line mockup-card-head-icon"></i>
+                        <span class="mockup-card-title">Recent Activity</span>
                     </div>
-                    <div class="mockup-bar-row">
-                        <span class="mockup-bar-label">Drive Thru</span>
-                        <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:62%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
-                        <span style="font-size:10px; color:rgba(255,255,255,0.4); width:26px; text-align:right;">62%</span>
-                    </div>
-                    <div class="mockup-bar-row">
-                        <span class="mockup-bar-label">Kitchen</span>
-                        <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:40%; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div></div>
-                        <span style="font-size:10px; color:rgba(255,255,255,0.4); width:26px; text-align:right;">40%</span>
-                    </div>
-                    <div class="mockup-bar-row">
-                        <span class="mockup-bar-label">Nuggets</span>
-                        <div class="mockup-bar-track"><div class="mockup-bar-fill" style="width:90%; background: linear-gradient(90deg, #4f46e5, #818cf8);"></div></div>
-                        <span style="font-size:10px; color:rgba(255,255,255,0.4); width:26px; text-align:right;">90%</span>
+                    <table class="mockup-table">
+                        <thead>
+                            <tr>
+                                <th>Position / Trainee</th>
+                                <th>Trainer</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="mockup-pos-name">Front Counter</div>
+                                    <div class="mockup-pos-sub">Jordan R.</div>
+                                </td>
+                                <td>
+                                    <div class="mockup-trainer-cell">
+                                        <div class="mockup-avatar" style="background:#4f46e5;">CM</div>
+                                        <span class="mockup-trainer-name">Chris M.</span>
+                                    </div>
+                                </td>
+                                <td><span class="mockup-score" style="background:#10b981;">4.8</span></td>
+                                <td><span class="mockup-date">Today</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="mockup-pos-name">Drive Thru</div>
+                                    <div class="mockup-pos-sub">Morgan L.</div>
+                                </td>
+                                <td>
+                                    <div class="mockup-trainer-cell">
+                                        <div class="mockup-avatar" style="background:#7c3aed;">SR</div>
+                                        <span class="mockup-trainer-name">Sara R.</span>
+                                    </div>
+                                </td>
+                                <td><span class="mockup-score" style="background:#4f46e5;">3.9</span></td>
+                                <td><span class="mockup-date">Yesterday</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="mockup-pos-name">Kitchen</div>
+                                    <div class="mockup-pos-sub">Alex K.</div>
+                                </td>
+                                <td>
+                                    <div class="mockup-trainer-cell">
+                                        <div class="mockup-avatar" style="background:#059669;">JT</div>
+                                        <span class="mockup-trainer-name">Jamie T.</span>
+                                    </div>
+                                </td>
+                                <td><span class="mockup-score" style="background:#f59e0b;">3.2</span></td>
+                                <td><span class="mockup-date">Mon</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- Overdue section -->
+                    <div style="padding: 8px 14px 6px; background:#fff7ed; border-top: 1px solid #fed7aa;">
+                        <div style="font-size:9px; font-weight:800; color:#c2410c; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;"><i class="fa-solid fa-clock" style="margin-right:4px;"></i>Overdue &mdash; Awaiting Submission</div>
+                        <div class="mockup-overdue-row" style="padding: 5px 0;">
+                            <div class="mockup-overdue-info">
+                                <div class="mockup-overdue-pos">Nuggets Station</div>
+                                <div class="mockup-overdue-who">Sam T. &rarr; Trainer: Chris M.</div>
+                            </div>
+                            <div class="mockup-nudge-btn"><i class="fa-solid fa-bell" style="margin-right:3px;"></i>Nudge</div>
+                        </div>
                     </div>
                 </div>
+                <!-- Launchpad sidebar -->
                 <div class="mockup-card">
-                    <div class="mockup-card-title">Upcoming Sessions</div>
-                    <div class="mockup-session-row">
-                        <div class="mockup-avatar" style="background:#4f46e5;">JR</div>
-                        <span class="mockup-session-name">Jordan R.</span>
-                        <span class="mockup-session-pos">Front Counter</span>
-                        <span class="mockup-badge" style="background:rgba(16,185,129,0.15); color:#34d399;">Today</span>
+                    <div class="mockup-card-head">
+                        <i class="fa-solid fa-rocket mockup-card-head-icon"></i>
+                        <span class="mockup-card-title">Quick Actions</span>
                     </div>
-                    <div class="mockup-session-row">
-                        <div class="mockup-avatar" style="background:#7c3aed;">ML</div>
-                        <span class="mockup-session-name">Morgan L.</span>
-                        <span class="mockup-session-pos">Drive Thru</span>
-                        <span class="mockup-badge" style="background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.4);">Tomorrow</span>
+                    <div class="mockup-launch-grid">
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#4f46e5;"><i class="fa-solid fa-bolt"></i></div>
+                            <span class="mockup-launch-label">Quick Train</span>
+                        </div>
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#0ea5e9;"><i class="fa-solid fa-calendar-plus"></i></div>
+                            <span class="mockup-launch-label">Schedule</span>
+                        </div>
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#10b981;"><i class="fa-solid fa-user-plus"></i></div>
+                            <span class="mockup-launch-label">Add Employee</span>
+                        </div>
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#8b5cf6;"><i class="fa-solid fa-map"></i></div>
+                            <span class="mockup-launch-label">Roadmaps</span>
+                        </div>
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#f59e0b;"><i class="fa-solid fa-qrcode"></i></div>
+                            <span class="mockup-launch-label">Guest Trainer</span>
+                        </div>
+                        <div class="mockup-launch-btn">
+                            <div class="mockup-launch-icon" style="background:#ef4444;"><i class="fa-solid fa-chart-bar"></i></div>
+                            <span class="mockup-launch-label">Reports</span>
+                        </div>
                     </div>
-                    <div class="mockup-session-row">
-                        <div class="mockup-avatar" style="background:#059669;">AK</div>
-                        <span class="mockup-session-name">Alex K.</span>
-                        <span class="mockup-session-pos">Kitchen</span>
-                        <span class="mockup-badge" style="background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.4);">Wed</span>
-                    </div>
-                    <div class="mockup-session-row">
-                        <div class="mockup-avatar" style="background:#b45309;">ST</div>
-                        <span class="mockup-session-name">Sam T.</span>
-                        <span class="mockup-session-pos">Nuggets</span>
-                        <span class="mockup-badge" style="background:rgba(245,158,11,0.15); color:#fbbf24;">Overdue</span>
+                    <div style="padding: 10px 12px; border-top: 1px solid #e2e8f0; background:#f8fafc;">
+                        <div style="font-size:9px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">This Week's Schedule</div>
+                        <div style="font-size:10px; color:#334155; font-weight:700; margin-bottom:3px;">Feb 10 &ndash; Feb 16</div>
+                        <div style="font-size:9px; color:#64748b; font-weight:600; margin-bottom:6px;">8 sessions &bull; 5 trainers assigned</div>
+                        <div style="height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden;">
+                            <div style="width:62%; height:100%; background:linear-gradient(90deg,#4f46e5,#818cf8); border-radius:2px;"></div>
+                        </div>
+                        <div style="font-size:9px; color:#94a3b8; margin-top:3px;">62% of sessions completed</div>
                     </div>
                 </div>
             </div>
@@ -1404,30 +1660,30 @@
                         <div class="roadmap-badge">62% Complete</div>
                     </div>
                     <div class="roadmap-steps">
-                        <div class="roadmap-step">
-                            <div class="roadmap-step-icon" style="background:rgba(16,185,129,0.15); color:#34d399;"><i class="fa-solid fa-check"></i></div>
+                        <div class="roadmap-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                            <div class="roadmap-step-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
                             <span class="roadmap-step-name">Register Basics</span>
-                            <span class="roadmap-step-score" style="color:#34d399;">4.8 / 5</span>
+                            <span class="roadmap-step-score" style="color:#16a34a; font-size:12px; font-weight:800;">4.8 / 5</span>
                         </div>
-                        <div class="roadmap-step">
-                            <div class="roadmap-step-icon" style="background:rgba(16,185,129,0.15); color:#34d399;"><i class="fa-solid fa-check"></i></div>
+                        <div class="roadmap-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                            <div class="roadmap-step-icon" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
                             <span class="roadmap-step-name">Order Taking</span>
-                            <span class="roadmap-step-score" style="color:#34d399;">4.5 / 5</span>
+                            <span class="roadmap-step-score" style="color:#16a34a; font-size:12px; font-weight:800;">4.5 / 5</span>
                         </div>
-                        <div class="roadmap-step" style="border-color: rgba(79,70,229,0.3); background: rgba(79,70,229,0.06);">
-                            <div class="roadmap-step-icon" style="background:rgba(79,70,229,0.15); color:#818cf8;"><i class="fa-solid fa-clock"></i></div>
+                        <div class="roadmap-step" style="border-color:#c7d2fe; background:#eef2ff;">
+                            <div class="roadmap-step-icon" style="background:#e0e7ff; color:#4f46e5;"><i class="fa-solid fa-clock"></i></div>
                             <span class="roadmap-step-name">Speed &amp; Accuracy</span>
-                            <span class="roadmap-step-score" style="color:#818cf8;">In Progress</span>
+                            <span class="roadmap-step-score" style="color:#4f46e5; font-size:11px; font-weight:800;">In Progress</span>
                         </div>
-                        <div class="roadmap-step" style="opacity:0.45;">
-                            <div class="roadmap-step-icon" style="background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.3);"><i class="fa-solid fa-lock"></i></div>
+                        <div class="roadmap-step" style="opacity:0.5;">
+                            <div class="roadmap-step-icon" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
                             <span class="roadmap-step-name">Suggestive Selling</span>
-                            <span class="roadmap-step-score" style="color:rgba(255,255,255,0.25);">Locked</span>
+                            <span class="roadmap-step-score" style="color:#94a3b8;">Locked</span>
                         </div>
-                        <div class="roadmap-step" style="opacity:0.45;">
-                            <div class="roadmap-step-icon" style="background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.3);"><i class="fa-solid fa-lock"></i></div>
+                        <div class="roadmap-step" style="opacity:0.5;">
+                            <div class="roadmap-step-icon" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
                             <span class="roadmap-step-name">Guest Recovery</span>
-                            <span class="roadmap-step-score" style="color:rgba(255,255,255,0.25);">Locked</span>
+                            <span class="roadmap-step-score" style="color:#94a3b8;">Locked</span>
                         </div>
                     </div>
                     <div class="roadmap-progress-bar">
