@@ -316,8 +316,11 @@ def _directory_online_ids(directory):
         if not (getattr(u.settings, 'show_online_status', True) if u.settings else True):
             continue
         ls = getattr(u, 'last_seen', None)
-        if ls and (now - ls).total_seconds() < 120:
-            online.add(emp.id)
+        if ls:
+            if ls.tzinfo is None:
+                ls = ls.replace(tzinfo=timezone.utc)
+            if (now - ls).total_seconds() < 120:
+                online.add(emp.id)
     return online
 
 
