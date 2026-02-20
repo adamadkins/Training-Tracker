@@ -360,6 +360,63 @@
         }
         .form-close:hover { color: #333; }
 
+        /* ══ LOCATION SPACING ══ */
+        .location-group { margin-bottom: 28px; }
+
+        /* ══ ABOUT CLASSIC ══ */
+        .about-classic {
+            margin: 50px 0 20px;
+            border-top: 2px dashed #ddd;
+            padding-top: 32px;
+        }
+        .about-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .about-badge {
+            background: #004f72;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 4px;
+        }
+        .about-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+        .about-body {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px 22px;
+            font-size: 13px;
+            font-weight: normal;
+            color: #444;
+            line-height: 1.85;
+        }
+        .about-body p { margin-bottom: 12px; }
+        .about-body p:last-child { margin-bottom: 0; }
+        .about-body b { color: #004f72; font-weight: bold; }
+        .about-body .strikethrough { text-decoration: line-through; color: #999; }
+        .about-tag {
+            display: inline-block;
+            background: #F1f1f1;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 8px;
+            color: #555;
+            margin: 2px 2px 0;
+        }
+        .about-tag.bad { background: #ffe4e4; border-color: #fbb; color: #c00; }
+
         /* ══ RESPONSIVE ══ */
         @media (max-width: 768px) {
             .body { margin-left: 4%; margin-right: 4%; }
@@ -413,6 +470,7 @@
     {% if groups|length > 1 %}
     {# Multiple locations — show one collapsible per location #}
     {% for location, members in groups.items() %}
+    <div class="location-group">
     <div class="collapsible section-collapsible"
          onclick="toggleCollapse('loc-{{ loop.index }}')">
         {{ location }}
@@ -489,6 +547,7 @@
             {% endfor %}
         </ul>
     </div>
+    </div>{# end location-group #}
     {% endfor %}
 
     {% else %}
@@ -576,6 +635,63 @@
         <p style="font-size:13px; color:#888; margin-top:6px;">Add trainees in the modern interface to see them here.</p>
     </div>
     {% endif %}
+
+    <!-- ══ ABOUT CLASSIC ══ -->
+    <div class="about-classic">
+        <div class="about-header">
+            <span class="about-badge">Origin Story</span>
+            <span class="about-title">About Training Tracker Classic</span>
+        </div>
+        <div class="about-body">
+            <p>
+                Training Tracker Classic — <b>v1.0</b> — was born out of a genuine need and a lot of
+                ambition for someone who barely knew HTML and CSS at the time. It was built to be used at a
+                <b>Chick-fil-A</b> store, designed to help managers track how new hires were progressing
+                through positions like iPads, Register, Drive Through, and more.
+            </p>
+            <p>
+                The honest truth? <b>It was pretty scuffed.</b> Instead of a real database, all the data
+                was stored in a <b>JSON file</b> — because SQL and databases felt way too intimidating back
+                then. That meant every single person on the team was reading from and writing to
+                <em>the same flat file</em> at the same time, with no real concurrency handling. Race conditions
+                were basically built-in.
+            </p>
+            <p>
+                It was hosted on a cheap service called <b>Glitch</b>, which would spin down the server
+                after a few minutes of inactivity. No profiles, no authentication, no mobile layout —
+                just a wall of gray accordions that looked fine on a desktop and like a disaster on a phone.
+                The design was functional at best; there were floats, hardcoded widths, and CSS that was
+                clearly written by someone watching YouTube tutorials at midnight.
+            </p>
+            <p>
+                Known issues at launch:
+                <br>
+                <span class="about-tag bad">No mobile support</span>
+                <span class="about-tag bad">JSON "database"</span>
+                <span class="about-tag bad">No user profiles</span>
+                <span class="about-tag bad">Everyone edits the same file</span>
+                <span class="about-tag bad">Glitch hosting (goes to sleep)</span>
+                <span class="about-tag bad">No authentication</span>
+                <span class="about-tag bad">No real-time updates</span>
+                <span class="about-tag bad">Slow on any network</span>
+            </p>
+            <p>
+                It took <b>months</b> to piece together — pre-AI, pre-GitHub Copilot, pre-anything helpful.
+                Stack Overflow threads and YouTube tutorials were the only tools available. Every bug was
+                a deep dive. Every feature felt like climbing a mountain.
+            </p>
+            <p>
+                The app was <b>abandoned shortly after</b> it was tried in the store. It just couldn't hold up
+                under real-world use. But that failure wasn't wasted — it was the spark that eventually led
+                to the Training Tracker you're using today: a proper database, real authentication,
+                mobile-first design, roadmaps, smart scheduling, and everything else that the original
+                never had.
+            </p>
+            <p style="color:#004f72; font-weight:bold; margin-top:4px;">
+                Sometimes the best thing a project can do is fail in exactly the right way. 🐔
+            </p>
+        </div>
+    </div>
 
 </div>
 
