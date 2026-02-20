@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User
 from app import db
@@ -16,7 +16,7 @@ def home():
         if current_user.role == "manager":
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
-    return redirect(url_for("auth.login"))
+    return render_template("landing.html")
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -131,3 +131,32 @@ def change_password():
 
     flash("Your password has been updated successfully!")
     return redirect(url_for('manager.employee_detail', employee_id=current_user.employee_id))
+
+
+@auth_bp.route("/waitlist", methods=["POST"])
+def waitlist():
+    """Capture landing page interest form submissions and email the admin."""
+    data = request.get_json(silent=True) or {}
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    business = data.get("business", "").strip()
+    size = data.get("size", "").strip()
+
+    if email:
+        try:
+            from app.utils.notifications import send_notification_email
+            import os
+            admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
+            subject = f"New Training Tracker Interest: {business or email}"
+            body = (
+                f"<h2>New Waitlist Signup</h2>"
+                f"<p><strong>Name:</strong> {name}</p>"
+                f"<p><strong>Email:</strong> {email}</p>"
+                f"<p><strong>Business:</strong> {business}</p>"
+                f"<p><strong>Team size:</strong> {size}</p>"
+            )
+            send_notification_email(admin_email, subject, body)
+        except Exception:
+            pass
+
+    return jsonify({"ok": True})
