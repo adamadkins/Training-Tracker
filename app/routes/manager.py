@@ -48,12 +48,74 @@ LOGO_DOMAIN_ALIASES = {
     "dunkin donuts": "dunkindonuts.com",
     "chipotle": "chipotle.com",
     "panera": "panera.com",
+    "panera bread": "panera.com",
     "kfc": "kfc.com",
     "popeyes": "popeyes.com",
     "sonic": "sonicdrivein.com",
     "arbys": "arbys.com",
+    "arby": "arbys.com",
     "panda express": "pandaexpress.com",
     "pandaexpress": "pandaexpress.com",
+    # Raising Cane's
+    "raising canes": "raisingcanes.com",
+    "raising cane's": "raisingcanes.com",
+    "raising canes chicken": "raisingcanes.com",
+    "canes": "raisingcanes.com",
+    # More chains
+    "five guys": "fiveguys.com",
+    "fiveguys": "fiveguys.com",
+    "in-n-out": "in-n-out.com",
+    "in n out": "in-n-out.com",
+    "innout": "in-n-out.com",
+    "whataburger": "whataburger.com",
+    "what a burger": "whataburger.com",
+    "culvers": "culvers.com",
+    "culver": "culvers.com",
+    "wingstop": "wingstop.com",
+    "wing stop": "wingstop.com",
+    "buffalo wild wings": "buffalowildwings.com",
+    "buffalo wild wing": "buffalowildwings.com",
+    "bww": "buffalowildwings.com",
+    "zaxbys": "zaxbys.com",
+    "zaxby": "zaxbys.com",
+    "bojangles": "bojangles.com",
+    "bojangle": "bojangles.com",
+    "qdoba": "qdoba.com",
+    "moe's": "moes.com",
+    "moes": "moes.com",
+    "cava": "cava.com",
+    "sweetgreen": "sweetgreen.com",
+    "sweet green": "sweetgreen.com",
+    "shake shack": "shakeshack.com",
+    "shakeshack": "shakeshack.com",
+    "jimmy johns": "jimmyjohns.com",
+    "jimmy john": "jimmyjohns.com",
+    "jimmyjohns": "jimmyjohns.com",
+    "firehouse subs": "firehousesubs.com",
+    "firehouse sub": "firehousesubs.com",
+    "papa johns": "papajohns.com",
+    "papa john": "papajohns.com",
+    "papajohns": "papajohns.com",
+    "little caesars": "littlecaesars.com",
+    "little caesar": "littlecaesars.com",
+    "panda": "pandaexpress.com",
+    "carl's jr": "carlsjr.com",
+    "carls jr": "carlsjr.com",
+    "carlsjr": "carlsjr.com",
+    "hardees": "hardees.com",
+    "hardee": "hardees.com",
+    "jack in the box": "jackinthebox.com",
+    "jack in the box": "jackinthebox.com",
+    "white castle": "whitecastle.com",
+    "whitecastle": "whitecastle.com",
+    "del taco": "deltaco.com",
+    "deltaco": "deltaco.com",
+    "el pollo loco": "elpolloloco.com",
+    "elpolloloco": "elpolloloco.com",
+    "blaze pizza": "blazepizza.com",
+    "blazepizza": "blazepizza.com",
+    "mod pizza": "modpizza.com",
+    "modpizza": "modpizza.com",
 }
 
 
@@ -75,6 +137,10 @@ def _logo_search_domains(q):
     slug = re.sub(r"\s+", "-", re.sub(r"[^a-z0-9\s]", "", q)).strip("-")
     if slug and slug + ".com" not in candidates:
         candidates.append(slug + ".com")
+    # Also try no-hyphen variant (raising canes -> raisingcanes.com)
+    slug_no_hyphen = slug.replace("-", "") if slug else ""
+    if slug_no_hyphen and slug_no_hyphen + ".com" not in candidates:
+        candidates.append(slug_no_hyphen + ".com")
     return candidates
 
 
