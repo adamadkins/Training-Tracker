@@ -35,6 +35,12 @@ class SignupRequest(db.Model):
     name = db.Column(db.String(120), nullable=False, default="")
     email = db.Column(db.String(255), nullable=False, index=True)
     business = db.Column(db.String(200), nullable=False, default="")
+    location_identifier = db.Column(db.String(120), nullable=True)  # e.g. Store #4521, Downtown — distinguishes same-brand locations
+    phone = db.Column(db.String(40), nullable=True)
+    address_line1 = db.Column(db.String(255), nullable=True)
+    city = db.Column(db.String(80), nullable=True)
+    state = db.Column(db.String(80), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
     size = db.Column(db.String(40), nullable=True)  # e.g. 11-25
     plan = db.Column(db.String(20), nullable=True)  # standard | pro
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

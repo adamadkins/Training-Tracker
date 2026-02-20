@@ -58,11 +58,18 @@ def _signup_request_email_content(signup_request):
     r = signup_request
     subject = "Your Training Tracker access request"
     name_part = (" " + r.name) if r.name else ""
+    addr_parts = [a for a in [r.address_line1, r.city, r.state, r.postal_code] if a]
+    location_line = ""
+    if r.location_identifier or addr_parts:
+        loc = r.location_identifier or ""
+        addr = ", ".join(addr_parts) if addr_parts else ""
+        location_line = f"Location: {loc}" + (f" — {addr}" if addr else "") + "\n\n"
     trial_line = "I'm going to set you up with a 14-day free trial, then you'll be on the plan you chose.\n\n"
     if r.plan == "standard":
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for your interest in Training Tracker Standard. I'd love to get you set up.\n\n"
+            + location_line
             + trial_line
             + "Standard includes everything you need to manage training and schedules for your team. "
             "I'll send you an invite to create your organization shortly.\n\n"
@@ -72,6 +79,7 @@ def _signup_request_email_content(signup_request):
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for your interest in Training Tracker Pro. I'd love to get you set up.\n\n"
+            + location_line
             + trial_line
             + "Pro includes PDF schedule upload and advanced features on top of everything in Standard. "
             "I'll send you an invite to create your organization shortly.\n\n"
@@ -81,6 +89,7 @@ def _signup_request_email_content(signup_request):
         body = (
             f"Hi{name_part},\n\n"
             "Thanks for reaching out about Training Tracker. I'd be happy to help you get started.\n\n"
+            + location_line
             + trial_line
             + "I'll follow up with next steps shortly.\n\n"
             "Best,"
@@ -136,6 +145,25 @@ def index():
         total_employees=total_employees,
         signup_requests_with_mailto=signup_requests_with_mailto,
     )
+
+
+@admin_bp.route("/signup-requests/clear", methods=["POST"])
+def signup_requests_clear():
+    """Delete all signup requests."""
+    count = SignupRequest.query.delete()
+    db.session.commit()
+    flash(f"Cleared {count} signup request(s).", "success")
+    return redirect(url_for("admin.index"))
+
+
+@admin_bp.route("/signup-requests/<int:req_id>/delete", methods=["POST"])
+def signup_request_delete(req_id):
+    """Delete one signup request."""
+    req = SignupRequest.query.get_or_404(req_id)
+    db.session.delete(req)
+    db.session.commit()
+    flash("Signup request removed.", "success")
+    return redirect(url_for("admin.index"))
 
 
 @admin_bp.route("/organizations")

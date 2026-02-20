@@ -310,6 +310,12 @@ def waitlist():
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     business = data.get("business", "").strip()
+    location_identifier = data.get("location_identifier", "").strip() or None
+    phone = data.get("phone", "").strip() or None
+    address_line1 = data.get("address_line1", "").strip() or None
+    city = data.get("city", "").strip() or None
+    state = data.get("state", "").strip() or None
+    postal_code = data.get("postal_code", "").strip() or None
     size = data.get("size", "").strip()
     plan = (data.get("plan") or "").strip().lower() or None  # 'standard' | 'pro'
 
@@ -319,6 +325,12 @@ def waitlist():
                 name=name or "",
                 email=email,
                 business=business or "",
+                location_identifier=location_identifier,
+                phone=phone,
+                address_line1=address_line1,
+                city=city,
+                state=state,
+                postal_code=postal_code,
                 size=size or None,
                 plan=plan if plan in ("standard", "pro") else None,
             )
@@ -330,14 +342,22 @@ def waitlist():
             from app.utils.notifications import send_notification_email
             import os
             admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
-            subject = f"Training Tracker signup: {business or email}" + (f" ({plan})" if plan else "")
+            loc_part = f" — {location_identifier}" if location_identifier else ""
+            subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
             body = (
                 f"<h2>New signup request</h2>"
                 f"<p><strong>Name:</strong> {name}</p>"
                 f"<p><strong>Email:</strong> {email}</p>"
                 f"<p><strong>Business:</strong> {business}</p>"
-                f"<p><strong>Team size:</strong> {size}</p>"
             )
+            if location_identifier:
+                body += f"<p><strong>Location / store:</strong> {location_identifier}</p>"
+            if phone:
+                body += f"<p><strong>Phone:</strong> {phone}</p>"
+            addr_parts = [a for a in [address_line1, city, state, postal_code] if a]
+            if addr_parts:
+                body += f"<p><strong>Address:</strong> {', '.join(addr_parts)}</p>"
+            body += f"<p><strong>Team size:</strong> {size or '—'}</p>"
             if plan:
                 body += f"<p><strong>Plan interested in:</strong> {plan.capitalize()}</p>"
             send_notification_email(admin_email, subject, body)

@@ -30,17 +30,26 @@
 
     <div class="table-card">
         <h2 class="section-title">Signup requests</h2>
-        <p class="section-desc">People who submitted the landing-page form. <strong>Email</strong> opens Gmail with their address and a plan-specific message; <strong>Copy</strong> copies their address.</p>
+        <p class="section-desc">Landing-page submissions. For multiple locations with the same business name (e.g. Chick-fil-A), use a unique subdomain when creating the org (e.g. <code>chickfila-store4521</code>, <code>chickfila-downtown</code>). <strong>Email</strong> opens Gmail; <strong>Copy</strong> copies their email.</p>
+        <div class="signup-requests-actions">
+            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i> Clear all</button>
+            </form>
+        </div>
         <table class="admin-table">
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Business</th>
+                    <th>Location</th>
+                    <th>Address</th>
+                    <th>Phone</th>
                     <th>Plan</th>
                     <th>Size</th>
                     <th>Date</th>
                     <th>Reach out</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -49,16 +58,24 @@
                     <td>{{ r.name or '—' }}</td>
                     <td><a href="{{ gmail_url }}" target="_blank" rel="noopener">{{ r.email }}</a></td>
                     <td>{{ r.business or '—' }}</td>
+                    <td>{{ r.location_identifier or '—' }}</td>
+                    <td>{% if r.address_line1 or r.city or r.state or r.postal_code %}{{ r.address_line1 or '' }}{% if r.city %}{% if r.address_line1 %}, {% endif %}{{ r.city }}{% endif %}{% if r.state %} {{ r.state }}{% endif %}{% if r.postal_code %} {{ r.postal_code }}{% endif %}{% else %}—{% endif %}</td>
+                    <td>{{ r.phone or '—' }}</td>
                     <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
                     <td>{{ r.size or '—' }}</td>
                     <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '—' }}</td>
                     <td class="actions-cell">
-                        <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Gmail with pre-filled message"><i class="fa-solid fa-envelope"></i> Email</a>
+                        <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Gmail"><i class="fa-solid fa-envelope"></i> Email</a>
                         <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
+                    </td>
+                    <td>
+                        <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                            <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+                        </form>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7">No signup requests yet.</td></tr>
+                <tr><td colspan="11">No signup requests yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -136,6 +153,12 @@
 .btn-email { background: var(--primary); color: white; }
 .btn-copy { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
 .btn-copy.copied { background: #dcfce7; color: #166534; border-color: #166534; }
+.signup-requests-actions { margin-bottom: 12px; }
+.signup-requests-actions .clear-form { display: inline-block; }
+.btn-outline-danger { background: transparent; border: 1px solid #dc2626; color: #dc2626; }
+.btn-outline-danger:hover { background: #fef2f2; }
+.btn-remove { background: transparent; border: none; color: var(--text-muted); padding: 4px 8px; }
+.btn-remove:hover { color: #dc2626; }
 </style>
 <script>
 document.querySelectorAll('.btn-copy').forEach(function(btn) {

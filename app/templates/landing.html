@@ -3115,7 +3115,33 @@
                 </div>
                 <div>
                     <label>Restaurant / Business name</label>
-                    <input type="text" name="business" placeholder="e.g. Chick-fil-A Midtown" required>
+                    <input type="text" name="business" placeholder="e.g. Chick-fil-A" required>
+                </div>
+                <div>
+                    <label>Location or store identifier <span style="font-weight:400; color:var(--muted);">(if you have multiple locations)</span></label>
+                    <input type="text" name="location_identifier" placeholder="e.g. Store #4521 or Downtown Austin">
+                </div>
+                <div>
+                    <label>Phone</label>
+                    <input type="tel" name="phone" placeholder="e.g. (555) 123-4567">
+                </div>
+                <div>
+                    <label>Street address</label>
+                    <input type="text" name="address_line1" placeholder="123 Main St">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label>City</label>
+                        <input type="text" name="city" placeholder="City">
+                    </div>
+                    <div>
+                        <label>State</label>
+                        <input type="text" name="state" placeholder="State">
+                    </div>
+                </div>
+                <div>
+                    <label>ZIP / Postal code</label>
+                    <input type="text" name="postal_code" placeholder="ZIP">
                 </div>
                 <div>
                     <label>Number of employees</label>
@@ -3184,6 +3210,12 @@
             name: form.name.value,
             email: form.email.value,
             business: form.business.value,
+            location_identifier: (form.location_identifier && form.location_identifier.value) || '',
+            phone: (form.phone && form.phone.value) || '',
+            address_line1: (form.address_line1 && form.address_line1.value) || '',
+            city: (form.city && form.city.value) || '',
+            state: (form.state && form.state.value) || '',
+            postal_code: (form.postal_code && form.postal_code.value) || '',
             size: form.size.value,
             plan: (form.plan && form.plan.value) || '',
         };
