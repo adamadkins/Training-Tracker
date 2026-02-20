@@ -634,11 +634,17 @@
                                 </td>
                                 <td style="text-align:right;">
                                     {% if not s.guest_trainer_name %}
-                                    <form method="POST" action="{{ url_for('manager.nudge_trainer', session_id=s.id) }}" style="display:inline;">
-                                        <button type="submit" style="padding:5px 12px; border-radius:8px; border:1px solid #f59e0b; background:#fef3c7; color:#92400e; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="Send a reminder to {{ s.trainer.first_name }}">
-                                            <i class="fa-solid fa-bell" style="margin-right:4px;"></i>Nudge
-                                        </button>
-                                    </form>
+                                        {% if s.last_nudged_at and s.last_nudged_at > nudge_cutoff %}
+                                        <span style="padding:5px 12px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; color:#9ca3af; font-size:11px; font-weight:800; white-space:nowrap; display:inline-block;" title="Nudge sent. Can resend after 24 hours.">
+                                            <i class="fa-solid fa-bell-slash" style="margin-right:4px;"></i>Nudged
+                                        </span>
+                                        {% else %}
+                                        <form method="POST" action="{{ url_for('manager.nudge_trainer', session_id=s.id) }}" style="display:inline;">
+                                            <button type="submit" style="padding:5px 12px; border-radius:8px; border:1px solid #f59e0b; background:#fef3c7; color:#92400e; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="Send a reminder to {{ s.trainer.first_name }}">
+                                                <i class="fa-solid fa-bell" style="margin-right:4px;"></i>Nudge
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                     {% endif %}
                                 </td>
                             </tr>

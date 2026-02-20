@@ -255,6 +255,8 @@ def dashboard():
     except (TypeError, ValueError):
         current_location_filter = None
 
+    nudge_cutoff = datetime.utcnow() - timedelta(hours=24)
+
     return render_template(
         "manager_dashboard.html",
         user=current_user,
@@ -263,6 +265,7 @@ def dashboard():
         overdue_sessions=overdue_sessions,
         overdue_sessions_count=overdue_sessions_count,
         today=date.today(),
+        nudge_cutoff=nudge_cutoff,
         unlinked_count=unlinked_count,
         require_signoff=require_signoff,
         flagged_sessions=flagged_sessions,
@@ -276,6 +279,18 @@ def dashboard():
 @manager_required
 def nudge_trainer(session_id):
     sess = TrainingSession.query.get_or_404(session_id)
+
+    # Block nudges for already-completed sessions
+    if sess.completed_at:
+        flash("That session has already been submitted.", "info")
+        return redirect(url_for('manager.dashboard'))
+
+    # Enforce 24-hour cooldown between nudges
+    now = datetime.utcnow()
+    if sess.last_nudged_at and (now - sess.last_nudged_at) < timedelta(hours=24):
+        flash("A nudge was already sent recently. Wait 24 hours before nudging again.", "warning")
+        return redirect(url_for('manager.dashboard'))
+
     trainer_user = User.query.filter_by(employee_id=sess.trainer_employee_id).first()
     pos_name = sess.position.name if sess.position else 'a session'
     date_str = sess.session_date.strftime('%b %d')
@@ -289,6 +304,8 @@ def nudge_trainer(session_id):
             category='session',
             link_url=link,
         )
+        sess.last_nudged_at = datetime.utcnow()
+        db.session.commit()
         flash(f"Nudge sent to {sess.trainer.first_name}.", "success")
     else:
         flash("Trainer has no account to notify.", "warning")

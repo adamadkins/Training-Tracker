@@ -219,6 +219,7 @@ class TrainingSession(db.Model):
     flag_notes = db.Column(db.Text, nullable=True)
     flag_cleared_at = db.Column(db.DateTime, nullable=True)
     flag_cleared_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    last_nudged_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     daypart = db.relationship("Daypart", foreign_keys=[daypart_id])
