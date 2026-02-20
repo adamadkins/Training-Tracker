@@ -42,8 +42,8 @@ def _org_stats(org_id):
     }
 
 
-def _signup_request_mailto(signup_request):
-    """Build a mailto URL with pre-filled subject and body based on the plan they chose."""
+def _signup_request_email_content(signup_request):
+    """Return (subject, body) for the signup request based on plan."""
     r = signup_request
     subject = "Your Training Tracker access request"
     name_part = (" " + r.name) if r.name else ""
@@ -70,10 +70,31 @@ def _signup_request_mailto(signup_request):
             "I'll follow up with next steps shortly.\n\n"
             "Best,"
         )
-    body = body.replace("\r\n", "\n").replace("\n", "\r\n")  # mailto-friendly line breaks
+    return subject, body
+
+
+def _signup_request_mailto(signup_request):
+    """Build a mailto URL (opens default desktop mail client)."""
+    r = signup_request
+    subject, body = _signup_request_email_content(r)
+    body = body.replace("\r\n", "\n").replace("\n", "\r\n")
     return (
         "mailto:" + quote(r.email, safe="")
         + "?subject=" + quote(subject, safe="")
+        + "&body=" + quote(body, safe="")
+    )
+
+
+def _signup_request_gmail_url(signup_request):
+    """Build Gmail compose URL so the Email button opens Gmail in the browser."""
+    r = signup_request
+    subject, body = _signup_request_email_content(r)
+    body = body.replace("\r\n", "\n")  # Gmail uses \n in body
+    base = "https://mail.google.com/mail/?view=cm&fs=1"
+    return (
+        base
+        + "&to=" + quote(r.email, safe="")
+        + "&su=" + quote(subject, safe="")
         + "&body=" + quote(body, safe="")
     )
 
@@ -88,7 +109,9 @@ def index():
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
     orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs[:20]]
     signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(50).all()
-    signup_requests_with_mailto = [(r, _signup_request_mailto(r)) for r in signup_requests]
+    signup_requests_with_mailto = [
+        (r, _signup_request_mailto(r), _signup_request_gmail_url(r)) for r in signup_requests
+    ]
     return render_template(
         "admin/index.html",
         organizations=orgs_with_stats,
