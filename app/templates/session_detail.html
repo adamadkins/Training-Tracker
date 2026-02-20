@@ -131,9 +131,9 @@
                 <div style="position: relative; z-index: 2;">
                     <div style="display: flex; gap: 12px; margin-bottom: 12px;">
                         {% if session.completed_at %}
-                            <div class="status-badge final"><i class="fa-solid fa-check"></i> Finalized</div>
+                            <div class="status-badge final"><i class="fa-solid fa-check"></i> Completed</div>
                         {% else %}
-                            <div class="status-badge pending"><i class="fa-regular fa-clock"></i> Pending</div>
+                            <div class="status-badge pending"><i class="fa-regular fa-clock"></i> Scheduled</div>
                         {% endif %}
                         <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); align-self: center;">
                             {{ session.session_date.strftime('%B %d, %Y') }}
