@@ -1725,7 +1725,6 @@
 <nav>
     <div class="nav-inner">
         <a href="/" class="nav-logo">
-            <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="Training Tracker">
             <span class="nav-logo-text">Training Tracker</span>
         </a>
         <div class="nav-links" id="navLinks">
@@ -1749,7 +1748,6 @@
     </div>
     <h1>Training that actually <span>sticks.</span></h1>
     <p class="hero-sub">Stop using spreadsheets and group chats to manage training. Training Tracker gives your team a real system for scheduling, tracking progress, and holding trainers accountable.</p>
-    <p style="font-size:14px; font-style:italic; color:rgba(255,255,255,0.5); margin-top:14px; letter-spacing:0.02em;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
     <div class="hero-actions">
         <a href="#" class="btn-primary" onclick="openModal(); return false;">
             <i class="fa-solid fa-rocket"></i> Get Started Free
@@ -1784,7 +1782,6 @@
         <!-- App header (real nav) -->
         <div class="m-header">
             <div class="m-brand">
-                <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="" class="m-brand-img">
                 <span class="m-brand-text">Training Tracker</span>
             </div>
             <nav class="m-nav role-nav active" data-role="manager">
@@ -2859,14 +2856,14 @@
                 <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:4px;">Guest Trainer Link</div>
                 <div style="font-size:11px; color:#64748b; margin-bottom:16px;">For Jordan R. &mdash; Front Counter</div>
                 <div style="width:140px; height:140px; margin:0 auto 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center;">
-                    <div style="width:100px; height:100px; background:repeating-conic-gradient(#1e293b 0% 25%, #fff 0% 50%) 50% / 10px 10px; border-radius:4px;"></div>
+                    <a href="{{ url_for('legacy.index') }}"><img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://trainingtracker.me/legacy/" alt="Scan to try Training Tracker Classic" style="width:100px; height:100px; border-radius:4px;"></a>
                 </div>
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:10px; color:#64748b; font-family:monospace; margin-bottom:12px; word-break:break-all;">trainingtracker.me/guest/train/a8f2c...</div>
                 <div style="display:flex; gap:8px; justify-content:center;">
                     <div style="padding:8px 16px; background:#7c3aed; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-copy"></i> Copy Link</div>
                     <div style="padding:8px 16px; background:#16a34a; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-message"></i> Send via Text</div>
                 </div>
-                <div style="margin-top:12px; font-size:9px; color:#94a3b8;">Expires in 24 hours or after first use</div>
+                <div style="margin-top:12px; font-size:9px; color:#94a3b8;">Scan the QR code to try Training Tracker Classic</div>
             </div>
         </div>
     </div>
@@ -3003,25 +3000,26 @@
     <div class="section-inner">
         <div class="pricing-header">
             <div class="section-label">Simple pricing</div>
-            <h2 class="section-title">One flat price, no surprises</h2>
-            <p class="section-sub">No per-seat fees. No hidden costs. Pay by location and get everything.</p>
+            <h2 class="section-title">Two plans, no surprises</h2>
+            <p class="section-sub">No per-seat fees. No hidden costs. Unlimited locations on both plans.</p>
         </div>
-        <div class="pricing-grid">
+        <div class="pricing-grid" style="max-width:720px; margin:0 auto; grid-template-columns: 1fr 1fr;">
             <div class="pricing-card">
-                <div class="pricing-plan-name">Starter</div>
+                <div class="pricing-plan-name">Standard</div>
                 <div class="pricing-price">
                     <span class="dollar">$</span>
-                    <span class="amount">29</span>
+                    <span class="amount">40</span>
                     <span class="period">/mo</span>
                 </div>
-                <p class="pricing-desc">Perfect for a single-location team just getting started with structured training.</p>
+                <p class="pricing-desc">Everything you need to run structured training across your locations.</p>
                 <hr class="pricing-divider">
                 <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> 1 location</li>
-                    <li><i class="fa-solid fa-check"></i> Up to 25 employees</li>
+                    <li><i class="fa-solid fa-check"></i> Unlimited locations</li>
+                    <li><i class="fa-solid fa-check"></i> Unlimited employees</li>
                     <li><i class="fa-solid fa-check"></i> Unlimited positions &amp; roadmaps</li>
-                    <li><i class="fa-solid fa-check"></i> Smart scheduling</li>
                     <li><i class="fa-solid fa-check"></i> Session ratings &amp; progress tracking</li>
+                    <li><i class="fa-solid fa-check"></i> Training roadmaps</li>
+                    <li class="disabled"><i class="fa-solid fa-xmark"></i> Smart scheduling</li>
                     <li class="disabled"><i class="fa-solid fa-xmark"></i> Guest trainer mode</li>
                     <li class="disabled"><i class="fa-solid fa-xmark"></i> Team messaging</li>
                 </ul>
@@ -3029,48 +3027,27 @@
             </div>
 
             <div class="pricing-card featured">
-                <div class="pricing-popular">Most Popular</div>
+                <div class="pricing-popular">Best Value</div>
                 <div class="pricing-plan-name">Pro</div>
                 <div class="pricing-price">
                     <span class="dollar">$</span>
-                    <span class="amount">59</span>
+                    <span class="amount">50</span>
                     <span class="period">/mo</span>
                 </div>
-                <p class="pricing-desc">The full Training Tracker experience for growing teams that take training seriously.</p>
+                <p class="pricing-desc">The full Training Tracker experience with every feature unlocked.</p>
                 <hr class="pricing-divider">
                 <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> Up to 3 locations</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited employees</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited positions &amp; roadmaps</li>
+                    <li><i class="fa-solid fa-check"></i> Everything in Standard</li>
                     <li><i class="fa-solid fa-check"></i> Smart scheduling</li>
-                    <li><i class="fa-solid fa-check"></i> Session ratings &amp; progress tracking</li>
                     <li><i class="fa-solid fa-check"></i> Guest trainer mode</li>
                     <li><i class="fa-solid fa-check"></i> Team messaging</li>
+                    <li><i class="fa-solid fa-check"></i> PDF schedule upload</li>
+                    <li><i class="fa-solid fa-check"></i> Priority support</li>
                 </ul>
                 <a href="#" class="pricing-btn pricing-btn-primary" onclick="openModal(); return false;">Get Started</a>
             </div>
-
-            <div class="pricing-card">
-                <div class="pricing-plan-name">Enterprise</div>
-                <div class="pricing-price">
-                    <span class="dollar"></span>
-                    <span class="amount" style="font-size:38px; line-height:1.2; padding-top:6px;">Custom</span>
-                </div>
-                <p class="pricing-desc">Multiple locations, custom onboarding, and dedicated support for larger operations.</p>
-                <hr class="pricing-divider">
-                <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> Unlimited locations</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited employees</li>
-                    <li><i class="fa-solid fa-check"></i> Everything in Pro</li>
-                    <li><i class="fa-solid fa-check"></i> Custom onboarding</li>
-                    <li><i class="fa-solid fa-check"></i> Dedicated support</li>
-                    <li><i class="fa-solid fa-check"></i> SLA guarantee</li>
-                    <li><i class="fa-solid fa-check"></i> Data export &amp; API access</li>
-                </ul>
-                <a href="mailto:hello@trainingtracker.me" class="pricing-btn pricing-btn-outline">Contact Us</a>
-            </div>
         </div>
-        <p class="pricing-note">All plans include a <strong>14-day free trial</strong>, no credit card required. &nbsp;<a href="#" onclick="openModal(); return false;">Start your trial today.</a></p>
+        <p class="pricing-note">Both plans include a <strong>14-day free trial</strong>, no credit card required. &nbsp;<a href="#" onclick="openModal(); return false;">Start your trial today.</a></p>
     </div>
 </section>
 
@@ -3078,7 +3055,6 @@
 <div class="cta-banner">
     <h2>Ready to fix your training?</h2>
     <p>Join teams that stopped winging it and started training with a real system.</p>
-    <p style="font-size:14px; font-style:italic; color:rgba(255,255,255,0.55); margin-top:6px;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
     <a href="#" class="btn-white" onclick="openModal(); return false;">
         <i class="fa-solid fa-rocket"></i> Get Started for Free
     </a>
@@ -3089,7 +3065,7 @@
     <div class="footer-inner">
         <div class="footer-top">
             <div class="footer-brand">
-                <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="Training Tracker">
+                <div style="font-size:18px; font-weight:900; color:var(--navy); margin-bottom:8px;">Training Tracker</div>
                 <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful enough to scale.</p>
                 <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
             </div>

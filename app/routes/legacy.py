@@ -1,16 +1,10 @@
 import io
-from flask import Blueprint, render_template, abort, send_file, Response
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, send_file, Response
 from sqlalchemy.orm import joinedload
 
 from app.models import Employee, TrainingSession, Location
 
 legacy_bp = Blueprint('legacy', __name__, url_prefix='/legacy')
-
-
-def _require_manager():
-    if not current_user.is_authenticated or current_user.role != 'manager':
-        abort(403)
 
 
 def _build_trainee_data():
@@ -70,24 +64,18 @@ def _build_trainee_data():
 
 
 @legacy_bp.route('/')
-@login_required
 def index():
-    _require_manager()
     trainees, groups = _build_trainee_data()
     return render_template('legacy.html', trainees=trainees, groups=groups)
 
 
 @legacy_bp.route('/about')
-@login_required
 def about():
-    _require_manager()
     return render_template('legacy_about.html')
 
 
 @legacy_bp.route('/export')
-@login_required
 def export_excel():
-    _require_manager()
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
