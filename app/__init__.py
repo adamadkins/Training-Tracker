@@ -71,11 +71,16 @@ def create_app():
             g.current_organization = None
             return
         org = Organization.query.filter_by(subdomain=subdomain).first()
-        if not org or (getattr(org, "status", "active") != "active"):
+        if not org:
             from flask import render_template
             return render_template("error.html", code=404, icon="\u26a0\ufe0f",
                 title="Organization Not Found",
                 message="This subdomain is not registered. Check the URL or contact your administrator."), 404
+        if getattr(org, "status", "active") != "active":
+            from flask import render_template
+            return render_template("error.html", code=403, icon="\u1f6ab",
+                title="Service Suspended",
+                message="This account has been suspended. Please contact your administrator or billing to restore access."), 403
         g.current_organization_id = org.id
         g.current_organization = org
 
