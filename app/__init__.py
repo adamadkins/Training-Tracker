@@ -45,7 +45,23 @@ def create_app():
     app.register_blueprint(legacy_bp)
     app.register_blueprint(guest_bp)
 
-    # 5. Inject app version into all templates
+    # 5. Inject app version and system_settings into all templates
+    @app.before_request
+    def inject_system_settings():
+        from flask import g
+        from app.models import SystemSettings
+        from app import cache
+        try:
+            g.system_settings = cache.get('system_settings')
+        except Exception:
+            g.system_settings = None
+        if g.system_settings is None:
+            g.system_settings = SystemSettings.query.first()
+            try:
+                cache.set('system_settings', g.system_settings, timeout=60)
+            except Exception:
+                pass
+
     @app.context_processor
     def inject_version():
         return {'app_version': APP_VERSION}

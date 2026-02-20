@@ -19,10 +19,21 @@
             'rose': '#e11d48',
             'sky': '#0284c7'
         } %}
+        {% set primary_hover = {
+            'indigo': '#4338ca',
+            'blue': '#1d4ed8',
+            'violet': '#6d28d9',
+            'green': '#047857',
+            'amber': '#b45309',
+            'rose': '#be123c',
+            'sky': '#0369a1'
+        } %}
         {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
         {% set _hex = primary_hex.get(_primary, primary_hex['indigo']) %}
+        {% set _hover = primary_hover.get(_primary, primary_hover['indigo']) %}
         :root {
             --primary: {{ _hex }};
+            --primary-hover: {{ _hover }};
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
             --text-main: #1e293b;

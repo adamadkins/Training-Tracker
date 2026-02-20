@@ -92,6 +92,7 @@
             <span class="{{ 'done' if step >= 1 else 'current' if step == 0 else '' }}"></span>
             <span class="{{ 'done' if step >= 2 else 'current' if step == 1 else '' }}"></span>
             <span class="{{ 'done' if step >= 3 else 'current' if step == 2 else '' }}"></span>
+            <span class="{{ 'done' if step >= 4 else 'current' if step == 3 else '' }}"></span>
         </div>
 
         {% if step == 0 %}
@@ -127,10 +128,46 @@
         {% endif %}
 
         {% if step == 2 %}
+        <h1 class="setup-title">Branding</h1>
+        <p class="setup-desc">Set your accent color and logo. You can change these later in Settings.</p>
+        <form method="post" action="{{ url_for('manager.setup_wizard') }}" enctype="multipart/form-data" id="setupBrandingForm" class="setup-form">
+            <input type="hidden" name="step" value="2">
+            <input type="hidden" name="custom_logo_url" id="setupCustomLogoUrl" value="{{ settings.custom_logo_url or '' }}">
+            <div class="form-row">
+                <label>Accent color</label>
+                <select name="primary_color">
+                    <option value="indigo" {{ 'selected' if (settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
+                    <option value="blue" {{ 'selected' if settings.primary_color == 'blue' }}>Blue</option>
+                    <option value="violet" {{ 'selected' if settings.primary_color == 'violet' }}>Violet</option>
+                    <option value="green" {{ 'selected' if settings.primary_color == 'green' }}>Green</option>
+                    <option value="amber" {{ 'selected' if settings.primary_color == 'amber' }}>Amber</option>
+                    <option value="rose" {{ 'selected' if settings.primary_color == 'rose' }}>Rose</option>
+                    <option value="sky" {{ 'selected' if settings.primary_color == 'sky' }}>Sky</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Logo (optional)</label>
+                <p class="setup-desc" style="margin-bottom: 8px;">Search by company name (e.g. chickfila, mcdonalds) or upload your own.</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px;">
+                    <input type="text" id="setupLogoSearchInput" placeholder="Company or domain" style="min-width: 160px;">
+                    <button type="button" id="setupLogoSearchBtn" class="btn-wizard" style="padding: 10px 16px;">Try</button>
+                </div>
+                <div id="setupLogoPreview" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <img id="setupLogoImg" src="" alt="" style="height: 32px; max-width: 100px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px;">
+                    <button type="button" id="setupUseLogoBtn" class="btn-wizard btn-wizard-secondary" style="padding: 8px 14px;">Use this logo</button>
+                </div>
+                <p class="setup-desc" style="margin-top: 10px;">Or upload:</p>
+                <input type="file" name="logo_file" accept="image/*" style="font-size: 13px;">
+            </div>
+            <button type="submit" class="btn-wizard">Next</button>
+        </form>
+        {% endif %}
+
+        {% if step == 3 %}
         <h1 class="setup-title">Add locations</h1>
         <p class="setup-desc">Create locations like FOH (front of house) and BOH (back of house). You can assign trainees to locations and restrict managers to only see one location's data.</p>
         <form method="post" action="{{ url_for('manager.setup_wizard') }}">
-            <input type="hidden" name="step" value="2">
+            <input type="hidden" name="step" value="3">
             <div class="form-row">
                 <label>Location names</label>
                 <div class="location-rows">
@@ -151,10 +188,65 @@
             <button type="submit" class="btn-wizard">Add &amp; continue</button>
         </form>
         <form method="post" action="{{ url_for('manager.setup_wizard') }}" style="margin-top: 16px;">
-            <input type="hidden" name="step" value="3">
+            <input type="hidden" name="step" value="4">
             <button type="submit" class="btn-wizard btn-wizard-secondary">Finish setup</button>
         </form>
         {% endif %}
     </div>
 </div>
+{% if step == 2 %}
+<script>
+(function() {
+    var input = document.getElementById('setupLogoSearchInput');
+    var btn = document.getElementById('setupLogoSearchBtn');
+    var preview = document.getElementById('setupLogoPreview');
+    var img = document.getElementById('setupLogoImg');
+    var useBtn = document.getElementById('setupUseLogoBtn');
+    var hidden = document.getElementById('setupCustomLogoUrl');
+    var searchedUrl = null;
+
+    function doSearch() {
+        var q = (input && input.value || '').trim();
+        if (!q) return;
+        if (btn) { btn.disabled = true; btn.textContent = 'Searching...'; }
+        preview.style.display = 'flex';
+        img.style.display = 'none';
+        if (useBtn) useBtn.style.display = 'none';
+        fetch('{{ url_for("manager.api_logo_search") }}?q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (btn) { btn.disabled = false; btn.textContent = 'Try'; }
+                if (data.url) {
+                    searchedUrl = data.url;
+                    img.src = data.url;
+                    img.style.display = 'block';
+                    if (useBtn) useBtn.style.display = '';
+                } else {
+                    searchedUrl = null;
+                    if (preview.querySelector('.logo-msg')) return;
+                    var m = document.createElement('span');
+                    m.className = 'logo-msg setup-desc';
+                    m.style.color = 'var(--text-muted)';
+                    m.textContent = 'No logo found. Try another name or upload.';
+                    preview.appendChild(m);
+                }
+            })
+            .catch(function() {
+                if (btn) { btn.disabled = false; btn.textContent = 'Try'; }
+                if (!preview.querySelector('.logo-msg')) {
+                    var m = document.createElement('span');
+                    m.className = 'logo-msg setup-desc';
+                    m.textContent = 'Search failed. Try again or upload.';
+                    preview.appendChild(m);
+                }
+            });
+    }
+
+    if (btn) btn.addEventListener('click', doSearch);
+    if (useBtn) useBtn.addEventListener('click', function() {
+        if (searchedUrl && hidden) { hidden.value = searchedUrl; useBtn.textContent = 'Selected'; }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

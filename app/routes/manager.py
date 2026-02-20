@@ -1,7 +1,11 @@
 import os
 import json
 import uuid
+import re
 from datetime import datetime, time, timedelta, timezone, date
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
+
 import flask
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app
 from flask_login import current_user, login_required
@@ -21,6 +25,75 @@ from app.utils.schedule_parser import parse_schedule_pdf
 from app.routes.helpers import manager_required, staff_required
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
+
+# Common company name -> domain for logo search (Clearbit)
+LOGO_DOMAIN_ALIASES = {
+    "chickfila": "chick-fil-a.com",
+    "chick-fil-a": "chick-fil-a.com",
+    "chick fil a": "chick-fil-a.com",
+    "mcdonalds": "mcdonalds.com",
+    "mcdonald": "mcdonalds.com",
+    "starbucks": "starbucks.com",
+    "wendys": "wendys.com",
+    "wendy": "wendys.com",
+    "tacobell": "tacobell.com",
+    "taco bell": "tacobell.com",
+    "subway": "subway.com",
+    "dominos": "dominos.com",
+    "dominos pizza": "dominos.com",
+    "pizzahut": "pizzahut.com",
+    "pizza hut": "pizzahut.com",
+    "dunkin": "dunkindonuts.com",
+    "dunkin donuts": "dunkindonuts.com",
+    "chipotle": "chipotle.com",
+    "panera": "panera.com",
+    "kfc": "kfc.com",
+    "popeyes": "popeyes.com",
+    "sonic": "sonicdrivein.com",
+    "arbys": "arbys.com",
+    "panda express": "pandaexpress.com",
+    "pandaexpress": "pandaexpress.com",
+}
+
+
+def _logo_search_domains(q):
+    """Build list of domain candidates for logo search (Clearbit)."""
+    q = (q or "").strip().lower()
+    if not q:
+        return []
+    # If it looks like a domain, use as-is (normalize)
+    if "." in q and " " not in q:
+        domain = q if q.startswith("http") else q.split("//")[-1].split("/")[0]
+        if "." in domain:
+            return [domain]
+    # Alias first
+    aliases = [LOGO_DOMAIN_ALIASES[k] for k in LOGO_DOMAIN_ALIASES if k in q or q in k]
+    # Then: query as subdomain (query.com), and slug from words (chick fil a -> chick-fil-a.com)
+    candidates = list(dict.fromkeys(aliases))
+    candidates.append(re.sub(r"[^a-z0-9.-]", "", q) + ".com" if not q.endswith(".com") else q)
+    slug = re.sub(r"\s+", "-", re.sub(r"[^a-z0-9\s]", "", q)).strip("-")
+    if slug and slug + ".com" not in candidates:
+        candidates.append(slug + ".com")
+    return candidates
+
+
+def _clearbit_logo_exists(domain):
+    """Return True if Clearbit has a logo for this domain (HEAD check)."""
+    url = f"https://logo.clearbit.com/{domain}"
+    try:
+        req = Request(url, method="HEAD", headers={"User-Agent": "TrainingTracker/1.0"})
+        with urlopen(req, timeout=5) as r:
+            return r.status == 200
+    except (HTTPError, URLError, OSError):
+        return False
+
+
+def _logo_search_first_url(q):
+    """Try domain candidates; return first Clearbit logo URL that exists, or None."""
+    for domain in _logo_search_domains(q):
+        if _clearbit_logo_exists(domain):
+            return f"https://logo.clearbit.com/{domain}"
+    return None
 
 
 def _get_manager_location_id():
@@ -125,6 +198,30 @@ def setup_wizard():
         db.session.commit()
         return redirect(url_for("manager.setup_wizard"))
     if step == 2:
+        # Branding: primary color and logo
+        raw = (request.form.get("primary_color") or "indigo").strip().lower()
+        if raw in ("indigo", "blue", "violet", "green", "amber", "rose", "sky"):
+            settings.primary_color = raw
+        logo_url = request.form.get("custom_logo_url", "").strip() or None
+        logo_file = request.files.get("logo_file")
+        if logo_file and logo_file.filename:
+            allowed = ("image/png", "image/jpeg", "image/gif", "image/webp")
+            if logo_file.content_type in allowed:
+                upload_dir = os.path.join(current_app.static_folder, "uploads", "logos")
+                os.makedirs(upload_dir, exist_ok=True)
+                ext = os.path.splitext(secure_filename(logo_file.filename))[1] or ".png"
+                if ext.lower() not in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
+                    ext = ".png"
+                name = str(uuid.uuid4()) + ext
+                path = os.path.join(upload_dir, name)
+                logo_file.save(path)
+                logo_url = "uploads/logos/" + name
+        settings.custom_logo_url = logo_url
+        settings.setup_step = 3
+        db.session.commit()
+        cache.delete("system_settings")
+        return redirect(url_for("manager.setup_wizard"))
+    if step == 3:
         # Add locations from form (names and optional descriptions)
         names = request.form.getlist("location_name")
         for name in names:
@@ -132,15 +229,15 @@ def setup_wizard():
             if name and not Location.query.filter_by(name=name).first():
                 loc = Location(name=name)
                 db.session.add(loc)
-        settings.setup_step = 2
+        settings.setup_step = 3
         db.session.commit()
         return redirect(url_for("manager.setup_wizard"))
-    if step == 3:
+    if step == 4:
         settings.setup_completed = True
         settings.setup_step = 0
         db.session.commit()
-        cache.delete('system_settings')
-        flash("Setup complete! You can change business type and locations later in Settings.", "success")
+        cache.delete("system_settings")
+        flash("Setup complete! You can change business type, branding, and locations later in Settings.", "success")
         return redirect(url_for("manager.dashboard"))
     # step 0: just advance to step 1
     settings.setup_step = 1
@@ -1832,6 +1929,18 @@ def session_delete(session_id):
     db.session.commit()
     flash("Session removed.")
     return redirect(url_for('manager.schedule_detail', schedule_id=sch_id))
+
+
+@manager_bp.route("/api/logo-search", methods=["GET"])
+@login_required
+@manager_required
+def api_logo_search():
+    """Try Clearbit logo for company/domain query; return first working URL or null."""
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"url": None})
+    url = _logo_search_first_url(q)
+    return jsonify({"url": url})
 
 
 @manager_bp.route("/settings", methods=['GET', 'POST'])
