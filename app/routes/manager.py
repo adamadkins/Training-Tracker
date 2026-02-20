@@ -18,6 +18,7 @@ from app.models import (
     User, Employee, Position, PositionDescriptor, Schedule,
     TrainingSession, SessionRating, Notification, Daypart, EmployeeNote,
     UserSettings, SystemSettings, TrainingRoadmap, RoadmapStep, Location,
+    Channel, ChannelParticipant, Message, MessageReaction, GuestTrainerToken,
     employee_locations,
 )
 from app import db, cache
@@ -1223,11 +1224,50 @@ def employee_delete(employee_id):
         flash("You cannot delete your own account.")
         return redirect(url_for('manager.employees_list'))
     emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
-    user_account = User.query.filter_by(employee_id=emp.id).first()
-    if user_account: db.session.delete(user_account)
-    db.session.delete(emp)
-    db.session.commit()
-    flash("Employee and associated login deleted.")
+    user_account = User.query.filter_by(organization_id=g._manager_org_id, employee_id=emp.id).first()
+
+    # Block if employee is trainee on any session (trainee_employee_id is NOT NULL)
+    if TrainingSession.query.filter_by(trainee_employee_id=emp.id).first():
+        flash("Cannot delete: this employee has training sessions as trainee. Remove or reassign those sessions first.")
+        return redirect(url_for('manager.employees_list'))
+
+    try:
+        if user_account:
+            Notification.query.filter_by(user_id=user_account.id).delete(synchronize_session=False)
+            UserSettings.query.filter_by(user_id=user_account.id).delete(synchronize_session=False)
+            Schedule.query.filter_by(created_by_user_id=user_account.id).update(
+                {Schedule.created_by_user_id: None}, synchronize_session=False
+            )
+            TrainingSession.query.filter(
+                (TrainingSession.completed_by_user_id == user_account.id) |
+                (TrainingSession.flag_cleared_by_user_id == user_account.id)
+            ).update({
+                TrainingSession.completed_by_user_id: None,
+                TrainingSession.flag_cleared_by_user_id: None,
+            }, synchronize_session=False)
+            EmployeeNote.query.filter_by(author_user_id=user_account.id).delete(synchronize_session=False)
+            db.session.delete(user_account)
+
+        EmployeeNote.query.filter_by(trainee_employee_id=emp.id).delete(synchronize_session=False)
+        MessageReaction.query.filter_by(employee_id=emp.id).delete(synchronize_session=False)
+        Message.query.filter(
+            (Message.sender_id == emp.id) | (Message.recipient_id == emp.id)
+        ).delete(synchronize_session=False)
+        ChannelParticipant.query.filter_by(employee_id=emp.id).delete(synchronize_session=False)
+        GuestTrainerToken.query.filter_by(trainee_id=emp.id).delete(synchronize_session=False)
+        TrainingSession.query.filter_by(trainer_employee_id=emp.id).update(
+            {TrainingSession.trainer_employee_id: None}, synchronize_session=False
+        )
+        Channel.query.filter_by(created_by_id=emp.id).update(
+            {Channel.created_by_id: None}, synchronize_session=False
+        )
+        db.session.execute(employee_locations.delete().where(employee_locations.c.employee_id == emp.id))
+        db.session.delete(emp)
+        db.session.commit()
+        flash("Employee and associated login deleted.")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Delete failed: {str(e)}", "error")
     return redirect(url_for('manager.employees_list'))
 
 
