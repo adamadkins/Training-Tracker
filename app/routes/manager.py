@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
 import flask
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app, Response
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
@@ -2057,6 +2057,35 @@ def api_logo_search():
         if domain and "." in domain:
             fallback_url = f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
     return jsonify({"url": url, "fallback_url": fallback_url})
+
+
+@manager_bp.route("/api/logo-proxy", methods=["GET"])
+@login_required
+@manager_required
+def api_logo_proxy():
+    """Proxy logo image so the browser loads from our domain (avoids ad-blocker blocking Clearbit/favicon)."""
+    raw = request.args.get("url", "").strip()
+    if not raw:
+        abort(404)
+    allowed_hosts = ("logo.clearbit.com", "www.google.com")
+    try:
+        parsed = urlparse(raw)
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            abort(404)
+        if not any(parsed.netloc == h or parsed.netloc.endswith("." + h) for h in allowed_hosts):
+            abort(404)
+    except Exception:
+        abort(404)
+    try:
+        req = Request(raw, headers={"User-Agent": "TrainingTracker/1.0"})
+        with urlopen(req, timeout=8) as r:
+            data = r.read()
+            ctype = r.headers.get("Content-Type") or "image/png"
+    except (HTTPError, URLError, OSError):
+        abort(404)
+    if not data or len(data) > 2 * 1024 * 1024:
+        abort(404)
+    return Response(data, mimetype=ctype.split(";")[0].strip(), direct_passthrough=True)
 
 
 @manager_bp.route("/settings", methods=['GET', 'POST'])

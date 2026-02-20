@@ -368,7 +368,7 @@
                             <span class="s-desc">e.g. chickfila, chick-fil-a.com, mcdonalds</span>
                         </div>
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
-                            <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="" data-logo-search-url="{{ url_for('manager.api_logo_search') }}">
+                            <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="" data-logo-search-url="{{ url_for('manager.api_logo_search') }}" data-logo-proxy-url="{{ url_for('manager.api_logo_proxy') }}">
                             <button type="button" id="logoSearchTryBtn" onclick="tryLogoSearch()" class="btn-save" style="padding: 8px 16px; font-size: 13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Try</button>
                             <span id="logoSearchStatus" class="s-desc" style="display: none; margin-left: 4px;"></span>
                             <div id="logoSearchPreview" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -676,7 +676,7 @@
                             if (fallbackUrl && !img.dataset.triedFallback) {
                                 img.dataset.triedFallback = '1';
                                 img.onerror = showLogoError;
-                                img.src = fallbackUrl;
+                                img.src = proxyUrl ? (proxyUrl + '?url=' + encodeURIComponent(fallbackUrl)) : fallbackUrl;
                                 return;
                             }
                             showLogoError();
@@ -686,7 +686,8 @@
                             var errMsg = document.getElementById('logoSearchMsg');
                             if (errMsg && errMsg.textContent === 'Logo could not be loaded.') errMsg.remove();
                         };
-                        img.src = data.url;
+                        var proxyUrl = input.getAttribute('data-logo-proxy-url') || '';
+                        img.src = proxyUrl ? (proxyUrl + '?url=' + encodeURIComponent(data.url)) : data.url;
                         img.style.display = 'block';
                     }
                     var useBtn = document.getElementById('useSearchedLogoBtn');
