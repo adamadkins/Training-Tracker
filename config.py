@@ -49,6 +49,13 @@ class Config:
     # SendGrid (email via HTTPS — no SMTP port needed). Set in .env on the server.
     SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
 
+    # --- Stripe (billing) ---
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+    STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    # Price ID for subscription (e.g. price_xxx from Stripe Dashboard)
+    STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
+
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.
     REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'

@@ -18,6 +18,8 @@ class Organization(db.Model):
     name = db.Column(db.String(120), nullable=False)
     subdomain = db.Column(db.String(80), unique=True, nullable=False, index=True)  # e.g. "acme" for acme.trainingtracker.me
     status = db.Column(db.String(20), default="active", nullable=False)  # active | suspended
+    stripe_customer_id = db.Column(db.String(255), nullable=True, index=True)
+    stripe_subscription_id = db.Column(db.String(255), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 

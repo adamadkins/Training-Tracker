@@ -38,8 +38,10 @@ def create_app():
     from app.routes.legacy import legacy_bp
     from app.routes.guest import guest_bp
     from app.routes.admin import admin_bp
+    from app.routes.billing import billing_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(billing_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(manager_bp, url_prefix='/manager')
     app.register_blueprint(employee_bp, url_prefix='/employee')

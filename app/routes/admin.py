@@ -1,5 +1,6 @@
 """Platform admin: manage organizations. Only on main domain, superuser only."""
-from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort
+import stripe
+from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models import (
@@ -73,6 +74,10 @@ def organization_detail(org_id):
     org = Organization.query.get_or_404(org_id)
     stats = _org_stats(org_id)
     has_users = stats["user_count"] > 0
+    if request.args.get("billing") == "success":
+        flash("Billing set up successfully.", "success")
+    elif request.args.get("billing") == "canceled":
+        flash("Checkout was canceled.", "info")
     return render_template(
         "admin/organization_detail.html",
         org=org,
@@ -131,6 +136,69 @@ def organization_activate(org_id):
     db.session.commit()
     flash(f"Organization '{org.name}' is active again.", "success")
     return redirect(url_for("admin.organization_detail", org_id=org.id))
+
+
+@admin_bp.route("/organizations/<int:org_id>/create-checkout", methods=["POST"])
+def organization_create_checkout(org_id):
+    """Redirect to Stripe Checkout to start a subscription for this org."""
+    org = Organization.query.get_or_404(org_id)
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    price_id = current_app.config.get("STRIPE_PRICE_ID")
+    if not secret or not price_id:
+        flash("Stripe is not configured (STRIPE_SECRET_KEY, STRIPE_PRICE_ID).", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+    stripe.api_key = secret
+    base = _base_domain()
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    admin_org_url = f"{scheme}://{request.host.split(':')[0]}{url_for('admin.organization_detail', org_id=org_id)}"
+    success_url = f"{admin_org_url}?billing=success"
+    cancel_url = f"{admin_org_url}?billing=canceled"
+    customer_email = None
+    first_user = User.query.filter_by(organization_id=org_id).first()
+    if first_user:
+        customer_email = first_user.email
+    try:
+        session_params = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "client_reference_id": str(org_id),
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+        }
+        if org.stripe_customer_id:
+            session_params["customer"] = org.stripe_customer_id
+        elif customer_email:
+            session_params["customer_email"] = customer_email
+        session = stripe.checkout.Session.create(**session_params)
+        return redirect(session.url)
+    except stripe.StripeError as e:
+        flash(f"Stripe error: {str(e)}", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+
+
+@admin_bp.route("/organizations/<int:org_id>/customer-portal", methods=["POST"])
+def organization_customer_portal(org_id):
+    """Redirect to Stripe Customer Portal so the customer can manage payment / cancel."""
+    org = Organization.query.get_or_404(org_id)
+    if not org.stripe_customer_id:
+        flash("No billing customer linked. Set up billing first.", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    if not secret:
+        flash("Stripe is not configured.", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+    stripe.api_key = secret
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    return_url = f"{scheme}://{request.host.split(':')[0]}{url_for('admin.organization_detail', org_id=org_id)}"
+    try:
+        portal = stripe.billing_portal.Session.create(
+            customer=org.stripe_customer_id,
+            return_url=return_url,
+        )
+        return redirect(portal.url)
+    except stripe.StripeError as e:
+        flash(f"Stripe error: {str(e)}", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
 
 
 def _base_domain():
