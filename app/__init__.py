@@ -48,9 +48,14 @@ def create_app():
     # 5. Inject app version and system_settings into all templates
     @app.before_request
     def inject_system_settings():
+        import hashlib
         from flask import g
         from app.models import SystemSettings
-        g.system_settings = SystemSettings.query.first()
+        settings = SystemSettings.query.first()
+        g.system_settings = settings
+        # Stable cache key per logo so img src doesn't flicker on refresh; changes when logo changes
+        logo_url = (settings and settings.custom_logo_url) or ""
+        g.logo_version = hashlib.md5(logo_url.encode()).hexdigest()[:12] if logo_url else ""
 
     @app.context_processor
     def inject_version():
