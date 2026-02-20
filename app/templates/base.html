@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
