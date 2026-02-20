@@ -185,8 +185,8 @@ def create_app():
         if not email:
             print("Email required.")
             return
-        existing = User.query.filter_by(organization_id=None, email=email).first()
-        if existing:
+        existing_super = User.query.filter_by(organization_id=None, email=email).first()
+        if existing_super:
             print("A superuser with that email already exists.")
             return
         password = getpass.getpass("Password: ")
@@ -196,6 +196,16 @@ def create_app():
         password2 = getpass.getpass("Confirm password: ")
         if password != password2:
             print("Passwords do not match.")
+            return
+        # If email exists in an org, promote that user to superuser instead of creating a new row
+        existing_org = User.query.filter(User.email == email).filter(User.organization_id.isnot(None)).first()
+        if existing_org:
+            existing_org.organization_id = None
+            existing_org.is_superuser = True
+            existing_org.employee_id = None
+            existing_org.set_password(password)
+            db.session.commit()
+            print("Existing user promoted to superuser. Log in at the main domain (e.g. trainingtracker.me/login).")
             return
         user = User(email=email, organization_id=None, is_superuser=True, role="manager")
         user.set_password(password)
