@@ -27,100 +27,15 @@ from app.routes.helpers import manager_required, staff_required
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 
-# Common company name -> domain for logo search (Clearbit)
-LOGO_DOMAIN_ALIASES = {
-    "chickfila": "chick-fil-a.com",
-    "chick-fil-a": "chick-fil-a.com",
-    "chick fil a": "chick-fil-a.com",
-    "mcdonalds": "mcdonalds.com",
-    "mcdonald": "mcdonalds.com",
-    "starbucks": "starbucks.com",
-    "wendys": "wendys.com",
-    "wendy": "wendys.com",
-    "tacobell": "tacobell.com",
-    "taco bell": "tacobell.com",
-    "subway": "subway.com",
-    "dominos": "dominos.com",
-    "dominos pizza": "dominos.com",
-    "pizzahut": "pizzahut.com",
-    "pizza hut": "pizzahut.com",
-    "dunkin": "dunkindonuts.com",
-    "dunkin donuts": "dunkindonuts.com",
-    "chipotle": "chipotle.com",
-    "panera": "panera.com",
-    "panera bread": "panera.com",
-    "kfc": "kfc.com",
-    "popeyes": "popeyes.com",
-    "sonic": "sonicdrivein.com",
-    "arbys": "arbys.com",
-    "arby": "arbys.com",
-    "panda express": "pandaexpress.com",
-    "pandaexpress": "pandaexpress.com",
-    # Raising Cane's
-    "raising canes": "raisingcanes.com",
-    "raising cane's": "raisingcanes.com",
-    "raising canes chicken": "raisingcanes.com",
-    "canes": "raisingcanes.com",
-    # More chains
-    "five guys": "fiveguys.com",
-    "fiveguys": "fiveguys.com",
-    "in-n-out": "in-n-out.com",
-    "in n out": "in-n-out.com",
-    "innout": "in-n-out.com",
-    "whataburger": "whataburger.com",
-    "what a burger": "whataburger.com",
-    "culvers": "culvers.com",
-    "culver": "culvers.com",
-    "wingstop": "wingstop.com",
-    "wing stop": "wingstop.com",
-    "buffalo wild wings": "buffalowildwings.com",
-    "buffalo wild wing": "buffalowildwings.com",
-    "bww": "buffalowildwings.com",
-    "zaxbys": "zaxbys.com",
-    "zaxby": "zaxbys.com",
-    "bojangles": "bojangles.com",
-    "bojangle": "bojangles.com",
-    "qdoba": "qdoba.com",
-    "moe's": "moes.com",
-    "moes": "moes.com",
-    "cava": "cava.com",
-    "sweetgreen": "sweetgreen.com",
-    "sweet green": "sweetgreen.com",
-    "shake shack": "shakeshack.com",
-    "shakeshack": "shakeshack.com",
-    "jimmy johns": "jimmyjohns.com",
-    "jimmy john": "jimmyjohns.com",
-    "jimmyjohns": "jimmyjohns.com",
-    "firehouse subs": "firehousesubs.com",
-    "firehouse sub": "firehousesubs.com",
-    "papa johns": "papajohns.com",
-    "papa john": "papajohns.com",
-    "papajohns": "papajohns.com",
-    "little caesars": "littlecaesars.com",
-    "little caesar": "littlecaesars.com",
-    "panda": "pandaexpress.com",
-    "carl's jr": "carlsjr.com",
-    "carls jr": "carlsjr.com",
-    "carlsjr": "carlsjr.com",
-    "hardees": "hardees.com",
-    "hardee": "hardees.com",
-    "jack in the box": "jackinthebox.com",
-    "jack in the box": "jackinthebox.com",
-    "white castle": "whitecastle.com",
-    "whitecastle": "whitecastle.com",
-    "del taco": "deltaco.com",
-    "deltaco": "deltaco.com",
-    "el pollo loco": "elpolloloco.com",
-    "elpolloloco": "elpolloloco.com",
-    "blaze pizza": "blazepizza.com",
-    "blazepizza": "blazepizza.com",
-    "mod pizza": "modpizza.com",
-    "modpizza": "modpizza.com",
-}
+def _google_favicon_url(domain):
+    """Return Google's favicon URL for a domain (works for any site)."""
+    if not domain or "." not in domain:
+        return None
+    return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
 
 
 def _logo_search_domains(q):
-    """Build list of domain candidates for logo search (Clearbit)."""
+    """Build list of domain candidates from query (slug variants, no web search)."""
     q = (q or "").strip().lower()
     if not q:
         return []
@@ -129,15 +44,13 @@ def _logo_search_domains(q):
         domain = q if q.startswith("http") else q.split("//")[-1].split("/")[0]
         if "." in domain:
             return [domain]
-    # Alias first
-    aliases = [LOGO_DOMAIN_ALIASES[k] for k in LOGO_DOMAIN_ALIASES if k in q or q in k]
-    # Then: query as subdomain (query.com), and slug from words (chick fil a -> chick-fil-a.com)
-    candidates = list(dict.fromkeys(aliases))
-    candidates.append(re.sub(r"[^a-z0-9.-]", "", q) + ".com" if not q.endswith(".com") else q)
+    candidates = []
+    raw = re.sub(r"[^a-z0-9.-]", "", q) + ".com" if not q.endswith(".com") else q
+    if raw and "." in raw:
+        candidates.append(raw)
     slug = re.sub(r"\s+", "-", re.sub(r"[^a-z0-9\s]", "", q)).strip("-")
     if slug and slug + ".com" not in candidates:
         candidates.append(slug + ".com")
-    # Also try no-hyphen variant (raising canes -> raisingcanes.com)
     slug_no_hyphen = slug.replace("-", "") if slug else ""
     if slug_no_hyphen and slug_no_hyphen + ".com" not in candidates:
         candidates.append(slug_no_hyphen + ".com")
@@ -224,21 +137,24 @@ def _logo_domains_from_web_search(q):
 
 
 def _logo_search_first_url(q):
-    """Try domain candidates (aliases + slug); then web search; return first Clearbit logo URL or None."""
+    """Find company domain via web search + slug; return (clearbit_url or None, best_domain for favicon)."""
+    q = (q or "").strip()
+    if not q or len(q) < 2:
+        return None, None
     base = "https://logo.clearbit.com/"
-    # Known alias domains: trust them and return URL even if Clearbit check fails (API may be flaky)
-    alias_domains = set(LOGO_DOMAIN_ALIASES.values())
-    # 1) Built-in candidates (aliases, query.com, slug)
-    for domain in _logo_search_domains(q):
-        if domain in alias_domains:
-            return base + domain
+    # 1) Web search first so we can look up any company by name
+    domains = _logo_domains_from_web_search(q)
+    # 2) Add slug-based candidates (query.com, slug.com, slugnohyphen.com)
+    for d in _logo_search_domains(q):
+        if d and d not in domains:
+            domains.append(d)
+    # 3) Try Clearbit for each domain; return first hit
+    for domain in domains:
         if _clearbit_logo_exists(domain):
-            return base + domain
-    # 2) Web search for "{q} official website" and try Clearbit for each result domain
-    for domain in _logo_domains_from_web_search(q):
-        if _clearbit_logo_exists(domain):
-            return base + domain
-    return None
+            return base + domain, domain
+    # 4) No Clearbit logo; still return first domain so caller can use Google favicon for any company
+    first = domains[0] if domains else None
+    return None, first
 
 
 def _download_logo_to_uploads(url):
@@ -2125,16 +2041,18 @@ def session_delete(session_id):
 @login_required
 @manager_required
 def api_logo_search():
-    """Try Clearbit logo for company/domain query; return URL and optional Google favicon fallback."""
+    """Look up any company: web search + slug for domain, then Clearbit or Google favicon."""
     q = request.args.get("q", "").strip()
     if not q:
         return jsonify({"url": None, "fallback_url": None})
-    url = _logo_search_first_url(q)
-    fallback_url = None
-    if url and "logo.clearbit.com" in url:
-        domain = url.split("logo.clearbit.com/")[-1].split("?")[0].strip()
-        if domain and "." in domain:
-            fallback_url = f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
+    url, domain = _logo_search_first_url(q)
+    fallback_url = _google_favicon_url(domain) if domain else None
+    # If Clearbit had no logo, use Google favicon as the primary so we always return something
+    if not url and fallback_url:
+        url = fallback_url
+        fallback_url = None
+    elif url and domain and "logo.clearbit.com" in url:
+        fallback_url = _google_favicon_url(domain)
     return jsonify({"url": url, "fallback_url": fallback_url})
 
 
