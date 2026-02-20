@@ -5,6 +5,7 @@ import re
 from datetime import datetime, time, timedelta, timezone, date
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 
 import flask
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app
@@ -88,9 +89,62 @@ def _clearbit_logo_exists(domain):
         return False
 
 
+def _domain_from_url(href):
+    """Extract clean domain from URL (e.g. https://www.foo.com/path -> foo.com)."""
+    if not href or not isinstance(href, str):
+        return None
+    try:
+        parsed = urlparse(href if href.startswith("http") else "https://" + href)
+        netloc = (parsed.netloc or "").strip().lower()
+        if not netloc or netloc.startswith("."):
+            return None
+        # Drop www.
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        # Skip search engines and common non-company sites
+        skip = ("duckduckgo.com", "google.com", "bing.com", "yahoo.com", "facebook.com",
+                "twitter.com", "instagram.com", "linkedin.com", "youtube.com", "wikipedia.org",
+                "amazon.com", "ebay.com", "yelp.com", "apple.com", "microsoft.com")
+        if any(netloc == s or netloc.endswith("." + s) for s in skip):
+            return None
+        if "." in netloc and len(netloc) > 3:
+            return netloc
+    except Exception:
+        pass
+    return None
+
+
+def _logo_domains_from_web_search(q):
+    """Search the web for the company and return list of domains from result URLs."""
+    q = (q or "").strip()
+    if not q or len(q) < 2:
+        return []
+    try:
+        from duckduckgo_search import DDGS
+        search_term = f"{q} official website"
+        with DDGS() as ddgs:
+            results = ddgs.text(search_term, max_results=8)
+        domains = []
+        seen = set()
+        for r in (results or []):
+            href = r.get("href") or r.get("link")
+            d = _domain_from_url(href)
+            if d and d not in seen:
+                seen.add(d)
+                domains.append(d)
+        return domains
+    except Exception:
+        return []
+
+
 def _logo_search_first_url(q):
-    """Try domain candidates; return first Clearbit logo URL that exists, or None."""
+    """Try domain candidates (aliases + slug); then web search; return first Clearbit logo URL or None."""
+    # 1) Built-in candidates (aliases, query.com, slug)
     for domain in _logo_search_domains(q):
+        if _clearbit_logo_exists(domain):
+            return f"https://logo.clearbit.com/{domain}"
+    # 2) Web search for "{q} official website" and try Clearbit for each result domain
+    for domain in _logo_domains_from_web_search(q):
         if _clearbit_logo_exists(domain):
             return f"https://logo.clearbit.com/{domain}"
     return None
