@@ -71,7 +71,9 @@ def organization_create():
         settings = SystemSettings(organization_id=org.id)
         db.session.add(settings)
         db.session.commit()
-        flash(f"Organization '{org.name}' created. Users can sign in at {subdomain}.{request.host.split(':')[0]}.", "success")
+        host = request.host.split(":")[0]
+        base_domain = host[4:] if host.startswith("www.") else host
+        flash(f"Organization '{org.name}' created. Users can sign in at {subdomain}.{base_domain}.", "success")
         return redirect(url_for("admin.organization_detail", org_id=org.id))
     return render_template("admin/organization_form.html")
 

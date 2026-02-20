@@ -11,7 +11,7 @@
             <input type="text" id="name" name="name" value="{{ name or '' }}" required placeholder="Acme Inc">
             <label for="subdomain">Subdomain</label>
             <input type="text" id="subdomain" name="subdomain" value="{{ subdomain or '' }}" required placeholder="acme">
-            <p class="form-hint">Users will sign in at <strong><span id="subdomain-preview">subdomain</span>.{{ request.host.split(':')[0] }}</strong></p>
+            <p class="form-hint">Users will sign in at <strong><span id="subdomain-preview">subdomain</span>.{% set h = request.host.split(':')[0] %}{{ h[4:] if h[:4] == 'www.' else h }}</strong></p>
             <button type="submit" class="btn btn-primary">Create</button>
         </form>
     </div>

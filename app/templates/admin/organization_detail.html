@@ -9,7 +9,7 @@
         <dl class="detail-list">
             <dt>Subdomain</dt><dd><code>{{ org.subdomain }}</code></dd>
             <dt>Status</dt><dd><span class="status status-{{ org.status }}">{{ org.status }}</span></dd>
-            <dt>Login URL</dt><dd><code>{{ org.subdomain }}.{{ request.host.split(':')[0] }}</code></dd>
+            <dt>Login URL</dt><dd><code>{% set h = request.host.split(':')[0] %}{{ org.subdomain }}.{{ h[4:] if h[:4] == 'www.' else h }}</code></dd>
         </dl>
         <div class="detail-actions">
             {% if org.status == 'active' %}

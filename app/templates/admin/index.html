@@ -2,7 +2,7 @@
 {% block content %}
 <div class="admin-page">
     <h1 class="page-title">Platform Admin</h1>
-    <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{{ request.host.split(':')[0] }}</strong> (e.g. app.{{ request.host.split(':')[0] }}).</p>
+    <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{% set h = request.host.split(':')[0] %}{% set base_domain = h[4:] if h[:4] == 'www.' else h %}{{ base_domain }}</strong> (e.g. app.{{ base_domain }}).</p>
     <div class="card-list">
         <a href="{{ url_for('admin.organizations_list') }}" class="admin-card">
             <i class="fa-solid fa-building"></i>
