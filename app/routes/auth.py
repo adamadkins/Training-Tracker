@@ -28,9 +28,17 @@ def _fetch_logo_image(url):
     return None, None
 
 
+# 1x1 transparent PNG so /logo never 404s when a logo is configured (avoids broken img when file missing or fetch fails)
+_EMPTY_LOGO_PNG = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06"
+    b"\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
 @auth_bp.get("/logo")
 def logo():
     """Serve the configured system logo (no auth). Used by navbar and login page."""
+    import os
     settings = SystemSettings.query.first()
     if not settings or not settings.custom_logo_url:
         abort(404)
@@ -41,11 +49,18 @@ def logo():
         data, ctype = _fetch_logo_image(logo_url)
         if data and ctype:
             return Response(data, mimetype=ctype, direct_passthrough=True)
-        abort(404)
-    import os
-    path = os.path.join(current_app.static_folder, logo_url)
-    if not os.path.isfile(path):
-        abort(404)
+        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+    static_folder = current_app.static_folder
+    if not static_folder:
+        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+    path = os.path.normpath(os.path.join(static_folder, logo_url))
+    try:
+        path = os.path.realpath(path)
+        static_root = os.path.realpath(static_folder)
+        if os.path.commonpath([path, static_root]) != static_root or not os.path.isfile(path):
+            return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+    except (ValueError, OSError):
+        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
     ext = os.path.splitext(logo_url)[1].lower()
     mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
     return send_file(path, mimetype=mimetype, as_attachment=False)
