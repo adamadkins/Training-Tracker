@@ -320,6 +320,7 @@ def setup_wizard():
         elif raw.startswith("#") and re.match(r"^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$", raw):
             settings.primary_color = raw if len(raw) == 7 else _hex_expand_3(raw)
         logo_url = request.form.get("custom_logo_url", "").strip() or None
+        logo_fallback = request.form.get("custom_logo_fallback_url", "").strip() or None
         logo_file = request.files.get("logo_file")
         if logo_file and logo_file.filename:
             ctype = (logo_file.content_type or "").lower()
@@ -336,6 +337,8 @@ def setup_wizard():
                 logo_url = "uploads/logos/" + name
         elif logo_url and logo_url.startswith("http"):
             local_path = _download_logo_to_uploads(logo_url)
+            if not local_path and logo_fallback and logo_fallback.startswith("http"):
+                local_path = _download_logo_to_uploads(logo_fallback)
             if local_path:
                 logo_url = local_path
         settings.custom_logo_url = logo_url
@@ -2161,6 +2164,7 @@ def settings():
                 elif raw.startswith('#') and re.match(r'^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$', raw):
                     system_settings.primary_color = raw if len(raw) == 7 else _hex_expand_3(raw)
             logo_url = request.form.get('custom_logo_url', '').strip() or None
+            logo_fallback = request.form.get('custom_logo_fallback_url', '').strip() or None
             logo_file = request.files.get('logo_file')
             if logo_file and logo_file.filename:
                 # Accept any image/* or by extension (browsers send varying content_type e.g. image/x-png)
@@ -2178,6 +2182,8 @@ def settings():
                     logo_url = 'uploads/logos/' + name
             elif logo_url and logo_url.startswith('http'):
                 local_path = _download_logo_to_uploads(logo_url)
+                if not local_path and logo_fallback and logo_fallback.startswith('http'):
+                    local_path = _download_logo_to_uploads(logo_fallback)
                 if local_path:
                     logo_url = local_path
             system_settings.custom_logo_url = logo_url

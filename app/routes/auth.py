@@ -66,6 +66,20 @@ def _download_logo_to_uploads(url):
         return None
 
 
+def _logo_google_fallback_url(primary_url):
+    """If primary is a Clearbit logo URL, return Google favicon URL for the same domain."""
+    if not primary_url or "logo.clearbit.com" not in primary_url:
+        return None
+    try:
+        # e.g. https://logo.clearbit.com/domain.com -> domain.com
+        domain = primary_url.split("logo.clearbit.com/")[-1].split("?")[0].strip()
+        if domain and "." in domain:
+            return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
+    except Exception:
+        pass
+    return None
+
+
 # 1x1 transparent PNG so /logo never 404s when a logo is configured (avoids broken img when file missing or fetch fails)
 _EMPTY_LOGO_PNG = (
     b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06"
@@ -88,6 +102,10 @@ def logo():
             return Response(data, mimetype=ctype, direct_passthrough=True)
         # Fetch failed (e.g. CDN blocks server). Try once to download and persist to uploads, then serve from disk.
         local_path = _download_logo_to_uploads(logo_url)
+        if not local_path:
+            fallback_url = _logo_google_fallback_url(logo_url)
+            if fallback_url:
+                local_path = _download_logo_to_uploads(fallback_url)
         if local_path:
             settings.custom_logo_url = local_path
             db.session.commit()

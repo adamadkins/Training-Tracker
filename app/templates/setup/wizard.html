@@ -133,6 +133,7 @@
         <form method="post" action="{{ url_for('manager.setup_wizard') }}" enctype="multipart/form-data" id="setupBrandingForm" class="setup-form">
             <input type="hidden" name="step" value="2">
             <input type="hidden" name="custom_logo_url" id="setupCustomLogoUrl" value="{{ settings.custom_logo_url or '' }}">
+            <input type="hidden" name="custom_logo_fallback_url" id="setupCustomLogoFallbackUrl" value="">
             <div class="form-row">
                 <label>Accent color</label>
                 <input type="hidden" name="primary_color" id="setupPrimaryColorValue" value="{{ settings.primary_color or 'indigo' }}">
@@ -240,7 +241,9 @@
     var img = document.getElementById('setupLogoImg');
     var useBtn = document.getElementById('setupUseLogoBtn');
     var hidden = document.getElementById('setupCustomLogoUrl');
+    var fallbackHidden = document.getElementById('setupCustomLogoFallbackUrl');
     var searchedUrl = null;
+    var searchedFallbackUrl = null;
     var logoProxyUrl = '{{ url_for("manager.api_asset") }}';
 
     function doSearch() {
@@ -258,6 +261,7 @@
                 if (btn) { btn.disabled = false; btn.textContent = 'Try'; }
                 if (data.url) {
                     searchedUrl = data.url;
+                    searchedFallbackUrl = data.fallback_url || null;
                     img.alt = q || 'Logo';
                     var fallbackUrl = data.fallback_url || null;
                     function showLoadError() {
@@ -315,7 +319,11 @@
 
     if (btn) btn.addEventListener('click', doSearch);
     if (useBtn) useBtn.addEventListener('click', function() {
-        if (searchedUrl && hidden) { hidden.value = searchedUrl; useBtn.textContent = 'Selected'; }
+        if (searchedUrl && hidden) {
+            hidden.value = searchedUrl;
+            if (fallbackHidden) fallbackHidden.value = searchedFallbackUrl || '';
+            useBtn.textContent = 'Selected';
+        }
     });
 })();
 </script>

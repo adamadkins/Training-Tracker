@@ -335,6 +335,7 @@
                 </div>
                 <div class="s-body">
                     <input type="hidden" name="custom_logo_url" id="customLogoUrl" value="{{ system_settings.custom_logo_url or '' }}">
+                    <input type="hidden" name="custom_logo_fallback_url" id="customLogoFallbackUrl" value="">
                     <div class="s-row" style="flex-wrap: wrap; align-items: center; gap: 12px;">
                         <div class="s-info">
                             <label class="s-label">Accent color</label>
@@ -675,6 +676,7 @@
     }
 
     var searchedLogoUrl = null;
+    var searchedLogoFallbackUrl = null;
 
     function tryLogoSearch() {
         var input = document.getElementById('logoSearchInput');
@@ -689,6 +691,7 @@
             return;
         }
         searchedLogoUrl = null;
+        searchedLogoFallbackUrl = null;
         if (statusSpan) { statusSpan.style.display = 'inline'; statusSpan.textContent = 'Searching...'; statusSpan.className = 's-desc'; }
         if (tryBtn) tryBtn.disabled = true;
         if (preview) {
@@ -707,6 +710,7 @@
                 if (!preview) return;
                 if (data && data.url) {
                     searchedLogoUrl = data.url;
+                        searchedLogoFallbackUrl = data.fallback_url || null;
                     if (img) {
                         img.alt = q;
                         var fallbackUrl = data.fallback_url || null;
@@ -773,6 +777,8 @@
     function useSearchedLogo() {
         if (!searchedLogoUrl) return;
         document.getElementById('customLogoUrl').value = searchedLogoUrl;
+        var fallbackEl = document.getElementById('customLogoFallbackUrl');
+        if (fallbackEl) fallbackEl.value = searchedLogoFallbackUrl || '';
         document.getElementById('saveBar').style.display = 'flex';
     }
 
