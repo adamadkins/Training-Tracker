@@ -328,7 +328,7 @@ def _directory_online_ids(directory):
 def inbox():
     if not current_user.employee_id:
         flash("Link your account to an employee profile to chat.", "warning")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('auth.home'))
     my_id = current_user.employee_id
     sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
     online_employee_ids = _directory_online_ids(directory)
@@ -745,7 +745,7 @@ def dms_list():
     """Standalone page listing all direct-message conversations."""
     if not current_user.employee_id:
         flash("Link your account to an employee profile to chat.", "warning")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('auth.home'))
     my_id = current_user.employee_id
     _, sidebar_dms, _, directory = _build_sidebar_data(my_id)
     online_employee_ids = _directory_online_ids(directory)

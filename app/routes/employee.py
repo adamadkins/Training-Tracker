@@ -28,7 +28,7 @@ def get_current_week_start():
 def dashboard():
     if not current_user.employee_id:
         flash("Your account is not linked to an employee profile.", "warning")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('auth.home'))
 
     employee = current_user.employee
 
