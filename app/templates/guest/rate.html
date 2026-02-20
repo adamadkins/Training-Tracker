@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rate Session - Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .guest-header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .guest-brand { font-size: 15px; font-weight: 700; color: #1e293b; }
+        .guest-brand b { color: #4f46e5; }
+        .guest-badge {
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Content ── */
+        .wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 32px 20px 60px;
+        }
+
+        /* ── Page header ── */
+        .page-back { color: #64748b; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .page-back:hover { color: #4f46e5; }
+        .page-title {
+            font-size: 30px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            margin: 14px 0 4px;
+        }
+        .page-sub { font-size: 16px; color: #64748b; margin-bottom: 32px; }
+        .page-sub b { color: #1e293b; }
+
+        /* ── Criteria card ── */
+        .criteria-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .criteria-card h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 16px; }
+
+        /* ── Button ratings ── */
+        .rating-options {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            background: #f8fafc;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .rating-radio { display: none; }
+        .rating-label {
+            flex: 1; text-align: center; padding: 13px 0;
+            cursor: pointer; font-size: 15px; font-weight: 800;
+            color: #64748b; border-radius: 8px; transition: all 0.15s;
+        }
+        .rating-radio[value="1"]:checked + .rating-label { background: #ef4444; color: #fff; }
+        .rating-radio[value="2"]:checked + .rating-label { background: #f97316; color: #fff; }
+        .rating-radio[value="3"]:checked + .rating-label { background: #eab308; color: #fff; }
+        .rating-radio[value="4"]:checked + .rating-label { background: #84cc16; color: #fff; }
+        .rating-radio[value="5"]:checked + .rating-label { background: #22c55e; color: #fff; }
+        .rating-radio[value="6"]:checked + .rating-label { background: #22c55e; color: #fff; }
+        .rating-radio[value="7"]:checked + .rating-label { background: #10b981; color: #fff; }
+        .rating-radio[value="8"]:checked + .rating-label { background: #059669; color: #fff; }
+        .rating-radio[value="9"]:checked + .rating-label { background: #0d9488; color: #fff; }
+        .rating-radio[value="10"]:checked + .rating-label { background: #14b8a6; color: #fff; }
+
+        /* ── Legacy slider ── */
+        .rating-legacy-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .rating-legacy-value { min-width: 110px; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+        .rating-legacy-num { display: inline-block; font-size: 15px; font-weight: 900; margin-right: 4px; }
+        .rating-legacy-slider {
+            flex: 1; min-width: 160px;
+            -webkit-appearance: none; appearance: none;
+            height: 6px; border-radius: 4px; outline: none;
+            cursor: pointer; border: none;
+            background: linear-gradient(to right, #D60206 0%, #e2e8f0 0%);
+        }
+        .rating-legacy-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #004f72; border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+        }
+        .rating-legacy-slider::-moz-range-thumb {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #004f72; border: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+        }
+        .rating-legacy-slider::-moz-range-track { background: transparent; border: none; }
+
+        /* ── Comment box ── */
+        .comment-input {
+            width: 100%; padding: 12px 14px; border-radius: 10px;
+            border: 1px solid #e2e8f0; background: #f8fafc;
+            color: #1e293b; font-size: 14px; font-family: inherit;
+            outline: none; transition: border-color 0.15s;
+        }
+        .comment-input:focus { border-color: #4f46e5; }
+
+        /* ── Submit ── */
+        .btn-submit {
+            width: 100%;
+            padding: 18px;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+            transition: background 0.15s;
+        }
+        .btn-submit:hover { background: #4338ca; }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ── Mobile ── */
+        @media (max-width: 600px) {
+            .wrapper { padding: 20px 14px 60px; }
+            .page-title { font-size: 22px; }
+            .page-sub { font-size: 14px; margin-bottom: 24px; }
+            .criteria-card { padding: 16px; margin-bottom: 12px; }
+            .criteria-card h3 { font-size: 14px; margin-bottom: 12px; }
+            .rating-label { font-size: 13px; padding: 10px 0; }
+            .rating-options { gap: 3px; padding: 4px; }
+            .rating-legacy-row { flex-direction: column; align-items: stretch; gap: 8px; }
+            .rating-legacy-slider { width: 100%; min-width: 0; }
+            .rating-legacy-value { text-align: left; min-width: 0; }
+        }
+        @media (max-width: 380px) {
+            .rating-label { font-size: 12px; padding: 9px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="guest-header">
+    <span class="guest-brand">Training<b>Tracker</b></span>
+    <span class="guest-badge"><i class="fa-solid fa-user-clock" style="margin-right:4px;"></i>Guest Session</span>
+</header>
+
+<div class="wrapper">
+    <a href="{{ url_for('guest.enter_name', token=gt.token) }}" class="page-back">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+    <h1 class="page-title">{{ gt.position.name }}</h1>
+    <p class="page-sub">
+        Evaluating: <b>{{ gt.trainee.first_name }} {{ gt.trainee.last_name }}</b>
+        &nbsp;&middot;&nbsp; Trainer: <b>{{ guest_name }}</b>
+    </p>
+
+    <form method="POST" action="{{ url_for('guest.rate_session', token=gt.token) }}">
+        <input type="hidden" name="guest_name" value="{{ guest_name }}">
+
+        {% for d in descriptors %}
+        <div class="criteria-card">
+            <h3>{{ d.text }}</h3>
+            {% if rating_style == 'legacy' %}
+            <div class="rating-legacy-row">
+                <input type="hidden" name="rating_{{ d.id }}" id="rating_val_{{ d.id }}" value="5" required>
+                <input type="range" class="rating-legacy-slider" min="1" max="10" value="5"
+                       id="slider_{{ d.id }}" data-descriptor="{{ d.id }}">
+                <span class="rating-legacy-value" id="legacy_display_{{ d.id }}">
+                    <span class="rating-legacy-num">5/10 </span><span class="rating-legacy-quality">Average</span>
+                </span>
+            </div>
+            {% else %}
+            <div class="rating-options">
+                {% for i in range(1, scale_max + 1) %}
+                <input type="radio" name="rating_{{ d.id }}" id="r_{{ d.id }}_{{ i }}" value="{{ i }}" class="rating-radio" required>
+                <label for="r_{{ d.id }}_{{ i }}" class="rating-label">{{ i }}</label>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <input type="text" name="comment_{{ d.id }}" class="comment-input" placeholder="Add a note about this criteria (optional)...">
+        </div>
+        {% endfor %}
+
+        <div class="criteria-card" style="border-left: 4px solid #4f46e5;">
+            <h3>Overall Notes</h3>
+            <textarea name="overall_notes" class="comment-input" rows="4"
+                      placeholder="General feedback for the trainee..."></textarea>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">
+            Submit Evaluation <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </form>
+</div>
+
+{% if rating_style == 'legacy' %}
+<script>
+(function() {
+    var COLOR_MAP = {1:'#D60206',2:'#D60206',3:'#f97316',4:'#f97316',5:'#afa500',6:'#afa500',7:'#84cc16',8:'#84cc16',9:'#16a34a',10:'#16a34a'};
+    var QUALITY_MAP = {1:'Poor',2:'Poor',3:'Below Avg',4:'Below Avg',5:'Average',6:'Average',7:'Good',8:'Good',9:'Excellent',10:'Excellent'};
+    document.querySelectorAll('.rating-legacy-slider').forEach(function(slider) {
+        var did = slider.getAttribute('data-descriptor');
+        var hidden  = document.getElementById('rating_val_' + did);
+        var display = document.getElementById('legacy_display_' + did);
+        var numEl   = display.querySelector('.rating-legacy-num');
+        var qualEl  = display.querySelector('.rating-legacy-quality');
+        function update() {
+            var v = parseInt(slider.value, 10);
+            var pct = ((v - 1) / 9) * 100;
+            var col = COLOR_MAP[v];
+            hidden.value = v;
+            numEl.textContent = v + '/10 ';
+            qualEl.textContent = QUALITY_MAP[v];
+            numEl.style.color = col;
+            qualEl.style.color = col;
+            slider.style.background = 'linear-gradient(to right, ' + col + ' ' + pct + '%, #e2e8f0 ' + pct + '%)';
+        }
+        slider.addEventListener('input', update);
+        update();
+    });
+})();
+</script>
+{% endif %}
+<script>
+(function() {
+    var form = document.querySelector('form');
+    var btn = document.getElementById('submitBtn');
+    if (form && btn) {
+        form.addEventListener('submit', function() {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+        });
+    }
+})();
+</script>
+</body>
+</html>

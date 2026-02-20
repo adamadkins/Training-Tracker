@@ -542,8 +542,13 @@
                                         <div class="assignment-stack">
                                             <div class="assignee-item">
                                                 <span class="role-label">Trainer</span>
+                                                {% if s.guest_trainer_name %}
+                                                <span>{{ s.guest_trainer_name }}</span>
+                                                <span style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px;">GUEST</span>
+                                                {% else %}
                                                 <img src="{{ s.trainer.avatar(20) }}" class="avatar-sm">
                                                 <span>{{ s.trainer.first_name }} {{ s.trainer.last_name[0] }}.</span>
+                                                {% endif %}
                                             </div>
                                             <div class="assignee-item">
                                                 <span class="role-label">Trainee</span>

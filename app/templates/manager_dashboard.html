@@ -577,7 +577,7 @@
                         <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{{ fs.trainee.first_name }} {{ fs.trainee.last_name }}</div>
                         <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
                             {{ fs.position.name }} &middot; {{ fs.session_date.strftime('%b %d') }}
-                            {% if fs.trainer %} &middot; Flagged by {{ fs.trainer.first_name }}{% endif %}
+                            {% if fs.guest_trainer_name %} &middot; Flagged by {{ fs.guest_trainer_name }} (guest){% elif fs.trainer %} &middot; Flagged by {{ fs.trainer.first_name }}{% endif %}
                         </div>
                     </div>
                     {% if fs.flag_reason %}
@@ -623,16 +623,23 @@
                                 </td>
                                 <td class="mobile-hide">
                                     <div class="trainer-cell">
+                                        {% if s.guest_trainer_name %}
+                                        <span class="trainer-name">{{ s.guest_trainer_name }}</span>
+                                        <span style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px; margin-left:3px;">GUEST</span>
+                                        {% else %}
                                         <img src="{{ s.trainer.avatar(18) }}" class="avatar-xs">
                                         <span class="trainer-name">{{ s.trainer.first_name }}</span>
+                                        {% endif %}
                                     </div>
                                 </td>
                                 <td style="text-align:right;">
+                                    {% if not s.guest_trainer_name %}
                                     <form method="POST" action="{{ url_for('manager.nudge_trainer', session_id=s.id) }}" style="display:inline;">
                                         <button type="submit" style="padding:5px 12px; border-radius:8px; border:1px solid #f59e0b; background:#fef3c7; color:#92400e; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="Send a reminder to {{ s.trainer.first_name }}">
                                             <i class="fa-solid fa-bell" style="margin-right:4px;"></i>Nudge
                                         </button>
                                     </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -675,8 +682,13 @@
                                     </td>
                                     <td class="mobile-hide">
                                         <div class="trainer-cell">
+                                            {% if s.guest_trainer_name %}
+                                            <span class="trainer-name">{{ s.guest_trainer_name }}</span>
+                                            <span style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px; margin-left:3px;">GUEST</span>
+                                            {% else %}
                                             <img src="{{ s.trainer.avatar(18) }}" class="avatar-xs">
                                             <span class="trainer-name">{{ s.trainer.first_name }}</span>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td style="text-align:right;">

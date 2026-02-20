@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timezone, time
 import pytz
+import uuid
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
@@ -202,8 +203,9 @@ class TrainingSession(db.Model):
     custom_start_time = db.Column(db.Time, nullable=True)
     custom_end_time = db.Column(db.Time, nullable=True)
     position_id = db.Column(db.Integer, db.ForeignKey("positions.id"), nullable=False)
-    trainer_employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    trainer_employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
     trainee_employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    guest_trainer_name = db.Column(db.String(100), nullable=True)
     overall_notes = db.Column(db.Text, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
     completed_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
@@ -395,3 +397,26 @@ class RoadmapStep(db.Model):
     required_sessions = db.Column(db.Integer, default=3, nullable=False)
     min_avg_rating = db.Column(db.Float, default=4.0, nullable=False)
     position = db.relationship("Position")
+
+
+class GuestTrainerToken(db.Model):
+    __tablename__ = "guest_trainer_tokens"
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(36), unique=True, nullable=False, index=True,
+                      default=lambda: str(uuid.uuid4()))
+    trainee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=False)
+    position_id = db.Column(db.Integer, db.ForeignKey("positions.id"), nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    trainee = db.relationship("Employee", foreign_keys=[trainee_id])
+    position = db.relationship("Position", foreign_keys=[position_id])
+    created_by = db.relationship("User", foreign_keys=[created_by_id])
+
+    @property
+    def is_valid(self):
+        if self.used_at:
+            return False
+        return datetime.now(timezone.utc) < self.expires_at.replace(tzinfo=timezone.utc)

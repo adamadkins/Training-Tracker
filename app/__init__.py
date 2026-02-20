@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from flask import Flask, session, redirect, url_for, flash, request
 
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, logout_user, current_user
 from flask_migrate import Migrate
@@ -36,12 +36,14 @@ def create_app():
     from app.routes.employee import employee_bp
     from app.routes.messages import messages_bp
     from app.routes.legacy import legacy_bp
+    from app.routes.guest import guest_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(manager_bp, url_prefix='/manager')
     app.register_blueprint(employee_bp, url_prefix='/employee')
     app.register_blueprint(messages_bp)
     app.register_blueprint(legacy_bp)
+    app.register_blueprint(guest_bp)
 
     # 5. Inject app version into all templates
     @app.context_processor
@@ -61,6 +63,7 @@ def create_app():
         # Skip static files and the auth endpoints to avoid redirect loops
         if request.endpoint and (
             request.endpoint.startswith('static') or
+            request.endpoint.startswith('guest.') or
             request.endpoint in ('auth.login', 'auth.logout',
                                  'auth.forgot_password', 'auth.reset_token')
         ):

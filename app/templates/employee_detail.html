@@ -511,6 +511,10 @@
                                 <i class="fa-solid fa-graduation-cap"></i> Graduate
                             </button>
                         </form>
+                        <button class="hero-btn" onclick="openGuestModal()" title="Generate a one-time link for an impromptu trainer"
+                                style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none;">
+                            <i class="fa-solid fa-qrcode"></i> Guest Trainer
+                        </button>
                         {% endif %}
                     {% endif %}
                     {% if employee.id == current_user.employee_id %}
@@ -698,6 +702,96 @@
     </div>
 </div>
 
+{% if current_user.role == 'manager' and employee.role == 'trainee' and not employee.graduated_at %}
+<!-- ── Guest Trainer Modal ───────────────────────────────────────────────── -->
+<div id="guestOverlay" onclick="closeGuestModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500;"></div>
+<div id="guestModal" style="
+    display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    z-index:501; background:var(--bg-card); border:1px solid var(--border);
+    border-radius:20px; box-shadow:0 16px 48px rgba(0,0,0,0.18);
+    width:92%; max-width:440px; padding:28px 28px 24px;
+    max-height:90vh; overflow-y:auto;
+">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div>
+            <div style="font-size:12px; font-weight:800; color:#7c3aed; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:3px;">
+                <i class="fa-solid fa-qrcode"></i> Guest Trainer
+            </div>
+            <div style="font-size:18px; font-weight:900; color:var(--text-main);">Generate a One-Time Link</div>
+        </div>
+        <button onclick="closeGuestModal()" style="background:none; border:none; font-size:18px; color:var(--text-muted); cursor:pointer; padding:4px;">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
+        Pick a position below. The link expires in <b>24 hours</b> or after it is used once.
+        Share it by copying the link or sending it via SMS.
+    </p>
+
+    <!-- Step 1: pick position -->
+    <div id="guestStep1">
+        <label style="font-size:11px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; display:block; margin-bottom:8px;">
+            Position to Train On
+        </label>
+        <select id="guestPositionSelect" style="
+            width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:10px;
+            background:var(--bg-body); color:var(--text-main); font-size:14px; font-family:inherit;
+            margin-bottom:16px; outline:none;
+        ">
+            <option value="">Select a position...</option>
+            {% for item in mastery_list %}
+            {% if item.active %}
+            <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+
+        <button id="guestGenerateBtn" onclick="generateGuestLink()" style="
+            width:100%; padding:14px; background:#7c3aed; color:#fff; border:none; border-radius:10px;
+            font-size:15px; font-weight:800; font-family:inherit; cursor:pointer;
+        ">
+            <i class="fa-solid fa-link"></i> Generate Link
+        </button>
+        <p id="guestError" style="display:none; color:#ef4444; font-size:13px; margin-top:8px; font-weight:600;"></p>
+    </div>
+
+    <!-- Step 2: show QR + share options -->
+    <div id="guestStep2" style="display:none;">
+        <div style="text-align:center; margin-bottom:20px;">
+            <canvas id="guestQr" style="border-radius:10px;"></canvas>
+        </div>
+
+        <div style="background:var(--bg-body); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+            <input id="guestLinkInput" type="text" readonly style="
+                flex:1; border:none; background:transparent; color:var(--text-muted);
+                font-size:12px; font-family:'Courier New', monospace; outline:none; min-width:0;
+            ">
+            <button onclick="copyGuestLink()" id="copyBtn" style="
+                background:#7c3aed; color:#fff; border:none; padding:6px 14px;
+                border-radius:7px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap;
+            ">Copy</button>
+        </div>
+
+        <a id="guestSmsBtn" href="#" style="
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            width:100%; padding:13px; background:#16a34a; color:#fff; border-radius:10px;
+            font-size:15px; font-weight:800; text-decoration:none; margin-bottom:12px;
+        ">
+            <i class="fa-solid fa-comment-sms"></i> Share via Text Message
+        </a>
+
+        <button onclick="resetGuestModal()" style="
+            width:100%; padding:11px; background:transparent; color:var(--text-muted);
+            border:1px solid var(--border); border-radius:10px; font-size:13px; font-weight:700;
+            font-family:inherit; cursor:pointer;
+        ">
+            <i class="fa-solid fa-rotate-left"></i> Generate a Different Link
+        </button>
+    </div>
+</div>
+{% endif %}
+
 <script>
 function togglePasswordForm() {
     const container = document.getElementById('pw-form-container');
@@ -707,5 +801,88 @@ function togglePasswordForm() {
         ? '<i class="fa-solid fa-xmark"></i> Cancel'
         : '<i class="fa-solid fa-key"></i> Security';
 }
+
+{% if current_user.role == 'manager' and employee.role == 'trainee' and not employee.graduated_at %}
+function openGuestModal() {
+    document.getElementById('guestModal').style.display = 'block';
+    document.getElementById('guestOverlay').style.display = 'block';
+}
+function closeGuestModal() {
+    document.getElementById('guestModal').style.display = 'none';
+    document.getElementById('guestOverlay').style.display = 'none';
+}
+function resetGuestModal() {
+    document.getElementById('guestStep1').style.display = 'block';
+    document.getElementById('guestStep2').style.display = 'none';
+    document.getElementById('guestPositionSelect').value = '';
+    document.getElementById('guestError').style.display = 'none';
+    document.getElementById('guestGenerateBtn').disabled = false;
+    document.getElementById('guestGenerateBtn').innerHTML = '<i class="fa-solid fa-link"></i> Generate Link';
+}
+
+function generateGuestLink() {
+    const posId = document.getElementById('guestPositionSelect').value;
+    const errEl = document.getElementById('guestError');
+    if (!posId) {
+        errEl.textContent = 'Please select a position first.';
+        errEl.style.display = 'block';
+        return;
+    }
+    errEl.style.display = 'none';
+    const btn = document.getElementById('guestGenerateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+
+    const form = new FormData();
+    form.append('trainee_id', '{{ employee.id }}');
+    form.append('position_id', posId);
+
+    fetch('{{ url_for("guest.generate") }}', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                errEl.textContent = data.error;
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-link"></i> Generate Link';
+                return;
+            }
+            document.getElementById('guestLinkInput').value = data.link;
+            document.getElementById('guestSmsBtn').href =
+                'sms:?body=' + encodeURIComponent(data.sms_body);
+
+            // Render QR code via qrcode.js
+            const canvas = document.getElementById('guestQr');
+            QRCode.toCanvas(canvas, data.link, {
+                width: 200,
+                margin: 2,
+                color: { dark: '#1e293b', light: '#ffffff' }
+            }, function(err) {});
+
+            document.getElementById('guestStep1').style.display = 'none';
+            document.getElementById('guestStep2').style.display = 'block';
+        })
+        .catch(() => {
+            errEl.textContent = 'Something went wrong. Please try again.';
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-link"></i> Generate Link';
+        });
+}
+
+function copyGuestLink() {
+    const input = document.getElementById('guestLinkInput');
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => {
+            btn.textContent = 'Copy';
+            btn.style.background = '#7c3aed';
+        }, 2000);
+    });
+}
+{% endif %}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 {% endblock %}

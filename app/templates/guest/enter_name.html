@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guest Trainer - Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f0f4ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.10);
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .brand {
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+        .brand b { color: #4f46e5; }
+        .context-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 26px;
+            font-weight: 900;
+            color: #1e293b;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+        .subtitle {
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        .subtitle b { color: #1e293b; }
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            color: #1e293b;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        input[type="text"]:focus { border-color: #4f46e5; }
+        .error-msg {
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .btn {
+            width: 100%;
+            margin-top: 24px;
+            padding: 16px;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: background 0.15s;
+        }
+        .btn:hover { background: #4338ca; }
+        .footer-note {
+            margin-top: 28px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand">Training<b>Tracker</b> &nbsp;·&nbsp; Guest Session</div>
+
+        <div class="context-badge">
+            <i class="fa-solid fa-user-clock"></i>
+            Guest Trainer
+        </div>
+
+        <h1>Welcome</h1>
+        <p class="subtitle">
+            You've been asked to train <b>{{ gt.trainee.first_name }} {{ gt.trainee.last_name }}</b>
+            on <b>{{ gt.position.name }}</b>. Before you get started, let us know your name.
+        </p>
+
+        <form method="POST">
+            <label for="guest_name">Your Name</label>
+            <input
+                type="text"
+                id="guest_name"
+                name="guest_name"
+                placeholder="First and last name"
+                autocomplete="name"
+                autofocus
+                required
+            >
+            {% if error %}
+            <p class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</p>
+            {% endif %}
+
+            <button type="submit" class="btn">
+                Continue to Rating <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <p class="footer-note">
+            This link expires 24 hours after it was created, or after it is used once.
+            <br>If it has expired, contact your manager for a new link.
+        </p>
+    </div>
+</body>
+</html>

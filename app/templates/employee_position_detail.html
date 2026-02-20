@@ -121,7 +121,7 @@
 
                         <div style="border-left: 1px solid var(--border); padding-left: 24px;">
                             <div style="font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
-                                Instructor: {{ s.trainer.first_name }} {{ s.trainer.last_name }}
+                                Instructor: {% if s.guest_trainer_name %}{{ s.guest_trainer_name }} <span style="font-size:10px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 6px; border-radius:8px; vertical-align:middle;">GUEST</span>{% else %}{{ s.trainer.first_name }} {{ s.trainer.last_name }}{% endif %}
                             </div>
                             <div style="font-size: 12px; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px;">
                                 <i class="fa-regular fa-calendar-check"></i> Completed on {{ s.completed_at.strftime('%I:%M %p') }}

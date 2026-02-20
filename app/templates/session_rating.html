@@ -287,7 +287,7 @@
                     </span>
                 </div>
                 <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Trainer: {{ h.trainer.first_name }}</span>
+                    <span>Trainer: {% if h.guest_trainer_name %}{{ h.guest_trainer_name }} <span style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px;">GUEST</span>{% else %}{{ h.trainer.first_name }}{% endif %}</span>
                     <span style="color: var(--primary); font-size: 10px; font-weight: 800;">VIEW <i class="fa-solid fa-chevron-right" style="font-size: 8px;"></i></span>
                 </div>
                 {% if h.overall_notes %}
