@@ -592,6 +592,57 @@
         </div>
         {% endif %}
 
+        {# ── Overdue Sessions ── #}
+        {% if overdue_sessions %}
+        <div style="margin-bottom: 24px;">
+            <div class="section-head">
+                <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Overdue Sessions <span style="font-size:12px; font-weight:700; color:#ef4444; background:rgba(239,68,68,0.08); border-radius:6px; padding:2px 8px; margin-left:6px;">{{ overdue_sessions|length }}</span></h2>
+            </div>
+            <div class="activity-card">
+                <div style="overflow-x:auto;">
+                    <table class="activity-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Session</th>
+                                <th class="mobile-hide">Trainer</th>
+                                <th style="text-align:right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in overdue_sessions %}
+                            <tr>
+                                <td>
+                                    {% set days_ago = (today - s.session_date).days %}
+                                    <span class="date-label" style="color:#ef4444;">{{ s.session_date.strftime('%b %d') }}</span>
+                                    <div style="font-size:10px; color:#ef4444; font-weight:700;">{{ days_ago }}d ago</div>
+                                </td>
+                                <td>
+                                    <div class="activity-pos">{{ s.position.name }}</div>
+                                    <div class="activity-trainee">{{ s.trainee.first_name }} {{ s.trainee.last_name[0] }}.</div>
+                                </td>
+                                <td class="mobile-hide">
+                                    <div class="trainer-cell">
+                                        <img src="{{ s.trainer.avatar(18) }}" class="avatar-xs">
+                                        <span class="trainer-name">{{ s.trainer.first_name }}</span>
+                                    </div>
+                                </td>
+                                <td style="text-align:right;">
+                                    <form method="POST" action="{{ url_for('manager.nudge_trainer', session_id=s.id) }}" style="display:inline;">
+                                        <button type="submit" style="padding:5px 12px; border-radius:8px; border:1px solid #f59e0b; background:#fef3c7; color:#92400e; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="Send a reminder to {{ s.trainer.first_name }}">
+                                            <i class="fa-solid fa-bell" style="margin-right:4px;"></i>Nudge
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         {# ── 2. Cockpit (Activity + Launchpad) ── #}
         <div class="cockpit-grid">
 

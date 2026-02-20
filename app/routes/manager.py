@@ -192,11 +192,16 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        overdue_sessions_count = TrainingSession.query.filter(
+        overdue_sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
             TrainingSession.session_date < date.today(),
-        ).count()
+        ).options(
+            joinedload(TrainingSession.position),
+            joinedload(TrainingSession.trainer),
+            joinedload(TrainingSession.trainee),
+        ).order_by(TrainingSession.session_date.asc()).all()
+        overdue_sessions_count = len(overdue_sessions)
     else:
         employees = Employee.query.filter(Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
@@ -214,11 +219,16 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        overdue_sessions_count = TrainingSession.query.filter(
+        overdue_sessions = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.completed_at == None,
             TrainingSession.session_date < date.today(),
-        ).count()
+        ).options(
+            joinedload(TrainingSession.position),
+            joinedload(TrainingSession.trainer),
+            joinedload(TrainingSession.trainee),
+        ).order_by(TrainingSession.session_date.asc()).all()
+        overdue_sessions_count = len(overdue_sessions)
     assigned_employee_ids = db.session.query(User.employee_id).filter(User.employee_id != None)
     emp_query = Employee.query.filter(~Employee.id.in_(assigned_employee_ids))
     if visible_ids is not None:
@@ -250,13 +260,39 @@ def dashboard():
         user=current_user,
         employees=employees,
         sessions=sessions,
+        overdue_sessions=overdue_sessions,
         overdue_sessions_count=overdue_sessions_count,
+        today=date.today(),
         unlinked_count=unlinked_count,
         require_signoff=require_signoff,
         flagged_sessions=flagged_sessions,
         manager_locations=manager_locations,
         current_location_filter=current_location_filter,
     )
+
+
+# --- NUDGE TRAINER ---
+@manager_bp.route("/sessions/<int:session_id>/nudge", methods=['POST'])
+@manager_required
+def nudge_trainer(session_id):
+    sess = TrainingSession.query.get_or_404(session_id)
+    trainer_user = User.query.filter_by(employee_id=sess.trainer_employee_id).first()
+    pos_name = sess.position.name if sess.position else 'a session'
+    date_str = sess.session_date.strftime('%b %d')
+    trainee_name = f"{sess.trainee.first_name} {sess.trainee.last_name}" if sess.trainee else 'their trainee'
+    link = url_for('employee.session_rating', session_id=sess.id, _external=True)
+    if trainer_user:
+        notify(
+            trainer_user,
+            "Reminder: Submit Training Session",
+            f"Please submit your {pos_name} session with {trainee_name} from {date_str}. It has not been completed yet.",
+            category='session',
+            link_url=link,
+        )
+        flash(f"Nudge sent to {sess.trainer.first_name}.", "success")
+    else:
+        flash("Trainer has no account to notify.", "warning")
+    return redirect(url_for('manager.dashboard'))
 
 
 # --- NOTIFICATIONS ---
