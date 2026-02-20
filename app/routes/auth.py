@@ -86,6 +86,9 @@ _EMPTY_LOGO_PNG = (
     b"\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
 )
 
+# Prevent caching so navbar shows new logo immediately after saving in Settings (no refresh needed)
+_NO_CACHE_HEADERS = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache", "Expires": "0"}
+
 
 @auth_bp.get("/logo")
 def logo():
@@ -99,7 +102,9 @@ def logo():
     if logo_url.startswith("http"):
         data, ctype = _fetch_logo_image(logo_url)
         if data and ctype:
-            return Response(data, mimetype=ctype, direct_passthrough=True)
+            r = Response(data, mimetype=ctype, direct_passthrough=True)
+            r.headers.update(_NO_CACHE_HEADERS)
+            return r
         # Fetch failed (e.g. CDN blocks server). Try once to download and persist to uploads, then serve from disk.
         local_path = _download_logo_to_uploads(logo_url)
         if not local_path:
@@ -112,21 +117,33 @@ def logo():
             path = os.path.join(current_app.static_folder, local_path)
             ext = os.path.splitext(local_path)[1].lower()
             mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
-            return send_file(path, mimetype=mimetype, as_attachment=False)
-        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+            r = send_file(path, mimetype=mimetype, as_attachment=False)
+            r.headers.update(_NO_CACHE_HEADERS)
+            return r
+        r = Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+        r.headers.update(_NO_CACHE_HEADERS)
+        return r
     # Serve local logo via static URL so path resolution matches Flask/nginx exactly
     static_folder = current_app.static_folder
     if not static_folder:
-        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+        r = Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+        r.headers.update(_NO_CACHE_HEADERS)
+        return r
     path = os.path.normpath(os.path.join(static_folder, logo_url))
     try:
         path = os.path.realpath(path)
         static_root = os.path.realpath(static_folder)
         if os.path.commonpath([path, static_root]) != static_root or not os.path.isfile(path):
-            return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+            r = Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+            r.headers.update(_NO_CACHE_HEADERS)
+            return r
     except (ValueError, OSError):
-        return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
-    return redirect(url_for("static", filename=logo_url))
+        r = Response(_EMPTY_LOGO_PNG, mimetype="image/png")
+        r.headers.update(_NO_CACHE_HEADERS)
+        return r
+    r = redirect(url_for("static", filename=logo_url))
+    r.headers.update(_NO_CACHE_HEADERS)
+    return r
 
 
 @auth_bp.get("/")
