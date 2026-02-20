@@ -115,26 +115,43 @@ def _domain_from_url(href):
 
 
 def _logo_domains_from_web_search(q):
-    """Search the web for the company and return list of domains from result URLs."""
+    """Search the web for the company and return list of domains (DuckDuckGo then Google fallback)."""
     q = (q or "").strip()
     if not q or len(q) < 2:
         return []
-    try:
-        from duckduckgo_search import DDGS
-        search_term = f"{q} official website"
-        with DDGS() as ddgs:
-            results = ddgs.text(search_term, max_results=8)
-        domains = []
-        seen = set()
-        for r in (results or []):
-            href = r.get("href") or r.get("link")
+    domains = []
+    seen = set()
+
+    def add_domains_from_urls(urls):
+        for href in (urls or []):
             d = _domain_from_url(href)
             if d and d not in seen:
                 seen.add(d)
                 domains.append(d)
-        return domains
+
+    # 1) DuckDuckGo
+    try:
+        from duckduckgo_search import DDGS
+        search_term = f"{q} official website"
+        with DDGS() as ddgs:
+            results = ddgs.text(search_term, max_results=10)
+        for r in (results or []):
+            href = r.get("href") or r.get("link")
+            add_domains_from_urls([href] if href else [])
     except Exception:
-        return []
+        pass
+
+    # 2) Google fallback if we have few or no domains
+    if len(domains) < 3:
+        try:
+            from googlesearch import search as google_search
+            search_term = f"{q} official website"
+            urls = list(google_search(search_term, num_results=10, lang="en"))
+            add_domains_from_urls(urls)
+        except Exception:
+            pass
+
+    return domains
 
 
 def _logo_search_first_url(q):

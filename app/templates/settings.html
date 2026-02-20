@@ -340,7 +340,7 @@
                             <label class="s-label">Accent color</label>
                             <span class="s-desc">Primary color for buttons, links, and highlights.</span>
                         </div>
-                        <select name="primary_color" class="s-select">
+                        <select name="primary_color" id="primaryColorSelect" class="s-select">
                             <option value="indigo" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
                             <option value="blue" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'blue' }}>Blue</option>
                             <option value="violet" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'violet' }}>Violet</option>
@@ -356,7 +356,7 @@
                             <span class="s-desc">Show your company logo in the app header. Search by company name or website, or upload your own image.</span>
                         </div>
                         {% if system_settings.custom_logo_url %}
-                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <div id="currentLogoBlock" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <img src="{{ system_settings.custom_logo_url if system_settings.custom_logo_url.startswith('http') else url_for('static', filename=system_settings.custom_logo_url) }}" alt="Current logo" style="height: 36px; max-width: 120px; object-fit: contain;">
                             <button type="button" onclick="removeLogo()" class="btn-save" style="background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; font-size: 12px;">Remove logo</button>
                         </div>
@@ -604,6 +604,21 @@
 <script>
     document.body.classList.add('settings-active');
 
+    (function() {
+        var primaryHex = { indigo: '#4f46e5', blue: '#2563eb', violet: '#7c3aed', green: '#059669', amber: '#d97706', rose: '#e11d48', sky: '#0284c7' };
+        var primaryHover = { indigo: '#4338ca', blue: '#1d4ed8', violet: '#6d28d9', green: '#047857', amber: '#b45309', rose: '#be123c', sky: '#0369a1' };
+        function applyPrimaryColor(key) {
+            var hex = primaryHex[key] || primaryHex.indigo;
+            var hover = primaryHover[key] || primaryHover.indigo;
+            document.documentElement.style.setProperty('--primary', hex);
+            document.documentElement.style.setProperty('--primary-hover', hover);
+        }
+        var sel = document.getElementById('primaryColorSelect');
+        if (sel) {
+            sel.addEventListener('change', function() { applyPrimaryColor(this.value); });
+        }
+    })();
+
     function replayTutorial() {
         var btn = document.getElementById('replayTutorialBtn');
         btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Loading...';
@@ -681,9 +696,16 @@
     }
 
     function removeLogo() {
-        document.getElementById('customLogoUrl').value = '';
+        var hidden = document.getElementById('customLogoUrl');
+        if (hidden) hidden.value = '';
+        var block = document.getElementById('currentLogoBlock');
+        if (block) block.style.display = 'none';
+        var fileInput = document.getElementById('logoFileInput');
+        if (fileInput) { fileInput.value = ''; }
+        var uploadPreview = document.getElementById('logoUploadPreview');
+        if (uploadPreview) uploadPreview.style.display = 'none';
         document.getElementById('saveBar').style.display = 'flex';
-    }
+      }
 
     (function() {
         var form = document.getElementById('settingsForm');
