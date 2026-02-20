@@ -135,7 +135,7 @@
             <input type="hidden" name="custom_logo_url" id="setupCustomLogoUrl" value="{{ settings.custom_logo_url or '' }}">
             <div class="form-row">
                 <label>Accent color</label>
-                <select name="primary_color">
+                <select name="primary_color" id="setupPrimaryColor">
                     <option value="indigo" {{ 'selected' if (settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
                     <option value="blue" {{ 'selected' if settings.primary_color == 'blue' }}>Blue</option>
                     <option value="violet" {{ 'selected' if settings.primary_color == 'violet' }}>Violet</option>
@@ -197,6 +197,18 @@
 {% if step == 2 %}
 <script>
 (function() {
+    var primaryHex = { indigo: '#4f46e5', blue: '#2563eb', violet: '#7c3aed', green: '#059669', amber: '#d97706', rose: '#e11d48', sky: '#0284c7' };
+    var primaryHover = { indigo: '#4338ca', blue: '#1d4ed8', violet: '#6d28d9', green: '#047857', amber: '#b45309', rose: '#be123c', sky: '#0369a1' };
+    var colorSel = document.getElementById('setupPrimaryColor');
+    if (colorSel) {
+        colorSel.addEventListener('change', function() {
+            var k = this.value;
+            document.documentElement.style.setProperty('--primary', primaryHex[k] || primaryHex.indigo);
+            document.documentElement.style.setProperty('--primary-hover', primaryHover[k] || primaryHover.indigo);
+        });
+    }
+})();
+(function() {
     var input = document.getElementById('setupLogoSearchInput');
     var btn = document.getElementById('setupLogoSearchBtn');
     var preview = document.getElementById('setupLogoPreview');
@@ -212,6 +224,8 @@
         preview.style.display = 'flex';
         img.style.display = 'none';
         if (useBtn) useBtn.style.display = 'none';
+        var oldMsg = preview.querySelector('.logo-msg');
+        if (oldMsg) oldMsg.remove();
         fetch('{{ url_for("manager.api_logo_search") }}?q=' + encodeURIComponent(q))
             .then(function(r) { return r.json(); })
             .then(function(data) {

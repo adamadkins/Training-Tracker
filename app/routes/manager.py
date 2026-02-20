@@ -79,14 +79,17 @@ def _logo_search_domains(q):
 
 
 def _clearbit_logo_exists(domain):
-    """Return True if Clearbit has a logo for this domain (HEAD check)."""
+    """Return True if Clearbit has a logo for this domain. Tries HEAD then GET (some hosts block HEAD)."""
     url = f"https://logo.clearbit.com/{domain}"
-    try:
-        req = Request(url, method="HEAD", headers={"User-Agent": "TrainingTracker/1.0"})
-        with urlopen(req, timeout=5) as r:
-            return r.status == 200
-    except (HTTPError, URLError, OSError):
-        return False
+    for method in ("HEAD", "GET"):
+        try:
+            req = Request(url, method=method, headers={"User-Agent": "Mozilla/5.0 (compatible; TrainingTracker/1.0)"})
+            with urlopen(req, timeout=8) as r:
+                if r.status == 200:
+                    return True
+        except (HTTPError, URLError, OSError):
+            continue
+    return False
 
 
 def _domain_from_url(href):
@@ -156,14 +159,19 @@ def _logo_domains_from_web_search(q):
 
 def _logo_search_first_url(q):
     """Try domain candidates (aliases + slug); then web search; return first Clearbit logo URL or None."""
+    base = "https://logo.clearbit.com/"
+    # Known alias domains: trust them and return URL even if Clearbit check fails (API may be flaky)
+    alias_domains = set(LOGO_DOMAIN_ALIASES.values())
     # 1) Built-in candidates (aliases, query.com, slug)
     for domain in _logo_search_domains(q):
+        if domain in alias_domains:
+            return base + domain
         if _clearbit_logo_exists(domain):
-            return f"https://logo.clearbit.com/{domain}"
+            return base + domain
     # 2) Web search for "{q} official website" and try Clearbit for each result domain
     for domain in _logo_domains_from_web_search(q):
         if _clearbit_logo_exists(domain):
-            return f"https://logo.clearbit.com/{domain}"
+            return base + domain
     return None
 
 
