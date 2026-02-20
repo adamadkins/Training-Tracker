@@ -585,8 +585,8 @@ body.msg-active { overflow: hidden; }
     .reaction-pill { font-size: 13px; padding: 4px 8px; }
     .hover-btn { padding: 8px 12px; font-size: 16px; }
 
-    /* ── Bigger input ── */
-    .msg-footer { padding: 0 12px 12px; }
+    /* ── Bigger input — extra bottom padding clears the fixed nav bar ── */
+    .msg-footer { padding: 0 12px 72px; }
     .msg-textarea { font-size: 16px; padding: 12px 6px; }
     .msg-input-btn { font-size: 18px; padding: 12px 14px; }
     .msg-send-btn { font-size: 20px; padding: 10px 14px; }
@@ -870,7 +870,7 @@ body.msg-active { overflow: hidden; }
     <nav class="msg-bottom-bar" aria-label="Messages navigation">
         <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="msg-bottom-link" title="Back to app"><i class="fa-solid fa-arrow-left"></i><span>Back</span></a>
         <a href="{{ url_for('messages.inbox') }}" class="msg-bottom-link {{ 'active' if not active_channel and not active_partner else '' }}" title="Messages home"><i class="fa-solid fa-inbox"></i><span>Home</span></a>
-        <a href="{{ url_for('messages.inbox') }}#dms" class="msg-bottom-link" title="Direct messages"><i class="fa-regular fa-comment-dots"></i><span>DMs</span></a>
+        <a href="{{ url_for('messages.dms_list') }}" class="msg-bottom-link" title="Direct messages"><i class="fa-regular fa-comment-dots"></i><span>DMs</span></a>
     </nav>
 </div>
 

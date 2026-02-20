@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body.inbox-active main.container,
+    body:has(.inbox-wrapper) main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    body.inbox-active main,
+    body:has(.inbox-wrapper) main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
+
+    .inbox-wrapper {
+        background: var(--bg-body);
+        min-height: calc(100vh - 72px);
+        padding: 28px 32px;
+    }
+    .inbox-container {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+
+    .back-link {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+        transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--text-main); }
+
+    .inbox-hero { margin-bottom: 20px; }
+    .inbox-title {
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--text-main);
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    .inbox-subtitle {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin: 3px 0 0;
+        font-weight: 500;
+    }
+
+    .msg-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .msg-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 14px;
+        align-items: center;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+    .msg-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px var(--shadow);
+        border-color: var(--primary);
+    }
+    .msg-card.unread {
+        background: rgba(79, 70, 229, 0.03);
+        border-left: 3px solid var(--primary);
+    }
+
+    .avatar-wrapper { position: relative; flex-shrink: 0; }
+    .avatar-lg {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: var(--bg-body);
+    }
+    .status-dot {
+        position: absolute;
+        bottom: -1px;
+        right: -1px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid var(--bg-card);
+    }
+    .status-dot.active { background: #10b981; }
+    .status-dot.notify { background: #ef4444; }
+
+    .chat-info { min-width: 0; }
+    .chat-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 1px;
+    }
+    .chat-preview {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 500;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .msg-card.unread .chat-name { color: var(--primary); }
+    .msg-card.unread .chat-preview { color: var(--text-main); font-weight: 600; }
+
+    .chat-meta { text-align: right; min-width: 56px; flex-shrink: 0; }
+    .time-stamp {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 4px;
+    }
+    .unread-badge {
+        background: #ef4444;
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+
+    .empty-inbox {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+    }
+    .empty-inbox i {
+        font-size: 36px;
+        opacity: 0.15;
+        margin-bottom: 12px;
+        display: block;
+    }
+    .empty-inbox h3 {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0 0 4px;
+    }
+    .empty-inbox p { font-size: 12px; margin: 0; }
+
+    /* new-DM button */
+    .btn-new-dm {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 18px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        margin-bottom: 20px;
+    }
+    .btn-new-dm:hover { opacity: 0.9; }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+        align-items: flex-end;
+        justify-content: center;
+    }
+    .modal-content {
+        background: var(--bg-card);
+        width: 100%;
+        max-width: 500px;
+        height: 80vh;
+        border-radius: 20px 20px 0 0;
+        padding: 20px 16px;
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 0.25s ease;
+        border-top: 1px solid var(--border);
+    }
+    @media (min-width: 600px) {
+        .modal-overlay { align-items: center; }
+        .modal-content { border-radius: 16px; height: auto; max-height: 75vh; }
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .modal-title { font-size: 18px; font-weight: 800; margin: 0; color: var(--text-main); }
+    .modal-close {
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        color: var(--text-main);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+    }
+    @keyframes slideUp {
+        from { transform: translateY(40px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+    }
+    .search-wrapper { position: relative; margin-bottom: 12px; }
+    .search-input {
+        width: 100%;
+        padding: 9px 12px 9px 34px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        font-size: 12px;
+        color: var(--text-main);
+        outline: none;
+        transition: border-color 0.15s;
+        box-sizing: border-box;
+    }
+    .search-input:focus { border-color: var(--primary); }
+    .search-icon {
+        position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); pointer-events: none; font-size: 11px;
+    }
+    .user-list { flex: 1; overflow-y: auto; }
+    .user-list::-webkit-scrollbar { width: 3px; }
+    .user-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    .user-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px; border-radius: 8px;
+        text-decoration: none; transition: background 0.1s; margin-bottom: 2px;
+    }
+    .user-item:hover { background: var(--bg-body); }
+    .user-avatar-sm { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .user-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+    .user-role { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+        .inbox-wrapper { padding: 16px 14px; }
+        .inbox-title { font-size: 20px; }
+        .msg-card { padding: 12px; gap: 10px; }
+        .avatar-lg { width: 38px; height: 38px; border-radius: 10px; }
+        .chat-name { font-size: 13px; }
+    }
+</style>
+
+<div class="inbox-wrapper">
+    <div class="inbox-container">
+
+        <a href="{{ url_for('messages.inbox') }}" class="back-link">
+            <i class="fa-solid fa-arrow-left"></i> Back to Messages
+        </a>
+
+        <div class="inbox-hero" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+            <div>
+                <h1 class="inbox-title"><i class="fa-regular fa-comment-dots" style="color:var(--primary); margin-right:8px;"></i>Direct Messages</h1>
+                <p class="inbox-subtitle">{{ conversations|length }} conversation{{ 's' if conversations|length != 1 else '' }}</p>
+            </div>
+            <button class="btn-new-dm" onclick="openNewDmModal()">
+                <i class="fa-solid fa-plus"></i> New DM
+            </button>
+        </div>
+
+        <div class="msg-list">
+            {% for chat in conversations %}
+            {% set chat_url = url_for('messages.channel_chat', channel_id=chat.channel.id) if chat.type == 'channel' else url_for('messages.chat', partner_id=chat.partner.id) %}
+            <a href="{{ chat_url }}" class="msg-card {{ 'unread' if chat.unread > 0 }}">
+                <div class="avatar-wrapper">
+                    {% if chat.avatar_employee %}
+                        <img src="{{ chat.avatar_employee.avatar(44) }}" class="avatar-lg" alt="">
+                    {% else %}
+                        <div class="avatar-lg" style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--primary);"><i class="fa-solid fa-user"></i></div>
+                    {% endif %}
+                    <div class="status-dot {{ 'notify' if chat.unread > 0 else 'active' }}"></div>
+                </div>
+
+                <div class="chat-info">
+                    <div class="chat-name">{{ chat.display_name }}</div>
+                    <div class="chat-preview">{{ chat.last_message or 'No messages yet' }}</div>
+                </div>
+
+                <div class="chat-meta">
+                    <span class="time-stamp">{{ chat.timestamp.strftime('%b %d') if chat.timestamp else '' }}</span>
+                    {% if chat.unread > 0 %}
+                        <div class="unread-badge">{{ chat.unread }}</div>
+                    {% else %}
+                        <i class="fa-solid fa-chevron-right" style="color:var(--border); font-size:9px;"></i>
+                    {% endif %}
+                </div>
+            </a>
+            {% else %}
+            <div class="empty-inbox">
+                <i class="fa-regular fa-comment-dots"></i>
+                <h3>No direct messages yet</h3>
+                <p>Tap "New DM" to start a private conversation.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+{# ── New DM modal ── #}
+<div id="newDmModal" class="modal-overlay" onclick="if(event.target===this) closeModal();">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 class="modal-title">New Direct Message</h2>
+            <button onclick="closeModal()" class="modal-close"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="dmSearch" class="search-input" placeholder="Search staff..." oninput="filterList()">
+        </div>
+        <div id="dmList" class="user-list">
+            {% for person in directory %}
+            <a href="{{ url_for('messages.dm_redirect', partner_id=person.id) }}" class="user-item search-item">
+                <img src="{{ person.avatar(36) }}" class="user-avatar-sm" alt="">
+                <div>
+                    <div class="user-name search-text">{{ person.first_name }} {{ person.last_name }}</div>
+                    <div class="user-role">{{ person.role|capitalize }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.body.classList.add('inbox-active');
+
+    function openNewDmModal() {
+        var m = document.getElementById('newDmModal');
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(function(){ document.getElementById('dmSearch').focus(); }, 200);
+    }
+    function closeModal() {
+        document.getElementById('newDmModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    function filterList() {
+        var q = document.getElementById('dmSearch').value.toLowerCase();
+        document.querySelectorAll('#dmList .search-item').forEach(function(item) {
+            var name = item.querySelector('.search-text').textContent.toLowerCase();
+            item.classList.toggle('hidden', name.indexOf(q) === -1);
+        });
+    }
+</script>
+{% endblock %}

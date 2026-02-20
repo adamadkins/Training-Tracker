@@ -665,13 +665,42 @@ def channel_update(channel_id):
     member_ids = [int(x) for x in member_ids if x]
     current_ids = {p.employee_id for p in ch.participants}
     new_ids = set(member_ids)
-    for eid in new_ids - current_ids:
+    added_ids = new_ids - current_ids
+    for eid in added_ids:
         db.session.add(ChannelParticipant(channel_id=ch.id, employee_id=eid))
     for cp in list(ch.participants):
         if cp.employee_id not in new_ids and cp.employee_id != ch.created_by_id:
             db.session.delete(cp)
     db.session.commit()
+
+    # Notify newly added members so the channel appears for them immediately
+    ch_link = url_for('messages.channel_chat', channel_id=ch.id, _external=True)
+    for eid in added_ids:
+        u = User.query.filter_by(employee_id=eid).first()
+        if u:
+            notify(u, f"Added to #{ch.name}",
+                   f"You've been added to the \"{ch.name}\" channel.",
+                   category='message', link_url=ch_link)
+    if added_ids:
+        db.session.commit()
+
     return jsonify({'status': 'ok', 'url': url_for('messages.channel_chat', channel_id=ch.id)})
+
+
+@messages_bp.route('/dms')
+@login_required
+def dms_list():
+    """Standalone page listing all direct-message conversations."""
+    if not current_user.employee_id:
+        flash("Link your account to an employee profile to chat.", "warning")
+        return redirect(url_for('main.index'))
+    my_id = current_user.employee_id
+    _, sidebar_dms, _, directory = _build_sidebar_data(my_id)
+    return render_template(
+        'messages/dms.html',
+        conversations=sidebar_dms,
+        directory=directory,
+    )
 
 
 @messages_bp.route('/<int:partner_id>/updates')
