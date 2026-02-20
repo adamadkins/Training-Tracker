@@ -329,7 +329,7 @@
                     <div class="s-header-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-paintbrush"></i></div>
                     <div class="s-header-text">
                         <h2>Branding</h2>
-                        <p>Accent color and logo for the app header</p>
+                        <p>Accent color and logo for the app header. Change these here anytime—no need to run setup.</p>
                     </div>
                     <span class="s-badge">Manager</span>
                 </div>
@@ -371,7 +371,8 @@
                             <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="">
                             <button type="button" onclick="tryLogoSearch()" class="btn-save" style="padding: 8px 16px; font-size: 13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Try</button>
                             <div id="logoSearchPreview" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <img id="logoSearchImg" src="" alt="" style="height: 32px; max-width: 100px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px;">
+                                <span class="s-desc" style="margin-right: 4px;">Preview:</span>
+                                <img id="logoSearchImg" src="" alt="" style="height: 40px; width: auto; min-width: 48px; max-width: 120px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body);">
                                 <button type="button" id="useSearchedLogoBtn" onclick="useSearchedLogo()" class="btn-save" style="padding: 6px 12px; font-size: 12px;">Use this logo</button>
                             </div>
                         </div>
@@ -419,7 +420,7 @@
                     <div class="s-header-icon blue"><i class="fa-solid fa-building"></i></div>
                     <div class="s-header-text">
                         <h2>Organization</h2>
-                        <p>Business type and locations from setup</p>
+                        <p>Business type and locations (branding is in the Branding section above)</p>
                     </div>
                 </div>
                 <div class="s-body">
@@ -447,7 +448,7 @@
                     <div class="s-row" style="border-bottom: none;">
                         <div class="s-info">
                             <label class="s-label">Setup wizard</label>
-                            <span class="s-desc">Run the organization setup wizard (business type and locations).</span>
+                            <span class="s-desc">Run setup only if you need to set business type or locations again. For accent color and logo, use the Branding section above.</span>
                         </div>
                         <a href="{{ url_for('manager.setup_wizard', run=1) }}" class="btn-save" style="text-decoration: none; display: inline-block; background: var(--bg-body); color: var(--primary); border: 1px solid var(--primary);">Run setup wizard</a>
                     </div>
@@ -635,11 +636,12 @@
         if (!q) return;
         var preview = document.getElementById('logoSearchPreview');
         var img = document.getElementById('logoSearchImg');
+        img.dataset.triedFallback = '';
         var msg = document.getElementById('logoSearchMsg');
+        if (msg) msg.remove();
         preview.style.display = 'flex';
         preview.classList.remove('logo-error');
         img.style.display = 'none';
-        if (msg) msg.remove();
         var statusEl = document.createElement('span');
         statusEl.id = 'logoSearchMsg';
         statusEl.className = 's-desc';
@@ -671,7 +673,11 @@
                         }
                         showLogoError();
                     };
-                    img.onload = function() { img.style.display = 'block'; };
+                    img.onload = function() {
+                        img.style.display = 'block';
+                        var errMsg = document.getElementById('logoSearchMsg');
+                        if (errMsg && errMsg.textContent === 'Logo could not be loaded.') errMsg.remove();
+                    };
                     img.src = data.url;
                     img.style.display = 'block';
                     var useBtn = document.getElementById('useSearchedLogoBtn');
