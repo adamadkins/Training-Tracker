@@ -1,3 +1,5 @@
+import os
+import uuid
 from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
@@ -11,21 +13,57 @@ from app.utils.notifications import send_notification_email
 
 auth_bp = Blueprint("auth", __name__)
 
+# Browser-like User-Agent so logo CDNs (e.g. Clearbit) are more likely to allow the request
+_LOGO_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
+
 
 def _fetch_logo_image(url):
     """Fetch image bytes from URL; returns (data, content_type) or (None, None)."""
     if not url or not url.startswith("http"):
         return None, None
-    try:
-        req = Request(url, headers={"User-Agent": "TrainingTracker/1.0"})
-        with urlopen(req, timeout=8) as r:
-            data = r.read()
-            ctype = (r.headers.get("Content-Type") or "image/png").split(";")[0].strip()
-            if data and len(data) <= 2 * 1024 * 1024:
-                return data, ctype
-    except (HTTPError, URLError, OSError):
-        pass
+    for ua in (_LOGO_USER_AGENT, "TrainingTracker/1.0"):
+        try:
+            req = Request(url, headers={"User-Agent": ua})
+            with urlopen(req, timeout=10) as r:
+                data = r.read()
+                ctype = (r.headers.get("Content-Type") or "image/png").split(";")[0].strip()
+                if data and len(data) <= 2 * 1024 * 1024:
+                    return data, ctype
+        except (HTTPError, URLError, OSError):
+            continue
     return None, None
+
+
+def _download_logo_to_uploads(url):
+    """Download image from URL and save to static/uploads/logos/. Returns relative path or None."""
+    if not url or not url.startswith("http"):
+        return None
+    try:
+        req = Request(url, headers={"User-Agent": _LOGO_USER_AGENT})
+        with urlopen(req, timeout=10) as r:
+            data = r.read()
+            ctype = (r.headers.get("Content-Type") or "").lower()
+        if not data or len(data) > 5 * 1024 * 1024:
+            return None
+        ext = ".png"
+        if "jpeg" in ctype or "jpg" in ctype:
+            ext = ".jpg"
+        elif "gif" in ctype:
+            ext = ".gif"
+        elif "webp" in ctype:
+            ext = ".webp"
+        static_folder = current_app.static_folder
+        if not static_folder:
+            return None
+        upload_dir = os.path.join(static_folder, "uploads", "logos")
+        os.makedirs(upload_dir, exist_ok=True)
+        name = str(uuid.uuid4()) + ext
+        path = os.path.join(upload_dir, name)
+        with open(path, "wb") as f:
+            f.write(data)
+        return "uploads/logos/" + name
+    except Exception:
+        return None
 
 
 # 1x1 transparent PNG so /logo never 404s when a logo is configured (avoids broken img when file missing or fetch fails)
@@ -38,7 +76,6 @@ _EMPTY_LOGO_PNG = (
 @auth_bp.get("/logo")
 def logo():
     """Serve the configured system logo (no auth). Used by navbar and login page."""
-    import os
     settings = SystemSettings.query.first()
     if not settings or not settings.custom_logo_url:
         abort(404)
@@ -49,6 +86,15 @@ def logo():
         data, ctype = _fetch_logo_image(logo_url)
         if data and ctype:
             return Response(data, mimetype=ctype, direct_passthrough=True)
+        # Fetch failed (e.g. CDN blocks server). Try once to download and persist to uploads, then serve from disk.
+        local_path = _download_logo_to_uploads(logo_url)
+        if local_path:
+            settings.custom_logo_url = local_path
+            db.session.commit()
+            path = os.path.join(current_app.static_folder, local_path)
+            ext = os.path.splitext(local_path)[1].lower()
+            mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
+            return send_file(path, mimetype=mimetype, as_attachment=False)
         return Response(_EMPTY_LOGO_PNG, mimetype="image/png")
     static_folder = current_app.static_folder
     if not static_folder:
