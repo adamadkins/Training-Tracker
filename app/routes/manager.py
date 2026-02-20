@@ -1539,7 +1539,9 @@ def schedule_create():
             return redirect(url_for('manager.schedule_detail', schedule_id=new_sch.id))
         except Exception as e:
             flash(f"Error: {str(e)}")
-    return render_template("schedule_form.html", mode="new", schedule=None)
+    sys = SystemSettings.query.first()
+    default_hide = getattr(sys, 'default_hide_assignments', False) if sys else False
+    return render_template("schedule_form.html", mode="new", schedule=None, default_hide_assignments=default_hide)
 
 
 @manager_bp.route("/schedules/<int:schedule_id>/edit", methods=['GET', 'POST'])

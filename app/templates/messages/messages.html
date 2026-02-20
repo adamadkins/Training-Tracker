@@ -998,8 +998,8 @@ body.msg-active { overflow: hidden; }
                 {% for person in directory %}
                 <a href="{{ url_for('messages.dm_redirect', partner_id=person.id) }}" class="member-check-item dm-person" data-name="{{ person.first_name|lower }} {{ person.last_name|lower }}" style="text-decoration: none; color: inherit;">
                     <img src="{{ person.avatar(28) }}" class="member-check-avatar" alt="">
-                    <div class="member-check-info">
-                        <div class="member-check-name">{{ person.first_name }} {{ person.last_name }}</div>
+                    <div class="member-check-info" style="position: relative;">
+                        <div class="member-check-name">{{ person.first_name }} {{ person.last_name }}{% if online_employee_ids is defined and person.id in online_employee_ids %}<span class="online-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-left:6px;vertical-align:middle;" title="Online"></span>{% endif %}</div>
                         <div class="member-check-role">{{ person.role|capitalize }}</div>
                     </div>
                 </a>

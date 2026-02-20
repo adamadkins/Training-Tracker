@@ -37,6 +37,14 @@ def load_system_settings():
     flask.g.system_settings = settings
 
 
+@messages_bp.before_request
+def update_last_seen():
+    """Update current user's last_seen for online status when they hit any messages route."""
+    if current_user.is_authenticated and getattr(current_user, 'id', None):
+        User.query.filter_by(id=current_user.id).update({'last_seen': datetime.now(timezone.utc)})
+        db.session.commit()
+
+
 # ── Helpers ──────────────────────────────────────────────
 
 def get_reaction_map(message_ids, current_employee_id):
@@ -85,8 +93,10 @@ def enrich_messages_with_sessions(messages):
     return {s.id: s for s in sessions}
 
 
-def mark_as_read(partner_id, my_id):
-    """Mark all unread messages from partner as read."""
+def mark_as_read(partner_id, my_id, reader_allow_read_receipts=True):
+    """Mark all unread messages from partner as read. Only updates if reader has read receipts enabled."""
+    if not reader_allow_read_receipts:
+        return
     Message.query.filter(
         Message.sender_id == partner_id,
         Message.recipient_id == my_id,
@@ -283,7 +293,32 @@ def _build_sidebar_data(my_id):
         Employee.status == 'active'
     ).order_by(Employee.first_name).all()
 
+    # If trainee-to-trainee DMs are disabled, filter directory for trainee users
+    sys = flask.g.system_settings
+    if sys and not getattr(sys, 'allow_trainee_to_trainee_dm', True):
+        my_emp = Employee.query.get(my_id)
+        if my_emp and getattr(my_emp, 'role', None) == 'trainee':
+            directory = [e for e in directory if getattr(e, 'role', None) != 'trainee']
+
     return sidebar_channels, sidebar_dms, unreads, directory
+
+
+def _directory_online_ids(directory):
+    """Given a list of Employee, return set of employee ids who are 'online' (last_seen < 2 min and show_online_status)."""
+    if not directory:
+        return set()
+    now = datetime.now(timezone.utc)
+    online = set()
+    for emp in directory:
+        u = User.query.filter_by(employee_id=emp.id).first()
+        if not u:
+            continue
+        if not (getattr(u.settings, 'show_online_status', True) if u.settings else True):
+            continue
+        ls = getattr(u, 'last_seen', None)
+        if ls and (now - ls).total_seconds() < 120:
+            online.add(emp.id)
+    return online
 
 
 # ── Routes ───────────────────────────────────────────────
@@ -296,12 +331,14 @@ def inbox():
         return redirect(url_for('main.index'))
     my_id = current_user.employee_id
     sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
+    online_employee_ids = _directory_online_ids(directory)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
         sidebar_unreads=sidebar_unreads,
         directory=directory,
+        online_employee_ids=online_employee_ids,
         active_channel=None,
         active_partner=None,
         channel_display_name='',
@@ -329,6 +366,11 @@ def chat(partner_id):
     if flask.g.system_settings and not flask.g.system_settings.dm_enabled:
         flash("Messaging is disabled.", "info")
         return redirect(url_for('messages.inbox'))
+    sys = flask.g.system_settings
+    if sys and not getattr(sys, 'allow_trainee_to_trainee_dm', True):
+        if current_user.role == 'trainee' and getattr(partner, 'role', None) == 'trainee':
+            flash("Trainee-to-trainee direct messages are disabled.", "warning")
+            return redirect(url_for('messages.inbox'))
 
     # Handle new message
     if request.method == 'POST':
@@ -377,8 +419,9 @@ def chat(partner_id):
                 return jsonify({'status': 'success'})
             return redirect(url_for('messages.chat', partner_id=partner_id))
 
-    # Mark incoming messages as read
-    mark_as_read(partner_id, my_id)
+    # Mark incoming messages as read (only if current user allows read receipts)
+    reader_allows = getattr(current_user.settings, 'allow_read_receipts', True) if current_user.settings else True
+    mark_as_read(partner_id, my_id, reader_allow_read_receipts=reader_allows)
 
     # Load conversation
     messages = Message.query.filter(
@@ -397,12 +440,14 @@ def chat(partner_id):
     yesterday = today - timedelta(days=1)
 
     sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
+    online_employee_ids = _directory_online_ids(directory)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
         sidebar_unreads=sidebar_unreads,
         directory=directory,
+        online_employee_ids=online_employee_ids,
         active_channel=None,
         active_partner=partner,
         channel_display_name='',
@@ -428,6 +473,11 @@ def dm_redirect(partner_id):
     if flask.g.system_settings and not flask.g.system_settings.dm_enabled:
         flash("Messaging is disabled.", "info")
         return redirect(url_for('messages.inbox'))
+    sys = flask.g.system_settings
+    if sys and not getattr(sys, 'allow_trainee_to_trainee_dm', True):
+        if current_user.role == 'trainee' and getattr(partner, 'role', None) == 'trainee':
+            flash("Trainee-to-trainee direct messages are disabled.", "warning")
+            return redirect(url_for('messages.inbox'))
     ch, _ = get_or_create_dm_channel(current_user.employee_id, partner_id)
     if not ch:
         flash("Cannot start a chat with yourself.", "warning")
@@ -528,12 +578,14 @@ def channel_chat(channel_id):
     )
 
     sidebar_channels, sidebar_dms, sidebar_unreads, directory = _build_sidebar_data(my_id)
+    online_employee_ids = _directory_online_ids(directory)
     return render_template(
         'messages/messages.html',
         sidebar_channels=sidebar_channels,
         sidebar_dms=sidebar_dms,
         sidebar_unreads=sidebar_unreads,
         directory=directory,
+        online_employee_ids=online_employee_ids,
         active_channel=ch,
         active_partner=None,
         channel_display_name=channel_display_name,
@@ -696,10 +748,12 @@ def dms_list():
         return redirect(url_for('main.index'))
     my_id = current_user.employee_id
     _, sidebar_dms, _, directory = _build_sidebar_data(my_id)
+    online_employee_ids = _directory_online_ids(directory)
     return render_template(
         'messages/dms.html',
         conversations=sidebar_dms,
         directory=directory,
+        online_employee_ids=online_employee_ids,
     )
 
 
@@ -709,7 +763,14 @@ def chat_updates(partner_id):
     my_id = current_user.employee_id
     last_id = request.args.get('last_id', 0, type=int)
 
-    mark_as_read(partner_id, my_id)
+    reader_allows_receipts = True
+    if current_user.settings:
+        reader_allows_receipts = getattr(current_user.settings, 'allow_read_receipts', True)
+    mark_as_read(partner_id, my_id, reader_allow_read_receipts=reader_allows_receipts)
+
+    # Partner's read receipt preference: hide read_at on messages we sent if they disabled receipts
+    partner_user = User.query.filter_by(employee_id=partner_id).first()
+    partner_allows_receipts = getattr(partner_user.settings, 'allow_read_receipts', True) if (partner_user and partner_user.settings) else True
 
     new_msgs = Message.query.filter(
         or_(
@@ -741,6 +802,8 @@ def chat_updates(partner_id):
         reply_to_data = reply_to_map.get(m.reply_to_id) if m.reply_to_id else None
         sender = m.sender
 
+        read_at_val = (m.read_at.isoformat() if m.read_at else None) if (m.sender_id != my_id or partner_allows_receipts) else None
+
         messages_data.append({
             'id': m.id,
             'sender_id': m.sender_id,
@@ -748,7 +811,7 @@ def chat_updates(partner_id):
             'sender_avatar': sender.avatar(36) if sender else '',
             'body': m.body,
             'timestamp': m.timestamp.isoformat(),
-            'read_at': m.read_at.isoformat() if m.read_at else None,
+            'read_at': read_at_val,
             'session_preview': session_data,
             'reply_to': reply_to_data,
         })

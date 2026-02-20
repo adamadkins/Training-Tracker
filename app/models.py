@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(20), nullable=False, default="trainee")
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
+    last_seen = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     employee = db.relationship("Employee", foreign_keys=[employee_id],

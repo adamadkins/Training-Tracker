@@ -314,9 +314,9 @@
                             <span class="s-desc">Choose your preferred color scheme.</span>
                         </div>
                         <select name="theme_pref" class="s-select">
-                            <option value="light" {{ 'selected' if user_settings.theme_pref == 'light' }}>Light</option>
-                            <option value="dark" {{ 'selected' if user_settings.theme_pref == 'dark' }}>Dark</option>
-                            <option value="system" {{ 'selected' if user_settings.theme_pref == 'system' }}>System</option>
+                            <option value="light" {{ 'selected' if (user_settings.theme_pref or 'system') == 'light' }}>Light</option>
+                            <option value="dark" {{ 'selected' if (user_settings.theme_pref or 'system') == 'dark' }}>Dark</option>
+                            <option value="system" {{ 'selected' if (user_settings.theme_pref or 'system') == 'system' }}>System</option>
                         </select>
                     </div>
                 </div>

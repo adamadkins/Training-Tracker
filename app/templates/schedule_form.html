@@ -264,7 +264,7 @@
 
                 <div class="toggle-card">
                     <input type="checkbox" name="hide_assignments" id="hide_assignments"
-                           {{ 'checked' if (schedule and schedule.hide_assignments) else '' }}>
+                           {{ 'checked' if (schedule and schedule.hide_assignments) or (not schedule and default_hide_assignments|default(false)) else '' }}>
                     <div>
                         <label for="hide_assignments" class="toggle-label">Hide Assignments (Blind Mode)</label>
                         <p class="toggle-desc">
