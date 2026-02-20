@@ -268,7 +268,6 @@
         </div>
         <h1>See Every Feature<br>Up Close</h1>
         <p>A deep dive into everything Training Tracker can do for your team &mdash; from scheduling to graduation.</p>
-        <div class="tour-hero-motto">&ldquo;The difference between good and great is the little things.&rdquo;</div>
     </div>
 </section>
 
@@ -855,13 +854,13 @@
                     <div class="tm-qr">
                         <div class="tm-title" style="margin-bottom:2px;">Guest Trainer Link</div>
                         <div class="tm-sub" style="margin-bottom:16px;">For Jordan R. &mdash; Front Counter</div>
-                        <div class="tm-qr-box"><div class="tm-qr-pattern"></div></div>
+                        <div class="tm-qr-box"><a href="{{ url_for('legacy.index') }}"><img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://trainingtracker.me/legacy/" alt="Scan to try Training Tracker Classic" style="width:80px; height:80px; border-radius:3px;"></a></div>
                         <div class="tm-qr-link">trainingtracker.me/guest/train/a8f2c...</div>
                         <div class="tm-qr-btns">
                             <div class="tm-qr-btn" style="background:#7c3aed;"><i class="fa-solid fa-copy"></i> Copy Link</div>
                             <div class="tm-qr-btn" style="background:#16a34a;"><i class="fa-solid fa-message"></i> Send via Text</div>
                         </div>
-                        <div style="margin-top:10px; font-size:9px; color:#94a3b8;">Expires in 24 hours or after first use</div>
+                        <div style="margin-top:10px; font-size:9px; color:#94a3b8;">Scan the QR code to try Training Tracker Classic</div>
                     </div>
                 </div>
             </div>
@@ -873,7 +872,6 @@
 <section class="tour-cta">
     <h2>Ready to see it in action?</h2>
     <p>Join teams that stopped winging it and started training with a real system.</p>
-    <div class="tour-cta-motto">&ldquo;The difference between good and great is the little things.&rdquo;</div>
     <a href="{{ url_for('auth.home') }}#" class="tour-cta-btn" onclick="event.preventDefault();">
         <i class="fa-solid fa-rocket"></i> Get Started for Free
     </a>
