@@ -482,5 +482,25 @@
 {% if current_user.is_authenticated and not current_user.has_seen_tutorial %}
 {% include 'tutorial_overlay.html' %}
 {% endif %}
+
+<footer style="
+    border-top: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--bg-card);
+">
+    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">
+        <b style="color: var(--text-main);">Training<b>Tracker</b></b>
+        &nbsp;&middot;&nbsp;
+        <a href="{{ url_for('legacy.index') }}" style="color: var(--text-muted); text-decoration: none; font-family: 'Courier New', monospace; font-size: 11px;" title="View Training Tracker Classic">Classic</a>
+    </span>
+    <span style="font-size: 11px; color: var(--text-muted); font-family: 'Courier New', monospace; letter-spacing: 0.04em;">
+        v{{ app_version }}
+    </span>
+</footer>
 </body>
 </html>

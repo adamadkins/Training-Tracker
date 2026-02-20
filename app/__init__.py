@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 
 from flask import Flask, session, redirect, url_for, flash, request
+
+APP_VERSION = "2.2.0"
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, logout_user, current_user
 from flask_migrate import Migrate
@@ -41,14 +43,19 @@ def create_app():
     app.register_blueprint(messages_bp)
     app.register_blueprint(legacy_bp)
 
-    # 5. Define the User Loader
+    # 5. Inject app version into all templates
+    @app.context_processor
+    def inject_version():
+        return {'app_version': APP_VERSION}
+
+    # 7. Define the User Loader
     from app.models import User
 
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # 6. Session idle-timeout enforcement
+    # 8. Session idle-timeout enforcement
     @app.before_request
     def enforce_session_timeout():
         # Skip static files and the auth endpoints to avoid redirect loops
