@@ -127,17 +127,15 @@
         }
         .brand-logo-img-wrap {
             flex-shrink: 0;
-            width: 140px;
-            min-width: 48px;
             height: 32px;
             display: flex;
             align-items: center;
+            max-width: 140px;
         }
         .brand-logo-img {
             height: 32px;
             width: auto;
             max-width: 140px;
-            min-width: 48px;
             object-fit: contain;
             display: block;
             vertical-align: middle;
@@ -406,7 +404,7 @@
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
-                <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="async" width="140" height="32"></span>
+                <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="async"></span>
                 {% endif %}
                 <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
             </a>
