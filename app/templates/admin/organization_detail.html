@@ -22,6 +22,12 @@
             </form>
             {% endif %}
         </div>
+        {% if not has_users and org.status == 'active' %}
+        <div class="invite-first-section">
+            <p class="invite-first-text">No users yet. Invite the first manager so they can log in to their dashboard.</p>
+            <a href="{{ url_for('admin.organization_invite_first_user', org_id=org.id) }}" class="btn btn-primary">Invite first user</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 <style>
@@ -36,6 +42,8 @@
 .detail-list dd { margin: 0; font-size: 15px; color: var(--text-main); }
 .detail-list code { font-size: 13px; background: var(--bg-body); padding: 4px 10px; border-radius: 8px; }
 .detail-actions { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.invite-first-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.invite-first-text { margin: 0 0 12px 0; color: var(--text-muted); font-size: 14px; }
 .status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
 .status-active { background: #dcfce7; color: #166534; }
 .status-suspended { background: #fee2e2; color: #991b1b; }
