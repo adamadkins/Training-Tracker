@@ -255,6 +255,7 @@
             display: none;
             background: none;
             border: none;
+        .nav-overlay { display: none; }
             font-size: 18px;
             color: var(--text-main);
             cursor: pointer;
@@ -425,6 +426,7 @@
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
 <div class="dm-disabled-banner">
+    <div class="nav-overlay" id="navOverlay" onclick="toggleMobileMenu()" aria-hidden="true"></div>
     <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
     Direct messaging is currently disabled for all staff.
 </div>
