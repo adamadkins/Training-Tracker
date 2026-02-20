@@ -7,7 +7,7 @@ from app.models import (
     Organization, SystemSettings, User, Employee, Location, Position, PositionDescriptor,
     Daypart, Schedule, TrainingSession, Channel, Message, Notification, TrainingRoadmap,
     RoadmapStep, ChannelParticipant, MessageReaction, SessionRating, GuestTrainerToken,
-    EmployeeNote, UserSettings,
+    EmployeeNote, UserSettings, SignupRequest,
 )
 from app.utils.notifications import send_notification_email
 
@@ -50,6 +50,7 @@ def index():
     total_users = User.query.filter(User.organization_id.isnot(None)).count()
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
     orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs[:20]]
+    signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(50).all()
     return render_template(
         "admin/index.html",
         organizations=orgs_with_stats,
@@ -57,6 +58,7 @@ def index():
         active_orgs=active_orgs,
         total_users=total_users,
         total_employees=total_employees,
+        signup_requests=signup_requests,
     )
 
 

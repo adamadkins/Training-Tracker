@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort, g
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, SystemSettings, Organization
+from app.models import User, SystemSettings, Organization, SignupRequest
 from app import db
 # ADDED: Import your notification helper
 from app.utils.notifications import send_notification_email
@@ -305,15 +305,27 @@ def change_password():
 
 @auth_bp.route("/waitlist", methods=["POST"])
 def waitlist():
-    """Capture landing page interest form submissions and email the admin. Plan = Standard or Pro they clicked."""
+    """Capture landing page interest form submissions; save to DB and email the admin."""
     data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     business = data.get("business", "").strip()
     size = data.get("size", "").strip()
-    plan = (data.get("plan") or "").strip().lower()  # 'standard' | 'pro' when they clicked a plan CTA
+    plan = (data.get("plan") or "").strip().lower() or None  # 'standard' | 'pro'
 
     if email:
+        try:
+            req = SignupRequest(
+                name=name or "",
+                email=email,
+                business=business or "",
+                size=size or None,
+                plan=plan if plan in ("standard", "pro") else None,
+            )
+            db.session.add(req)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         try:
             from app.utils.notifications import send_notification_email
             import os

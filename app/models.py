@@ -25,6 +25,18 @@ class Organization(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
+class SignupRequest(db.Model):
+    """Landing page / waitlist signup; shown on admin dashboard for follow-up."""
+    __tablename__ = "signup_requests"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, default="")
+    email = db.Column(db.String(255), nullable=False, index=True)
+    business = db.Column(db.String(200), nullable=False, default="")
+    size = db.Column(db.String(40), nullable=True)  # e.g. 11-25
+    plan = db.Column(db.String(20), nullable=True)  # standard | pro
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
 class User(db.Model, UserMixin):
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("organization_id", "email", name="uq_user_org_email"),)
