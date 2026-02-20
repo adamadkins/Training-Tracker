@@ -393,7 +393,8 @@
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
-                <img src="{{ g.system_settings.custom_logo_url if g.system_settings.custom_logo_url.startswith('http') else url_for('static', filename=g.system_settings.custom_logo_url) }}" alt="Logo" class="brand-logo-img">
+                {% set logo_url = g.system_settings.custom_logo_url %}
+                <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url) }}" alt="Logo" class="brand-logo-img" referrerpolicy="no-referrer">
                 <span class="brand-logo-text">Training<b>Tracker</b></span>
                 {% else %}
                 <span class="brand-logo-text">Training<b>Tracker</b></span>

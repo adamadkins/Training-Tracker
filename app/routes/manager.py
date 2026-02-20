@@ -175,6 +175,35 @@ def _logo_search_first_url(q):
     return None
 
 
+def _download_logo_to_uploads(url):
+    """Download image from URL and save to static/uploads/logos/. Returns relative path or None."""
+    if not url or not url.startswith("http"):
+        return None
+    try:
+        req = Request(url, headers={"User-Agent": "TrainingTracker/1.0"})
+        with urlopen(req, timeout=10) as r:
+            data = r.read()
+            ctype = (r.headers.get("Content-Type") or "").lower()
+        if not data or len(data) > 5 * 1024 * 1024:
+            return None
+        ext = ".png"
+        if "jpeg" in ctype or "jpg" in ctype:
+            ext = ".jpg"
+        elif "gif" in ctype:
+            ext = ".gif"
+        elif "webp" in ctype:
+            ext = ".webp"
+        upload_dir = os.path.join(current_app.static_folder, "uploads", "logos")
+        os.makedirs(upload_dir, exist_ok=True)
+        name = str(uuid.uuid4()) + ext
+        path = os.path.join(upload_dir, name)
+        with open(path, "wb") as f:
+            f.write(data)
+        return "uploads/logos/" + name
+    except Exception:
+        return None
+
+
 def _get_manager_location_id():
     """If the current user is a manager with a location restriction, return that location_id; else None."""
     if not current_user.is_authenticated or current_user.role != "manager" or not current_user.employee_id:
@@ -295,10 +324,13 @@ def setup_wizard():
                 path = os.path.join(upload_dir, name)
                 logo_file.save(path)
                 logo_url = "uploads/logos/" + name
+        elif logo_url and logo_url.startswith("http"):
+            local_path = _download_logo_to_uploads(logo_url)
+            if local_path:
+                logo_url = local_path
         settings.custom_logo_url = logo_url
         settings.setup_step = 3
         db.session.commit()
-        cache.delete("system_settings")
         return redirect(url_for("manager.setup_wizard"))
     if step == 3:
         # Add locations from form (names and optional descriptions)
@@ -2075,9 +2107,13 @@ def settings():
                     path = os.path.join(upload_dir, name)
                     logo_file.save(path)
                     logo_url = 'uploads/logos/' + name
+            elif logo_url and logo_url.startswith('http'):
+                local_path = _download_logo_to_uploads(logo_url)
+                if local_path:
+                    logo_url = local_path
             system_settings.custom_logo_url = logo_url
         db.session.commit()
-        cache.delete('system_settings')
+        cache.delete("system_settings")
         flash("Settings updated successfully!", "success")
         return redirect(url_for('manager.settings'))
     share_trainee_data = getattr(system_settings, 'share_trainee_data_with_trainees', True)

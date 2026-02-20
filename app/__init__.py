@@ -50,17 +50,7 @@ def create_app():
     def inject_system_settings():
         from flask import g
         from app.models import SystemSettings
-        from app import cache
-        try:
-            g.system_settings = cache.get('system_settings')
-        except Exception:
-            g.system_settings = None
-        if g.system_settings is None:
-            g.system_settings = SystemSettings.query.first()
-            try:
-                cache.set('system_settings', g.system_settings, timeout=60)
-            except Exception:
-                pass
+        g.system_settings = SystemSettings.query.first()
 
     @app.context_processor
     def inject_version():
