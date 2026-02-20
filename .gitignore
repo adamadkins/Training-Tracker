@@ -11,6 +11,7 @@ instance/
 *.db
 .env
 .env.local
+app/static/uploads/
 
 # IDE / OS
 .idea/

@@ -10,8 +10,19 @@
 
     <style>
         /* ── Theme variables ── */
+        {% set primary_hex = {
+            'indigo': '#4f46e5',
+            'blue': '#2563eb',
+            'violet': '#7c3aed',
+            'green': '#059669',
+            'amber': '#d97706',
+            'rose': '#e11d48',
+            'sky': '#0284c7'
+        } %}
+        {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
+        {% set _hex = primary_hex.get(_primary, primary_hex['indigo']) %}
         :root {
-            --primary: #4f46e5;
+            --primary: {{ _hex }};
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
             --text-main: #1e293b;
@@ -100,7 +111,14 @@
             text-decoration: none;
             flex-shrink: 0;
         }
-        .brand-logo span {
+        .brand-logo-img {
+            height: 32px;
+            width: auto;
+            max-width: 140px;
+            object-fit: contain;
+            display: block;
+        }
+        .brand-logo span, .brand-logo .brand-logo-text {
             font-family: 'Inter', sans-serif;
             font-size: 16px;
             font-weight: 700;
@@ -363,7 +381,12 @@
     <div class="container nav-split">
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
-                <span>Training<b>Tracker</b></span>
+                {% if g.system_settings and g.system_settings.custom_logo_url %}
+                <img src="{{ g.system_settings.custom_logo_url if g.system_settings.custom_logo_url.startswith('http') else url_for('static', filename=g.system_settings.custom_logo_url) }}" alt="Logo" class="brand-logo-img">
+                <span class="brand-logo-text">Training<b>Tracker</b></span>
+                {% else %}
+                <span class="brand-logo-text">Training<b>Tracker</b></span>
+                {% endif %}
             </a>
 
             <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>

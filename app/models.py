@@ -351,6 +351,9 @@ class SystemSettings(db.Model):
     require_completion_notes = db.Column(db.Boolean, default=False)
     require_digital_signoff = db.Column(db.Boolean, default=False)
     default_rating_scale = db.Column(db.Integer, default=5)
+    # Branding
+    primary_color = db.Column(db.String(20), default='indigo', nullable=False)
+    custom_logo_url = db.Column(db.String(500), nullable=True)
     # Setup wizard
     setup_completed = db.Column(db.Boolean, default=False, nullable=False)
     setup_step = db.Column(db.Integer, default=0, nullable=False)

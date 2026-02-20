@@ -263,7 +263,7 @@
             <p class="settings-subtitle">Personal preferences{% if current_user.role == 'manager' %} & system configuration{% endif %}</p>
         </div>
 
-        <form method="POST" id="settingsForm">
+        <form method="POST" id="settingsForm" enctype="multipart/form-data">
 
             {# ── Notifications ── #}
             <div class="s-section">
@@ -321,6 +321,74 @@
                     </div>
                 </div>
             </div>
+
+            {# ── Branding (managers only) ── #}
+            {% if current_user.role == 'manager' %}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon" style="background: #fef3c7; color: #d97706;"><i class="fa-solid fa-paintbrush"></i></div>
+                    <div class="s-header-text">
+                        <h2>Branding</h2>
+                        <p>Accent color and logo for the app header</p>
+                    </div>
+                    <span class="s-badge">Manager</span>
+                </div>
+                <div class="s-body">
+                    <input type="hidden" name="custom_logo_url" id="customLogoUrl" value="{{ system_settings.custom_logo_url or '' }}">
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Accent color</label>
+                            <span class="s-desc">Primary color for buttons, links, and highlights.</span>
+                        </div>
+                        <select name="primary_color" class="s-select">
+                            <option value="indigo" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'indigo' }}>Indigo</option>
+                            <option value="blue" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'blue' }}>Blue</option>
+                            <option value="violet" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'violet' }}>Violet</option>
+                            <option value="green" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'green' }}>Green</option>
+                            <option value="amber" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'amber' }}>Amber</option>
+                            <option value="rose" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'rose' }}>Rose</option>
+                            <option value="sky" {{ 'selected' if (system_settings.primary_color or 'indigo') == 'sky' }}>Sky</option>
+                        </select>
+                    </div>
+                    <div class="s-row" style="flex-wrap: wrap;">
+                        <div class="s-info" style="flex: 1 1 100%; margin-bottom: 8px;">
+                            <label class="s-label">Custom logo</label>
+                            <span class="s-desc">Show your company logo in the app header. Search by company name or website, or upload your own image.</span>
+                        </div>
+                        {% if system_settings.custom_logo_url %}
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <img src="{{ system_settings.custom_logo_url if system_settings.custom_logo_url.startswith('http') else url_for('static', filename=system_settings.custom_logo_url) }}" alt="Current logo" style="height: 36px; max-width: 120px; object-fit: contain;">
+                            <button type="button" onclick="removeLogo()" class="btn-save" style="background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; font-size: 12px;">Remove logo</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="s-row" style="flex-wrap: wrap; border-bottom: none;">
+                        <div class="s-info" style="flex: 1 1 100%;">
+                            <label class="s-label" style="margin-bottom: 6px;">Search by company or domain</label>
+                            <span class="s-desc">e.g. chickfila, chick-fil-a.com, mcdonalds</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                            <input type="text" id="logoSearchInput" class="s-select" placeholder="Company or domain" style="min-width: 180px;" value="">
+                            <button type="button" onclick="tryLogoSearch()" class="btn-save" style="padding: 8px 16px; font-size: 13px;"><i class="fa-solid fa-magnifying-glass" style="margin-right:4px;"></i> Try</button>
+                            <div id="logoSearchPreview" style="display: none; align-items: center; gap: 8px;">
+                                <img id="logoSearchImg" src="" alt="" style="height: 32px; max-width: 100px; object-fit: contain; border: 1px solid var(--border); border-radius: 6px;">
+                                <button type="button" onclick="useSearchedLogo()" class="btn-save" style="padding: 6px 12px; font-size: 12px;">Use this logo</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="s-row" style="border-bottom: none; margin-top: 8px;">
+                        <div class="s-info">
+                            <label class="s-label">Or upload your own</label>
+                            <span class="s-desc">PNG, JPG or GIF. Recommended height about 32–40px.</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="file" name="logo_file" id="logoFileInput" accept="image/*" style="font-size: 12px;">
+                            <div id="logoUploadPreview" style="display: none;"><img id="logoUploadImg" src="" alt="" style="height: 32px; max-width: 100px; object-fit: contain;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             {# ── Help & Tutorial ── #}
             <div class="s-section">
@@ -541,29 +609,73 @@
             .catch(function() { btn.innerHTML = '<i class="fa-solid fa-play"></i> Replay Tutorial'; btn.disabled = false; });
     }
 
+    var searchedLogoUrl = null;
+
+    function tryLogoSearch() {
+        var q = (document.getElementById('logoSearchInput').value || '').trim().toLowerCase();
+        if (!q) return;
+        var domain = q;
+        if (domain.indexOf('.') === -1) {
+            domain = domain.replace(/\s+/g, '-').replace(/'/g, '') + '.com';
+        } else {
+            domain = domain.replace(/^https?:\/\//, '').split('/')[0];
+        }
+        var url = 'https://logo.clearbit.com/' + domain;
+        var img = document.getElementById('logoSearchImg');
+        var preview = document.getElementById('logoSearchPreview');
+        img.onerror = function() { preview.style.display = 'none'; searchedLogoUrl = null; };
+        img.onload = function() { preview.style.display = 'flex'; searchedLogoUrl = url; };
+        img.src = url;
+        img.alt = domain;
+    }
+
+    function useSearchedLogo() {
+        if (!searchedLogoUrl) return;
+        document.getElementById('customLogoUrl').value = searchedLogoUrl;
+        document.getElementById('saveBar').style.display = 'flex';
+    }
+
+    function removeLogo() {
+        document.getElementById('customLogoUrl').value = '';
+        document.getElementById('saveBar').style.display = 'flex';
+    }
+
     (function() {
         var form = document.getElementById('settingsForm');
         var saveBar = document.getElementById('saveBar');
         var initial = {};
-        var inputs = form.querySelectorAll('input[type="checkbox"], select');
+        var inputs = form.querySelectorAll('input[type="checkbox"], input[type="hidden"][name="custom_logo_url"], select');
+        var fileInput = form.querySelector('input[name="logo_file"]');
 
         for (var i = 0; i < inputs.length; i++) {
             var el = inputs[i];
             initial[el.name] = el.type === 'checkbox' ? el.checked : el.value;
         }
+        initial['logo_file'] = '';
 
-        form.addEventListener('input', function() {
+        function checkChanged() {
             var changed = false;
             for (var i = 0; i < inputs.length; i++) {
                 var el = inputs[i];
                 var current = el.type === 'checkbox' ? el.checked : el.value;
                 if (current !== initial[el.name]) { changed = true; break; }
             }
+            if (fileInput && fileInput.files && fileInput.files.length > 0) changed = true;
             saveBar.style.display = changed ? 'flex' : 'none';
-        });
+        }
 
+        form.addEventListener('input', checkChanged);
         form.addEventListener('change', function() {
-            form.dispatchEvent(new Event('input'));
+            if (fileInput && document.activeElement === fileInput) {
+                var preview = document.getElementById('logoUploadPreview');
+                var img = document.getElementById('logoUploadImg');
+                if (fileInput.files && fileInput.files[0]) {
+                    var r = new FileReader();
+                    r.onload = function(e) { img.src = e.target.result; preview.style.display = 'block'; };
+                    r.readAsDataURL(fileInput.files[0]);
+                } else { preview.style.display = 'none'; }
+            }
+            checkChanged();
         });
     })();
 </script>

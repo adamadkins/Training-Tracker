@@ -1,5 +1,6 @@
 import os
 import json
+import uuid
 from datetime import datetime, time, timedelta, timezone, date
 import flask
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app
@@ -1863,6 +1864,25 @@ def settings():
             system_settings.default_rating_scale = raw_scale if raw_scale in (0, 5, 10) else 5
             if 'business_type' in request.form:
                 system_settings.business_type = request.form.get('business_type') or None
+            if 'primary_color' in request.form:
+                raw = request.form.get('primary_color', 'indigo').strip().lower()
+                if raw in ('indigo', 'blue', 'violet', 'green', 'amber', 'rose', 'sky'):
+                    system_settings.primary_color = raw
+            logo_url = request.form.get('custom_logo_url', '').strip() or None
+            logo_file = request.files.get('logo_file')
+            if logo_file and logo_file.filename:
+                allowed = ('image/png', 'image/jpeg', 'image/gif', 'image/webp')
+                if logo_file.content_type in allowed:
+                    upload_dir = os.path.join(current_app.static_folder, 'uploads', 'logos')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    ext = os.path.splitext(secure_filename(logo_file.filename))[1] or '.png'
+                    if ext.lower() not in ('.png', '.jpg', '.jpeg', '.gif', '.webp'):
+                        ext = '.png'
+                    name = str(uuid.uuid4()) + ext
+                    path = os.path.join(upload_dir, name)
+                    logo_file.save(path)
+                    logo_url = 'uploads/logos/' + name
+            system_settings.custom_logo_url = logo_url
         db.session.commit()
         cache.delete('system_settings')
         flash("Settings updated successfully!", "success")
