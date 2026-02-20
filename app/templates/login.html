@@ -234,7 +234,11 @@
         {# --- Header Spectacle --- #}
         <div class="auth-spectacle">
             <div class="icon-spectacle">
+                {% if g.system_settings and g.system_settings.custom_logo_url and not g.system_settings.custom_logo_url.startswith('http') %}
+                <img src="{{ url_for('static', filename=g.system_settings.custom_logo_url) }}" alt="Logo" style="max-width: 64px; max-height: 64px; object-fit: contain;" referrerpolicy="no-referrer">
+                {% else %}
                 <i class="fa-solid fa-lock" style="font-size: 32px;"></i>
+                {% endif %}
             </div>
 
             <h1 class="auth-title">Welcome Back</h1>

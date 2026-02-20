@@ -2107,6 +2107,22 @@ def api_logo_proxy():
     abort(404)
 
 
+@manager_bp.route("/api/asset", methods=["GET"])
+@login_required
+@manager_required
+def api_asset():
+    """Fetch external image via server (neutral path to avoid ad-blockers). Params: u=primary URL, f=fallback URL."""
+    raw = request.args.get("u", "").strip() or request.args.get("url", "").strip()
+    fallback_raw = request.args.get("f", "").strip() or request.args.get("fallback", "").strip()
+    for candidate in (raw, fallback_raw):
+        if not candidate:
+            continue
+        data, ctype = _proxy_fetch_image(candidate)
+        if data and ctype:
+            return Response(data, mimetype=ctype, direct_passthrough=True)
+    abort(404)
+
+
 @manager_bp.route("/settings", methods=['GET', 'POST'])
 @login_required
 def settings():
