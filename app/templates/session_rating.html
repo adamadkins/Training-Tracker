@@ -75,39 +75,39 @@
     .rating-radio[value="9"]:checked + .rating-label { background: #0d9488; color: white; }
     .rating-radio[value="10"]:checked + .rating-label { background: #14b8a6; color: white; }
 
-    /* Legacy mode: slider + colored value */
-    .rating-legacy-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    /* Legacy mode: slider + colored label (matching v1 style) */
+    .rating-legacy-row {
+        display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
     .rating-legacy-value {
-        width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-        font-size: 22px; font-weight: 900; color: white; flex-shrink: 0;
+        min-width: 110px; font-size: 13px; font-weight: 800;
+        text-align: right; flex-shrink: 0;
+    }
+    .rating-legacy-num {
+        display: inline-block;
+        font-size: 15px; font-weight: 900;
+        margin-right: 4px;
     }
     .rating-legacy-slider {
-        flex: 1; min-width: 160px; height: 28px; cursor: pointer;
+        flex: 1; min-width: 160px;
         -webkit-appearance: none; appearance: none;
-        background: linear-gradient(to right, #ef4444 0%, #22c55e 100%);
-        border-radius: 14px; border: none;
+        height: 6px; border-radius: 4px; outline: none;
+        cursor: pointer; border: none;
+        /* background set dynamically via JS */
+        background: linear-gradient(to right, #D60206 0%, #ddd 0%);
     }
     .rating-legacy-slider::-webkit-slider-thumb {
         -webkit-appearance: none; appearance: none;
-        width: 24px; height: 24px; border-radius: 50%;
-        background: white; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        width: 20px; height: 20px; border-radius: 50%;
+        background: #004f72; border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
     }
     .rating-legacy-slider::-moz-range-thumb {
-        width: 24px; height: 24px; border-radius: 50%;
-        background: white; cursor: pointer; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        width: 20px; height: 20px; border-radius: 50%;
+        background: #004f72; border: none;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
     }
     .rating-legacy-slider::-moz-range-track { background: transparent; border: none; }
-    /* Legacy value colors 1-10 */
-    .legacy-v1 { background: #ef4444; }
-    .legacy-v2 { background: #f97316; }
-    .legacy-v3 { background: #eab308; }
-    .legacy-v4 { background: #84cc16; }
-    .legacy-v5 { background: #22c55e; }
-    .legacy-v6 { background: #22c55e; }
-    .legacy-v7 { background: #10b981; }
-    .legacy-v8 { background: #059669; }
-    .legacy-v9 { background: #0d9488; }
-    .legacy-v10 { background: #14b8a6; }
 
     .comment-input {
         width: 100%;
@@ -282,8 +282,10 @@
                     {% if rating_style == 'legacy' %}
                     <div class="rating-legacy-row">
                         <input type="hidden" name="rating_{{ d.id }}" id="rating_val_{{ d.id }}" value="5" required>
-                        <span class="rating-legacy-value legacy-v5" id="legacy_display_{{ d.id }}">5</span>
                         <input type="range" class="rating-legacy-slider" min="1" max="10" value="5" id="slider_{{ d.id }}" data-descriptor="{{ d.id }}">
+                        <span class="rating-legacy-value" id="legacy_display_{{ d.id }}">
+                            <span class="rating-legacy-num">5</span><span class="rating-legacy-quality">Average</span>
+                        </span>
                     </div>
                     {% else %}
                     <div class="rating-options">
@@ -342,16 +344,42 @@
 {% if rating_style == 'legacy' %}
 <script>
 (function() {
+    var COLOR_MAP = {
+        1: '#D60206', 2: '#D60206',
+        3: '#f97316', 4: '#f97316',
+        5: '#afa500', 6: '#afa500',
+        7: '#84cc16', 8: '#84cc16',
+        9: '#16a34a', 10: '#16a34a'
+    };
+    var QUALITY_MAP = {
+        1: 'Poor',        2: 'Poor',
+        3: 'Below Avg',   4: 'Below Avg',
+        5: 'Average',     6: 'Average',
+        7: 'Good',        8: 'Good',
+        9: 'Excellent',   10: 'Excellent'
+    };
+
     var sliders = document.querySelectorAll('.rating-legacy-slider');
     sliders.forEach(function(slider) {
         var did = slider.getAttribute('data-descriptor');
-        var hidden = document.getElementById('rating_val_' + did);
+        var hidden  = document.getElementById('rating_val_' + did);
         var display = document.getElementById('legacy_display_' + did);
+        var numEl   = display.querySelector('.rating-legacy-num');
+        var qualEl  = display.querySelector('.rating-legacy-quality');
+
         function update() {
-            var v = parseInt(slider.value, 10);
+            var v   = parseInt(slider.value, 10);
+            var pct = ((v - 1) / 9) * 100;
+            var col = COLOR_MAP[v];
+
             hidden.value = v;
-            display.textContent = v;
-            display.className = 'rating-legacy-value legacy-v' + v;
+            numEl.textContent  = v + '/10 ';
+            qualEl.textContent = QUALITY_MAP[v];
+            numEl.style.color  = col;
+            qualEl.style.color = col;
+
+            slider.style.background =
+                'linear-gradient(to right, ' + col + ' ' + pct + '%, #ddd ' + pct + '%)';
         }
         slider.addEventListener('input', update);
         update();
