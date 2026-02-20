@@ -306,6 +306,7 @@ def nudge_trainer(session_id):
         )
         sess.last_nudged_at = datetime.utcnow()
         db.session.commit()
+        cache.delete(_dashboard_cache_key())
         flash(f"Nudge sent to {sess.trainer.first_name}.", "success")
     else:
         flash("Trainer has no account to notify.", "warning")
