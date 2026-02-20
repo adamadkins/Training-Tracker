@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
+    <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
+    {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -122,12 +125,22 @@
             text-decoration: none;
             flex-shrink: 0;
         }
+        .brand-logo-img-wrap {
+            flex-shrink: 0;
+            width: 140px;
+            min-width: 48px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+        }
         .brand-logo-img {
             height: 32px;
             width: auto;
             max-width: 140px;
+            min-width: 48px;
             object-fit: contain;
             display: block;
+            vertical-align: middle;
         }
         .brand-logo span, .brand-logo .brand-logo-text {
             font-family: 'Inter', sans-serif;
@@ -393,7 +406,7 @@
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
-                <img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer">
+                <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="async" width="140" height="32"></span>
                 {% endif %}
                 <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
             </a>
