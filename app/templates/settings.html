@@ -238,6 +238,13 @@
         from { transform: translate(-50%, 80px); opacity: 0; }
         to { transform: translate(-50%, 0); opacity: 1; }
     }
+    @media (max-width: 600px) {
+        .save-bar { animation: barUpMobile 0.4s ease; }
+    }
+    @keyframes barUpMobile {
+        from { transform: translateY(80px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
 
     /* ── Danger zone ── */
     .s-section.danger { border-color: rgba(239, 68, 68, 0.2); }
@@ -245,11 +252,65 @@
 
     /* ── Mobile ── */
     @media (max-width: 600px) {
-        .settings-wrapper { padding: 16px 12px 120px; }
-        .s-body { padding: 4px 14px; }
-        .s-header { padding: 12px 14px; }
-        .s-row { flex-wrap: wrap; gap: 12px; }
+        .settings-wrapper {
+            padding: 16px 12px 120px;
+            overflow-x: hidden;
+        }
+        .settings-col { padding: 0 4px; }
+        .s-body { padding: 8px 12px; }
+        .s-header { padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
+        .s-header-text { min-width: 0; }
+        .s-badge { margin-left: 0; margin-top: 2px; }
+        .s-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 0;
+        }
         .s-info { min-width: 0; width: 100%; margin-bottom: 0; }
+        .s-select {
+            min-width: 0;
+            width: 100%;
+            max-width: 100%;
+        }
+        .save-bar {
+            left: 12px;
+            right: 12px;
+            width: auto;
+            max-width: none;
+            transform: none;
+            bottom: max(16px, env(safe-area-inset-bottom));
+        }
+        .save-bar .btn-save { flex-shrink: 0; }
+    }
+
+    /* Branding / logo section on mobile */
+    @media (max-width: 600px) {
+        .settings-wrapper .s-row input[type="text"]#logoSearchInput,
+        .settings-wrapper .s-row input[type="text"]#businessNameInput {
+            min-width: 0 !important;
+            max-width: none !important;
+            width: 100%;
+        }
+        .settings-wrapper .s-row > div[style*="flex-wrap"] {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100%;
+        }
+        .settings-wrapper .s-row > div[style*="flex-wrap"] > div:first-child.s-info {
+            flex: none !important;
+        }
+        .settings-wrapper #logoSearchInput {
+            width: 100%;
+        }
+        .settings-wrapper #logoSearchPreview {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .settings-wrapper input[type="file"]#logoFileInput {
+            width: 100%;
+            max-width: 100%;
+        }
     }
 </style>
 
