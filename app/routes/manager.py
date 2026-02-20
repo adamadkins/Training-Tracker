@@ -386,7 +386,7 @@ def setup_skip():
 
 
 def _dashboard_cache_key():
-    return f"manager_dashboard/{getattr(current_user, 'id', None)}/{request.args.get('location_id', '')}/{request.args.get('billing', '')}"
+    return f"manager_dashboard/{getattr(current_user, 'id', None)}/{request.args.get('location_id', '')}"
 
 
 # --- DASHBOARD ---
@@ -484,12 +484,6 @@ def dashboard():
 
     nudge_cutoff = datetime.utcnow() - timedelta(hours=24)
 
-    org = Organization.query.get(oid) if oid else None
-    if request.args.get("billing") == "success":
-        flash("Billing set up successfully.", "success")
-    elif request.args.get("billing") == "canceled":
-        flash("Checkout was canceled.", "info")
-
     return render_template(
         "manager_dashboard.html",
         user=current_user,
@@ -504,15 +498,14 @@ def dashboard():
         flagged_sessions=flagged_sessions,
         manager_locations=manager_locations,
         current_location_filter=current_location_filter,
-        org=org,
     )
 
 
-# --- BILLING (tenant: checkout + portal) ---
+# --- BILLING (tenant: checkout + portal; return to Settings) ---
 def _manager_billing_return_url():
     scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
     host = request.host.split(":")[0]
-    return f"{scheme}://{host}{url_for('manager.dashboard')}"
+    return f"{scheme}://{host}{url_for('manager.settings')}"
 
 
 @manager_bp.route("/billing/checkout", methods=["POST"])
@@ -2326,9 +2319,15 @@ def settings():
         flash("Settings updated successfully!", "success")
         return redirect(url_for('manager.settings'))
     share_trainee_data = getattr(system_settings, 'share_trainee_data_with_trainees', True)
+    org = Organization.query.get(g._manager_org_id) if getattr(g, '_manager_org_id', None) else None
+    if request.args.get("billing") == "success":
+        flash("Billing set up successfully.", "success")
+    elif request.args.get("billing") == "canceled":
+        flash("Checkout was canceled.", "info")
     return render_template(
         'settings.html',
         user_settings=user_settings,
         system_settings=system_settings,
         share_trainee_data_with_trainees=share_trainee_data,
+        org=org,
     )

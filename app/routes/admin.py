@@ -138,6 +138,29 @@ def organization_activate(org_id):
     return redirect(url_for("admin.organization_detail", org_id=org.id))
 
 
+@admin_bp.route("/organizations/<int:org_id>/free-plan/<plan>", methods=["POST"])
+def organization_set_free_plan(org_id, plan):
+    """Give organization Standard or Pro plan for free. plan is 'standard' or 'pro'."""
+    org = Organization.query.get_or_404(org_id)
+    if plan not in ("standard", "pro"):
+        flash("Invalid plan.", "error")
+        return redirect(url_for("admin.organization_detail", org_id=org_id))
+    org.free_plan = plan
+    db.session.commit()
+    flash(f"Organization '{org.name}' now has {plan.capitalize()} plan (free).", "success")
+    return redirect(url_for("admin.organization_detail", org_id=org_id))
+
+
+@admin_bp.route("/organizations/<int:org_id>/remove-free-plan", methods=["POST"])
+def organization_remove_free_plan(org_id):
+    """Remove free plan; org will need a paid subscription or to be set up again."""
+    org = Organization.query.get_or_404(org_id)
+    org.free_plan = None
+    db.session.commit()
+    flash(f"Free plan removed for '{org.name}'.", "info")
+    return redirect(url_for("admin.organization_detail", org_id=org_id))
+
+
 @admin_bp.route("/organizations/<int:org_id>/create-checkout", methods=["POST"])
 def organization_create_checkout(org_id):
     """Redirect to Stripe Checkout to start a subscription for this org. Plan: standard | pro."""

@@ -229,6 +229,21 @@
         transform: scale(1.04);
         box-shadow: 0 0 12px rgba(79, 70, 229, 0.4);
     }
+    .btn-settings-action {
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-settings-action:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-settings-action.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-settings-action.primary:hover { opacity: 0.9; }
+
     .btn-save:disabled {
         opacity: 0.3;
         cursor: not-allowed;
@@ -323,6 +338,66 @@
             <h1 class="settings-title">Settings</h1>
             <p class="settings-subtitle">Personal preferences{% if current_user.role == 'manager' %} & system configuration{% endif %}</p>
         </div>
+
+            {# ── Billing (managers only) ── #}
+            {% if current_user.role == 'manager' and org %}
+            <div class="s-section">
+                <div class="s-header">
+                    <div class="s-header-icon emerald"><i class="fa-solid fa-credit-card"></i></div>
+                    <div class="s-header-text">
+                        <h2>Billing</h2>
+                        <p>Subscription and payment</p>
+                    </div>
+                </div>
+                <div class="s-body">
+                    {% if org.free_plan %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Plan</label>
+                            <span class="s-desc">{{ org.free_plan|capitalize }} (free)</span>
+                        </div>
+                    </div>
+                    {% elif org.stripe_subscription_id %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Subscription</label>
+                            <span class="s-desc">Active</span>
+                        </div>
+                        <form method="post" action="{{ url_for('manager.billing_customer_portal') }}" style="display:inline;">
+                            <button type="submit" class="btn-settings-action">Manage billing</button>
+                        </form>
+                    </div>
+                    {% elif org.stripe_customer_id %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Billing</label>
+                            <span class="s-desc">Customer linked</span>
+                        </div>
+                        <form method="post" action="{{ url_for('manager.billing_customer_portal') }}" style="display:inline;">
+                            <button type="submit" class="btn-settings-action">Manage billing</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Plan</label>
+                            <span class="s-desc">Subscribe to Standard or Pro</span>
+                        </div>
+                    </div>
+                    <div class="s-row" style="flex-wrap: wrap; gap: 10px;">
+                        <form method="post" action="{{ url_for('manager.billing_create_checkout') }}" style="display:inline;">
+                            <input type="hidden" name="plan" value="standard">
+                            <button type="submit" class="btn-settings-action primary">Standard $40/mo</button>
+                        </form>
+                        <form method="post" action="{{ url_for('manager.billing_create_checkout') }}" style="display:inline;">
+                            <input type="hidden" name="plan" value="pro">
+                            <button type="submit" class="btn-settings-action">Pro $50/mo</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
 
         <form method="POST" id="settingsForm" enctype="multipart/form-data">
 

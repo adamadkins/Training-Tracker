@@ -187,16 +187,6 @@
         font-weight: 500;
     }
 
-    /* ── Billing ── */
-    .billing-card { margin-bottom: 20px; }
-    .billing-status { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 0; display: flex; align-items: center; gap: 8px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); opacity: 0.6; }
-    .status-dot.active { background: #22c55e; opacity: 1; }
-    .billing-btn { width: 100%; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); cursor: pointer; transition: all 0.15s; }
-    .billing-btn:hover { border-color: var(--primary); color: var(--primary); }
-    .billing-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
-    .billing-btn.primary:hover { opacity: 0.9; }
-
     /* ── Launchpad ── */
     .launchpad-card {
         background: var(--bg-card);
@@ -726,36 +716,8 @@
                 </div>
             </div>
 
-            {# RIGHT: Billing + Launchpad #}
+            {# RIGHT: Launchpad #}
             <div class="launchpad-sidebar">
-                {% if org %}
-                <div class="section-head">
-                    <h2 class="section-title">Billing</h2>
-                </div>
-                <div class="launchpad-card billing-card">
-                    {% if org.stripe_subscription_id %}
-                    <p class="billing-status"><span class="status-dot active"></span> Subscription active</p>
-                    <form method="post" action="{{ url_for('manager.billing_customer_portal') }}" style="margin-top:10px;">
-                        <button type="submit" class="billing-btn">Manage billing</button>
-                    </form>
-                    {% elif org.stripe_customer_id %}
-                    <p class="billing-status"><span class="status-dot"></span> Customer linked</p>
-                    <form method="post" action="{{ url_for('manager.billing_customer_portal') }}" style="margin-top:10px;">
-                        <button type="submit" class="billing-btn">Manage billing</button>
-                    </form>
-                    {% else %}
-                    <p class="billing-status"><span class="status-dot"></span> No subscription</p>
-                    <form method="post" action="{{ url_for('manager.billing_create_checkout') }}" style="margin-top:8px;">
-                        <input type="hidden" name="plan" value="standard">
-                        <button type="submit" class="billing-btn primary">Standard $40/mo</button>
-                    </form>
-                    <form method="post" action="{{ url_for('manager.billing_create_checkout') }}" style="margin-top:6px;">
-                        <input type="hidden" name="plan" value="pro">
-                        <button type="submit" class="billing-btn">Pro $50/mo</button>
-                    </form>
-                    {% endif %}
-                </div>
-                {% endif %}
                 <div class="section-head">
                     <h2 class="section-title">Launchpad</h2>
                 </div>

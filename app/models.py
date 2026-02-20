@@ -20,6 +20,7 @@ class Organization(db.Model):
     status = db.Column(db.String(20), default="active", nullable=False)  # active | suspended
     stripe_customer_id = db.Column(db.String(255), nullable=True, index=True)
     stripe_subscription_id = db.Column(db.String(255), nullable=True, index=True)
+    free_plan = db.Column(db.String(20), nullable=True)  # 'standard' | 'pro' when org has that plan for free
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 

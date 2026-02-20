@@ -28,7 +28,12 @@
             <dt>Created</dt><dd>{{ org.created_at.strftime('%Y-%m-%d %H:%M UTC') if org.created_at else '—' }}</dd>
             <dt>Billing</dt>
             <dd>
-                {% if org.stripe_subscription_id %}
+                {% if org.free_plan %}
+                <span class="status status-active">{{ org.free_plan|capitalize }} (free)</span>
+                <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}" style="display:inline; margin-left:8px;">
+                    <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
+                </form>
+                {% elif org.stripe_subscription_id %}
                 <span class="status status-active">Subscription active</span>
                 {% elif org.stripe_customer_id %}
                 <span class="billing-note">Customer linked, no active subscription</span>
@@ -36,6 +41,13 @@
                 <span class="billing-note">Not set up</span>
                 {% endif %}
                 <div class="billing-actions">
+                    {% if not org.free_plan %}
+                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}" style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Give Standard free</button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='pro') }}" style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Give Pro free</button>
+                    </form>
                     <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
                         <input type="hidden" name="plan" value="standard">
                         <button type="submit" class="btn btn-primary btn-sm">Standard $40/mo</button>
@@ -48,6 +60,7 @@
                     <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}" style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Manage billing</button>
                     </form>
+                    {% endif %}
                     {% endif %}
                 </div>
             </dd>
