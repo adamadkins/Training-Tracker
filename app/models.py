@@ -73,6 +73,7 @@ class Employee(db.Model):
     graduated_at = db.Column(db.DateTime, nullable=True)  # When manager marked trainee as graduated (offboarding)
 
     current_roadmap_id = db.Column(db.Integer, db.ForeignKey("training_roadmaps.id"), nullable=True)
+    roadmap_assigned_at = db.Column(db.DateTime, nullable=True)  # When the current roadmap was assigned; sessions before this date are excluded from mastery
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships - Added backref here
@@ -105,8 +106,17 @@ class Employee(db.Model):
         mastered_count = 0
         target_step = None
 
+        # Only count sessions completed on/after the roadmap was assigned so pre-existing data
+        # doesn't automatically skip a trainee past steps they haven't done on this roadmap.
+        assigned_date = self.roadmap_assigned_at.date() if self.roadmap_assigned_at else None
+
         for step in steps:
-            sessions = [s for s in self.trainee_sessions if s.position_id == step.position_id and s.completed_at]
+            sessions = [
+                s for s in self.trainee_sessions
+                if s.position_id == step.position_id
+                and s.completed_at
+                and (assigned_date is None or s.session_date >= assigned_date)
+            ]
 
             avg_rating = 0
             if sessions:

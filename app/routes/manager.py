@@ -411,11 +411,13 @@ def roadmap_roster(roadmap_id):
     roadmap = TrainingRoadmap.query.get_or_404(roadmap_id)
 
     if request.method == 'POST':
+        now_utc = datetime.now(timezone.utc)
         add_ids = request.form.getlist('add_employee_ids')
         for emp_id in add_ids:
             emp = Employee.query.get(emp_id)
             if emp:
                 emp.current_roadmap_id = roadmap.id
+                emp.roadmap_assigned_at = now_utc
                 u = User.query.filter_by(employee_id=emp.id).first()
                 if u:
                     notify(u, "New Roadmap Assigned",
@@ -428,6 +430,7 @@ def roadmap_roster(roadmap_id):
             emp = Employee.query.get(emp_id)
             if emp and emp.current_roadmap_id == roadmap.id:
                 emp.current_roadmap_id = None
+                emp.roadmap_assigned_at = None
 
         db.session.commit()
         flash(f"Roster updated for {roadmap.name}.", "success")
@@ -452,6 +455,7 @@ def assign_roadmap(employee_id):
 
     if roadmap_id:
         employee.current_roadmap_id = roadmap_id
+        employee.roadmap_assigned_at = datetime.now(timezone.utc)
         roadmap = TrainingRoadmap.query.get(roadmap_id)
         u = User.query.filter_by(employee_id=employee.id).first()
         if u and roadmap:
@@ -462,6 +466,7 @@ def assign_roadmap(employee_id):
         flash(f"Roadmap assigned to {employee.first_name}.", "success")
     else:
         employee.current_roadmap_id = None
+        employee.roadmap_assigned_at = None
         flash("Roadmap removed.", "info")
 
     db.session.commit()
@@ -513,7 +518,8 @@ def smart_builder_build():
                            builder_data=data,
                            all_positions=data.get('all_positions', []),
                            trainee_stats=data.get('trainee_stats', {}),
-                           week_label=week_label)
+                           week_label=week_label,
+                           hide_assignments=data.get('hide_assignments', False))
 
 
 @manager_bp.route('/schedules/smart-builder/clear')
@@ -671,6 +677,7 @@ def process_smart_schedule():
 
         # Store parsed data in a per-user cache file (avoids cookie size limits)
         week_start_str = request.form.get('week_start', '')
+        hide_assignments = 'hide_assignments' in request.form
         cache_data = {
             'days': days_data,
             'all_positions': all_positions,
@@ -678,6 +685,7 @@ def process_smart_schedule():
             'file_size': file_size,
             'file_name': file.filename,
             'week_start': week_start_str,
+            'hide_assignments': hide_assignments,
         }
         with open(_sb_data_path(), 'w') as f:
             json.dump(cache_data, f)
@@ -703,6 +711,7 @@ def create_smart_session():
         session_date_str = data.get('session_date')
         start_time_str = data.get('start_time')
         end_time_str = data.get('end_time')
+        hide_assignments = bool(data.get('hide_assignments', False))
 
         # Validation
         if not all([trainee_id, trainer_id, position_id, session_date_str]):
@@ -750,6 +759,7 @@ def create_smart_session():
                 start_date=start_of_week,
                 end_date=end_of_week,
                 status='draft',
+                hide_assignments=hide_assignments,
                 created_by_user_id=current_user.id
             )
             db.session.add(schedule)
