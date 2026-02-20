@@ -19,6 +19,11 @@ def home():
     return render_template("landing.html")
 
 
+@auth_bp.get("/tour")
+def tour():
+    return render_template("tour.html")
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:

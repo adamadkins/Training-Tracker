@@ -737,6 +737,211 @@
             font-size: 11px; cursor: pointer;
         }
 
+        /* ── ROLE TOGGLE ── */
+        .role-toggle-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+        }
+        .role-toggle {
+            display: inline-flex; background: #fff; border: 1px solid #e2e8f0;
+            border-radius: 10px; padding: 3px; gap: 2px;
+        }
+        .role-btn {
+            padding: 7px 18px; border-radius: 8px; border: none;
+            background: transparent; color: #64748b; font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .role-btn:hover { color: #1e293b; background: #f8fafc; }
+        .role-btn.active { background: #4f46e5; color: #fff; }
+        .role-nav { display: none; }
+        .role-nav.active { display: flex; }
+
+        /* ── TRAINER: RATE SESSION SCREEN ── */
+        .m-rate-body { background: #f8fafc; padding: 22px 24px; max-height: 520px; overflow-y: auto; }
+        .m-back-link { font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 4px; }
+        .m-rate-title { font-size: 20px; font-weight: 900; color: #1e293b; margin: 0 0 2px; letter-spacing: -0.02em; }
+        .m-rate-sub { font-size: 11px; color: #64748b; margin-bottom: 16px; }
+        .m-criteria-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 10px;
+        }
+        .m-criteria-name { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+        .m-rating-btns {
+            display: flex; gap: 4px; padding: 4px; background: #f8fafc; border-radius: 10px;
+        }
+        .m-rbtn {
+            flex: 1; padding: 8px 0; text-align: center; border-radius: 7px;
+            font-size: 13px; font-weight: 800; border: none; cursor: pointer;
+            transition: all 0.1s; background: transparent; color: #94a3b8;
+        }
+        .m-rbtn.sel-1 { background: #ef4444; color: #fff; }
+        .m-rbtn.sel-2 { background: #f97316; color: #fff; }
+        .m-rbtn.sel-3 { background: #eab308; color: #fff; }
+        .m-rbtn.sel-4 { background: #84cc16; color: #fff; }
+        .m-rbtn.sel-5 { background: #22c55e; color: #fff; }
+        .m-comment-input {
+            width: 100%; margin-top: 8px; padding: 8px 10px; border: 1px solid #e2e8f0;
+            border-radius: 8px; font-size: 11px; color: #94a3b8; background: #fff; outline: none;
+        }
+        .m-notes-area {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 10px;
+        }
+        .m-flag-row {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 12px 16px; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .m-flag-check { width: 16px; height: 16px; accent-color: #64748b; }
+        .m-flag-label { font-size: 12px; color: #64748b; font-weight: 600; }
+        .m-submit-btn {
+            background: #4f46e5; color: #fff; border: none; padding: 12px 24px;
+            border-radius: 10px; font-size: 13px; font-weight: 800; width: 100%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+
+        /* ── TRAINER: SCHEDULE SCREEN ── */
+        .m-tsched-body { background: #f8fafc; padding: 22px 24px; }
+        .m-week-header {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px 18px; margin-bottom: 14px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .m-week-title { font-size: 16px; font-weight: 900; color: #1e293b; }
+        .m-week-badge {
+            font-size: 9px; font-weight: 800; background: #dcfce7; color: #166534;
+            border: 1px solid #bbf7d0; padding: 3px 10px; border-radius: 20px; text-transform: uppercase;
+        }
+        .m-day-group { margin-bottom: 12px; }
+        .m-day-label {
+            font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;
+            letter-spacing: 0.06em; margin-bottom: 6px; padding-left: 4px;
+        }
+        .m-sched-session {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 10px 14px; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .m-sched-time { font-size: 11px; font-weight: 700; color: #4f46e5; width: 56px; flex-shrink: 0; }
+        .m-sched-info { flex: 1; }
+        .m-sched-pos { font-size: 12px; font-weight: 800; color: #1e293b; }
+        .m-sched-trainee { font-size: 10px; color: #64748b; }
+        .m-sched-status {
+            font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 5px;
+        }
+
+        /* ── TRAINEE: DASHBOARD ── */
+        .m-te-body { background: #f8fafc; padding: 22px 24px; }
+        .m-te-welcome {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+        }
+        .m-te-av-big {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; font-weight: 800; color: #fff;
+            border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .m-te-stats { display: flex; gap: 8px; margin-bottom: 16px; }
+        .m-te-stat {
+            flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+            padding: 10px 14px; border-left: 4px solid;
+        }
+        .m-te-stat-val { font-size: 22px; font-weight: 900; display: block; line-height: 1; margin-bottom: 2px; }
+        .m-te-stat-lbl { font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+        .m-te-hero-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+            padding: 16px 18px; margin-bottom: 14px; border-left: 5px solid #4f46e5;
+            background: linear-gradient(to right, rgba(79,70,229,0.03), transparent);
+        }
+        .m-te-hero-label { font-size: 9px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+        .m-te-hero-title { font-size: 16px; font-weight: 900; color: #1e293b; margin-bottom: 3px; }
+        .m-te-hero-meta { font-size: 11px; color: #64748b; margin-bottom: 8px; }
+        .m-te-hero-pill {
+            font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px;
+            text-transform: uppercase; display: inline-block;
+        }
+        .m-te-cols { display: grid; grid-template-columns: 1fr 200px; gap: 12px; }
+        /* Roadmap sidebar widget */
+        .m-te-roadmap-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 14px; position: relative; overflow: hidden;
+        }
+        .m-te-rm-title { font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 2px; }
+        .m-te-rm-sub { font-size: 9px; color: #64748b; margin-bottom: 10px; }
+        .m-te-rm-bar-bg {
+            height: 8px; background: #f1f5f9; border-radius: 4px; border: 1px solid #e2e8f0;
+            overflow: hidden; margin-bottom: 4px;
+        }
+        .m-te-rm-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #10b981, #34d399); }
+        .m-te-rm-pct { font-size: 9px; font-weight: 700; color: #64748b; text-align: right; }
+        .m-te-rm-steps { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .m-te-rm-step {
+            display: flex; align-items: center; gap: 6px; font-size: 10px;
+            padding: 4px 6px; border-radius: 6px;
+        }
+        .m-te-rm-step-icon { font-size: 10px; width: 18px; text-align: center; }
+
+        /* ── TRAINEE: ROADMAP FULL ── */
+        .m-roadmap-body { background: #f8fafc; padding: 22px 24px; }
+        .m-rm-full-card {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 14px;
+            overflow: hidden;
+        }
+        .m-rm-full-header {
+            padding: 16px 18px; border-bottom: 1px solid #e2e8f0;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .m-rm-full-title { font-size: 15px; font-weight: 900; color: #1e293b; }
+        .m-rm-full-steps { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+        .m-rm-step {
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc;
+        }
+        .m-rm-step-num {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; flex-shrink: 0;
+        }
+        .m-rm-step-name { flex: 1; font-size: 12px; font-weight: 700; color: #334155; }
+        .m-rm-step-score { font-size: 11px; font-weight: 800; }
+        .m-rm-progress-bar {
+            height: 5px; background: #e2e8f0; overflow: hidden;
+        }
+        .m-rm-progress-fill { height: 100%; background: linear-gradient(90deg, #4f46e5, #34d399); }
+        .m-rm-progress-label {
+            padding: 8px 18px 14px; display: flex; justify-content: space-between;
+            font-size: 10px; color: #94a3b8; font-weight: 600;
+        }
+
+        /* ── TRAINEE: SESSION HISTORY ── */
+        .m-hist-body { background: #f8fafc; padding: 22px 24px; }
+
+        /* ── FEATURE SHOWCASE ── */
+        .showcase { padding: 80px 24px; }
+        .showcase:nth-child(even) { background: #f8fafc; }
+        .showcase-inner {
+            max-width: 1120px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+        }
+        .showcase-inner.reverse { direction: rtl; }
+        .showcase-inner.reverse > * { direction: ltr; }
+        .showcase-text .section-label { margin-bottom: 12px; }
+        .showcase-text h2 { font-size: 32px; font-weight: 900; color: var(--navy); letter-spacing: -0.02em; margin-bottom: 16px; line-height: 1.2; }
+        .showcase-text p { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+        .showcase-bullets { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+        .showcase-bullets li {
+            display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--slate); line-height: 1.5;
+        }
+        .showcase-bullets li i { color: #10b981; margin-top: 4px; font-size: 12px; flex-shrink: 0; }
+        .showcase-visual {
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+            overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+        @media (max-width: 860px) {
+            .showcase-inner, .showcase-inner.reverse { grid-template-columns: 1fr; direction: ltr; gap: 32px; }
+            .showcase-inner.reverse > * { direction: ltr; }
+        }
+
         /* Responsive */
         .m-cockpit { grid-template-columns: 1fr 200px; }
         @media (max-width: 780px) {
@@ -744,6 +949,8 @@
             .m-trainee-grid { grid-template-columns: 1fr; }
             .m-nav .m-nav-link:nth-child(n+3) { display: none; }
             .m-msg-sidebar { width: 160px; min-width: 160px; }
+            .m-te-cols { grid-template-columns: 1fr; }
+            .role-toggle-row { justify-content: center; }
         }
 
 
@@ -1524,6 +1731,7 @@
         <div class="nav-links" id="navLinks">
             <a href="#features" class="nav-link">Features</a>
             <a href="#how-it-works" class="nav-link">How It Works</a>
+            <a href="{{ url_for('auth.tour') }}" class="nav-link">Tour</a>
             <a href="#pricing" class="nav-link">Pricing</a>
             <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
             <a href="#" class="nav-cta" onclick="openModal(); return false;">Get Started</a>
@@ -1541,6 +1749,7 @@
     </div>
     <h1>Training that actually <span>sticks.</span></h1>
     <p class="hero-sub">Stop using spreadsheets and group chats to manage training. Training Tracker gives your team a real system for scheduling, tracking progress, and holding trainers accountable.</p>
+    <p style="font-size:14px; font-style:italic; color:rgba(255,255,255,0.5); margin-top:14px; letter-spacing:0.02em;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
     <div class="hero-actions">
         <a href="#" class="btn-primary" onclick="openModal(); return false;">
             <i class="fa-solid fa-rocket"></i> Get Started Free
@@ -1554,8 +1763,13 @@
 <!-- ── LIVE DEMO ── -->
 <div class="demo-section">
     <div class="demo-inner">
-        <div class="demo-label-row">
+        <div class="role-toggle-row">
             <span class="demo-eyebrow"><i class="fa-solid fa-circle" style="color:#22c55e; font-size:8px; animation: pulse 2s infinite;"></i> Interactive Preview &mdash; click the tabs</span>
+            <div class="role-toggle">
+                <button class="role-btn active" data-role="manager"><i class="fa-solid fa-briefcase" style="margin-right:4px; font-size:10px;"></i>Manager</button>
+                <button class="role-btn" data-role="trainer"><i class="fa-solid fa-chalkboard-user" style="margin-right:4px; font-size:10px;"></i>Trainer</button>
+                <button class="role-btn" data-role="trainee"><i class="fa-solid fa-user-graduate" style="margin-right:4px; font-size:10px;"></i>Trainee</button>
+            </div>
         </div>
     <!-- Interactive App Demo -->
     <div class="m-demo" id="appDemo">
@@ -1573,11 +1787,21 @@
                 <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="" class="m-brand-img">
                 <span class="m-brand-text">Training Tracker</span>
             </div>
-            <nav class="m-nav">
+            <nav class="m-nav role-nav active" data-role="manager">
                 <button class="m-nav-link active" data-tab="dashboard" data-url="trainingtracker.me/manager/dashboard">Dashboard</button>
                 <button class="m-nav-link" data-tab="employees" data-url="trainingtracker.me/manager/employees">Employees</button>
                 <button class="m-nav-link" data-tab="schedules" data-url="trainingtracker.me/manager/schedules">Schedules</button>
                 <button class="m-nav-link" data-tab="messages" data-url="trainingtracker.me/messages">Messages</button>
+            </nav>
+            <nav class="m-nav role-nav" data-role="trainer">
+                <button class="m-nav-link active" data-tab="t-dashboard" data-url="trainingtracker.me/employee/dashboard">My Dashboard</button>
+                <button class="m-nav-link" data-tab="t-rate" data-url="trainingtracker.me/employee/sessions/42">Rate Session</button>
+                <button class="m-nav-link" data-tab="t-schedule" data-url="trainingtracker.me/employee/schedule/8">My Schedule</button>
+            </nav>
+            <nav class="m-nav role-nav" data-role="trainee">
+                <button class="m-nav-link active" data-tab="te-dashboard" data-url="trainingtracker.me/employee/dashboard">My Dashboard</button>
+                <button class="m-nav-link" data-tab="te-roadmap" data-url="trainingtracker.me/employee/dashboard">My Roadmap</button>
+                <button class="m-nav-link" data-tab="te-history" data-url="trainingtracker.me/employee/dashboard">Session History</button>
             </nav>
             <div class="m-header-right">
                 <div class="m-bell">
@@ -2062,6 +2286,370 @@
                 </div>
             </div>
 
+            <!-- ══════════ TRAINER SCREENS ══════════ -->
+
+            <!-- ── TRAINER DASHBOARD ── -->
+            <div class="m-screen" id="tab-t-dashboard">
+                <div class="m-dash-body">
+                    <div class="m-page-hero">
+                        <div>
+                            <h1 class="m-page-title">Hi, Chris</h1>
+                            <p class="m-page-sub">Trainer Dashboard &mdash; here is what is on your plate.</p>
+                        </div>
+                        <button class="m-btn-primary"><i class="fa-solid fa-bolt"></i> Quick Train</button>
+                    </div>
+                    <div class="m-kpi-row">
+                        <div class="m-kpi" style="border-left: 4px solid #3b82f6;">
+                            <span class="m-kpi-val" style="color:#3b82f6;">3</span>
+                            <div class="m-kpi-label">Scheduled</div>
+                        </div>
+                        <div class="m-kpi" style="border-left: 4px solid #10b981;">
+                            <span class="m-kpi-val" style="color:#10b981;">24</span>
+                            <div class="m-kpi-label">Completed</div>
+                        </div>
+                        <div class="m-kpi" style="border-left: 4px solid #f59e0b;">
+                            <span class="m-kpi-val" style="color:#f59e0b;">1</span>
+                            <div class="m-kpi-label">Floor Active</div>
+                        </div>
+                    </div>
+                    <!-- Next session hero -->
+                    <div class="m-te-hero-card" style="border-left-color:#4f46e5; margin-bottom: 14px;">
+                        <div class="m-te-hero-label">Next Session</div>
+                        <div class="m-te-hero-title">Front Counter &mdash; Jordan R.</div>
+                        <div class="m-te-hero-meta">You are training Jordan on Front Counter basics</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="m-te-hero-pill" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                            <button class="m-btn-primary" style="padding:6px 14px; font-size:11px;">Start Session <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i></button>
+                        </div>
+                    </div>
+                    <!-- Overdue -->
+                    <div class="m-te-hero-card" style="border-left-color:#ef4444; background: linear-gradient(to right, rgba(239,68,68,0.03), transparent); margin-bottom: 14px;">
+                        <div class="m-te-hero-label" style="color:#ef4444;">Overdue &mdash; 2 days ago</div>
+                        <div class="m-te-hero-title">Drive Thru &mdash; Morgan L.</div>
+                        <div class="m-te-hero-meta">You need to submit this evaluation</div>
+                        <button style="padding:6px 14px; font-size:11px; font-weight:800; background:#ef4444; color:#fff; border:none; border-radius:8px; cursor:pointer;">Submit Now <i class="fa-solid fa-arrow-right" style="font-size:9px;"></i></button>
+                    </div>
+                    <!-- Floor coverage -->
+                    <div class="m-activity-card" style="border-left: 4px solid #f59e0b;">
+                        <div style="padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fa-solid fa-users" style="color:#f59e0b; font-size:11px;"></i>
+                            <span style="font-size:12px; font-weight:800; color:#1e293b;">Floor Coverage</span>
+                            <span style="font-size:9px; font-weight:700; background:#fef3c7; color:#92400e; padding:2px 7px; border-radius:4px;">1 unclaimed</span>
+                        </div>
+                        <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div class="m-pos">Kitchen &mdash; Alex K.</div>
+                                <div class="m-sub">No trainer assigned yet</div>
+                            </div>
+                            <button style="font-size:10px; font-weight:800; padding:5px 12px; border-radius:6px; background:rgba(245,158,11,0.1); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); cursor:pointer;">Claim</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TRAINER: RATE SESSION ── -->
+            <div class="m-screen" id="tab-t-rate">
+                <div class="m-rate-body">
+                    <div class="m-back-link"><i class="fa-solid fa-arrow-left" style="font-size:9px;"></i> Back to Dashboard</div>
+                    <div class="m-rate-title">Rate Session</div>
+                    <div class="m-rate-sub">Jordan R. &mdash; Front Counter &bull; Feb 15, 2026</div>
+                    <!-- Criteria 1 -->
+                    <div class="m-criteria-card">
+                        <div class="m-criteria-name">Knowledge &amp; Accuracy</div>
+                        <div class="m-rating-btns">
+                            <div class="m-rbtn">1</div>
+                            <div class="m-rbtn">2</div>
+                            <div class="m-rbtn">3</div>
+                            <div class="m-rbtn sel-4">4</div>
+                            <div class="m-rbtn">5</div>
+                        </div>
+                        <input class="m-comment-input" placeholder="Optional comment..." readonly>
+                    </div>
+                    <!-- Criteria 2 -->
+                    <div class="m-criteria-card">
+                        <div class="m-criteria-name">Speed of Service</div>
+                        <div class="m-rating-btns">
+                            <div class="m-rbtn">1</div>
+                            <div class="m-rbtn">2</div>
+                            <div class="m-rbtn">3</div>
+                            <div class="m-rbtn">4</div>
+                            <div class="m-rbtn sel-5">5</div>
+                        </div>
+                        <input class="m-comment-input" placeholder="Optional comment..." readonly>
+                    </div>
+                    <!-- Criteria 3 -->
+                    <div class="m-criteria-card">
+                        <div class="m-criteria-name">Guest Interaction</div>
+                        <div class="m-rating-btns">
+                            <div class="m-rbtn">1</div>
+                            <div class="m-rbtn">2</div>
+                            <div class="m-rbtn sel-3">3</div>
+                            <div class="m-rbtn">4</div>
+                            <div class="m-rbtn">5</div>
+                        </div>
+                        <input class="m-comment-input" value="Needs to greet guests more consistently" readonly style="color:#334155;">
+                    </div>
+                    <!-- Overall notes -->
+                    <div class="m-notes-area">
+                        <div style="font-size:12px; font-weight:800; color:#1e293b; margin-bottom:6px;">Overall Notes</div>
+                        <div style="padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:11px; color:#334155; background:#f8fafc; min-height:40px;">Great improvement from last session. Jordan is picking up the register quickly. Needs a bit more confidence with guests.</div>
+                    </div>
+                    <!-- Flag -->
+                    <div class="m-flag-row">
+                        <input type="checkbox" class="m-flag-check" disabled>
+                        <span class="m-flag-label"><i class="fa-solid fa-flag" style="color:#94a3b8; margin-right:4px;"></i>Flag for manager attention</span>
+                    </div>
+                    <!-- Submit -->
+                    <button class="m-submit-btn"><i class="fa-solid fa-paper-plane"></i> Submit Evaluation</button>
+                </div>
+            </div>
+
+            <!-- ── TRAINER: MY SCHEDULE ── -->
+            <div class="m-screen" id="tab-t-schedule">
+                <div class="m-tsched-body">
+                    <div class="m-page-title" style="margin-bottom: 4px;">My Schedule</div>
+                    <div class="m-page-sub" style="margin-bottom: 16px;">Your assigned training sessions this week.</div>
+                    <div class="m-week-header">
+                        <div class="m-week-title">Feb 10 &ndash; Feb 16</div>
+                        <div class="m-week-badge"><i class="fa-solid fa-circle" style="font-size:5px;"></i> Published</div>
+                    </div>
+                    <div class="m-day-group">
+                        <div class="m-day-label">Tuesday, Feb 11</div>
+                        <div class="m-sched-session">
+                            <div class="m-sched-time">9:00 AM</div>
+                            <div class="m-sched-info">
+                                <div class="m-sched-pos">Front Counter</div>
+                                <div class="m-sched-trainee">Training: Jordan R.</div>
+                            </div>
+                            <span class="m-sched-status" style="background:#dcfce7; color:#166534;">Completed</span>
+                        </div>
+                    </div>
+                    <div class="m-day-group">
+                        <div class="m-day-label">Thursday, Feb 13</div>
+                        <div class="m-sched-session">
+                            <div class="m-sched-time">10:30 AM</div>
+                            <div class="m-sched-info">
+                                <div class="m-sched-pos">Drive Thru</div>
+                                <div class="m-sched-trainee">Training: Morgan L.</div>
+                            </div>
+                            <span class="m-sched-status" style="background:#fee2e2; color:#b91c1c;">Overdue</span>
+                        </div>
+                    </div>
+                    <div class="m-day-group">
+                        <div class="m-day-label">Saturday, Feb 15</div>
+                        <div class="m-sched-session" style="border-left: 3px solid #4f46e5;">
+                            <div class="m-sched-time">8:00 AM</div>
+                            <div class="m-sched-info">
+                                <div class="m-sched-pos">Front Counter</div>
+                                <div class="m-sched-trainee">Training: Jordan R.</div>
+                            </div>
+                            <span class="m-sched-status" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                        </div>
+                        <div class="m-sched-session">
+                            <div class="m-sched-time">2:00 PM</div>
+                            <div class="m-sched-info">
+                                <div class="m-sched-pos">Nuggets Station</div>
+                                <div class="m-sched-trainee">Training: Sam T.</div>
+                            </div>
+                            <span class="m-sched-status" style="background:#f8fafc; color:#64748b;">Upcoming</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════ TRAINEE SCREENS ══════════ -->
+
+            <!-- ── TRAINEE DASHBOARD ── -->
+            <div class="m-screen" id="tab-te-dashboard">
+                <div class="m-te-body">
+                    <div class="m-te-welcome">
+                        <div class="m-te-av-big" style="background:#4f46e5;">JR</div>
+                        <div>
+                            <div class="m-page-title" style="font-size:18px;">Welcome back, Jordan</div>
+                            <div class="m-page-sub">Here is where you stand with your training.</div>
+                        </div>
+                    </div>
+                    <div class="m-te-stats">
+                        <div class="m-te-stat" style="border-left-color:#3b82f6;">
+                            <span class="m-te-stat-val" style="color:#3b82f6;">2</span>
+                            <div class="m-te-stat-lbl">Scheduled</div>
+                        </div>
+                        <div class="m-te-stat" style="border-left-color:#10b981;">
+                            <span class="m-te-stat-val" style="color:#10b981;">8</span>
+                            <div class="m-te-stat-lbl">Completed</div>
+                        </div>
+                        <div class="m-te-stat" style="border-left-color:#8b5cf6;">
+                            <span class="m-te-stat-val" style="color:#8b5cf6;">1</span>
+                            <div class="m-te-stat-lbl">Upcoming</div>
+                        </div>
+                    </div>
+                    <!-- Next assignment hero -->
+                    <div class="m-te-hero-card">
+                        <div class="m-te-hero-label">Next Assignment</div>
+                        <div class="m-te-hero-title">Front Counter &mdash; Speed &amp; Accuracy</div>
+                        <div class="m-te-hero-meta">With trainer Chris M. &bull; Saturday, Feb 15</div>
+                        <span class="m-te-hero-pill" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                    </div>
+                    <div class="m-te-cols">
+                        <!-- History list -->
+                        <div>
+                            <div style="font-size:13px; font-weight:800; color:#1e293b; margin-bottom:8px;">Recent Sessions</div>
+                            <div class="m-activity-card">
+                                <table class="m-table">
+                                    <thead><tr><th>Date</th><th>Position</th><th>Trainer</th><th style="text-align:right;">Score</th></tr></thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="m-date-lbl">Feb 13</span></td>
+                                            <td><div class="m-pos">Front Counter</div><div class="m-sub">Order Taking</div></td>
+                                            <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                            <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.5</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="m-date-lbl">Feb 10</span></td>
+                                            <td><div class="m-pos">Front Counter</div><div class="m-sub">Register Basics</div></td>
+                                            <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                            <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.8</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Roadmap sidebar -->
+                        <div>
+                            <div style="font-size:13px; font-weight:800; color:#1e293b; margin-bottom:8px;">My Roadmap</div>
+                            <div class="m-te-roadmap-card">
+                                <div style="font-size:28px; position:absolute; top:8px; right:12px; opacity:0.06; transform:rotate(15deg);">&#127942;</div>
+                                <div class="m-te-rm-title">Front Counter</div>
+                                <div class="m-te-rm-sub">5 steps &bull; 2 complete</div>
+                                <div class="m-te-rm-bar-bg"><div class="m-te-rm-bar-fill" style="width:40%;"></div></div>
+                                <div class="m-te-rm-pct">40%</div>
+                                <div class="m-te-rm-steps">
+                                    <div class="m-te-rm-step" style="background:#f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                                        <span class="m-te-rm-step-icon" style="color:#16a34a;"><i class="fa-solid fa-check"></i></span>
+                                        <span style="font-size:10px; font-weight:700; color:#166534;">Register Basics</span>
+                                    </div>
+                                    <div class="m-te-rm-step" style="background:#f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;">
+                                        <span class="m-te-rm-step-icon" style="color:#16a34a;"><i class="fa-solid fa-check"></i></span>
+                                        <span style="font-size:10px; font-weight:700; color:#166534;">Order Taking</span>
+                                    </div>
+                                    <div class="m-te-rm-step" style="background:#eef2ff; border: 1px solid #c7d2fe; border-radius: 6px;">
+                                        <span class="m-te-rm-step-icon" style="color:#4f46e5;"><i class="fa-solid fa-clock"></i></span>
+                                        <span style="font-size:10px; font-weight:700; color:#4f46e5;">Speed &amp; Accuracy</span>
+                                    </div>
+                                    <div class="m-te-rm-step" style="opacity:0.4;">
+                                        <span class="m-te-rm-step-icon" style="color:#94a3b8;"><i class="fa-solid fa-lock"></i></span>
+                                        <span style="font-size:10px; font-weight:600; color:#94a3b8;">Suggestive Selling</span>
+                                    </div>
+                                    <div class="m-te-rm-step" style="opacity:0.4;">
+                                        <span class="m-te-rm-step-icon" style="color:#94a3b8;"><i class="fa-solid fa-lock"></i></span>
+                                        <span style="font-size:10px; font-weight:600; color:#94a3b8;">Guest Recovery</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TRAINEE: MY ROADMAP (Full View) ── -->
+            <div class="m-screen" id="tab-te-roadmap">
+                <div class="m-roadmap-body">
+                    <div class="m-back-link"><i class="fa-solid fa-arrow-left" style="font-size:9px;"></i> Back to Dashboard</div>
+                    <div class="m-page-title" style="margin-bottom: 4px;">My Training Roadmap</div>
+                    <div class="m-page-sub" style="margin-bottom: 16px;">Front Counter &mdash; assigned by Adam A.</div>
+                    <div class="m-rm-full-card">
+                        <div class="m-rm-full-header">
+                            <div class="m-rm-full-title">Front Counter Roadmap</div>
+                            <span class="m-week-badge" style="background:#dcfce7; color:#166534; border-color:#bbf7d0;">40% Complete</span>
+                        </div>
+                        <div class="m-rm-full-steps">
+                            <div class="m-rm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                                <div class="m-rm-step-num" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
+                                <span class="m-rm-step-name" style="color:#166534;">Register Basics</span>
+                                <span class="m-rm-step-score" style="color:#16a34a;">4.8 / 5</span>
+                            </div>
+                            <div class="m-rm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                                <div class="m-rm-step-num" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
+                                <span class="m-rm-step-name" style="color:#166534;">Order Taking</span>
+                                <span class="m-rm-step-score" style="color:#16a34a;">4.5 / 5</span>
+                            </div>
+                            <div class="m-rm-step" style="border-color:#c7d2fe; background:#eef2ff;">
+                                <div class="m-rm-step-num" style="background:#e0e7ff; color:#4f46e5;"><i class="fa-solid fa-clock"></i></div>
+                                <span class="m-rm-step-name" style="color:#4f46e5;">Speed &amp; Accuracy</span>
+                                <span class="m-rm-step-score" style="color:#4f46e5;">In Progress</span>
+                            </div>
+                            <div class="m-rm-step" style="opacity:0.45;">
+                                <div class="m-rm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
+                                <span class="m-rm-step-name">Suggestive Selling</span>
+                                <span class="m-rm-step-score" style="color:#94a3b8;">Locked</span>
+                            </div>
+                            <div class="m-rm-step" style="opacity:0.45;">
+                                <div class="m-rm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
+                                <span class="m-rm-step-name">Guest Recovery</span>
+                                <span class="m-rm-step-score" style="color:#94a3b8;">Locked</span>
+                            </div>
+                        </div>
+                        <div class="m-rm-progress-bar"><div class="m-rm-progress-fill" style="width:40%;"></div></div>
+                        <div class="m-rm-progress-label"><span>2 of 5 steps complete</span><span>40%</span></div>
+                    </div>
+                    <div style="margin-top:14px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; border-top:4px solid #4f46e5;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                            <i class="fa-solid fa-lightbulb" style="color:#4f46e5;"></i>
+                            <span style="font-size:12px; font-weight:800; color:#1e293b;">What is next?</span>
+                        </div>
+                        <div style="font-size:11px; color:#64748b; line-height:1.5;">Complete your <strong style="color:#4f46e5;">Speed &amp; Accuracy</strong> training with a score of 3.5 or higher to unlock the next step.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TRAINEE: SESSION HISTORY ── -->
+            <div class="m-screen" id="tab-te-history">
+                <div class="m-hist-body">
+                    <div class="m-page-title" style="margin-bottom: 4px;">Session History</div>
+                    <div class="m-page-sub" style="margin-bottom: 16px;">All your completed training sessions.</div>
+                    <div class="m-activity-card">
+                        <table class="m-table">
+                            <thead><tr><th>Date</th><th>Position</th><th>Trainer</th><th style="text-align:right;">Score</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="m-date-lbl">Feb 13</span></td>
+                                    <td><div class="m-pos">Front Counter</div><div class="m-sub">Order Taking</div></td>
+                                    <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                    <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.5 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="m-date-lbl">Feb 10</span></td>
+                                    <td><div class="m-pos">Front Counter</div><div class="m-sub">Register Basics</div></td>
+                                    <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                    <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.8 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="m-date-lbl">Feb 6</span></td>
+                                    <td><div class="m-pos">Front Counter</div><div class="m-sub">Register Basics</div></td>
+                                    <td><div class="m-trainer-cell"><div class="m-av" style="background:#7c3aed;">SR</div><span style="font-size:11px;font-weight:700;color:#334155;">Sara R.</span></div></td>
+                                    <td style="text-align:right;"><span class="m-score" style="background:#f59e0b;">3.2 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="m-date-lbl">Feb 3</span></td>
+                                    <td><div class="m-pos">Drive Thru</div><div class="m-sub">Window Basics</div></td>
+                                    <td><div class="m-trainer-cell"><div class="m-av" style="background:#059669;">JT</div><span style="font-size:11px;font-weight:700;color:#334155;">Jamie T.</span></div></td>
+                                    <td style="text-align:right;"><span class="m-score" style="background:#4f46e5;">3.9 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="m-date-lbl">Jan 30</span></td>
+                                    <td><div class="m-pos">Front Counter</div><div class="m-sub">Register Basics</div></td>
+                                    <td><div class="m-trainer-cell"><div class="m-av" style="background:#4f46e5;">CM</div><span style="font-size:11px;font-weight:700;color:#334155;">Chris M.</span></div></td>
+                                    <td style="text-align:right;"><span class="m-score" style="background:#10b981;">4.1 <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="text-align:center; margin-top:16px;">
+                        <span style="font-size:11px; font-weight:700; color:#64748b;">Showing 5 of 8 sessions</span>
+                    </div>
+                </div>
+            </div>
+
         </div><!-- /m-screens -->
     </div><!-- /m-demo -->
 
@@ -2069,19 +2657,49 @@
     (function() {
         var demo = document.getElementById('appDemo');
         if (!demo) return;
-        var links = demo.querySelectorAll('.m-nav-link');
-        var screens = demo.querySelectorAll('.m-screen');
         var urlBar = document.getElementById('demoUrl');
-        links.forEach(function(link) {
-            link.addEventListener('click', function() {
-                var tab = this.dataset.tab;
-                links.forEach(function(l) { l.classList.remove('active'); });
-                screens.forEach(function(s) { s.classList.remove('active'); });
+        var userPill = demo.querySelector('.m-user-name');
+        var userAv = demo.querySelector('.m-user-avatar');
+        var roleBtns = document.querySelectorAll('.role-btn');
+        var roleNavs = demo.querySelectorAll('.role-nav');
+        var screens = demo.querySelectorAll('.m-screen');
+        var roleUsers = {manager:{name:'Adam A.',init:'A'},trainer:{name:'Chris M.',init:'C'},trainee:{name:'Jordan R.',init:'J'}};
+
+        function activateTab(navLink) {
+            var nav = navLink.closest('.role-nav');
+            nav.querySelectorAll('.m-nav-link').forEach(function(l){l.classList.remove('active');});
+            screens.forEach(function(s){s.classList.remove('active');});
+            navLink.classList.add('active');
+            var t = document.getElementById('tab-' + navLink.dataset.tab);
+            if (t) t.classList.add('active');
+            if (urlBar && navLink.dataset.url) urlBar.textContent = navLink.dataset.url;
+        }
+
+        function switchRole(role) {
+            roleNavs.forEach(function(n){n.classList.remove('active');});
+            screens.forEach(function(s){s.classList.remove('active');});
+            var nav = demo.querySelector('.role-nav[data-role="'+role+'"]');
+            if (nav) {
+                nav.classList.add('active');
+                var first = nav.querySelector('.m-nav-link');
+                if (first) { first.classList.add('active'); activateTab(first); }
+            }
+            var u = roleUsers[role];
+            if (u && userPill) { userPill.textContent = u.name; }
+            if (u && userAv) { userAv.textContent = u.init; }
+        }
+
+        roleBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                roleBtns.forEach(function(b){b.classList.remove('active');});
                 this.classList.add('active');
-                var target = document.getElementById('tab-' + tab);
-                if (target) target.classList.add('active');
-                if (urlBar && this.dataset.url) urlBar.textContent = this.dataset.url;
+                switchRole(this.dataset.role);
             });
+        });
+
+        demo.addEventListener('click', function(e) {
+            var link = e.target.closest('.m-nav-link');
+            if (link) activateTab(link);
         });
     })();
     </script>
@@ -2108,48 +2726,12 @@
             <p class="section-sub">From day one onboarding to position mastery, Training Tracker handles every step of the process.</p>
         </div>
         <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#ede9fe; color:#7c3aed;">
-                    <i class="fa-solid fa-calendar-days"></i>
-                </div>
-                <h3>Smart Scheduling</h3>
-                <p>Build weekly training schedules in minutes. The smart scheduler automatically pairs trainees with qualified trainers and available positions.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#d1fae5; color:#059669;">
-                    <i class="fa-solid fa-road"></i>
-                </div>
-                <h3>Training Roadmaps</h3>
-                <p>Define a structured path for each position. Assign trainees to roadmaps and watch them progress through every step, in order.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#dbeafe; color:#2563eb;">
-                    <i class="fa-solid fa-chart-line"></i>
-                </div>
-                <h3>Progress Tracking</h3>
-                <p>See exactly where each trainee stands across every position. Drill into session ratings, scores by quality, and trends over time.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#fef3c7; color:#d97706;">
-                    <i class="fa-solid fa-star"></i>
-                </div>
-                <h3>Session Ratings</h3>
-                <p>Trainers rate each session on multiple qualities like knowledge, speed, and attitude. Ratings are aggregated into a clear overall score.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#fce7f3; color:#db2777;">
-                    <i class="fa-solid fa-qrcode"></i>
-                </div>
-                <h3>Guest Trainer Mode</h3>
-                <p>Need someone to train who is not in the system? Generate a one-time QR code link, share it by text, and they can submit a session without an account.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon" style="background:#e0f2fe; color:#0284c7;">
-                    <i class="fa-solid fa-message"></i>
-                </div>
-                <h3>Team Messaging</h3>
-                <p>Built-in direct messages and group channels so your team can communicate around training without needing a separate app.</p>
-            </div>
+            <div class="feature-card"><div class="feature-icon" style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-calendar-days"></i></div><h3>Smart Scheduling</h3><p>Auto-pair trainees with trainers in seconds. Upload your work schedule and the system does the rest.</p></div>
+            <div class="feature-card"><div class="feature-icon" style="background:#d1fae5; color:#059669;"><i class="fa-solid fa-road"></i></div><h3>Training Roadmaps</h3><p>Build step-by-step paths for every position. Trainees unlock the next step only after mastering the current one.</p></div>
+            <div class="feature-card"><div class="feature-icon" style="background:#dbeafe; color:#2563eb;"><i class="fa-solid fa-chart-line"></i></div><h3>Progress Tracking</h3><p>See where every trainee stands at a glance. Drill into scores, trends, and mastery across all positions.</p></div>
+            <div class="feature-card"><div class="feature-icon" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-star"></i></div><h3>Session Ratings</h3><p>Trainers rate each session on skills like speed, accuracy, and attitude with colored 1-5 scales.</p></div>
+            <div class="feature-card"><div class="feature-icon" style="background:#fce7f3; color:#db2777;"><i class="fa-solid fa-qrcode"></i></div><h3>Guest Trainer Mode</h3><p>Generate a one-time QR code for anyone to submit a training session. No account needed.</p></div>
+            <div class="feature-card"><div class="feature-icon" style="background:#e0f2fe; color:#0284c7;"><i class="fa-solid fa-message"></i></div><h3>Team Messaging</h3><p>Slack-style channels and DMs built right in. Coordinate training without switching apps.</p></div>
         </div>
     </div>
 </section>
@@ -2163,24 +2745,185 @@
             <p class="section-sub" style="margin: 0 auto;">No IT team required. No six-week implementation. You set it up, your team starts using it.</p>
         </div>
         <div class="steps-grid">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Set up your positions</h3>
-                <p>Add the positions at your location, define what good performance looks like for each one, and build training roadmaps for new hires.</p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Build your schedule</h3>
-                <p>Create a weekly training schedule, assign sessions manually or let the smart scheduler do it, and publish it for your trainers to see.</p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>Track and improve</h3>
-                <p>Trainers submit ratings after each session. You see progress in real time, catch problems early, and know exactly when someone is ready to graduate.</p>
-            </div>
+            <div class="step"><div class="step-number">1</div><h3>Set up your positions</h3><p>Add the positions at your location, define what good looks like, and build training roadmaps for new hires.</p></div>
+            <div class="step"><div class="step-number">2</div><h3>Build your schedule</h3><p>Create a weekly schedule manually or let the smart scheduler auto-pair trainees with trainers.</p></div>
+            <div class="step"><div class="step-number">3</div><h3>Track and improve</h3><p>Trainers submit ratings after each session. You see progress in real time and know when someone is ready.</p></div>
         </div>
     </div>
 </section>
+
+<!-- ── FEATURE SHOWCASE: Smart Scheduling ── -->
+<div class="showcase" id="feature-scheduling">
+    <div class="showcase-inner">
+        <div class="showcase-text">
+            <div class="section-label">Smart Scheduling</div>
+            <h2>Build a full training week in one click</h2>
+            <p>Upload your work schedule, and the smart scheduler automatically pairs trainees with qualified trainers across every shift. No more spreadsheets, no more guessing.</p>
+            <ul class="showcase-bullets">
+                <li><i class="fa-solid fa-check"></i> PDF schedule upload with auto-detection of shifts and names</li>
+                <li><i class="fa-solid fa-check"></i> Automatic trainer-trainee pairing based on position and availability</li>
+                <li><i class="fa-solid fa-check"></i> Blind schedule option to hide assignments until session time</li>
+                <li><i class="fa-solid fa-check"></i> Conflict detection prevents double-booking</li>
+            </ul>
+        </div>
+        <div class="showcase-visual">
+            <div style="padding:14px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                <div style="font-size:14px; font-weight:900; color:#1e293b;">Training Schedules</div>
+                <div style="display:flex; gap:6px;">
+                    <div class="m-btn-smart" style="font-size:10px; padding:6px 12px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Schedule</div>
+                    <div class="m-btn-primary" style="font-size:10px; padding:6px 12px;"><i class="fa-solid fa-plus"></i> Manual</div>
+                </div>
+            </div>
+            <table class="m-table">
+                <thead><tr><th></th><th>Week</th><th>Status</th><th>Sessions</th></tr></thead>
+                <tbody>
+                    <tr><td><div class="m-icon-box" style="width:30px;height:30px;font-size:11px;"><i class="fa-solid fa-calendar-days"></i></div></td><td><div style="font-size:12px;font-weight:800;color:#1e293b;">Feb 10 &ndash; Feb 16</div><div style="font-size:10px;color:#64748b;">Current week</div></td><td><span class="m-pill-pub"><i class="fa-solid fa-circle" style="font-size:5px;"></i> Published</span></td><td><span style="font-size:12px;font-weight:700;">8 sessions</span></td></tr>
+                    <tr><td><div class="m-icon-box" style="width:30px;height:30px;font-size:11px;"><i class="fa-solid fa-calendar-days"></i></div></td><td><div style="font-size:12px;font-weight:800;color:#1e293b;">Feb 17 &ndash; Feb 23</div><div style="font-size:10px;color:#64748b;">Next week</div></td><td><span class="m-pill-draft"><i class="fa-solid fa-circle" style="font-size:5px;"></i> Draft</span></td><td><span style="font-size:12px;font-weight:700;">5 sessions</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── FEATURE SHOWCASE: Session Ratings ── -->
+<div class="showcase" id="feature-ratings">
+    <div class="showcase-inner reverse">
+        <div class="showcase-text">
+            <div class="section-label">Session Ratings</div>
+            <h2>Detailed feedback on every skill, every session</h2>
+            <p>Trainers rate trainees on each quality defined for the position. Color-coded 1-5 scales make it fast and intuitive. Optional comments let trainers call out specifics.</p>
+            <ul class="showcase-bullets">
+                <li><i class="fa-solid fa-check"></i> Custom skill descriptors per position (speed, accuracy, attitude, etc.)</li>
+                <li><i class="fa-solid fa-check"></i> Color-coded ratings from red (1) to green (5)</li>
+                <li><i class="fa-solid fa-check"></i> "Needs Attention" flag for manager follow-up</li>
+                <li><i class="fa-solid fa-check"></i> Full session history with score trends over time</li>
+            </ul>
+        </div>
+        <div class="showcase-visual">
+            <div style="padding:14px 18px; border-bottom:1px solid #e2e8f0;">
+                <div style="font-size:14px; font-weight:900; color:#1e293b;">Rate Session</div>
+                <div style="font-size:11px; color:#64748b;">Jordan R. &mdash; Front Counter</div>
+            </div>
+            <div style="padding:14px 16px;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+                    <div style="font-size:12px; font-weight:800; color:#1e293b; margin-bottom:6px;">Knowledge &amp; Accuracy</div>
+                    <div style="display:flex; gap:4px; padding:3px; background:#f1f5f9; border-radius:8px;">
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">1</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">2</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">3</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;background:#84cc16;color:#fff;">4</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">5</div>
+                    </div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-bottom:8px;">
+                    <div style="font-size:12px; font-weight:800; color:#1e293b; margin-bottom:6px;">Speed of Service</div>
+                    <div style="display:flex; gap:4px; padding:3px; background:#f1f5f9; border-radius:8px;">
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">1</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">2</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">3</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">4</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;background:#22c55e;color:#fff;">5</div>
+                    </div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px;">
+                    <div style="font-size:12px; font-weight:800; color:#1e293b; margin-bottom:6px;">Guest Interaction</div>
+                    <div style="display:flex; gap:4px; padding:3px; background:#f1f5f9; border-radius:8px;">
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">1</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">2</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;background:#eab308;color:#fff;">3</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">4</div>
+                        <div style="flex:1;text-align:center;padding:6px 0;border-radius:6px;font-size:12px;font-weight:800;color:#94a3b8;">5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── FEATURE SHOWCASE: Guest Trainer ── -->
+<div class="showcase" id="feature-guest">
+    <div class="showcase-inner">
+        <div class="showcase-text">
+            <div class="section-label">Guest Trainer Mode</div>
+            <h2>Anyone can train, no account needed</h2>
+            <p>Miscommunication happens. When a new hire shows up and the scheduled trainer is out, Guest Trainer Mode saves the day. Generate a one-time link, share it by text, and anyone can submit a session evaluation.</p>
+            <ul class="showcase-bullets">
+                <li><i class="fa-solid fa-check"></i> QR code and shareable link generated in seconds</li>
+                <li><i class="fa-solid fa-check"></i> One-tap text message sharing via native SMS</li>
+                <li><i class="fa-solid fa-check"></i> Link expires after 24 hours or first use</li>
+                <li><i class="fa-solid fa-check"></i> Guest sessions clearly labeled in the system</li>
+            </ul>
+        </div>
+        <div class="showcase-visual">
+            <div style="padding:20px; text-align:center;">
+                <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:4px;">Guest Trainer Link</div>
+                <div style="font-size:11px; color:#64748b; margin-bottom:16px;">For Jordan R. &mdash; Front Counter</div>
+                <div style="width:140px; height:140px; margin:0 auto 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center;">
+                    <div style="width:100px; height:100px; background:repeating-conic-gradient(#1e293b 0% 25%, #fff 0% 50%) 50% / 10px 10px; border-radius:4px;"></div>
+                </div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:10px; color:#64748b; font-family:monospace; margin-bottom:12px; word-break:break-all;">trainingtracker.me/guest/train/a8f2c...</div>
+                <div style="display:flex; gap:8px; justify-content:center;">
+                    <div style="padding:8px 16px; background:#7c3aed; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-copy"></i> Copy Link</div>
+                    <div style="padding:8px 16px; background:#16a34a; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-message"></i> Send via Text</div>
+                </div>
+                <div style="margin-top:12px; font-size:9px; color:#94a3b8;">Expires in 24 hours or after first use</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── FEATURE SHOWCASE: Employee Profiles ── -->
+<div class="showcase" id="feature-profiles">
+    <div class="showcase-inner reverse">
+        <div class="showcase-text">
+            <div class="section-label">Employee Profiles</div>
+            <h2>Every team member's full training story</h2>
+            <p>See exactly where each person stands. Their training transcript, mastery badges, roadmap progress, and internal notes all in one place. Know who is ready to graduate and who needs more time.</p>
+            <ul class="showcase-bullets">
+                <li><i class="fa-solid fa-check"></i> Per-position training scores and session history</li>
+                <li><i class="fa-solid fa-check"></i> Green mastery badges when positions are completed</li>
+                <li><i class="fa-solid fa-check"></i> Internal notes visible only to managers</li>
+                <li><i class="fa-solid fa-check"></i> One-click graduation when a trainee is ready</li>
+            </ul>
+        </div>
+        <div class="showcase-visual">
+            <div style="padding:16px 18px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+                <div style="width:42px; height:42px; border-radius:10px; background:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:#fff;">JR</div>
+                <div>
+                    <div style="font-size:14px; font-weight:900; color:#1e293b;">Jordan R.</div>
+                    <div style="display:flex; gap:4px;">
+                        <span style="font-size:9px; font-weight:800; padding:2px 7px; border-radius:5px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; text-transform:uppercase;">Trainee</span>
+                        <span style="font-size:9px; font-weight:800; padding:2px 7px; border-radius:5px; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; text-transform:uppercase;">Active</span>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:14px 18px; border-bottom:1px solid #e2e8f0; display:flex; gap:20px;">
+                <div><div style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Sessions</div><div style="font-size:14px;font-weight:800;color:#1e293b;">8</div></div>
+                <div><div style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Avg. Score</div><div style="font-size:14px;font-weight:800;color:#4f46e5;">4.2</div></div>
+                <div><div style="font-size:8px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Roadmap</div><div style="font-size:14px;font-weight:800;color:#10b981;">40%</div></div>
+            </div>
+            <div style="padding:14px 18px;">
+                <div style="font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px;">Training Transcript</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                    <div style="padding:10px; border-radius:8px; border:1px solid #e2e8f0; border-left:3px solid #4f46e5;">
+                        <div style="font-size:11px;font-weight:800;color:#1e293b;">Front Counter</div>
+                        <div style="font-size:18px;font-weight:900;color:#4f46e5;">4.5</div>
+                        <div style="font-size:9px;color:#64748b;">6 sessions</div>
+                    </div>
+                    <div style="padding:10px; border-radius:8px; border:1px solid #e2e8f0; border-left:3px solid #10b981;">
+                        <div style="font-size:11px;font-weight:800;color:#1e293b;">Drive Thru</div>
+                        <div style="font-size:18px;font-weight:900;color:#10b981;">3.9</div>
+                        <div style="font-size:9px;color:#64748b;">2 sessions</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:3px; flex-wrap:wrap; margin-top:8px;">
+                    <span style="font-size:8px; font-weight:800; padding:2px 6px; border-radius:4px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; text-transform:uppercase; display:inline-flex; align-items:center; gap:2px;"><i class="fa-solid fa-check" style="font-size:6px;"></i> Register Basics</span>
+                    <span style="font-size:8px; font-weight:800; padding:2px 6px; border-radius:4px; background:#dcfce7; color:#166534; border:1px solid #bbf7d0; text-transform:uppercase; display:inline-flex; align-items:center; gap:2px;"><i class="fa-solid fa-check" style="font-size:6px;"></i> Order Taking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ── HIGHLIGHT: ROADMAPS ── -->
 <section class="highlight">
@@ -2335,6 +3078,7 @@
 <div class="cta-banner">
     <h2>Ready to fix your training?</h2>
     <p>Join teams that stopped winging it and started training with a real system.</p>
+    <p style="font-size:14px; font-style:italic; color:rgba(255,255,255,0.55); margin-top:6px;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
     <a href="#" class="btn-white" onclick="openModal(); return false;">
         <i class="fa-solid fa-rocket"></i> Get Started for Free
     </a>
@@ -2347,11 +3091,13 @@
             <div class="footer-brand">
                 <img src="{{ url_for('static', filename='tt_logo.png') }}" alt="Training Tracker">
                 <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful enough to scale.</p>
+                <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">&ldquo;The difference between good and great is the little things.&rdquo;</p>
             </div>
             <div class="footer-col">
                 <h4>Product</h4>
                 <a href="#features">Features</a>
                 <a href="#how-it-works">How It Works</a>
+                <a href="{{ url_for('auth.tour') }}">Feature Tour</a>
                 <a href="#pricing">Pricing</a>
                 <a href="{{ url_for('legacy.index') }}">Classic Mode</a>
             </div>
