@@ -521,8 +521,8 @@
                     <span class="kpi-label">Completed</span>
                 </div>
                 <div class="kpi-card">
-                    <span class="kpi-val {{ 'warn' if pending_sessions_count > 0 else '' }}">{{ pending_sessions_count }}</span>
-                    <span class="kpi-label">Scheduled</span>
+                    <span class="kpi-val {{ 'warn' if overdue_sessions_count > 0 else '' }}">{{ overdue_sessions_count }}</span>
+                    <span class="kpi-label">Overdue</span>
                 </div>
                 {% if unlinked_count > 0 %}
                 <div class="kpi-card">
@@ -632,11 +632,6 @@
                                         {% set ratings = s.ratings|map(attribute='rating_value')|list %}
                                         {% set avg = (ratings|sum / ratings|length)|round(1) if ratings else 0 %}
                                         <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                                            {% if require_signoff and not s.acknowledged_at %}
-                                            <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; color: #f59e0b; background: #fef3c7; padding: 3px 8px; border-radius: 6px; border: 1px solid #fde68a; white-space: nowrap;">
-                                                <i class="fa-solid fa-signature" style="margin-right: 3px;"></i>Sign-off Needed
-                                            </span>
-                                            {% endif %}
                                             <a href="{{ url_for('employee.session_rating', session_id=s.id) }}" class="score-badge" style="background: {{ '#10b981' if avg >= 4 else '#f59e0b' if avg >= 3 else '#ef4444' }};">
                                                 {{ avg }} <i class="fa-solid fa-chevron-right" style="font-size:7px;"></i>
                                             </a>

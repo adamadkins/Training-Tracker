@@ -192,9 +192,10 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        pending_sessions_count = TrainingSession.query.filter(
+        overdue_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
+            TrainingSession.session_date < date.today(),
         ).count()
     else:
         employees = Employee.query.filter(Employee.graduated_at == None).options(
@@ -213,9 +214,10 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        pending_sessions_count = TrainingSession.query.filter(
+        overdue_sessions_count = TrainingSession.query.filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.completed_at == None,
+            TrainingSession.session_date < date.today(),
         ).count()
     assigned_employee_ids = db.session.query(User.employee_id).filter(User.employee_id != None)
     emp_query = Employee.query.filter(~Employee.id.in_(assigned_employee_ids))
@@ -248,7 +250,7 @@ def dashboard():
         user=current_user,
         employees=employees,
         sessions=sessions,
-        pending_sessions_count=pending_sessions_count,
+        overdue_sessions_count=overdue_sessions_count,
         unlinked_count=unlinked_count,
         require_signoff=require_signoff,
         flagged_sessions=flagged_sessions,
