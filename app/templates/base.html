@@ -392,9 +392,8 @@
     <div class="container nav-split">
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
-                {% if g.system_settings and g.system_settings.custom_logo_url and not g.system_settings.custom_logo_url.startswith('http') %}
-                {% set logo_url = g.system_settings.custom_logo_url %}
-                <img src="{{ url_for('static', filename=logo_url) }}" alt="Logo" class="brand-logo-img" referrerpolicy="no-referrer">
+                {% if g.system_settings and g.system_settings.custom_logo_url %}
+                <img src="{{ url_for('auth.logo') }}" alt="Logo" class="brand-logo-img" referrerpolicy="no-referrer">
                 <span class="brand-logo-text">Training<b>Tracker</b></span>
                 {% else %}
                 <span class="brand-logo-text">Training<b>Tracker</b></span>

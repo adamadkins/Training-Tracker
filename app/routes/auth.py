@@ -1,13 +1,54 @@
 from datetime import datetime, timezone
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User
+from app.models import User, SystemSettings
 from app import db
 # ADDED: Import your notification helper
 from app.utils.notifications import send_notification_email
 
 auth_bp = Blueprint("auth", __name__)
+
+
+def _fetch_logo_image(url):
+    """Fetch image bytes from URL; returns (data, content_type) or (None, None)."""
+    if not url or not url.startswith("http"):
+        return None, None
+    try:
+        req = Request(url, headers={"User-Agent": "TrainingTracker/1.0"})
+        with urlopen(req, timeout=8) as r:
+            data = r.read()
+            ctype = (r.headers.get("Content-Type") or "image/png").split(";")[0].strip()
+            if data and len(data) <= 2 * 1024 * 1024:
+                return data, ctype
+    except (HTTPError, URLError, OSError):
+        pass
+    return None, None
+
+
+@auth_bp.get("/logo")
+def logo():
+    """Serve the configured system logo (no auth). Used by navbar and login page."""
+    settings = SystemSettings.query.first()
+    if not settings or not settings.custom_logo_url:
+        abort(404)
+    logo_url = (settings.custom_logo_url or "").strip()
+    if not logo_url:
+        abort(404)
+    if logo_url.startswith("http"):
+        data, ctype = _fetch_logo_image(logo_url)
+        if data and ctype:
+            return Response(data, mimetype=ctype, direct_passthrough=True)
+        abort(404)
+    import os
+    path = os.path.join(current_app.static_folder, logo_url)
+    if not os.path.isfile(path):
+        abort(404)
+    ext = os.path.splitext(logo_url)[1].lower()
+    mimetype = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}.get(ext, "image/png")
+    return send_file(path, mimetype=mimetype, as_attachment=False)
 
 
 @auth_bp.get("/")
