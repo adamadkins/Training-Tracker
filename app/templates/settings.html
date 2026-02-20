@@ -652,18 +652,27 @@
                 if (statusEl.parentNode) statusEl.remove();
                 if (data.url) {
                     searchedLogoUrl = data.url;
-                    img.src = data.url;
                     img.alt = q;
-                    img.onerror = function() {
-                        searchedLogoUrl = null;
+                    var fallbackUrl = data.fallback_url || null;
+                    function showLogoError() {
                         var m = document.createElement('span');
                         m.id = 'logoSearchMsg';
                         m.className = 's-desc logo-error';
                         m.textContent = 'Logo could not be loaded.';
                         preview.appendChild(m);
                         img.style.display = 'none';
+                    }
+                    img.onerror = function() {
+                        if (fallbackUrl && !img.dataset.triedFallback) {
+                            img.dataset.triedFallback = '1';
+                            img.onerror = showLogoError;
+                            img.src = fallbackUrl;
+                            return;
+                        }
+                        showLogoError();
                     };
                     img.onload = function() { img.style.display = 'block'; };
+                    img.src = data.url;
                     img.style.display = 'block';
                     var useBtn = document.getElementById('useSearchedLogoBtn');
                     if (useBtn) useBtn.style.display = '';

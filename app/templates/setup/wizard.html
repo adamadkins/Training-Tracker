@@ -234,16 +234,27 @@
                 if (data.url) {
                     searchedUrl = data.url;
                     img.alt = q || 'Logo';
-                    img.onerror = function() {
+                    var fallbackUrl = data.fallback_url || null;
+                    function showLoadError() {
                         img.style.display = 'none';
                         var m = document.createElement('span');
                         m.className = 'logo-msg setup-desc';
                         m.style.color = 'var(--text-muted)';
                         m.textContent = 'Image couldn\'t load (you can still click "Use this logo" or upload your own).';
                         if (!preview.querySelector('.logo-msg')) preview.appendChild(m);
+                    }
+                    img.onerror = function() {
+                        if (fallbackUrl && !img.dataset.triedFallback) {
+                            img.dataset.triedFallback = '1';
+                            img.onerror = showLoadError;
+                            img.src = fallbackUrl;
+                            return;
+                        }
+                        showLoadError();
                     };
                     img.onload = function() {
                         img.style.display = 'block';
+                        img.dataset.triedFallback = '';
                         var msg = preview.querySelector('.logo-msg');
                         if (msg && msg.textContent.indexOf('couldn\'t load') !== -1) msg.remove();
                     };

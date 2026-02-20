@@ -2014,12 +2014,17 @@ def session_delete(session_id):
 @login_required
 @manager_required
 def api_logo_search():
-    """Try Clearbit logo for company/domain query; return first working URL or null."""
+    """Try Clearbit logo for company/domain query; return URL and optional Google favicon fallback."""
     q = request.args.get("q", "").strip()
     if not q:
-        return jsonify({"url": None})
+        return jsonify({"url": None, "fallback_url": None})
     url = _logo_search_first_url(q)
-    return jsonify({"url": url})
+    fallback_url = None
+    if url and "logo.clearbit.com" in url:
+        domain = url.split("logo.clearbit.com/")[-1].split("?")[0].strip()
+        if domain and "." in domain:
+            fallback_url = f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
+    return jsonify({"url": url, "fallback_url": fallback_url})
 
 
 @manager_bp.route("/settings", methods=['GET', 'POST'])
