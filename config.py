@@ -15,6 +15,8 @@ class Config:
     # ProxyFix in __init__.py handles scheme (http→https) for live requests automatically.
     SERVER_NAME = os.environ.get('SERVER_NAME') or None
     PREFERRED_URL_SCHEME = os.environ.get('PREFERRED_URL_SCHEME', 'https')
+    # Main domain for multi-tenant: subdomain is stripped from request.host to resolve Organization (e.g. trainingtracker.me, www.trainingtracker.me).
+    MAIN_DOMAIN = os.environ.get('MAIN_DOMAIN') or (SERVER_NAME if SERVER_NAME and '.' in SERVER_NAME else 'trainingtracker.me')
 
     # --- Session ---
     # Sessions are permanent so Flask respects PERMANENT_SESSION_LIFETIME.

@@ -7,21 +7,35 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from flask import current_app
 import hashlib
-from sqlalchemy import Index
+from sqlalchemy import Index, UniqueConstraint
 from app import db
+
+
+class Organization(db.Model):
+    """Tenant: one per company. Resolved from subdomain (e.g. acme.trainingtracker.me -> subdomain 'acme')."""
+    __tablename__ = "organizations"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    subdomain = db.Column(db.String(80), unique=True, nullable=False, index=True)  # e.g. "acme" for acme.trainingtracker.me
+    status = db.Column(db.String(20), default="active", nullable=False)  # active | suspended
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("organization_id", "email", name="uq_user_org_email"),)
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=True)  # None = superuser (admin)
+    email = db.Column(db.String(255), nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), nullable=False, default="trainee")
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    is_superuser = db.Column(db.Boolean, default=False, nullable=False)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
     last_seen = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
+    organization = db.relationship("Organization", backref="users")
     employee = db.relationship("Employee", foreign_keys=[employee_id],
                                backref=db.backref("user_account", uselist=False))
 
@@ -57,15 +71,18 @@ employee_locations = db.Table(
 class Location(db.Model):
     __tablename__ = "locations"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
     name = db.Column(db.String(80), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    organization = db.relationship("Organization", backref="locations")
     employees = db.relationship("Employee", backref="location", lazy="dynamic")
 
 
 class Employee(db.Model):
     __tablename__ = "employees"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="trainee")
@@ -78,6 +95,7 @@ class Employee(db.Model):
     roadmap_assigned_at = db.Column(db.DateTime, nullable=True)  # When the current roadmap was assigned; sessions before this date are excluded from mastery
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
+    organization = db.relationship("Organization", backref="employees")
     # Relationships - Added backref here
     active_roadmap = db.relationship("TrainingRoadmap", foreign_keys=[current_roadmap_id], backref="trainees")
     # Multiple location assignments (cross-training; managers can see multiple locations)
@@ -148,11 +166,14 @@ class Employee(db.Model):
 
 class Position(db.Model):
     __tablename__ = "positions"
+    __table_args__ = (UniqueConstraint("organization_id", "name", name="uq_position_org_name"),)
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True, nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
+    name = db.Column(db.String(120), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     location_id = db.Column(db.Integer, db.ForeignKey("locations.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    organization = db.relationship("Organization", backref="positions")
     descriptors = db.relationship("PositionDescriptor", backref="position", cascade="all, delete-orphan")
     location = db.relationship("Location", backref="positions")
 
@@ -168,17 +189,21 @@ class PositionDescriptor(db.Model):
 
 class Daypart(db.Model):
     __tablename__ = "dayparts"
+    __table_args__ = (UniqueConstraint("organization_id", "name", name="uq_daypart_org_name"),)
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
+    name = db.Column(db.String(80), nullable=False)
     start_time = db.Column(db.Time, nullable=True)
     end_time = db.Column(db.Time, nullable=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    organization = db.relationship("Organization", backref="dayparts")
 
 
 class Schedule(db.Model):
     __tablename__ = "schedules"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default='draft')
@@ -187,6 +212,7 @@ class Schedule(db.Model):
     created_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
+    organization = db.relationship("Organization", backref="schedules")
     created_by = db.relationship("User", foreign_keys=[created_by_user_id])
     sessions = db.relationship("TrainingSession", backref="schedule", cascade="all, delete-orphan")
 
@@ -198,6 +224,7 @@ class TrainingSession(db.Model):
         Index("ix_training_sessions_trainee_completed", "trainee_employee_id", "completed_at"),
     )
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)  # denormalized for scoping
     schedule_id = db.Column(db.Integer, db.ForeignKey("schedules.id"), nullable=False)
     session_date = db.Column(db.Date, nullable=False)
     daypart_id = db.Column(db.Integer, db.ForeignKey("dayparts.id"), nullable=True)
@@ -291,6 +318,7 @@ class Channel(db.Model):
     """Slack-like channel: either a group channel (name) or a DM (name null, exactly 2 participants)."""
     __tablename__ = "channels"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
     name = db.Column(db.String(80), nullable=True)  # null for DM
     channel_type = db.Column(db.String(20), nullable=False, default="channel")  # 'channel' | 'dm'
     description = db.Column(db.String(255), nullable=True)
@@ -298,6 +326,7 @@ class Channel(db.Model):
     is_read_only = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    organization = db.relationship("Organization", backref="channels")
     created_by = db.relationship("Employee", foreign_keys=[created_by_id])
     participants = db.relationship(
         "ChannelParticipant",
@@ -344,6 +373,7 @@ class Message(db.Model):
 class SystemSettings(db.Model):
     __tablename__ = "system_settings"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, unique=True, index=True)  # one row per org
     dm_enabled = db.Column(db.Boolean, default=True)
     allow_trainee_to_trainee_dm = db.Column(db.Boolean, default=True)
     share_trainee_data_with_trainees = db.Column(db.Boolean, default=True)  # When False, trainees cannot see their own training data
@@ -359,6 +389,7 @@ class SystemSettings(db.Model):
     setup_completed = db.Column(db.Boolean, default=False, nullable=False)
     setup_step = db.Column(db.Integer, default=0, nullable=False)
     business_type = db.Column(db.String(80), nullable=True)
+    organization = db.relationship("Organization", backref=db.backref("system_settings", uselist=False))
 
 
 class UserSettings(db.Model):
@@ -387,9 +418,11 @@ class MessageReaction(db.Model):
 class TrainingRoadmap(db.Model):
     __tablename__ = "training_roadmaps"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    organization = db.relationship("Organization", backref="training_roadmaps")
     steps = db.relationship("RoadmapStep", backref="roadmap", cascade="all, delete-orphan",
                             order_by="RoadmapStep.order_index")
 

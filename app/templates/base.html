@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
@@ -258,7 +259,6 @@
             color: var(--text-main);
             cursor: pointer;
         }
-        .nav-overlay { display: none; }
         .nav-icon-close { display: none !important; }
 
         /* ── Toast ── */
@@ -310,10 +310,11 @@
             font-size: 11px;
         }
 
-        /* ── Responsive nav ── */
+        /* ── Responsive nav (dropdown) ── */
         @media (max-width: 900px) {
+            .main-header { position: relative; }
             .container { padding: 0 16px !important; }
-            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.2s, transform 0.2s; }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.2s; }
             .mobile-menu-btn:hover { background: var(--bg-body); }
             .mobile-menu-btn .nav-icon-menu { display: block; }
             .mobile-menu-btn .nav-icon-close { display: none; }
@@ -321,72 +322,51 @@
             .mobile-menu-btn.open .nav-icon-close { display: block !important; }
             .nav-group { gap: 0; justify-content: space-between; }
 
-            .nav-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.4);
-                z-index: 98;
-                opacity: 0;
-                transition: opacity 0.25s ease;
-                backdrop-filter: blur(2px);
-            }
-            body.nav-open .nav-overlay {
-                display: block;
-                opacity: 1;
-            }
-            body.nav-open { overflow: hidden; }
-
             .nav-content {
                 display: flex;
-                position: fixed;
-                top: 0;
+                position: absolute;
+                top: 100%;
+                left: 0;
                 right: 0;
-                bottom: 0;
-                width: min(320px, 88vw);
-                max-width: 100%;
-                background: var(--header-bg);
+                width: 100%;
+                margin-top: 0;
                 flex-direction: column;
-                padding: 24px 20px;
-                padding-top: calc(64px + 16px);
-                border-left: 1px solid var(--border);
-                box-shadow: -8px 0 24px rgba(0,0,0,0.12);
+                background: var(--header-bg);
+                border-top: none;
+                border-bottom: 1px solid var(--border);
+                border-left: none;
+                border-right: none;
+                border-radius: 0;
+                box-shadow: none;
                 z-index: 99;
-                transform: translateX(100%);
-                transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-                overflow-y: auto;
+                padding: 16px 16px 20px;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+                transform: translateY(-6px);
             }
             .nav-content.show {
-                transform: translateX(0);
-            }
-            .nav-content.show .nav-links a {
-                animation: navItemIn 0.35s ease backwards;
-            }
-            .nav-content.show .nav-links a:nth-child(1) { animation-delay: 0.05s; }
-            .nav-content.show .nav-links a:nth-child(2) { animation-delay: 0.08s; }
-            .nav-content.show .nav-links a:nth-child(3) { animation-delay: 0.11s; }
-            .nav-content.show .nav-links a:nth-child(4) { animation-delay: 0.14s; }
-            .nav-content.show .nav-links a:nth-child(5) { animation-delay: 0.17s; }
-            .nav-content.show .nav-links a:nth-child(6) { animation-delay: 0.2s; }
-            .nav-content.show .nav-links a:nth-child(7) { animation-delay: 0.23s; }
-            @keyframes navItemIn {
-                from { opacity: 0; transform: translateX(12px); }
-                to { opacity: 1; transform: translateX(0); }
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+                transform: translateY(0);
             }
 
             .nav-links {
                 flex-direction: column;
-                gap: 6px;
+                gap: 4px;
                 width: 100%;
                 text-align: left;
-                margin-bottom: 20px;
+                margin-bottom: 12px;
             }
             .nav-links a {
-                padding: 14px 16px;
+                padding: 12px 14px;
                 width: 100%;
-                border-radius: 12px;
+                border-radius: 10px;
                 background: var(--bg-body);
                 font-weight: 600;
+                font-size: 14px;
                 transition: background 0.2s, color 0.2s;
             }
             .nav-links a:active { background: var(--border); }
@@ -401,11 +381,11 @@
                 flex-direction: row;
                 flex-wrap: wrap;
                 width: 100%;
-                gap: 12px;
+                gap: 10px;
                 justify-content: center;
-                padding-top: 16px;
+                padding-top: 12px;
                 border-top: 1px solid var(--border);
-                margin-top: 8px;
+                margin-top: 4px;
             }
             .btn-logout-icon {
                 width: 44px;
@@ -423,7 +403,7 @@
                 order: 10;
                 display: flex;
                 justify-content: center;
-                margin-top: 8px;
+                margin-top: 4px;
             }
             .pill-container {
                 width: 100%;
@@ -451,14 +431,13 @@
 {% endif %}
 
 <header class="main-header">
-    <div class="nav-overlay" id="navOverlay" onclick="toggleMobileMenu()" aria-hidden="true"></div>
     <div class="container nav-split">
         <div class="nav-group">
-            <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
+            <a href="{{ url_for('admin.index') if request.endpoint and request.endpoint.startswith('admin.') else (url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard')) }}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
                 <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="sync"></span>
                 {% endif %}
-                <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
+                <span class="brand-logo-text">{% if request.endpoint and request.endpoint.startswith('admin.') %}Training<b>Tracker</b> · Admin{% elif g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · Training<b>Tracker</b>{% else %}Training<b>Tracker</b>{% endif %}</span>
             </a>
 
             <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-expanded="false" aria-label="Open menu"><i class="fa-solid fa-bars nav-icon-menu" aria-hidden="true"></i><i class="fa-solid fa-times nav-icon-close" aria-hidden="true"></i></button>
@@ -466,7 +445,10 @@
             <div class="nav-content" id="navContent">
                 {% if current_user.is_authenticated %}
                 <nav class="nav-links">
-                    {% if current_user.role == 'manager' %}
+                    {% if request.endpoint and request.endpoint.startswith('admin.') %}
+                    <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' else '' }}">Dashboard</a>
+                    <a href="{{ url_for('admin.organizations_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.organization') else '' }}">Organizations</a>
+                    {% elif current_user.role == 'manager' %}
                     <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>
                     <a href="{{ url_for('manager.positions_list') }}" data-tutorial="positions" class="{{ 'active' if 'position' in request.endpoint else '' }}">Positions</a>
                     <a href="{{ url_for('manager.roadmaps_list') }}" data-tutorial="roadmaps" class="{{ 'active' if 'roadmap' in request.endpoint and request.endpoint not in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] else '' }}">Roadmaps</a>
@@ -480,6 +462,12 @@
                 </nav>
                 <div class="nav-actions">
                     <div class="user-profile">
+                        {% if request.endpoint and request.endpoint.startswith('admin.') %}
+                        <span class="user-name-nav" style="padding-right:8px;">Admin</span>
+                        <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        </a>
+                        {% else %}
                         {% if g.system_settings and not g.system_settings.dm_enabled %}
                         <div class="notif-btn disabled" title="Messaging Disabled"><i class="fa-regular fa-paper-plane"></i></div>
                         {% else %}
@@ -496,16 +484,21 @@
                             <i class="fa-solid fa-gear"></i>
                         </a>
 
+                        {% if current_user.employee_id and current_user.employee %}
                         <a href="{{ url_for('manager.employee_detail', employee_id=current_user.employee_id, back=request.path) }}" class="profile-pill-link">
                             <div class="pill-container">
                                 <img src="{{ current_user.employee.avatar(26) }}" class="nav-avatar">
                                 <span class="user-name-nav">{{ current_user.employee.first_name }}</span>
                             </div>
                         </a>
+                        {% else %}
+                        <span class="user-name-nav" style="padding-right:8px;">{{ current_user.email }}</span>
+                        {% endif %}
 
                         <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
@@ -526,11 +519,8 @@
     function toggleMobileMenu() {
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');
-        var overlay = document.getElementById('navOverlay');
         var isOpen = nav && nav.classList.toggle('show');
         if (btn) { btn.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); btn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu'); }
-        if (overlay) overlay.setAttribute('aria-hidden', !isOpen);
-        document.body.classList.toggle('nav-open', isOpen);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -538,7 +528,10 @@
         var btn = document.getElementById('mobileMenuBtn');
         if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {
             nav.querySelectorAll('.nav-links a, .profile-pill-link').forEach(function(link) {
-                link.addEventListener('click', function() { document.body.classList.remove('nav-open'); nav.classList.remove('show'); if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); } document.getElementById('navOverlay').setAttribute('aria-hidden', 'true'); });
+                link.addEventListener('click', function() {
+                    nav.classList.remove('show');
+                    if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); }
+                });
             });
         }
         var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};

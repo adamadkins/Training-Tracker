@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+    <h1 class="page-title">Platform Admin</h1>
+    <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{{ request.host.split(':')[0] }}</strong> (e.g. app.{{ request.host.split(':')[0] }}).</p>
+    <div class="card-list">
+        <a href="{{ url_for('admin.organizations_list') }}" class="admin-card">
+            <i class="fa-solid fa-building"></i>
+            <span>Organizations</span>
+            <em>{{ organizations|length }} total</em>
+        </a>
+        <a href="{{ url_for('admin.organization_create') }}" class="admin-card">
+            <i class="fa-solid fa-plus"></i>
+            <span>Create organization</span>
+        </a>
+    </div>
+    {% if organizations %}
+    <h2>Recent organizations</h2>
+    <ul class="admin-org-list">
+        {% for org in organizations[:10] %}
+        <li><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code> <span class="status status-{{ org.status }}">{{ org.status }}</span></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+<style>
+.admin-page { max-width: 800px; }
+.page-title { font-size: 28px; font-weight: 800; color: var(--text-main); margin: 0 0 8px 0; }
+.page-subtitle { color: var(--text-muted); font-size: 15px; margin: 0 0 28px 0; }
+.card-list { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+.admin-card {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 20px 24px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 16px; text-decoration: none; color: var(--text-main);
+    min-width: 200px; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.admin-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px var(--shadow); }
+.admin-card i { font-size: 24px; color: var(--primary); }
+.admin-card span { font-weight: 700; font-size: 15px; }
+.admin-card em { font-size: 12px; color: var(--text-muted); font-style: normal; }
+.admin-org-list { list-style: none; padding: 0; margin: 0; }
+.admin-org-list li { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.admin-org-list a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.admin-org-list a:hover { text-decoration: underline; }
+.admin-org-list code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
+.status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.status-active { background: #dcfce7; color: #166534; }
+.status-suspended { background: #fee2e2; color: #991b1b; }
+h2 { font-size: 18px; font-weight: 700; margin: 24px 0 12px 0; color: var(--text-main); }
+</style>
+{% endblock %}

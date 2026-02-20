@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, date, timedelta, timezone
 import flask
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, g
 from flask_login import login_required, current_user
 import pytz
 from sqlalchemy.orm import joinedload
@@ -13,6 +13,13 @@ from app.models import (
 from app.utils.notifications import notify
 
 employee_bp = Blueprint('employee', __name__, url_prefix='/employee')
+
+
+def _org_id():
+    oid = getattr(g, "current_organization_id", None)
+    if oid is None:
+        abort(404)
+    return oid
 
 
 # --- HELPER ---
@@ -42,7 +49,8 @@ def dashboard():
 
     # 1. YOUR UPCOMING (eager load to avoid N+1 in template)
     session_opts = (joinedload(TrainingSession.position), joinedload(TrainingSession.trainer), joinedload(TrainingSession.trainee))
-    my_upcoming = TrainingSession.query.filter(
+    oid = _org_id()
+    my_upcoming = TrainingSession.query.filter_by(organization_id=oid).filter(
         TrainingSession.completed_at == None,
         (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
     ).options(*session_opts).order_by(TrainingSession.session_date.asc(), TrainingSession.id.asc()).all()
@@ -51,7 +59,7 @@ def dashboard():
     floor_coverage = []
     if current_user.role in ['trainer', 'manager']:
         coverage_cutoff = today - timedelta(days=30)
-        floor_coverage = TrainingSession.query.filter(
+        floor_coverage = TrainingSession.query.filter_by(organization_id=oid).filter(
             TrainingSession.completed_at == None,
             TrainingSession.trainee_employee_id != me,
             TrainingSession.trainer_employee_id != me,
@@ -59,7 +67,7 @@ def dashboard():
         ).options(*session_opts).order_by(TrainingSession.session_date.asc()).limit(50).all()
 
     # 3. HISTORY
-    recent_sessions = TrainingSession.query.filter(
+    recent_sessions = TrainingSession.query.filter_by(organization_id=oid).filter(
         TrainingSession.completed_at != None,
         (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
     ).options(*session_opts).order_by(TrainingSession.completed_at.desc()).limit(5).all()
@@ -67,16 +75,16 @@ def dashboard():
     # 4. STATS
     stats = {
         'pending_count': len(my_upcoming),
-        'total_completed': TrainingSession.query.filter(
+        'total_completed': TrainingSession.query.filter_by(organization_id=oid).filter(
             TrainingSession.completed_at != None,
             (TrainingSession.trainee_employee_id == me) | (TrainingSession.trainer_employee_id == me)
         ).count(),
-        'teaching_count': TrainingSession.query.filter_by(trainer_employee_id=me, completed_at=None).count()
+        'teaching_count': TrainingSession.query.filter_by(organization_id=oid, trainer_employee_id=me, completed_at=None).count()
     }
 
     trainee_data_hidden = False
     if current_user.role == 'trainee':
-        sys = getattr(flask.g, 'system_settings', None) or SystemSettings.query.first()
+        sys = getattr(flask.g, 'system_settings', None) or SystemSettings.query.filter_by(organization_id=oid).first()
         if sys and not getattr(sys, 'share_trainee_data_with_trainees', True):
             trainee_data_hidden = True
             my_upcoming = []
@@ -120,7 +128,7 @@ def take_over_session(session_id):
         flash("You do not have permission to reassign sessions.", "error")
         return redirect(url_for('employee.dashboard'))
 
-    sess = TrainingSession.query.get_or_404(session_id)
+    sess = TrainingSession.query.filter_by(organization_id=_org_id(), id=session_id).first_or_404()
 
     if sess.completed_at:
         flash("This session is already finalized.", "error")
@@ -135,7 +143,7 @@ def take_over_session(session_id):
 
     # Notify the trainee
     if sess.trainee_employee_id:
-        u = User.query.filter_by(employee_id=sess.trainee_employee_id).first()
+        u = User.query.filter_by(organization_id=_org_id(), employee_id=sess.trainee_employee_id).first()
         if u:
             notify(u, "Trainer Reassigned",
                    f"{new_trainer_name} has taken over your {pos_name} training session.",
@@ -143,7 +151,7 @@ def take_over_session(session_id):
 
     # Notify old trainer
     if old_trainer_id and old_trainer_id != current_user.employee_id:
-        u = User.query.filter_by(employee_id=old_trainer_id).first()
+        u = User.query.filter_by(organization_id=_org_id(), employee_id=old_trainer_id).first()
         if u:
             notify(u, "Session Reassigned",
                    f"{new_trainer_name} has taken over your {pos_name} session with {sess.trainee.first_name}.",
@@ -211,9 +219,9 @@ def api_tutorial_reset():
 @login_required
 def schedules_list():
     if current_user.role == 'manager':
-        schedules = Schedule.query.order_by(Schedule.start_date.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=_org_id()).order_by(Schedule.start_date.desc()).all()
     else:
-        schedules = Schedule.query.filter_by(status='published').order_by(Schedule.start_date.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=_org_id(), status='published').order_by(Schedule.start_date.desc()).all()
 
     tz = pytz.timezone('US/Eastern')
     today = datetime.now(tz).date()
@@ -246,7 +254,7 @@ def schedules_list():
 @employee_bp.route("/schedule/<int:schedule_id>")
 @login_required
 def weekly_schedule(schedule_id):
-    schedule = Schedule.query.get_or_404(schedule_id)
+    schedule = Schedule.query.filter_by(organization_id=_org_id(), id=schedule_id).first_or_404()
 
     if schedule.status != 'published' and current_user.role == 'trainee':
         abort(403)
@@ -295,7 +303,7 @@ def weekly_schedule(schedule_id):
 @employee_bp.route('/sessions/<int:session_id>')
 @login_required
 def session_rating(session_id):
-    session = TrainingSession.query.get_or_404(session_id)
+    session = TrainingSession.query.filter_by(organization_id=_org_id(), id=session_id).first_or_404()
 
     # 1. BLIND MODE CHECK (Managers bypass)
     if current_user.role != 'manager' and session.is_locked:
@@ -320,13 +328,13 @@ def session_rating(session_id):
         abort(403)
 
     descriptors = PositionDescriptor.query.filter_by(position_id=session.position_id, active=True).all()
-    history = TrainingSession.query.filter_by(
+    history = TrainingSession.query.filter_by(organization_id=_org_id(),
         trainee_employee_id=session.trainee_employee_id,
         position_id=session.position_id
     ).filter(TrainingSession.completed_at.isnot(None)).order_by(TrainingSession.completed_at.desc()).all()
 
     # Rating scale: from session (if completed) or system settings (0 = legacy sliders)
-    system_settings = SystemSettings.query.first()
+    system_settings = SystemSettings.query.filter_by(organization_id=_org_id()).first()
     default_scale = system_settings.default_rating_scale if system_settings is not None else 5
     if default_scale not in (0, 5, 10):
         default_scale = 5
@@ -360,14 +368,14 @@ def session_rating(session_id):
 @employee_bp.route('/sessions/<int:session_id>/rate', methods=['POST'])
 @login_required
 def session_submit_rating(session_id):
-    session = TrainingSession.query.get_or_404(session_id)
+    session = TrainingSession.query.filter_by(organization_id=_org_id(), id=session_id).first_or_404()
 
     if current_user.role not in ['trainer', 'manager']:
         flash("Only trainers or managers can submit evaluations.", "danger")
         return redirect(url_for('employee.session_rating', session_id=session_id))
 
     try:
-        system_settings = SystemSettings.query.first()
+        system_settings = SystemSettings.query.filter_by(organization_id=_org_id()).first()
         default_scale = system_settings.default_rating_scale if system_settings is not None else 5
         if default_scale not in (0, 5, 10):
             default_scale = 5
@@ -415,7 +423,7 @@ def session_submit_rating(session_id):
         trainee_name = session.trainee.first_name + ' ' + session.trainee.last_name if session.trainee else 'a trainee'
 
         if session.trainee_employee_id:
-            u = User.query.filter_by(employee_id=session.trainee_employee_id).first()
+            u = User.query.filter_by(organization_id=_org_id(), employee_id=session.trainee_employee_id).first()
             if u and u.id != current_user.id:
                 notify(u, "Training Session Completed",
                        f"Your training session for {pos_name} has been completed and rated.",
@@ -423,7 +431,7 @@ def session_submit_rating(session_id):
 
         # Notify one manager (only if the completer is not already a manager)
         if current_user.role != 'manager':
-            mgr = User.query.filter_by(role='manager').first()
+            mgr = User.query.filter_by(organization_id=_org_id(), role='manager').first()
             if mgr:
                 notify(mgr, "Training Session Completed",
                        f"{trainee_name} completed a {pos_name} training session.",
@@ -432,7 +440,7 @@ def session_submit_rating(session_id):
         # If flagged, send high-priority notification to all managers
         if session.flagged:
             reason_text = session.flag_reason or 'No category specified'
-            manager_users = User.query.filter_by(role='manager').all()
+            manager_users = User.query.filter_by(organization_id=_org_id(), role='manager').all()
             for mu in manager_users:
                 if mu.id != current_user.id:
                     notify(mu, "Needs Attention: Session Flagged",
@@ -459,7 +467,7 @@ def session_submit_rating(session_id):
 @employee_bp.route('/sessions/<int:session_id>/acknowledge', methods=['GET', 'POST'])
 @login_required
 def session_acknowledge(session_id):
-    session = TrainingSession.query.get_or_404(session_id)
+    session = TrainingSession.query.filter_by(organization_id=_org_id(), id=session_id).first_or_404()
     if not session.completed_at:
         flash("This session has not been evaluated yet.", "warning")
         return redirect(url_for('employee.session_rating', session_id=session_id))
@@ -500,7 +508,7 @@ def quick_train():
         tz = pytz.timezone('US/Eastern')
         today = datetime.now(tz).date()
 
-        current_schedule = Schedule.query.filter(
+        current_schedule = Schedule.query.filter_by(organization_id=_org_id()).filter(
             Schedule.start_date <= today,
             Schedule.end_date >= today
         ).first()
@@ -527,10 +535,10 @@ def quick_train():
         db.session.commit()
 
         # Notify trainee about the quick session
-        position = Position.query.get(position_id)
+        position = Position.query.filter_by(organization_id=_org_id(), id=position_id).first()
         pos_name = position.name if position else 'a position'
         sess_link = url_for('employee.session_rating', session_id=new_session.id, _external=True)
-        u = User.query.filter_by(employee_id=int(trainee_id)).first()
+        u = User.query.filter_by(organization_id=_org_id(), employee_id=int(trainee_id)).first()
         if u:
             notify(u, "New Training Session",
                    f"A quick training session for {pos_name} has been started with you.",
@@ -540,7 +548,7 @@ def quick_train():
         flash(f"Quick session started for {today.strftime('%b %d')}", "success")
         return redirect(url_for('employee.session_rating', session_id=new_session.id))
 
-    trainees = Employee.query.filter(Employee.role == 'trainee', Employee.status == 'active', Employee.graduated_at == None).all()
-    positions = Position.query.filter_by(active=True).all()
+    trainees = Employee.query.filter_by(organization_id=_org_id()).filter(Employee.role == 'trainee', Employee.status == 'active', Employee.graduated_at == None).all()
+    positions = Position.query.filter_by(organization_id=_org_id(), active=True).all()
 
     return render_template('manager_quick_train.html', trainees=trainees, positions=positions)

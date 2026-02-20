@@ -37,23 +37,64 @@ def create_app():
     from app.routes.messages import messages_bp
     from app.routes.legacy import legacy_bp
     from app.routes.guest import guest_bp
+    from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(manager_bp, url_prefix='/manager')
     app.register_blueprint(employee_bp, url_prefix='/employee')
     app.register_blueprint(messages_bp)
     app.register_blueprint(legacy_bp)
     app.register_blueprint(guest_bp)
 
-    # 5. Inject app version and system_settings into all templates
+    # 5. Resolve tenant from subdomain (before any tenant-scoped logic)
+    @app.before_request
+    def resolve_tenant():
+        from flask import g
+        from app.models import Organization
+        host = (request.host or "").lower().split(":")[0]
+        main_domain = app.config.get("MAIN_DOMAIN", "trainingtracker.me").lower()
+        main_domain = main_domain.split(":")[0]
+        if host == main_domain or host == "www." + main_domain:
+            g.current_organization_id = None
+            g.current_organization = None
+            return
+        # Subdomain: e.g. acme.trainingtracker.me -> subdomain "acme"
+        if host.endswith("." + main_domain):
+            subdomain = host[: -len("." + main_domain)].strip()
+        elif main_domain in host and host.startswith("www."):
+            subdomain = None
+        else:
+            subdomain = host.split(".")[0] if "." in host else host
+        if not subdomain or subdomain == "www":
+            g.current_organization_id = None
+            g.current_organization = None
+            return
+        org = Organization.query.filter_by(subdomain=subdomain).first()
+        if not org or (getattr(org, "status", "active") != "active"):
+            from flask import render_template
+            return render_template("error.html", code=404, icon="\u26a0\ufe0f",
+                title="Organization Not Found",
+                message="This subdomain is not registered. Check the URL or contact your administrator."), 404
+        g.current_organization_id = org.id
+        g.current_organization = org
+
+    # 6. Inject app version and system_settings into all templates (tenant-scoped)
     @app.before_request
     def inject_system_settings():
         import hashlib
         from flask import g
         from app.models import SystemSettings
-        settings = SystemSettings.query.first()
+        if getattr(g, "current_organization_id", None) is None:
+            g.system_settings = None
+            g.logo_version = ""
+            return
+        settings = SystemSettings.query.filter_by(organization_id=g.current_organization_id).first()
+        if not settings:
+            settings = SystemSettings(organization_id=g.current_organization_id)
+            db.session.add(settings)
+            db.session.commit()
         g.system_settings = settings
-        # Stable cache key per logo so img src doesn't flicker on refresh; changes when logo changes
         logo_url = (settings and settings.custom_logo_url) or ""
         g.logo_version = hashlib.md5(logo_url.encode()).hexdigest()[:12] if logo_url else ""
 
@@ -133,5 +174,33 @@ def create_app():
 
         session['_last_active'] = now_ts
         session.permanent = True
+
+    # CLI: create platform superuser (main domain admin)
+    @app.cli.command("create-superuser")
+    def create_superuser_cmd():
+        """Create a platform admin user (superuser). Log in at main domain (e.g. trainingtracker.me/login)."""
+        import getpass
+        from app.models import User
+        email = input("Email: ").strip().lower()
+        if not email:
+            print("Email required.")
+            return
+        existing = User.query.filter_by(organization_id=None, email=email).first()
+        if existing:
+            print("A superuser with that email already exists.")
+            return
+        password = getpass.getpass("Password: ")
+        if len(password) < 8:
+            print("Password must be at least 8 characters.")
+            return
+        password2 = getpass.getpass("Confirm password: ")
+        if password != password2:
+            print("Passwords do not match.")
+            return
+        user = User(email=email, organization_id=None, is_superuser=True, role="manager")
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        print("Superuser created. Log in at the main domain (e.g. trainingtracker.me/login).")
 
     return app

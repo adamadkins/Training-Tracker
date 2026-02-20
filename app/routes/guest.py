@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 
 import pytz
 from flask import (Blueprint, render_template, redirect, url_for,
-                   request, jsonify, abort)
+                   request, jsonify, abort, g)
 from flask_login import login_required, current_user
 
 from app import db
@@ -31,8 +31,11 @@ def generate():
     if not trainee_id or not position_id:
         return jsonify({'error': 'trainee_id and position_id are required'}), 400
 
-    trainee = Employee.query.get(trainee_id)
-    position = Position.query.get(position_id)
+    oid = getattr(g, 'current_organization_id', None)
+    if not oid:
+        return jsonify({'error': 'Organization required'}), 404
+    trainee = Employee.query.filter_by(organization_id=oid, id=trainee_id).first()
+    position = Position.query.filter_by(organization_id=oid, id=position_id).first()
     if not trainee or not position:
         return jsonify({'error': 'Invalid trainee or position'}), 404
 
@@ -98,7 +101,10 @@ def rate_session(token):
         position_id=gt.position_id, active=True
     ).all()
 
-    system_settings = SystemSettings.query.first()
+    oid = gt.trainee.organization_id if gt.trainee else None
+    if not oid:
+        abort(404)
+    system_settings = SystemSettings.query.filter_by(organization_id=oid).first()
     default_scale = system_settings.default_rating_scale if system_settings else 5
     if default_scale not in (0, 5, 10):
         default_scale = 5
@@ -113,7 +119,7 @@ def rate_session(token):
         # Find or create a schedule for today
         tz = pytz.timezone('US/Eastern')
         today = datetime.now(tz).date()
-        current_schedule = Schedule.query.filter(
+        current_schedule = Schedule.query.filter_by(organization_id=oid).filter(
             Schedule.start_date <= today,
             Schedule.end_date >= today
         ).first()
@@ -124,7 +130,8 @@ def rate_session(token):
             current_schedule = Schedule(
                 start_date=monday, end_date=sunday,
                 status='published',
-                created_by_user_id=gt.created_by_id
+                created_by_user_id=gt.created_by_id,
+                organization_id=oid,
             )
             db.session.add(current_schedule)
             db.session.flush()
@@ -137,6 +144,7 @@ def rate_session(token):
             trainee_employee_id=gt.trainee_id,
             position_id=gt.position_id,
             session_date=today,
+            organization_id=oid,
         )
         db.session.add(session)
         db.session.flush()
@@ -172,14 +180,14 @@ def rate_session(token):
         # Notify the trainee
         pos_name = gt.position.name
         sess_link = url_for('employee.session_rating', session_id=session.id, _external=True)
-        u = User.query.filter_by(employee_id=gt.trainee_id).first()
+        u = User.query.filter_by(organization_id=oid, employee_id=gt.trainee_id).first()
         if u:
             notify(u, "Training Session Completed",
                    f"Your training session for {pos_name} has been completed and rated by {guest_name}.",
                    category='session', link_url=sess_link)
 
         # Notify all managers
-        manager_users = User.query.filter_by(role='manager').all()
+        manager_users = User.query.filter_by(organization_id=oid, role='manager').all()
         trainee = gt.trainee
         trainee_name = f"{trainee.first_name} {trainee.last_name}"
         for mgr in manager_users:

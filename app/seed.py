@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app, db
 from app.models import (
-    User, Employee, SystemSettings, Position, Daypart,
+    Organization, User, Employee, SystemSettings, Position, Daypart,
     Schedule, TrainingSession, PositionDescriptor,
     SessionRating, Message, Notification,
     Channel, ChannelParticipant,
@@ -86,9 +86,19 @@ def _run_seed(app, drop_first=True):
         else:
             print("\n📥 Database empty — inserting demo data...")
 
+        # ─── 0. Default organization ───
+        print("🏢 Default organization...")
+        default_org = Organization.query.filter_by(subdomain="app").first()
+        if not default_org:
+            default_org = Organization(name="Default", subdomain="app", status="active")
+            db.session.add(default_org)
+            db.session.flush()
+        org_id = default_org.id
+
         # ─── 1. System settings ───
         print("⚙️  System settings...")
         settings = SystemSettings(
+            organization_id=org_id,
             dm_enabled=True,
             allow_trainee_to_trainee_dm=True,
             setup_completed=True,
@@ -102,7 +112,7 @@ def _run_seed(app, drop_first=True):
         position_names = list(POSITION_DESCRIPTORS.keys())
         db_positions = []
         for name in position_names:
-            pos = Position(name=name, active=True)
+            pos = Position(name=name, active=True, organization_id=org_id)
             db.session.add(pos)
             db.session.flush()
             db_positions.append(pos)
@@ -120,7 +130,7 @@ def _run_seed(app, drop_first=True):
         ]
         db_dayparts = []
         for name, start, end in dayparts_data:
-            dp = Daypart(name=name, start_time=start, end_time=end)
+            dp = Daypart(name=name, start_time=start, end_time=end, organization_id=org_id)
             db.session.add(dp)
             db_dayparts.append(dp)
         db.session.commit()
@@ -153,13 +163,14 @@ def _run_seed(app, drop_first=True):
                 role=role,
                 status="active",
                 start_date=start,
+                organization_id=org_id,
             )
             db.session.add(emp)
             db.session.flush()
             login_emails = ["admin@local", "trainer@local", "trainee@local"]
             idx = len(all_employees)
             email = login_emails[idx] if idx < 3 else f"{first.lower()}.{last.lower()}@demo.local"
-            user = User(email=email, role=role, employee_id=emp.id)
+            user = User(email=email, role=role, employee_id=emp.id, organization_id=org_id)
             user.set_password("admin1234" if email == "admin@local" else "password123")
             db.session.add(user)
             all_employees.append(emp)
@@ -178,7 +189,7 @@ def _run_seed(app, drop_first=True):
 
         for start_dt, status in [(last_monday, "published"), (this_monday, "published"), (next_monday, "draft")]:
             end_dt = start_dt + timedelta(days=6)
-            sched = Schedule(start_date=start_dt, end_date=end_dt, status=status)
+            sched = Schedule(start_date=start_dt, end_date=end_dt, status=status, organization_id=org_id)
             db.session.add(sched)
             db.session.flush()
 
@@ -203,6 +214,7 @@ def _run_seed(app, drop_first=True):
                         daypart_id=dp_id,
                         custom_start_time=c_start,
                         custom_end_time=c_end,
+                        organization_id=org_id,
                     )
                     if start_dt == last_monday or (start_dt == this_monday and session_day < today):
                         session.completed_at = datetime.combine(session_day, time(16, 30))
@@ -237,6 +249,7 @@ def _run_seed(app, drop_first=True):
             is_private=False,
             is_read_only=False,
             created_by_id=managers[0].id,
+            organization_id=org_id,
         )
         db.session.add(ch_general)
         db.session.flush()
@@ -266,6 +279,7 @@ def _run_seed(app, drop_first=True):
             is_private=True,
             is_read_only=False,
             created_by_id=managers[0].id,
+            organization_id=org_id,
         )
         db.session.add(ch_managers)
         db.session.flush()
@@ -286,6 +300,7 @@ def _run_seed(app, drop_first=True):
             is_private=False,
             is_read_only=True,
             created_by_id=managers[0].id,
+            organization_id=org_id,
         )
         db.session.add(ch_schedule)
         db.session.flush()
@@ -301,7 +316,7 @@ def _run_seed(app, drop_first=True):
         # DM channel: Terry (trainer) <-> Tim (trainee)
         terry = next(e for e in all_employees if e.first_name == "Terry" and e.role == "trainer")
         tim = next(e for e in all_employees if e.first_name == "Tim" and e.role == "trainee")
-        ch_dm = Channel(name=None, channel_type="dm", created_by_id=terry.id)
+        ch_dm = Channel(name=None, channel_type="dm", created_by_id=terry.id, organization_id=org_id)
         db.session.add(ch_dm)
         db.session.flush()
         db.session.add(ChannelParticipant(channel_id=ch_dm.id, employee_id=terry.id))
@@ -343,6 +358,7 @@ def _run_seed(app, drop_first=True):
         print("  • Trainer:  trainer@local / password123 (Terry Trainer)")
         print("  • Trainee:  trainee@local / password123 (Tim Trainee)")
         print("  • Others:  firstname.lastname@demo.local / password123")
+        print("Use subdomain 'app' (e.g. app.yourdomain.com) to sign in.")
         print("=" * 60)
 
 
@@ -351,6 +367,10 @@ def seed_if_empty(app):
     from sqlalchemy.exc import OperationalError, IntegrityError
     with app.app_context():
         try:
+            if Organization.query.first() is None:
+                default_org = Organization(name="Default", subdomain="app", status="active")
+                db.session.add(default_org)
+                db.session.commit()
             if SystemSettings.query.first() is not None:
                 return
         except OperationalError:

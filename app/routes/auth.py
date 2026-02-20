@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort, g
 from flask_login import login_user, logout_user, login_required, current_user
 from app.models import User, SystemSettings
 from app import db
@@ -93,9 +93,9 @@ _LOGO_CACHE_HEADERS = {"Cache-Control": "public, max-age=3600"}
 
 @auth_bp.get("/logo")
 def logo():
-    """Serve the configured system logo (no auth). Used by navbar and login page."""
-    settings = SystemSettings.query.first()
-    if not settings or not settings.custom_logo_url:
+    """Serve the configured system logo (no auth). Used by navbar and login page. Resolved from current tenant (g.system_settings)."""
+    settings = getattr(g, "system_settings", None)
+    if not settings or not getattr(settings, "custom_logo_url", None):
         abort(404)
     logo_url = (settings.custom_logo_url or "").strip()
     if not logo_url:
@@ -150,6 +150,8 @@ def logo():
 @auth_bp.get("/")
 def home():
     if current_user.is_authenticated:
+        if getattr(current_user, "is_superuser", False) and getattr(g, "current_organization_id", None) is None:
+            return redirect(url_for("admin.index"))
         if current_user.role == "manager":
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
@@ -166,28 +168,42 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("auth.home"))
 
+    org_id = getattr(g, "current_organization_id", None)
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
-        user = User.query.filter_by(email=email).first()
+        if org_id is not None:
+            user = User.query.filter_by(organization_id=org_id, email=email).first()
+        else:
+            # Main domain: only superusers (organization_id is None) can log in
+            user = User.query.filter_by(organization_id=None, email=email).first()
 
         if user and user.password_hash is None:
             flash("Your account is not set up yet. Please use the link sent to your email.")
             return redirect(url_for("auth.login"))
 
         if not user or not user.check_password(password):
-            flash("Invalid email or password.")
+            if org_id is None:
+                flash("No platform admin account found. Use your company URL to sign in (e.g. app.yourdomain.com).")
+            else:
+                flash("Invalid email or password.")
             return render_template("login.html"), 401
 
         session.permanent = True
         session['_last_active'] = datetime.now(timezone.utc).timestamp()
         login_user(user)
 
+        if org_id is None and getattr(user, "is_superuser", False):
+            return redirect(url_for("admin.index"))
         if user.role == "manager":
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
 
+    if org_id is None:
+        # Main domain: show login form for platform admins (no_tenant_login for anonymous would go on landing)
+        return render_template("login.html", admin_login=True)
     return render_template("login.html")
 
 
@@ -200,7 +216,11 @@ def forgot_password():
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        user = User.query.filter_by(email=email).first()
+        org_id = getattr(g, "current_organization_id", None)
+        if org_id is not None:
+            user = User.query.filter_by(organization_id=org_id, email=email).first()
+        else:
+            user = User.query.filter_by(email=email).first()
 
         # We show success regardless of whether the email exists for security
         if user:

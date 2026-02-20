@@ -4,7 +4,7 @@ import re
 import flask
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, flash, jsonify, abort
+    url_for, flash, jsonify, abort, g
 )
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_, func, case
@@ -20,21 +20,11 @@ from app.utils.notifications import notify
 messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
 
 
-@messages_bp.before_app_request
-def load_system_settings():
-    """Load system-wide settings into g, cached to avoid a query every request."""
-    from app import cache
-    try:
-        settings = cache.get('system_settings')
-    except Exception:
-        settings = None
-    if settings is None:
-        settings = SystemSettings.query.first()
-        try:
-            cache.set('system_settings', settings, timeout=60)
-        except Exception:
-            pass  # cache down — just use the DB result
-    flask.g.system_settings = settings
+def _org_id():
+    oid = getattr(g, "current_organization_id", None)
+    if oid is None:
+        abort(404)
+    return oid
 
 
 @messages_bp.before_request
@@ -87,7 +77,10 @@ def enrich_messages_with_sessions(messages):
     if not session_ids:
         return {}
 
-    sessions = TrainingSession.query.filter(
+    oid = getattr(g, "current_organization_id", None)
+    if oid is None:
+        return {}
+    sessions = TrainingSession.query.filter_by(organization_id=oid).filter(
         TrainingSession.id.in_(session_ids)
     ).all()
     return {s.id: s for s in sessions}
@@ -137,14 +130,15 @@ def get_or_create_dm_channel(my_id, partner_id):
         return None, False
     my_ch = db.session.query(ChannelParticipant.channel_id).filter(ChannelParticipant.employee_id == my_id)
     other_ch = db.session.query(ChannelParticipant.channel_id).filter(ChannelParticipant.employee_id == partner_id)
-    existing = Channel.query.filter(
+    oid = _org_id()
+    existing = Channel.query.filter_by(organization_id=oid).filter(
         Channel.channel_type == 'dm',
         Channel.id.in_(my_ch),
         Channel.id.in_(other_ch),
     ).first()
     if existing:
         return existing, False
-    ch = Channel(name=None, channel_type='dm', created_by_id=my_id)
+    ch = Channel(name=None, channel_type='dm', created_by_id=my_id, organization_id=oid)
     db.session.add(ch)
     db.session.flush()
     db.session.add(ChannelParticipant(channel_id=ch.id, employee_id=my_id))
@@ -220,7 +214,8 @@ def _build_sidebar_data(my_id):
         unread_map = {}
 
     # Eagerly load channels with participants + employees for display name / avatar
-    channels = Channel.query.filter(Channel.id.in_(channel_ids)).all() if channel_ids else []
+    oid = _org_id()
+    channels = Channel.query.filter_by(organization_id=oid).filter(Channel.id.in_(channel_ids)).all() if channel_ids else []
     ch_map = {ch.id: ch for ch in channels}
 
     sidebar_channels = []
@@ -288,7 +283,7 @@ def _build_sidebar_data(my_id):
     unreads = [item for item in sidebar_channels + sidebar_dms if item.get('unread', 0) > 0]
     unreads.sort(key=lambda x: x.get('timestamp') or _min_ts, reverse=True)
 
-    directory = Employee.query.filter(
+    directory = Employee.query.filter_by(organization_id=oid).filter(
         Employee.id != my_id,
         Employee.status == 'active'
     ).order_by(Employee.first_name).all()
@@ -296,7 +291,7 @@ def _build_sidebar_data(my_id):
     # If trainee-to-trainee DMs are disabled, filter directory for trainee users
     sys = flask.g.system_settings
     if sys and not getattr(sys, 'allow_trainee_to_trainee_dm', True):
-        my_emp = Employee.query.get(my_id)
+        my_emp = Employee.query.filter_by(organization_id=oid, id=my_id).first()
         if my_emp and getattr(my_emp, 'role', None) == 'trainee':
             directory = [e for e in directory if getattr(e, 'role', None) != 'trainee']
 
@@ -310,7 +305,7 @@ def _directory_online_ids(directory):
     now = datetime.now(timezone.utc)
     online = set()
     for emp in directory:
-        u = User.query.filter_by(employee_id=emp.id).first()
+        u = User.query.filter_by(organization_id=getattr(g, 'current_organization_id'), employee_id=emp.id).first()
         if not u:
             continue
         if not (getattr(u.settings, 'show_online_status', True) if u.settings else True):
@@ -364,7 +359,7 @@ def chat(partner_id):
         abort(403)
 
     my_id = current_user.employee_id
-    partner = Employee.query.get_or_404(partner_id)
+    partner = Employee.query.filter_by(organization_id=_org_id(), id=partner_id).first_or_404()
 
     if flask.g.system_settings and not flask.g.system_settings.dm_enabled:
         flash("Messaging is disabled.", "info")
@@ -405,10 +400,10 @@ def chat(partner_id):
             db.session.commit()
 
             # Email-only notification for DM recipient
-            sender_emp = Employee.query.get(my_id)
+            sender_emp = Employee.query.filter_by(organization_id=_org_id(), id=my_id).first()
             sender_name = (sender_emp.first_name + ' ' + sender_emp.last_name) if sender_emp else 'Someone'
             snippet = (body[:80] + '...') if len(body) > 80 else body
-            recipient_user = User.query.filter_by(employee_id=partner_id).first()
+            recipient_user = User.query.filter_by(organization_id=_org_id(), employee_id=partner_id).first()
             if recipient_user:
                 notify(recipient_user,
                        f"New message from {sender_name}",
@@ -472,7 +467,7 @@ def dm_redirect(partner_id):
     """Find or create DM channel with partner and redirect to channel chat."""
     if not current_user.employee_id:
         abort(403)
-    partner = Employee.query.get_or_404(partner_id)
+    partner = Employee.query.filter_by(organization_id=_org_id(), id=partner_id).first_or_404()
     if flask.g.system_settings and not flask.g.system_settings.dm_enabled:
         flash("Messaging is disabled.", "info")
         return redirect(url_for('messages.inbox'))
@@ -494,7 +489,7 @@ def channel_chat(channel_id):
     if not current_user.employee_id:
         abort(403)
     my_id = current_user.employee_id
-    ch = Channel.query.get_or_404(channel_id)
+    ch = Channel.query.filter_by(organization_id=_org_id(), id=channel_id).first_or_404()
     participation = ChannelParticipant.query.filter_by(channel_id=channel_id, employee_id=my_id).first()
     if not participation:
         flash("You are not in this channel.", "warning")
@@ -538,14 +533,14 @@ def channel_chat(channel_id):
             db.session.commit()
 
             # Email-only notification for other channel participants
-            sender_emp = Employee.query.get(my_id)
+            sender_emp = Employee.query.filter_by(organization_id=_org_id(), id=my_id).first()
             sender_name = (sender_emp.first_name + ' ' + sender_emp.last_name) if sender_emp else 'Someone'
             ch_name = _channel_display_name(ch, my_id)
             snippet = (body[:80] + '...') if len(body) > 80 else body
             ch_link = url_for('messages.channel_chat', channel_id=channel_id, _external=True)
             for cp in ch.participants:
                 if cp.employee_id != my_id:
-                    u = User.query.filter_by(employee_id=cp.employee_id).first()
+                    u = User.query.filter_by(organization_id=_org_id(), employee_id=cp.employee_id).first()
                     if u:
                         notify(u,
                                f"New message in {ch_name}",
@@ -680,6 +675,7 @@ def create_channel():
         is_private=is_private,
         is_read_only=is_read_only,
         created_by_id=current_user.employee_id,
+        organization_id=_org_id(),
     )
     db.session.add(ch)
     db.session.flush()
@@ -696,7 +692,7 @@ def create_channel():
 def channel_update(channel_id):
     if not current_user.employee_id:
         return jsonify({'error': 'Not allowed'}), 403
-    ch = Channel.query.get_or_404(channel_id)
+    ch = Channel.query.filter_by(organization_id=_org_id(), id=channel_id).first_or_404()
     if ch.channel_type != 'channel':
         return jsonify({'error': 'Only group channels can be edited'}), 400
     participation = ChannelParticipant.query.filter_by(channel_id=channel_id, employee_id=current_user.employee_id).first()
@@ -731,7 +727,7 @@ def channel_update(channel_id):
     # Notify newly added members so the channel appears for them immediately
     ch_link = url_for('messages.channel_chat', channel_id=ch.id, _external=True)
     for eid in added_ids:
-        u = User.query.filter_by(employee_id=eid).first()
+        u = User.query.filter_by(organization_id=_org_id(), employee_id=eid).first()
         if u:
             notify(u, f"Added to #{ch.name}",
                    f"You've been added to the \"{ch.name}\" channel.",
@@ -772,7 +768,7 @@ def chat_updates(partner_id):
     mark_as_read(partner_id, my_id, reader_allow_read_receipts=reader_allows_receipts)
 
     # Partner's read receipt preference: hide read_at on messages we sent if they disabled receipts
-    partner_user = User.query.filter_by(employee_id=partner_id).first()
+    partner_user = User.query.filter_by(organization_id=_org_id(), employee_id=partner_id).first()
     partner_allows_receipts = getattr(partner_user.settings, 'allow_read_receipts', True) if (partner_user and partner_user.settings) else True
 
     new_msgs = Message.query.filter(
@@ -836,7 +832,7 @@ def chat_updates(partner_id):
 @login_required
 def get_shared_sessions(partner_id):
     """Return sessions available for attachment in chat."""
-    query = TrainingSession.query
+    query = TrainingSession.query.filter_by(organization_id=_org_id())
 
     if current_user.role == 'manager':
         sessions = query.order_by(

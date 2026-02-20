@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Tracker – Sign in</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: var(--bg-body, #f8fafc); color: var(--text-main, #1e293b); font-family: system-ui, sans-serif; }
+        .box { max-width: 420px; padding: 32px; text-align: center; }
+        h1 { font-size: 22px; margin-bottom: 8px; }
+        p { color: var(--text-muted, #64748b); font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+        .example { background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 14px 18px; font-size: 15px; margin-top: 16px; word-break: break-all; }
+        .example strong { color: var(--primary, #2563eb); }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Sign in to Training Tracker</h1>
+        <p>Use your company&rsquo;s Training Tracker link to sign in. Each organization has its own URL.</p>
+        <p>For example, if your company uses the default link:</p>
+        <div class="example"><strong>https://app.trainingtracker.me</strong></div>
+        <p style="margin-top: 20px; font-size: 13px;">Ask your manager for your organization&rsquo;s sign-in URL, or open the link they sent you.</p>
+    </div>
+</body>
+</html>

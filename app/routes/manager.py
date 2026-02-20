@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
 import flask
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app, Response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app, Response, g
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
@@ -26,6 +26,20 @@ from app.utils.schedule_parser import parse_schedule_pdf
 from app.routes.helpers import manager_required, staff_required
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
+
+
+@manager_bp.before_request
+def _require_tenant():
+    g._manager_org_id = _org_id()
+
+
+def _org_id():
+    """Current tenant organization id. Abort 404 if not on a tenant subdomain."""
+    oid = getattr(g, "current_organization_id", None)
+    if oid is None:
+        abort(404)
+    return oid
+
 
 def _google_favicon_url(domain):
     """Return Google's favicon URL for a domain (works for any site)."""
@@ -197,7 +211,8 @@ def _get_manager_location_id():
     """If the current user is a manager with a location restriction, return that location_id; else None."""
     if not current_user.is_authenticated or current_user.role != "manager" or not current_user.employee_id:
         return None
-    emp = Employee.query.get(current_user.employee_id)
+    oid = _org_id()
+    emp = Employee.query.filter_by(organization_id=oid, id=current_user.employee_id).first()
     return emp.location_id if emp else None
 
 
@@ -205,7 +220,8 @@ def _get_manager_location_ids():
     """All location IDs this manager is assigned to (M2M + primary). None = org-wide (no restriction)."""
     if not current_user.is_authenticated or current_user.role != "manager" or not current_user.employee_id:
         return None
-    emp = Employee.query.get(current_user.employee_id)
+    oid = _org_id()
+    emp = Employee.query.filter_by(organization_id=oid, id=current_user.employee_id).first()
     if not emp:
         return None
     ids = emp.location_ids()
@@ -216,6 +232,7 @@ def get_visible_employee_ids(location_filter=None):
     """Return list of employee IDs the current manager can see.
     location_filter: if set, restrict to employees in that location (must be in manager's locations).
     If manager has multiple locations and location_filter is None, returns employees from any of them."""
+    oid = _org_id()
     loc_ids = _get_manager_location_ids()
     if loc_ids is None:
         return None  # org-wide: no filter
@@ -233,6 +250,7 @@ def get_visible_employee_ids(location_filter=None):
         employee_locations.c.location_id.in_(loc_ids)
     )
     rows = Employee.query.filter(
+        Employee.organization_id == oid,
         Employee.status == "active",
         db.or_(
             Employee.location_id.in_(loc_ids),
@@ -261,9 +279,10 @@ def send_invite_email(user):
 @manager_bp.route("/setup", methods=["GET", "POST"])
 @manager_required
 def setup_wizard():
-    settings = SystemSettings.query.first()
+    oid = _org_id()
+    settings = SystemSettings.query.filter_by(organization_id=oid).first()
     if not settings:
-        settings = SystemSettings()
+        settings = SystemSettings(organization_id=oid)
         db.session.add(settings)
         db.session.commit()
     if request.method == "GET":
@@ -272,7 +291,7 @@ def setup_wizard():
         if setup_done and not run_again:
             return render_template("setup/complete.html")
         step = getattr(settings, "setup_step", 0)
-        locations = Location.query.order_by(Location.name).all()
+        locations = Location.query.filter_by(organization_id=oid).order_by(Location.name).all()
         return render_template(
             "setup/wizard.html",
             step=step,
@@ -333,8 +352,8 @@ def setup_wizard():
         names = request.form.getlist("location_name")
         for name in names:
             name = (name or "").strip()
-            if name and not Location.query.filter_by(name=name).first():
-                loc = Location(name=name)
+            if name and not Location.query.filter_by(organization_id=oid, name=name).first():
+                loc = Location(organization_id=oid, name=name)
                 db.session.add(loc)
         settings.setup_step = 3
         db.session.commit()
@@ -355,7 +374,8 @@ def setup_wizard():
 @manager_bp.route("/setup/skip", methods=["POST"])
 @manager_required
 def setup_skip():
-    settings = SystemSettings.query.first()
+    oid = _org_id()
+    settings = SystemSettings.query.filter_by(organization_id=oid).first()
     if settings:
         settings.setup_completed = True
         settings.setup_step = 0
@@ -373,15 +393,16 @@ def _dashboard_cache_key():
 @manager_required
 @cache.cached(timeout=60, key_prefix=_dashboard_cache_key)
 def dashboard():
-    sys_settings = SystemSettings.query.first()
+    oid = _org_id()
+    sys_settings = SystemSettings.query.filter_by(organization_id=oid).first()
     if sys_settings and getattr(sys_settings, "setup_completed", True) is False:
         return redirect(url_for("manager.setup_wizard"))
     location_filter = request.args.get("location_id")
     visible_ids = get_visible_employee_ids(location_filter=location_filter)
-    non_graduated_ids = [r[0] for r in Employee.query.filter(Employee.graduated_at == None).with_entities(Employee.id).all()]
+    non_graduated_ids = [r[0] for r in Employee.query.filter_by(organization_id=oid).filter(Employee.graduated_at == None).with_entities(Employee.id).all()]
     if visible_ids is not None:
         active_ids = [eid for eid in visible_ids if eid in non_graduated_ids]
-        employees = Employee.query.filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).options(
+        employees = Employee.query.filter_by(organization_id=oid).filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
             selectinload(Employee.trainee_sessions).options(
                 joinedload(TrainingSession.position),
@@ -389,7 +410,7 @@ def dashboard():
             ),
         ).all()
         dash_cutoff = date.today() - timedelta(days=90)
-        sessions = TrainingSession.query.filter(
+        sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.session_date >= dash_cutoff,
         ).options(
@@ -397,7 +418,7 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        overdue_sessions = TrainingSession.query.filter(
+        overdue_sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_(active_ids),
             TrainingSession.completed_at == None,
             TrainingSession.session_date < date.today(),
@@ -408,7 +429,7 @@ def dashboard():
         ).order_by(TrainingSession.session_date.asc()).all()
         overdue_sessions_count = len(overdue_sessions)
     else:
-        employees = Employee.query.filter(Employee.graduated_at == None).options(
+        employees = Employee.query.filter_by(organization_id=oid).filter(Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
             selectinload(Employee.trainee_sessions).options(
                 joinedload(TrainingSession.position),
@@ -416,7 +437,7 @@ def dashboard():
             ),
         ).all()
         dash_cutoff = date.today() - timedelta(days=90)
-        sessions = TrainingSession.query.filter(
+        sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.session_date >= dash_cutoff,
         ).options(
@@ -424,7 +445,7 @@ def dashboard():
             joinedload(TrainingSession.trainer),
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        overdue_sessions = TrainingSession.query.filter(
+        overdue_sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_(non_graduated_ids),
             TrainingSession.completed_at == None,
             TrainingSession.session_date < date.today(),
@@ -435,14 +456,14 @@ def dashboard():
         ).order_by(TrainingSession.session_date.asc()).all()
         overdue_sessions_count = len(overdue_sessions)
     assigned_employee_ids = db.session.query(User.employee_id).filter(User.employee_id != None)
-    emp_query = Employee.query.filter(~Employee.id.in_(assigned_employee_ids))
+    emp_query = Employee.query.filter_by(organization_id=g._manager_org_id).filter(~Employee.id.in_(assigned_employee_ids))
     if visible_ids is not None:
         emp_query = emp_query.filter(Employee.id.in_(visible_ids))
     unlinked_count = emp_query.count()
 
     require_signoff = getattr(sys_settings, 'require_digital_signoff', False) if sys_settings else False
 
-    flagged_sessions = TrainingSession.query.filter(
+    flagged_sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
         TrainingSession.flagged == True,
         TrainingSession.flag_cleared_at == None
     ).options(
@@ -454,7 +475,7 @@ def dashboard():
     manager_loc_ids = _get_manager_location_ids()
     manager_locations = []
     if manager_loc_ids:
-        manager_locations = Location.query.filter(Location.id.in_(manager_loc_ids)).order_by(Location.name).all()
+        manager_locations = Location.query.filter_by(organization_id=g._manager_org_id).filter(Location.id.in_(manager_loc_ids)).order_by(Location.name).all()
     try:
         current_location_filter = int(location_filter) if location_filter else None
     except (TypeError, ValueError):
@@ -568,7 +589,7 @@ def change_password():
 @manager_bp.route('/roadmaps')
 @manager_required
 def roadmaps_list():
-    roadmaps = TrainingRoadmap.query.order_by(TrainingRoadmap.name).all()
+    roadmaps = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id).order_by(TrainingRoadmap.name).all()
     return render_template('roadmaps/list.html', roadmaps=roadmaps)
 
 
@@ -579,7 +600,7 @@ def roadmap_create():
         name = request.form.get('name')
         desc = request.form.get('description')
 
-        new_map = TrainingRoadmap(name=name, description=desc)
+        new_map = TrainingRoadmap(organization_id=g._manager_org_id, name=name, description=desc)
         db.session.add(new_map)
         db.session.commit()
 
@@ -590,8 +611,8 @@ def roadmap_create():
 @manager_bp.route('/roadmaps/<int:roadmap_id>/builder', methods=['GET', 'POST'])
 @manager_required
 def roadmap_builder(roadmap_id):
-    roadmap = TrainingRoadmap.query.get_or_404(roadmap_id)
-    all_positions = Position.query.filter_by(active=True).order_by(Position.name).all()
+    roadmap = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id, id=roadmap_id).first_or_404()
+    all_positions = Position.query.filter_by(organization_id=g._manager_org_id, active=True).order_by(Position.name).all()
 
     if request.method == 'POST':
         position_id = request.form.get('position_id')
@@ -658,7 +679,7 @@ def roadmap_step_delete(step_id):
     db.session.delete(step)
     db.session.commit()
 
-    roadmap = TrainingRoadmap.query.get(roadmap_id)
+    roadmap = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id, id=roadmap_id).first_or_404()
     for index, s in enumerate(sorted(roadmap.steps, key=lambda x: x.order_index)):
         s.order_index = index + 1
     db.session.commit()
@@ -669,13 +690,13 @@ def roadmap_step_delete(step_id):
 @manager_bp.route('/roadmaps/<int:roadmap_id>/roster', methods=['GET', 'POST'])
 @manager_required
 def roadmap_roster(roadmap_id):
-    roadmap = TrainingRoadmap.query.get_or_404(roadmap_id)
+    roadmap = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id, id=roadmap_id).first_or_404()
 
     if request.method == 'POST':
         now_utc = datetime.now(timezone.utc)
         add_ids = request.form.getlist('add_employee_ids')
         for emp_id in add_ids:
-            emp = Employee.query.get(emp_id)
+            emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=emp_id).first()
             if emp:
                 emp.current_roadmap_id = roadmap.id
                 emp.roadmap_assigned_at = now_utc
@@ -688,7 +709,7 @@ def roadmap_roster(roadmap_id):
 
         remove_ids = request.form.getlist('remove_employee_ids')
         for emp_id in remove_ids:
-            emp = Employee.query.get(emp_id)
+            emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=emp_id).first()
             if emp and emp.current_roadmap_id == roadmap.id:
                 emp.current_roadmap_id = None
                 emp.roadmap_assigned_at = None
@@ -697,8 +718,8 @@ def roadmap_roster(roadmap_id):
         flash(f"Roster updated for {roadmap.name}.", "success")
         return redirect(url_for('manager.roadmap_roster', roadmap_id=roadmap.id))
 
-    enrolled = Employee.query.filter(Employee.current_roadmap_id == roadmap.id, Employee.graduated_at == None).all()
-    available = Employee.query.filter(
+    enrolled = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.current_roadmap_id == roadmap.id, Employee.graduated_at == None).all()
+    available = Employee.query.filter_by(organization_id=g._manager_org_id).filter(
         (Employee.current_roadmap_id != roadmap.id) | (Employee.current_roadmap_id == None),
         Employee.status == 'active',
         Employee.role == 'trainee',
@@ -711,13 +732,13 @@ def roadmap_roster(roadmap_id):
 @manager_bp.route('/employee/<int:employee_id>/assign_roadmap', methods=['POST'])
 @manager_required
 def assign_roadmap(employee_id):
-    employee = Employee.query.get_or_404(employee_id)
+    employee = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
     roadmap_id = request.form.get('roadmap_id')
 
     if roadmap_id:
         employee.current_roadmap_id = roadmap_id
         employee.roadmap_assigned_at = datetime.now(timezone.utc)
-        roadmap = TrainingRoadmap.query.get(roadmap_id)
+        roadmap = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id, id=roadmap_id).first_or_404()
         u = User.query.filter_by(employee_id=employee.id).first()
         if u and roadmap:
             notify(u, "New Roadmap Assigned",
@@ -825,12 +846,12 @@ def process_smart_schedule():
             file_size = -1
 
         # Get all active positions for the dropdown
-        positions = Position.query.filter_by(active=True).order_by(Position.name).all()
+        positions = Position.query.filter_by(organization_id=g._manager_org_id, active=True).order_by(Position.name).all()
         all_positions = [{'id': p.id, 'name': p.name, 'location_id': p.location_id} for p in positions]
 
         # Build trainee stats (history + suggestion) — computed once
-        active_trainees = Employee.query.filter(Employee.status == 'active', Employee.role == 'trainee', Employee.graduated_at == None).all()
-        all_history = TrainingSession.query.filter(
+        active_trainees = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.status == 'active', Employee.role == 'trainee', Employee.graduated_at == None).all()
+        all_history = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_([t.id for t in active_trainees]),
             TrainingSession.completed_at != None
         ).all()
@@ -898,7 +919,7 @@ def process_smart_schedule():
             trainers = []
             trainees = []
             for shift in parsed_shifts:
-                emp = Employee.query.filter(
+                emp = Employee.query.filter_by(organization_id=g._manager_org_id).filter(
                     db.func.concat(Employee.first_name, ' ', Employee.last_name).ilike(f"%{shift['name']}%")
                 ).first()
 
@@ -979,9 +1000,9 @@ def create_smart_session():
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
 
         # Check if trainee and trainer exist
-        trainee = Employee.query.get(trainee_id)
-        trainer = Employee.query.get(trainer_id)
-        position = Position.query.get(position_id)
+        trainee = Employee.query.filter_by(organization_id=g._manager_org_id, id=trainee_id).first_or_404()
+        trainer = Employee.query.filter_by(organization_id=g._manager_org_id, id=trainer_id).first_or_404()
+        position = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
 
         if not trainee or not trainer or not position:
             return jsonify({'success': False, 'error': 'Invalid trainee, trainer, or position'}), 400
@@ -1005,7 +1026,7 @@ def create_smart_session():
                 pass
 
         # Create or find a schedule for this date
-        schedule = Schedule.query.filter(
+        schedule = Schedule.query.filter_by(organization_id=g._manager_org_id).filter(
             Schedule.start_date <= session_date,
             Schedule.end_date >= session_date
         ).first()
@@ -1017,6 +1038,7 @@ def create_smart_session():
             end_of_week = start_of_week + timedelta(days=6)
 
             schedule = Schedule(
+                organization_id=g._manager_org_id,
                 start_date=start_of_week,
                 end_date=end_of_week,
                 status='draft',
@@ -1043,6 +1065,7 @@ def create_smart_session():
 
         # Create the session
         new_session = TrainingSession(
+            organization_id=g._manager_org_id,
             schedule_id=schedule.id,
             session_date=session_date,
             daypart_id=None,
@@ -1094,16 +1117,16 @@ def create_smart_session():
 def employees_list():
     visible_ids = get_visible_employee_ids()
     if visible_ids is not None:
-        employees = Employee.query.filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).all()
+        employees = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).all()
     else:
-        employees = Employee.query.filter(Employee.graduated_at == None).all()
+        employees = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.graduated_at == None).all()
     return render_template("employees_list.html", employees=employees)
 
 
 @manager_bp.route("/employees/new", methods=['GET', 'POST'])
 @manager_required
 def employee_create():
-    locations = Location.query.order_by(Location.name).all()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     if request.method == 'POST':
         first_name = request.form.get("first_name")
         last_name = request.form.get("last_name")
@@ -1127,6 +1150,7 @@ def employee_create():
 
         try:
             new_emp = Employee(
+                organization_id=g._manager_org_id,
                 first_name=first_name,
                 last_name=last_name,
                 role=role,
@@ -1160,8 +1184,8 @@ def employee_edit(employee_id):
     visible_ids = get_visible_employee_ids()
     if visible_ids is not None and employee_id not in visible_ids:
         abort(403)
-    emp = Employee.query.get_or_404(employee_id)
-    locations = Location.query.order_by(Location.name).all()
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     if request.method == 'POST':
         old_role = emp.role
         emp.first_name = request.form.get("first_name")
@@ -1198,7 +1222,7 @@ def employee_delete(employee_id):
     if employee_id == current_user.employee_id:
         flash("You cannot delete your own account.")
         return redirect(url_for('manager.employees_list'))
-    emp = Employee.query.get_or_404(employee_id)
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
     user_account = User.query.filter_by(employee_id=emp.id).first()
     if user_account: db.session.delete(user_account)
     db.session.delete(emp)
@@ -1210,12 +1234,12 @@ def employee_delete(employee_id):
 @manager_bp.route("/employees/<int:employee_id>")
 @login_required
 def employee_detail(employee_id):
-    emp = Employee.query.options(
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).options(
         selectinload(Employee.trainee_sessions).joinedload(TrainingSession.position),
         selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
         selectinload(Employee.trainer_sessions).joinedload(TrainingSession.position),
         selectinload(Employee.trainer_sessions).joinedload(TrainingSession.trainee),
-    ).get_or_404(employee_id)
+    ).first_or_404()
     is_self = (current_user.employee_id == employee_id)
     is_staff = (current_user.role in ['manager', 'trainer'])
 
@@ -1223,7 +1247,7 @@ def employee_detail(employee_id):
         if not is_self:
             flash("You can only view your own profile.", "info")
             return redirect(url_for('manager.employee_detail', employee_id=current_user.employee_id))
-        sys = flask.g.get('system_settings') or SystemSettings.query.first()
+        sys = flask.g.get('system_settings') or SystemSettings.query.filter_by(organization_id=g._manager_org_id).first()
         if sys and not getattr(sys, 'share_trainee_data_with_trainees', True):
             flash("Your training data is not shared with trainees.", "info")
             return redirect(url_for('employee.dashboard'))
@@ -1240,7 +1264,7 @@ def employee_detail(employee_id):
     teaching_stats = None
     admin_stats = None
 
-    roadmaps = TrainingRoadmap.query.order_by(TrainingRoadmap.name).all() if current_user.role == 'manager' else []
+    roadmaps = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id).order_by(TrainingRoadmap.name).all() if current_user.role == 'manager' else []
 
     if emp.role == 'trainee':
         # Active positions matching the employee's location(s) (or global) — one query for locations
@@ -1249,7 +1273,7 @@ def employee_detail(employee_id):
         ).fetchall()]
         if not emp_loc_ids and getattr(emp, 'location_id', None):
             emp_loc_ids = [emp.location_id]
-        pos_query = Position.query.filter_by(active=True)
+        pos_query = Position.query.filter_by(organization_id=g._manager_org_id, active=True)
         if emp_loc_ids:
             pos_query = pos_query.filter(
                 db.or_(Position.location_id == None, Position.location_id.in_(emp_loc_ids))
@@ -1260,7 +1284,7 @@ def employee_detail(employee_id):
         # Also include any inactive positions this trainee has completed sessions for
         trained_pos_ids = {s.position_id for s in emp.trainee_sessions if s.completed_at}
         inactive_trained_ids = trained_pos_ids - active_pos_ids
-        inactive_positions = Position.query.filter(Position.id.in_(inactive_trained_ids)).all() if inactive_trained_ids else []
+        inactive_positions = Position.query.filter_by(organization_id=g._manager_org_id).filter(Position.id.in_(inactive_trained_ids)).all() if inactive_trained_ids else []
 
         all_positions = active_positions + inactive_positions
         for pos in all_positions:
@@ -1288,7 +1312,7 @@ def employee_detail(employee_id):
     elif emp.role == 'manager':
         user_id = emp.user_account.id if emp.user_account else None
         if user_id:
-            schedules_created = Schedule.query.filter_by(created_by_user_id=user_id).count()
+            schedules_created = Schedule.query.filter_by(organization_id=g._manager_org_id, created_by_user_id=user_id).count()
             notes_written = EmployeeNote.query.filter_by(author_user_id=user_id).count()
             sessions_finalized = TrainingSession.query.filter_by(completed_by_user_id=user_id).count()
             admin_stats = {'schedules': schedules_created, 'notes': notes_written, 'finalized': sessions_finalized}
@@ -1303,7 +1327,7 @@ def employee_graduate(employee_id):
     visible_ids = get_visible_employee_ids()
     if visible_ids is not None and employee_id not in visible_ids:
         abort(403)
-    emp = Employee.query.get_or_404(employee_id)
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
     if emp.role != 'trainee':
         flash("Only trainees can be graduated.", "warning")
         return redirect(url_for('manager.employee_detail', employee_id=employee_id))
@@ -1332,8 +1356,8 @@ def employee_position_detail(employee_id, position_id):
         return redirect(url_for('manager.employee_detail', employee_id=current_user.employee_id))
     if not (current_user.role in ['manager', 'trainer'] or current_user.employee_id == employee_id):
         abort(403)
-    emp = Employee.query.get_or_404(employee_id)
-    pos = Position.query.get_or_404(position_id)
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
+    pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     sessions = TrainingSession.query.filter_by(trainee_employee_id=employee_id, position_id=position_id).filter(
         TrainingSession.completed_at != None).order_by(TrainingSession.completed_at.desc()).all()
     return render_template("employee_position_detail.html", employee=emp, position=pos, sessions=sessions)
@@ -1342,7 +1366,7 @@ def employee_position_detail(employee_id, position_id):
 @manager_bp.route("/employees/<int:employee_id>/resend-invite", methods=['POST'])
 @manager_required
 def resend_invite(employee_id):
-    emp = Employee.query.get_or_404(employee_id)
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
     user_account = emp.user_account
     if not user_account:
         flash("No login account found.")
@@ -1357,7 +1381,7 @@ def resend_invite(employee_id):
 @manager_bp.route("/employees/<int:employee_id>/notes/new", methods=['POST'])
 @staff_required
 def employee_add_note(employee_id):
-    emp = Employee.query.get_or_404(employee_id)
+    emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=employee_id).first_or_404()
     note_text = request.form.get("note_text")
     category = request.form.get("category")
     if not note_text:
@@ -1375,8 +1399,8 @@ def employee_add_note(employee_id):
 @manager_bp.route("/positions")
 @manager_required
 def positions_list():
-    positions = Position.query.all()
-    locations = Location.query.order_by(Location.name).all()
+    positions = Position.query.filter_by(organization_id=g._manager_org_id).all()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     return render_template("positions_list.html", positions=positions, locations=locations)
 
 
@@ -1392,7 +1416,7 @@ def position_create():
         if not name:
             flash("Position name is required.")
             return redirect(url_for('manager.position_create'))
-        new_pos = Position(name=name, active=True, location_id=loc_id)
+        new_pos = Position(organization_id=g._manager_org_id, name=name, active=True, location_id=loc_id)
         db.session.add(new_pos)
         db.session.flush()
         for text in descriptor_texts:
@@ -1400,14 +1424,14 @@ def position_create():
         db.session.commit()
         flash(f"Position '{name}' created.")
         return redirect(url_for('manager.positions_list'))
-    locations = Location.query.order_by(Location.name).all()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     return render_template("position_form.html", mode="new", position=None, locations=locations)
 
 
 @manager_bp.route("/positions/<int:position_id>/edit", methods=['GET', 'POST'])
 @manager_required
 def position_edit(position_id):
-    pos = Position.query.get_or_404(position_id)
+    pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     if request.method == 'POST':
         pos.name = request.form.get("name")
         loc_id = request.form.get("location_id") or None
@@ -1457,10 +1481,10 @@ def position_edit(position_id):
     roadmap_steps = RoadmapStep.query.filter_by(position_id=pos.id).all()
     active_roadmaps = set()
     for step in roadmap_steps:
-        rm = TrainingRoadmap.query.get(step.roadmap_id)
+        rm = TrainingRoadmap.query.filter_by(organization_id=g._manager_org_id, id=step.roadmap_id).first()
         if rm:
             active_roadmaps.add(rm.name)
-    locations = Location.query.order_by(Location.name).all()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     return render_template(
         "position_form.html",
         mode="edit",
@@ -1474,7 +1498,7 @@ def position_edit(position_id):
 @manager_bp.route("/positions/<int:position_id>")
 @manager_required
 def position_detail(position_id):
-    pos = Position.query.get_or_404(position_id)
+    pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     descriptors = PositionDescriptor.query.filter_by(position_id=pos.id).all()
     return render_template("position_detail.html", position=pos, descriptors=descriptors)
 
@@ -1482,7 +1506,7 @@ def position_detail(position_id):
 @manager_bp.route("/positions/<int:position_id>/delete", methods=['POST'])
 @manager_required
 def position_delete(position_id):
-    pos = Position.query.get_or_404(position_id)
+    pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     if TrainingSession.query.filter_by(position_id=pos.id).first():
         flash("Cannot delete a position that has recorded training sessions.")
         return redirect(url_for('manager.positions_list'))
@@ -1495,7 +1519,7 @@ def position_delete(position_id):
 @manager_bp.route("/positions/<int:position_id>/descriptors/new", methods=['POST'])
 @manager_required
 def descriptor_create(position_id):
-    pos = Position.query.get_or_404(position_id)
+    pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     text = request.form.get("text")
     if not text or not text.strip():
         flash("Skill description cannot be empty.")
@@ -1522,7 +1546,7 @@ def descriptor_delete(descriptor_id):
 @manager_bp.route("/dayparts")
 @manager_required
 def dayparts_list():
-    dayparts = Daypart.query.order_by(Daypart.start_time.asc()).all()
+    dayparts = Daypart.query.filter_by(organization_id=g._manager_org_id).order_by(Daypart.start_time.asc()).all()
     return render_template("dayparts_list.html", dayparts=dayparts)
 
 
@@ -1534,7 +1558,7 @@ def daypart_create():
         start_str = request.form.get("start_time")
         end_str = request.form.get("end_time")
         try:
-            new_dp = Daypart(name=name, active=True)
+            new_dp = Daypart(organization_id=g._manager_org_id, name=name, active=True)
             if start_str: new_dp.start_time = datetime.strptime(start_str, '%H:%M').time()
             if end_str: new_dp.end_time = datetime.strptime(end_str, '%H:%M').time()
             db.session.add(new_dp)
@@ -1549,7 +1573,7 @@ def daypart_create():
 @manager_bp.route("/dayparts/<int:daypart_id>/edit", methods=['GET', 'POST'])
 @manager_required
 def daypart_edit(daypart_id):
-    dp = Daypart.query.get_or_404(daypart_id)
+    dp = Daypart.query.filter_by(organization_id=g._manager_org_id, id=daypart_id).first_or_404()
     if request.method == 'POST':
         try:
             dp.name = request.form.get("name")
@@ -1569,7 +1593,7 @@ def daypart_edit(daypart_id):
 @manager_bp.route("/dayparts/<int:daypart_id>/delete", methods=['POST'])
 @manager_required
 def daypart_delete(daypart_id):
-    dp = Daypart.query.get_or_404(daypart_id)
+    dp = Daypart.query.filter_by(organization_id=g._manager_org_id, id=daypart_id).first_or_404()
     db.session.delete(dp)
     db.session.commit()
     flash("Daypart deleted.")
@@ -1600,7 +1624,7 @@ def _can_manage_locations():
 @manager_bp.route("/locations")
 @manager_required
 def locations_list():
-    locations = Location.query.order_by(Location.name).all()
+    locations = Location.query.filter_by(organization_id=g._manager_org_id).order_by(Location.name).all()
     can_manage = _can_manage_locations()
     return render_template("locations_list.html", locations=locations, can_manage=can_manage)
 
@@ -1614,10 +1638,10 @@ def location_create():
         if not name:
             flash("Location name is required.")
             return redirect(url_for('manager.location_create'))
-        if Location.query.filter_by(name=name).first():
+        if Location.query.filter_by(organization_id=g._manager_org_id, name=name).first():
             flash(f"Location '{name}' already exists.")
             return redirect(url_for('manager.location_create'))
-        loc = Location(name=name, description=description)
+        loc = Location(organization_id=g._manager_org_id, name=name, description=description)
         db.session.add(loc)
         db.session.commit()
         flash(f"Location '{name}' created.")
@@ -1628,13 +1652,13 @@ def location_create():
 @manager_bp.route("/locations/<int:location_id>/edit", methods=['GET', 'POST'])
 @manager_required
 def location_edit(location_id):
-    loc = Location.query.get_or_404(location_id)
+    loc = Location.query.filter_by(organization_id=g._manager_org_id, id=location_id).first_or_404()
     if request.method == 'POST':
         name = (request.form.get("name") or "").strip()
         if not name:
             flash("Location name is required.")
             return redirect(url_for('manager.location_edit', location_id=location_id))
-        other = Location.query.filter(Location.name == name, Location.id != location_id).first()
+        other = Location.query.filter_by(organization_id=g._manager_org_id).filter(Location.name == name, Location.id != location_id).first()
         if other:
             flash(f"Location '{name}' already exists.")
             return redirect(url_for('manager.location_edit', location_id=location_id))
@@ -1649,7 +1673,7 @@ def location_edit(location_id):
 @manager_bp.route("/locations/<int:location_id>/delete", methods=['POST'])
 @manager_required
 def location_delete(location_id):
-    loc = Location.query.get_or_404(location_id)
+    loc = Location.query.filter_by(organization_id=g._manager_org_id, id=location_id).first_or_404()
     if loc.employees.count() > 0:
         flash(f"Cannot delete '{loc.name}': employees are assigned. Reassign them first.")
         return redirect(url_for('manager.locations_list'))
@@ -1663,14 +1687,14 @@ def location_delete(location_id):
 @manager_required
 def location_roster(location_id):
 
-    loc = Location.query.get_or_404(location_id)
+    loc = Location.query.filter_by(organization_id=g._manager_org_id, id=location_id).first_or_404()
 
     if request.method == 'POST':
         add_ids = request.form.getlist('add_employee_ids')
         remove_ids = request.form.getlist('remove_employee_ids')
 
         for eid in add_ids:
-            emp = Employee.query.get(int(eid))
+            emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=int(eid)).first()
             if not emp:
                 continue
             exists = db.session.query(employee_locations).filter(
@@ -1683,7 +1707,7 @@ def location_roster(location_id):
                     emp.location_id = loc.id  # primary
 
         for eid in remove_ids:
-            emp = Employee.query.get(int(eid))
+            emp = Employee.query.filter_by(organization_id=g._manager_org_id, id=int(eid)).first()
             if not emp:
                 continue
             if loc in list(emp.locations):  # load to avoid dynamic query issues
@@ -1698,12 +1722,12 @@ def location_roster(location_id):
 
     # Assigned = in M2M for this location or legacy location_id
     subq = db.session.query(employee_locations.c.employee_id).filter(employee_locations.c.location_id == loc.id)
-    assigned = Employee.query.filter(
+    assigned = Employee.query.filter_by(organization_id=g._manager_org_id).filter(
         Employee.status == 'active',
         db.or_(Employee.location_id == loc.id, Employee.id.in_(subq)),
     ).order_by(Employee.first_name).all()
     assigned_ids = {e.id for e in assigned}
-    available_q = Employee.query.filter(Employee.status == 'active')
+    available_q = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.status == 'active')
     if assigned_ids:
         available_q = available_q.filter(~Employee.id.in_(assigned_ids))
     available = available_q.order_by(Employee.first_name).all()
@@ -1721,9 +1745,9 @@ def schedules_list():
         subq = db.session.query(TrainingSession.schedule_id).filter(
             TrainingSession.trainee_employee_id.in_(visible_ids)
         ).distinct()
-        schedules = Schedule.query.filter(Schedule.id.in_(subq)).order_by(Schedule.created_at.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=g._manager_org_id).filter(Schedule.id.in_(subq)).order_by(Schedule.created_at.desc()).all()
     else:
-        schedules = Schedule.query.order_by(Schedule.created_at.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=g._manager_org_id).order_by(Schedule.created_at.desc()).all()
     return render_template("schedules_list.html", schedules=schedules)
 
 
@@ -1733,6 +1757,7 @@ def schedule_create():
     if request.method == 'POST':
         try:
             new_sch = Schedule(
+                organization_id=g._manager_org_id,
                 start_date=datetime.strptime(request.form.get("start_date"), '%Y-%m-%d'),
                 end_date=datetime.strptime(request.form.get("end_date"), '%Y-%m-%d'),
                 status=request.form.get("status"),
@@ -1744,7 +1769,7 @@ def schedule_create():
             return redirect(url_for('manager.schedule_detail', schedule_id=new_sch.id))
         except Exception as e:
             flash(f"Error: {str(e)}")
-    sys = SystemSettings.query.first()
+    sys = SystemSettings.query.filter_by(organization_id=g._manager_org_id).first()
     default_hide = getattr(sys, 'default_hide_assignments', False) if sys else False
     return render_template("schedule_form.html", mode="new", schedule=None, default_hide_assignments=default_hide)
 
@@ -1752,7 +1777,7 @@ def schedule_create():
 @manager_bp.route("/schedules/<int:schedule_id>/edit", methods=['GET', 'POST'])
 @manager_required
 def schedule_edit(schedule_id):
-    sch = Schedule.query.get_or_404(schedule_id)
+    sch = Schedule.query.filter_by(organization_id=g._manager_org_id, id=schedule_id).first_or_404()
     visible_ids = get_visible_employee_ids()
     if visible_ids is not None:
         has_visible = TrainingSession.query.filter_by(schedule_id=sch.id).filter(
@@ -1779,7 +1804,7 @@ def schedule_edit(schedule_id):
 @manager_bp.route("/schedules/<int:schedule_id>/delete", methods=['POST'])
 @manager_required
 def schedule_delete(schedule_id):
-    sch = Schedule.query.get_or_404(schedule_id)
+    sch = Schedule.query.filter_by(organization_id=g._manager_org_id, id=schedule_id).first_or_404()
     visible_ids = get_visible_employee_ids()
     if visible_ids is not None:
         has_visible = TrainingSession.query.filter_by(schedule_id=sch.id).filter(
@@ -1801,7 +1826,7 @@ def _schedule_detail_cache_key():
 @manager_required
 @cache.cached(timeout=90, key_prefix=_schedule_detail_cache_key)
 def schedule_detail(schedule_id):
-    sch = Schedule.query.get_or_404(schedule_id)
+    sch = Schedule.query.filter_by(organization_id=g._manager_org_id, id=schedule_id).first_or_404()
     visible_ids = get_visible_employee_ids()
 
     # Eager-load sessions with position, trainer, trainee (avoids N+1 in template)
@@ -1815,7 +1840,7 @@ def schedule_detail(schedule_id):
     sessions = session_query.all()
 
     # Eager-load employees with roadmaps+steps, trainee_sessions+ratings (Employee.locations is dynamic - cannot eager load)
-    employee_query = Employee.query.filter(Employee.status == 'active', Employee.graduated_at == None).options(
+    employee_query = Employee.query.filter_by(organization_id=g._manager_org_id).filter(Employee.status == 'active', Employee.graduated_at == None).options(
         selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
         selectinload(Employee.trainee_sessions).selectinload(TrainingSession.ratings),
     )
@@ -1831,8 +1856,8 @@ def schedule_detail(schedule_id):
         days.append(curr)
         curr += timedelta(days=1)
 
-    all_active_positions = Position.query.filter_by(active=True).all()
-    dayparts = Daypart.query.filter_by(active=True).all()
+    all_active_positions = Position.query.filter_by(organization_id=g._manager_org_id, active=True).all()
+    dayparts = Daypart.query.filter_by(organization_id=g._manager_org_id, active=True).all()
 
     # Precompute location_ids (one query; Employee.locations is dynamic so we can't eager-load it)
     employee_location_ids = {}
@@ -1856,7 +1881,7 @@ def schedule_detail(schedule_id):
     if trainee_ids:
         # Recent history only (limit rows to avoid timeout on large DBs)
         cutoff = date.today() - timedelta(days=365)
-        all_history = TrainingSession.query.filter(
+        all_history = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
             TrainingSession.trainee_employee_id.in_(trainee_ids),
             TrainingSession.completed_at != None,
             TrainingSession.session_date >= cutoff,
@@ -1912,7 +1937,7 @@ def schedule_detail(schedule_id):
 @manager_bp.route("/schedules/<int:schedule_id>/publish", methods=['POST'])
 @manager_required
 def schedule_publish(schedule_id):
-    sch = Schedule.query.get_or_404(schedule_id)
+    sch = Schedule.query.filter_by(organization_id=g._manager_org_id, id=schedule_id).first_or_404()
     sch.status = 'published'
     sch.published_at = datetime.now(timezone.utc)
     sessions = TrainingSession.query.filter_by(schedule_id=sch.id).all()
@@ -1924,7 +1949,7 @@ def schedule_publish(schedule_id):
         if s.trainee_employee_id:
             emp_ids.add(s.trainee_employee_id)
     users_to_notify = list(
-        User.query.filter(User.employee_id.in_(emp_ids))
+        User.query.filter_by(organization_id=g._manager_org_id).filter(User.employee_id.in_(emp_ids))
         .options(joinedload(User.settings))
         .all()
     ) if emp_ids else []
@@ -1972,6 +1997,7 @@ def session_create(schedule_id):
             if s_str: custom_start = datetime.strptime(s_str, '%H:%M').time()
             if e_str: custom_end = datetime.strptime(e_str, '%H:%M').time()
         new_session = TrainingSession(
+            organization_id=g._manager_org_id,
             schedule_id=schedule_id,
             session_date=datetime.strptime(request.form.get("session_date"), '%Y-%m-%d').date(),
             daypart_id=daypart_id,
@@ -1987,7 +2013,7 @@ def session_create(schedule_id):
 
         # In-app notifications only (no email) — emails are saved for schedule publish
         sess_link = url_for('employee.session_rating', session_id=new_session.id, _external=True)
-        position = Position.query.get(new_session.position_id)
+        position = Position.query.filter_by(organization_id=g._manager_org_id, id=new_session.position_id).first()
         pos_name = position.name if position else 'a position'
         sess_date = new_session.session_date.strftime('%b %d')
         if new_session.trainee_employee_id:
@@ -2120,9 +2146,9 @@ def settings():
         user_settings = UserSettings(user_id=current_user.id)
         db.session.add(user_settings)
         db.session.commit()
-    system_settings = SystemSettings.query.first()
+    system_settings = SystemSettings.query.filter_by(organization_id=g._manager_org_id).first()
     if not system_settings:
-        system_settings = SystemSettings()
+        system_settings = SystemSettings(organization_id=g._manager_org_id)
         db.session.add(system_settings)
         db.session.commit()
     if request.method == 'POST':
