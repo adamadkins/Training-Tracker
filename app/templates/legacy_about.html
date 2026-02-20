@@ -213,37 +213,36 @@
 
     <div class="page-eyebrow">Origin Story</div>
     <h1 class="page-title">About Training Tracker Classic</h1>
-    <p class="page-subtitle">The app that started it all, and why it almost didn't.</p>
+    <p class="page-subtitle">The app that started it all - and nearly killed the idea before it got off the ground.</p>
 
     <div class="story">
 
         <p>
-            Training Tracker Classic - <b>v1.0</b> - was built out of genuine need and a lot of ambition
-            for someone who barely knew HTML and CSS at the time. The idea was simple: help managers at a
-            <b>Chick-fil-A</b> store track how new hires were progressing through positions like iPads,
-            Register, Drive Through, Staging, and more.
+            I built Training Tracker Classic - <b>v1.0</b> - while I was working at <b>Chick-fil-A</b>.
+            The goal was straightforward: give managers a way to track how new hires were progressing
+            through positions like iPads, Register, Drive Through, Staging, and more.
+            I genuinely thought I could pull it off. I had barely touched HTML and CSS at that point,
+            but I figured I would learn as I went.
         </p>
 
         <p>
-            The honest truth? <b>It was pretty scuffed.</b> Instead of a real database, all the data lived
-            in a <b>JSON file</b> sitting on the server. SQL and databases felt way too intimidating to even
-            try. That meant every single person on the team was reading from and writing to
-            <b>the same flat file</b> at the same time, with zero concurrency handling. Race conditions
-            were basically a feature.
+            <b>The database situation was bad.</b> I was too intimidated by SQL to even try it, so I stored
+            everything in a <b>JSON file</b> on the server. Every team member read from and wrote to the
+            same file at the same time, with nothing handling conflicts. I did not know what a race condition
+            was when I wrote it. I found out the hard way.
         </p>
 
         <p>
-            It was hosted on a free service called <b>Glitch</b>, which would spin the server completely
-            down after a few minutes of inactivity. Every time someone opened it up during a shift, they
-            had to wait for a cold start. No profiles, no real accounts, no authentication.
-            Anyone with the link could open it and change anything.
+            I hosted it on a free tier of <b>Glitch</b>, which shut the server down after a few minutes
+            of inactivity. Every time someone opened the app at the start of a shift, they had to wait
+            through a cold start. There were no user profiles, no login system, and no access control.
+            Anyone who had the link could go in and change whatever they wanted.
         </p>
 
         <p>
-            On mobile? Forget it. The layout was built for a desktop and a desktop only. Floats,
-            hardcoded widths, pixel-specific margins that broke the moment you opened it on a phone.
-            It was clearly put together by someone watching YouTube tutorials at midnight and hoping
-            for the best.
+            I never built a mobile layout. I designed it on a desktop and assumed that was good enough.
+            It was not. The whole thing used floats, hardcoded pixel widths, and margins I had copy-pasted
+            from a tutorial without fully understanding what they did. On a phone it was basically unusable.
         </p>
 
         <div class="issues-label">Known issues at launch</div>
@@ -255,33 +254,35 @@
             <span class="issue-tag">Glitch hosting (cold starts)</span>
             <span class="issue-tag">No authentication</span>
             <span class="issue-tag">No real-time updates</span>
-            <span class="issue-tag">Painfully slow on any network</span>
-            <span class="issue-tag">Poor design</span>
+            <span class="issue-tag">Slow on any network</span>
+            <span class="issue-tag">Poor visual design</span>
             <span class="issue-tag">No data backups</span>
         </div>
 
         <p>
-            It took <b>months</b> to build. This was pre-AI, pre-Copilot, pre-anything that would help
-            you get unstuck in five minutes. Every bug meant digging through Stack Overflow threads and
-            rewatching tutorial videos to find what went wrong. Every feature felt like a small victory.
+            It took me <b>months</b> to put together. This was before AI tools, before GitHub Copilot,
+            before anything that could answer a question in seconds. When I got stuck, I dug through
+            Stack Overflow and rewatched YouTube tutorials until I found something that worked.
+            I had no one to ask. Every small thing that worked felt like a big win.
         </p>
 
         <p>
-            The app was <b>abandoned shortly after</b> it was tried in the store. The real world exposed
-            every crack immediately. It couldn't handle multiple people using it at once, it was too slow
-            to be practical during a rush, and nobody wanted to open a laptop just to log a training
-            session.
+            We tried it in the store and it <b>fell apart almost immediately</b>. It could not handle
+            multiple people using it at the same time. It was too slow to be useful during a busy shift.
+            Nobody wanted to find a laptop just to update a training record. I pulled the plug on it
+            not long after.
         </p>
 
     </div>
 
     <div class="closing">
-        But that failure wasn't wasted. Every frustration, every workaround, every "why doesn't this work"
-        moment became a lesson. The app that exists now - with a <b>real database</b>, proper
-        authentication, mobile-first design, roadmaps, smart scheduling, session ratings, and everything
-        else - exists because this one failed in exactly the right ways at exactly the right time.
+        I do not regret building it. Every frustration I ran into with this version gave me a concrete
+        list of things to fix in the next one. The Training Tracker I use now - with a <b>real database</b>,
+        actual authentication, a mobile-first layout, roadmaps, smart scheduling, and session ratings -
+        came directly from everything that went wrong here. This project showed me what I needed to learn,
+        and I went and learned it.
         <br><br>
-        <b>Sometimes the best thing a project can do is fall apart and show you what to build next. 🐔</b>
+        <b>🐔 - Adam Adkins</b>
     </div>
 
     <a href="{{ url_for('legacy.index') }}" class="back-link">
