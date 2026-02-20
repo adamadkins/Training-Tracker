@@ -32,24 +32,26 @@
             display: flex;
             align-items: center;
             padding: 0 24px;
-            height: 80px;
+            height: 90px;
             gap: 0;
+            position: relative;
         }
 
         /* Logo */
         .logo-wrap {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 10px;
             text-decoration: none;
-            flex-shrink: 0;
-            margin-right: 6px;
+            pointer-events: none;
         }
         .logo-img {
-            height: 52px;
+            height: 64px;
             width: auto;
             display: block;
-            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
         }
 
         /* + Add Team Member */
