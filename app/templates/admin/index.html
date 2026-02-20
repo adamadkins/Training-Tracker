@@ -30,7 +30,7 @@
 
     <div class="table-card">
         <h2 class="section-title">Signup requests</h2>
-        <p class="section-desc">People who submitted the landing-page form. Use <strong>Email</strong> to open your mail client or <strong>Copy</strong> to copy their address.</p>
+        <p class="section-desc">People who submitted the landing-page form. <strong>Email</strong> opens your mail client with their address and a plan-specific message; <strong>Copy</strong> copies their address.</p>
         <table class="admin-table">
             <thead>
                 <tr>
@@ -44,16 +44,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for r in signup_requests %}
+                {% for r, mailto_href in signup_requests_with_mailto %}
                 <tr>
                     <td>{{ r.name or '—' }}</td>
-                    <td><a href="mailto:{{ r.email }}">{{ r.email }}</a></td>
+                    <td><a href="{{ mailto_href }}">{{ r.email }}</a></td>
                     <td>{{ r.business or '—' }}</td>
                     <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
                     <td>{{ r.size or '—' }}</td>
                     <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '—' }}</td>
                     <td class="actions-cell">
-                        <a href="mailto:{{ r.email }}" class="btn btn-sm btn-email" title="Open in email"><i class="fa-solid fa-envelope"></i> Email</a>
+                        <a href="{{ mailto_href }}" class="btn btn-sm btn-email" title="Open in email with pre-filled message"><i class="fa-solid fa-envelope"></i> Email</a>
                         <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
                     </td>
                 </tr>

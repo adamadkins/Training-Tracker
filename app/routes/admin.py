@@ -1,5 +1,6 @@
 """Platform admin: manage organizations. Only on main domain, superuser only."""
 import stripe
+from urllib.parse import quote
 from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -41,6 +42,42 @@ def _org_stats(org_id):
     }
 
 
+def _signup_request_mailto(signup_request):
+    """Build a mailto URL with pre-filled subject and body based on the plan they chose."""
+    r = signup_request
+    subject = "Your Training Tracker access request"
+    name_part = (" " + r.name) if r.name else ""
+    if r.plan == "standard":
+        body = (
+            f"Hi{name_part},\n\n"
+            "Thanks for your interest in Training Tracker Standard. I'd love to get you set up.\n\n"
+            "Standard includes everything you need to manage training and schedules for your team. "
+            "I'll send you an invite to create your organization shortly.\n\n"
+            "Best,"
+        )
+    elif r.plan == "pro":
+        body = (
+            f"Hi{name_part},\n\n"
+            "Thanks for your interest in Training Tracker Pro. I'd love to get you set up.\n\n"
+            "Pro includes PDF schedule upload and advanced features on top of everything in Standard. "
+            "I'll send you an invite to create your organization shortly.\n\n"
+            "Best,"
+        )
+    else:
+        body = (
+            f"Hi{name_part},\n\n"
+            "Thanks for reaching out about Training Tracker. I'd be happy to help you get started.\n\n"
+            "I'll follow up with next steps shortly.\n\n"
+            "Best,"
+        )
+    body = body.replace("\r\n", "\n").replace("\n", "\r\n")  # mailto-friendly line breaks
+    return (
+        "mailto:" + quote(r.email, safe="")
+        + "?subject=" + quote(subject, safe="")
+        + "&body=" + quote(body, safe="")
+    )
+
+
 @admin_bp.route("/")
 def index():
     """Dashboard: key metrics and org list."""
@@ -51,6 +88,7 @@ def index():
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
     orgs_with_stats = [(org, _org_stats(org.id)) for org in orgs[:20]]
     signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(50).all()
+    signup_requests_with_mailto = [(r, _signup_request_mailto(r)) for r in signup_requests]
     return render_template(
         "admin/index.html",
         organizations=orgs_with_stats,
@@ -58,7 +96,7 @@ def index():
         active_orgs=active_orgs,
         total_users=total_users,
         total_employees=total_employees,
-        signup_requests=signup_requests,
+        signup_requests_with_mailto=signup_requests_with_mailto,
     )
 
 
