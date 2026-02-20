@@ -258,6 +258,8 @@
             color: var(--text-main);
             cursor: pointer;
         }
+        .nav-overlay { display: none; }
+        .nav-icon-close { display: none !important; }
 
         /* ── Toast ── */
         .toast-container {
@@ -311,42 +313,88 @@
         /* ── Responsive nav ── */
         @media (max-width: 900px) {
             .container { padding: 0 16px !important; }
-            .mobile-menu-btn { display: block; }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.2s, transform 0.2s; }
+            .mobile-menu-btn:hover { background: var(--bg-body); }
+            .mobile-menu-btn .nav-icon-menu { display: block; }
+            .mobile-menu-btn .nav-icon-close { display: none; }
+            .mobile-menu-btn.open .nav-icon-menu { display: none; }
+            .mobile-menu-btn.open .nav-icon-close { display: block !important; }
             .nav-group { gap: 0; justify-content: space-between; }
 
-            .nav-content {
+            .nav-overlay {
                 display: none;
-                position: absolute;
-                top: 64px;
-                left: 0;
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                z-index: 98;
+                opacity: 0;
+                transition: opacity 0.25s ease;
+                backdrop-filter: blur(2px);
+            }
+            body.nav-open .nav-overlay {
+                display: block;
+                opacity: 1;
+            }
+            body.nav-open { overflow: hidden; }
+
+            .nav-content {
+                display: flex;
+                position: fixed;
+                top: 0;
                 right: 0;
+                bottom: 0;
+                width: min(320px, 88vw);
+                max-width: 100%;
                 background: var(--header-bg);
                 flex-direction: column;
-                padding: 20px;
-                border-bottom: 1px solid var(--border);
-                box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+                padding: 24px 20px;
+                padding-top: calc(64px + 16px);
+                border-left: 1px solid var(--border);
+                box-shadow: -8px 0 24px rgba(0,0,0,0.12);
                 z-index: 99;
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+                overflow-y: auto;
             }
-            .nav-content.show { display: flex; }
+            .nav-content.show {
+                transform: translateX(0);
+            }
+            .nav-content.show .nav-links a {
+                animation: navItemIn 0.35s ease backwards;
+            }
+            .nav-content.show .nav-links a:nth-child(1) { animation-delay: 0.05s; }
+            .nav-content.show .nav-links a:nth-child(2) { animation-delay: 0.08s; }
+            .nav-content.show .nav-links a:nth-child(3) { animation-delay: 0.11s; }
+            .nav-content.show .nav-links a:nth-child(4) { animation-delay: 0.14s; }
+            .nav-content.show .nav-links a:nth-child(5) { animation-delay: 0.17s; }
+            .nav-content.show .nav-links a:nth-child(6) { animation-delay: 0.2s; }
+            .nav-content.show .nav-links a:nth-child(7) { animation-delay: 0.23s; }
+            @keyframes navItemIn {
+                from { opacity: 0; transform: translateX(12px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
 
             .nav-links {
                 flex-direction: column;
                 gap: 6px;
                 width: 100%;
-                text-align: center;
+                text-align: left;
                 margin-bottom: 20px;
             }
             .nav-links a {
-                padding: 12px 0;
+                padding: 14px 16px;
                 width: 100%;
-                border-radius: 10px;
+                border-radius: 12px;
                 background: var(--bg-body);
+                font-weight: 600;
+                transition: background 0.2s, color 0.2s;
             }
+            .nav-links a:active { background: var(--border); }
             .nav-links a.active::after { display: none; }
             .nav-links a.active {
-                background: var(--bg-body);
-                color: var(--primary);
-                border: 1px solid var(--primary);
+                background: var(--primary);
+                color: #fff;
+                border: none;
             }
 
             .user-profile {
@@ -355,12 +403,13 @@
                 width: 100%;
                 gap: 12px;
                 justify-content: center;
-                padding-top: 12px;
+                padding-top: 16px;
                 border-top: 1px solid var(--border);
+                margin-top: 8px;
             }
             .btn-logout-icon {
-                width: 40px;
-                height: 40px;
+                width: 44px;
+                height: 44px;
                 background: var(--bg-body);
                 border-radius: 50%;
                 display: flex;
@@ -368,19 +417,20 @@
                 justify-content: center;
                 padding: 0;
             }
-            .notif-btn { width: 40px; height: 40px; background: var(--bg-body); }
+            .notif-btn { width: 44px; height: 44px; background: var(--bg-body); border-radius: 12px; }
             .profile-pill-link {
                 width: 100%;
                 order: 10;
                 display: flex;
                 justify-content: center;
-                margin-top: 4px;
+                margin-top: 8px;
             }
             .pill-container {
                 width: 100%;
                 justify-content: center;
-                padding: 8px;
+                padding: 10px 12px;
                 background: var(--bg-body);
+                border-radius: 12px;
             }
         }
 
@@ -401,6 +451,7 @@
 {% endif %}
 
 <header class="main-header">
+    <div class="nav-overlay" id="navOverlay" onclick="toggleMobileMenu()" aria-hidden="true"></div>
     <div class="container nav-split">
         <div class="nav-group">
             <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
@@ -410,7 +461,7 @@
                 <span class="brand-logo-text">{% if g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · {% endif %}Training<b>Tracker</b></span>
             </a>
 
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-expanded="false" aria-label="Open menu"><i class="fa-solid fa-bars nav-icon-menu" aria-hidden="true"></i><i class="fa-solid fa-times nav-icon-close" aria-hidden="true"></i></button>
 
             <div class="nav-content" id="navContent">
                 {% if current_user.is_authenticated %}
@@ -473,10 +524,23 @@
 
 <script>
     function toggleMobileMenu() {
-        document.getElementById('navContent').classList.toggle('show');
+        var nav = document.getElementById('navContent');
+        var btn = document.getElementById('mobileMenuBtn');
+        var overlay = document.getElementById('navOverlay');
+        var isOpen = nav && nav.classList.toggle('show');
+        if (btn) { btn.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); btn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu'); }
+        if (overlay) overlay.setAttribute('aria-hidden', !isOpen);
+        document.body.classList.toggle('nav-open', isOpen);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        var nav = document.getElementById('navContent');
+        var btn = document.getElementById('mobileMenuBtn');
+        if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {
+            nav.querySelectorAll('.nav-links a, .profile-pill-link').forEach(function(link) {
+                link.addEventListener('click', function() { document.body.classList.remove('nav-open'); nav.classList.remove('show'); if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); } document.getElementById('navOverlay').setAttribute('aria-hidden', 'true'); });
+            });
+        }
         var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};
 
         window.createToast = function(message) {
