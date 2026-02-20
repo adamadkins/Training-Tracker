@@ -32,12 +32,14 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.manager import manager_bp
     from app.routes.employee import employee_bp
-    from app.routes.messages import messages_bp  # Import the new messages blueprint
+    from app.routes.messages import messages_bp
+    from app.routes.legacy import legacy_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(manager_bp, url_prefix='/manager')
     app.register_blueprint(employee_bp, url_prefix='/employee')
-    app.register_blueprint(messages_bp)  # Register the messages blueprint
+    app.register_blueprint(messages_bp)
+    app.register_blueprint(legacy_bp)
 
     # 5. Define the User Loader
     from app.models import User
