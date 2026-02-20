@@ -19,7 +19,7 @@ from app.models import (
     TrainingSession, SessionRating, Notification, Daypart, EmployeeNote,
     UserSettings, SystemSettings, TrainingRoadmap, RoadmapStep, Location,
     Channel, ChannelParticipant, Message, MessageReaction, GuestTrainerToken,
-    employee_locations,
+    Organization, employee_locations,
 )
 from app import db, cache
 from app.utils.notifications import send_notification_email, notify
@@ -386,7 +386,7 @@ def setup_skip():
 
 
 def _dashboard_cache_key():
-    return f"manager_dashboard/{getattr(current_user, 'id', None)}/{request.args.get('location_id', '')}"
+    return f"manager_dashboard/{getattr(current_user, 'id', None)}/{request.args.get('location_id', '')}/{request.args.get('billing', '')}"
 
 
 # --- DASHBOARD ---
@@ -484,6 +484,12 @@ def dashboard():
 
     nudge_cutoff = datetime.utcnow() - timedelta(hours=24)
 
+    org = Organization.query.get(oid) if oid else None
+    if request.args.get("billing") == "success":
+        flash("Billing set up successfully.", "success")
+    elif request.args.get("billing") == "canceled":
+        flash("Checkout was canceled.", "info")
+
     return render_template(
         "manager_dashboard.html",
         user=current_user,
@@ -498,7 +504,82 @@ def dashboard():
         flagged_sessions=flagged_sessions,
         manager_locations=manager_locations,
         current_location_filter=current_location_filter,
+        org=org,
     )
+
+
+# --- BILLING (tenant: checkout + portal) ---
+def _manager_billing_return_url():
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    host = request.host.split(":")[0]
+    return f"{scheme}://{host}{url_for('manager.dashboard')}"
+
+
+@manager_bp.route("/billing/checkout", methods=["POST"])
+@manager_required
+def billing_create_checkout():
+    """Redirect to Stripe Checkout for current org. Plan: standard | pro."""
+    import stripe
+    oid = _org_id()
+    org = Organization.query.get_or_404(oid)
+    plan = (request.form.get("plan") or "standard").strip().lower()
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    if plan == "pro":
+        price_id = current_app.config.get("STRIPE_PRICE_ID_PRO")
+    else:
+        price_id = current_app.config.get("STRIPE_PRICE_ID_STANDARD") or current_app.config.get("STRIPE_PRICE_ID")
+    if not secret or not price_id:
+        flash("Billing is not configured. Contact support.", "error")
+        return redirect(url_for("manager.dashboard"))
+    stripe.api_key = secret
+    return_url = _manager_billing_return_url()
+    success_url = f"{return_url}?billing=success"
+    cancel_url = f"{return_url}?billing=canceled"
+    customer_email = current_user.email if current_user else None
+    try:
+        session_params = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "client_reference_id": str(oid),
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+        }
+        if org.stripe_customer_id:
+            session_params["customer"] = org.stripe_customer_id
+        elif customer_email:
+            session_params["customer_email"] = customer_email
+        session = stripe.checkout.Session.create(**session_params)
+        return redirect(session.url)
+    except Exception as e:
+        flash(f"Could not start checkout: {str(e)}", "error")
+        return redirect(url_for("manager.dashboard"))
+
+
+@manager_bp.route("/billing/portal", methods=["POST"])
+@manager_required
+def billing_customer_portal():
+    """Redirect to Stripe Customer Portal for current org."""
+    import stripe
+    oid = _org_id()
+    org = Organization.query.get_or_404(oid)
+    if not org.stripe_customer_id:
+        flash("No billing account linked. Set up billing first.", "error")
+        return redirect(url_for("manager.dashboard"))
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    if not secret:
+        flash("Billing is not configured.", "error")
+        return redirect(url_for("manager.dashboard"))
+    stripe.api_key = secret
+    return_url = _manager_billing_return_url()
+    try:
+        portal = stripe.billing_portal.Session.create(
+            customer=org.stripe_customer_id,
+            return_url=return_url,
+        )
+        return redirect(portal.url)
+    except Exception as e:
+        flash(f"Could not open billing portal: {str(e)}", "error")
+        return redirect(url_for("manager.dashboard"))
 
 
 # --- NUDGE TRAINER ---
