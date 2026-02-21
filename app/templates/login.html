@@ -319,15 +319,16 @@
                 Having trouble logging in? <br>
                 <span style="color: var(--text-main); font-weight: 700;">Contact your manager for assistance.</span>
             </div>
-        </div>
-
-        <p class="auth-learn-more">
             {% if admin_login and not g.current_organization_id %}
-            Want to try Training Tracker? <a href="{{ url_for('auth.home') }}">Learn More</a>
+            <p class="auth-learn-more" style="margin-top:20px; margin-bottom:0;">
+                Want to try Training Tracker? <a href="{{ url_for('auth.home') }}">Learn More</a>
+            </p>
             {% else %}
-            Use a different company? <a href="{{ url_for('auth.leave_company') }}">Go back and enter a different company</a>
+            <p class="auth-learn-more" style="margin-top:20px; margin-bottom:0;">
+                Use a different company? <a href="{{ url_for('auth.leave_company') }}" style="color: var(--primary); font-weight: 700;">Go back and enter a different company</a>
+            </p>
             {% endif %}
-        </p>
+        </div>
 
     </div>
 
