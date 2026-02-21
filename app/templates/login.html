@@ -226,6 +226,20 @@
     }
     .auth-attribution span { font-weight: 700; color: var(--text-muted); }
 
+    .auth-learn-more {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 15px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .auth-learn-more a {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .auth-learn-more a:hover { text-decoration: underline; }
+
     /* --- MOBILE REFINEMENTS --- */
     @media (max-width: 600px) {
         .auth-wrapper { padding: 24px 16px; }
@@ -301,6 +315,10 @@
                 <span style="color: var(--text-main); font-weight: 700;">Contact your manager for assistance.</span>
             </div>
         </div>
+
+        <p class="auth-learn-more">
+            Want to try Training Tracker? <a href="{{ url_for('auth.home') }}">Learn More</a>
+        </p>
 
     </div>
 

@@ -163,6 +163,12 @@ def tour():
     return render_template("tour.html")
 
 
+@auth_bp.get("/support")
+def support():
+    """Support page (contact, help)."""
+    return render_template("support.html")
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
