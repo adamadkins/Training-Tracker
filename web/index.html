@@ -3,31 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta http-equiv="Refresh" content="0; url=https://trainingtracker.me">
   <title>Training Tracker</title>
-  <script>
-    // Redirect to live Training Tracker (change URL if your production domain differs)
-    window.location.replace('https://trainingtracker.me');
-  </script>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; }
+    .container { display: flex; flex-direction: column; height: 100%; }
+    .bar {
+      flex-shrink: 0;
+      padding: 10px 14px;
+      background: #1e293b;
+      color: #fff;
+      font-size: 14px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-      background: #f1f5f9;
-      color: #334155;
+      justify-content: space-between;
+      gap: 10px;
     }
-    .loader { text-align: center; }
-    .loader a { color: #4f46e5; }
+    .bar a { color: #93c5fd; text-decoration: none; font-weight: 600; }
+    .bar a:active { opacity: 0.8; }
+    .form-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .form-card {
+      background: #fff;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 360px;
+    }
+    .form-card h1 { font-size: 20px; margin-bottom: 8px; color: #0f172a; }
+    .form-card p { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    .form-card input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .form-card input:focus { outline: none; border-color: #4f46e5; }
+    .form-card button {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      background: #4f46e5;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .form-card button:active { opacity: 0.9; }
+    .iframe-wrap { flex: 1; position: relative; min-height: 0; }
+    .iframe-wrap iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="loader">
-    <p>Opening Training Tracker…</p>
-    <p>If you're not redirected, <a href="https://trainingtracker.me">tap here</a>.</p>
+  <div class="container">
+    <!-- Shown when a company is selected: thin bar with "Change company" -->
+    <div class="bar hidden" id="bar">
+      <span>Company: <strong id="bar-subdomain"></strong></span>
+      <a href="#" id="change-company">Use different company</a>
+    </div>
+    <!-- Shown when no company selected: subdomain entry form -->
+    <div class="form-wrap" id="form-wrap">
+      <div class="form-card">
+        <h1>Training Tracker</h1>
+        <p>Enter your company&rsquo;s sign-in address. For example, if you sign in at <strong>acme</strong>.trainingtracker.me, enter <strong>acme</strong>.</p>
+        <form id="subdomain-form">
+          <input type="text" id="subdomain" name="subdomain" placeholder="e.g. acme or mycompany" autocomplete="off" inputmode="text">
+          <button type="submit">Go to sign in</button>
+        </form>
+        <p style="margin-top:16px; font-size:13px; color:#64748b;">
+          <a href="#" id="platform-admin-link" style="color:#4f46e5; font-weight:600;">Platform admin?</a> Sign in on the main site.
+        </p>
+      </div>
+    </div>
+    <!-- Org login/dashboard loads here -->
+    <div class="iframe-wrap hidden" id="iframe-wrap">
+      <iframe id="app-frame" title="Training Tracker"></iframe>
+    </div>
   </div>
+  <script>
+    // Change this if your production domain is different (no https://, no trailing slash)
+    var BASE_DOMAIN = 'trainingtracker.me';
+    var STORAGE_KEY = 'tt_company_subdomain';
+
+    var formWrap = document.getElementById('form-wrap');
+    var iframeWrap = document.getElementById('iframe-wrap');
+    var bar = document.getElementById('bar');
+    var appFrame = document.getElementById('app-frame');
+    var barSubdomain = document.getElementById('bar-subdomain');
+    var subdomainInput = document.getElementById('subdomain');
+
+    function subdomainFromInput(val) {
+      return (val || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    }
+
+    function loadCompany(subdomain) {
+      if (!subdomain) return;
+      var url = 'https://' + subdomain + '.' + BASE_DOMAIN + '/login';
+      appFrame.src = url;
+      barSubdomain.textContent = subdomain;
+      formWrap.classList.add('hidden');
+      iframeWrap.classList.remove('hidden');
+      bar.classList.remove('hidden');
+    }
+
+    function loadMainLogin() {
+      appFrame.src = 'https://' + BASE_DOMAIN + '/login';
+      barSubdomain.textContent = 'Platform admin';
+      formWrap.classList.add('hidden');
+      iframeWrap.classList.remove('hidden');
+      bar.classList.remove('hidden');
+    }
+
+    function loadUrlDirect(url) {
+      appFrame.src = url;
+      barSubdomain.textContent = 'Invitation';
+      formWrap.classList.add('hidden');
+      iframeWrap.classList.remove('hidden');
+      bar.classList.remove('hidden');
+    }
+
+    function showForm() {
+      appFrame.src = '';
+      formWrap.classList.remove('hidden');
+      iframeWrap.classList.add('hidden');
+      bar.classList.add('hidden');
+      subdomainInput.value = '';
+      subdomainInput.focus();
+    }
+
+    function runSavedOrForm() {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        saved = subdomainFromInput(saved);
+        if (saved) { loadCompany(saved); return; }
+      }
+      formWrap.classList.remove('hidden');
+    }
+
+    // Hide form until we've checked launch URL / saved company (avoids flash)
+    formWrap.classList.add('hidden');
+
+    // If app was opened via invite link (trainingtracker://open?url=...), load that URL in the iframe
+    (function checkLaunchUrl() {
+      function go() {
+        if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App) {
+          Capacitor.Plugins.App.getLaunchUrl().then(function(r) {
+            if (r && r.url && r.url.indexOf('trainingtracker://open') === 0) {
+              try {
+                var u = new URL(r.url);
+                var target = u.searchParams.get('url');
+                if (target) { loadUrlDirect(target); return; }
+              } catch (e) {}
+            }
+            runSavedOrForm();
+          }).catch(runSavedOrForm);
+        } else {
+          runSavedOrForm();
+        }
+      }
+      go();
+    })();
+
+    document.getElementById('platform-admin-link').addEventListener('click', function(e) {
+      e.preventDefault();
+      loadMainLogin();
+    });
+
+    document.getElementById('subdomain-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var sub = subdomainFromInput(subdomainInput.value);
+      if (!sub) {
+        subdomainInput.focus();
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, sub);
+      loadCompany(sub);
+    });
+
+    document.getElementById('change-company').addEventListener('click', function(e) {
+      e.preventDefault();
+      localStorage.removeItem(STORAGE_KEY);
+      showForm();
+    });
+  </script>
 </body>
 </html>

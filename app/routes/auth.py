@@ -209,6 +209,19 @@ def support():
     return render_template("support.html")
 
 
+@auth_bp.route("/open-in-app")
+def open_in_app():
+    """Prompt to open the Training Tracker app (for invite/set-password links), then go to their company."""
+    from urllib.parse import quote
+    redirect_url = request.args.get("redirect", "").strip()
+    if not redirect_url or not (redirect_url.startswith("https://") or redirect_url.startswith("http://")):
+        flash("Invalid link. Please use the link from your invitation email.", "error")
+        return redirect(url_for("auth.home"))
+    # Deep link for the native app: trainingtracker://open?url=ENCODED_URL
+    app_url = "trainingtracker://open?url=" + quote(redirect_url, safe="")
+    return render_template("open_in_app.html", redirect_url=redirect_url, app_url=app_url)
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:

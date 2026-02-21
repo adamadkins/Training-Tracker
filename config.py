@@ -23,6 +23,15 @@ class Config:
     # Before-request logic in __init__.py enforces idle timeout independently.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.environ.get('SESSION_LIFETIME_HOURS', 12)))
     SESSION_IDLE_TIMEOUT = int(os.environ.get('SESSION_IDLE_TIMEOUT', 7200))  # seconds (default 2 h)
+    # In production (HTTPS), use SameSite=None and Secure so the session cookie is sent inside the
+    # native app's WebView iframe; otherwise the next request after login has no cookie → 403.
+    # For local HTTP dev, set SESSION_COOKIE_SAMESITE=Lax (or leave unset) and SESSION_COOKIE_SECURE=false.
+    _session_samesite = os.environ.get('SESSION_COOKIE_SAMESITE', '').strip() or None
+    if _session_samesite:
+        SESSION_COOKIE_SAMESITE = _session_samesite if _session_samesite.lower() != 'none' else 'None'
+    elif os.environ.get('PREFERRED_URL_SCHEME', 'https').lower() == 'https':
+        SESSION_COOKIE_SAMESITE = 'None'
+        SESSION_COOKIE_SECURE = True
 
     # --- Database Configuration ---
     # Use DATABASE_URL as-is so production (Railway) uses the internal URL (fast, private).

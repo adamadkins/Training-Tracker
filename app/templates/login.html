@@ -279,6 +279,11 @@
 
         {# --- Login Card --- #}
         <div class="auth-card">
+            {% if admin_login %}
+            <p class="password-set-msg" style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">
+                <strong>Using admin@local or a company account?</strong> This page is for platform administrators only. Sign in on your <em>company</em> page instead: in the Training Tracker app enter company <strong>app</strong>, or open <strong>app.{% set h = (request.host.split(':')[0] if request.host else 'trainingtracker.me') %}{% set base = h[4:] if h.startswith('www.') else h %}{{ base }}</strong> in a browser, then use your email and password.
+            </p>
+            {% endif %}
             {% if request.args.get('password_set') %}
             <p class="password-set-msg">Your password has been set. Sign in below with your email and new password.</p>
             {% endif %}

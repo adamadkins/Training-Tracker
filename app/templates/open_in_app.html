@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open in Training Tracker &mdash; Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
+        .wrap { max-width: 420px; margin: 0 auto; padding: 48px 24px 60px; }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        h1 { font-size: 22px; font-weight: 800; margin: 0 0 12px 0; color: #0f172a; }
+        p { font-size: 15px; color: #64748b; margin: 0 0 24px 0; }
+        .btn { display: block; width: 100%; padding: 14px 20px; border-radius: 10px; font-size: 16px; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; border: none; margin-bottom: 12px; }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-secondary:hover { background: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="card">
+            <h1>Open in Training Tracker</h1>
+            <p>You can open this link in the Training Tracker app (if you have it installed) or continue in your browser.</p>
+            <a href="{{ app_url }}" class="btn btn-primary" id="open-app">Open in app</a>
+            <a href="{{ redirect_url }}" class="btn btn-secondary">Continue in browser</a>
+        </div>
+    </div>
+    <script>
+        var redirectUrl = {{ redirect_url|tojson }};
+        var appLink = document.getElementById('open-app');
+        var tried = false;
+        appLink.addEventListener('click', function(e) {
+            if (tried) return;
+            tried = true;
+            window.location.href = appLink.href;
+            setTimeout(function() {
+                if (!document.hidden && confirm('If the app didn’t open, tap OK to continue in your browser instead.')) {
+                    window.location.href = redirectUrl;
+                }
+            }, 1500);
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

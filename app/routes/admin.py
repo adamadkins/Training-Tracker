@@ -20,7 +20,9 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 def _require_admin():
     """Require main domain and superuser. Call from before_request or top of each view."""
     if getattr(g, "current_organization_id", None) is not None:
-        abort(404)
+        # On tenant subdomain, redirect to main domain /admin so they can log in there (platform admin only on main).
+        main_domain = current_app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
+        return redirect(f"https://{main_domain}/admin")
     if not current_user.is_authenticated:
         return redirect(url_for("auth.login"))
     if not getattr(current_user, "is_superuser", False):
@@ -537,13 +539,14 @@ def organization_invite_first_user(org_id):
             token = user.get_reset_token()
             set_password_url = url_for("auth.reset_token", token=token, _external=True)
             base = _base_domain()
-            login_url = f"https://{org.subdomain}.{base}/login"
+            main_domain = current_app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
+            open_in_app_url = f"https://{main_domain}/open-in-app?redirect={quote(set_password_url)}"
             title = "Set up your Training Tracker account"
             body = (
                 f"Welcome to {org.name}!\n\n"
                 f"You've been set up as a manager. Click the link below to set your password. "
-                f"You'll then be taken to your sign-in page to log in.\n\n"
-                f"{set_password_url}\n\n"
+                f"If you have the Training Tracker app installed, you'll be prompted to open it and go straight to your company.\n\n"
+                f"{open_in_app_url}\n\n"
                 f"This link expires in 30 minutes."
             )
             send_notification_email(user, title, body)
