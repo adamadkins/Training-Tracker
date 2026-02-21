@@ -780,7 +780,7 @@
 <script>
 (function() {
   if (window === window.parent) return;
-  var apiUrl = '{{ url_for("employee.api_push_token_register", _external=False) }}';
+  var apiUrl = '/employee/api/push-token';
   var once = false;
   function onToken(e) {
     if (!e.data || e.data.type !== 'TrainingTrackerPushToken' || !e.data.token || once) return;
