@@ -339,6 +339,19 @@ class Notification(db.Model):
     user = db.relationship("User", foreign_keys=[user_id])
 
 
+class PushToken(db.Model):
+    """FCM/APNs device token for push notifications. One row per device per user."""
+    __tablename__ = "push_tokens"
+    __table_args__ = (db.UniqueConstraint("user_id", "token", name="uq_push_token_user_token"),)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    token = db.Column(db.String(500), nullable=False, index=True)
+    platform = db.Column(db.String(20), nullable=False, default="android")  # android | ios
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    user = db.relationship("User", backref="push_tokens")
+
+
 class Channel(db.Model):
     """Slack-like channel: either a group channel (name) or a DM (name null, exactly 2 participants)."""
     __tablename__ = "channels"
@@ -423,6 +436,7 @@ class UserSettings(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     notify_email = db.Column(db.Boolean, default=True)
     notify_in_app = db.Column(db.Boolean, default=True)
+    notify_push = db.Column(db.Boolean, default=True)
     theme_pref = db.Column(db.String(10), default='system')
     show_online_status = db.Column(db.Boolean, default=True)
     allow_read_receipts = db.Column(db.Boolean, default=True)
