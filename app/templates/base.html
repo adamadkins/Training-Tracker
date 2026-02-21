@@ -583,13 +583,13 @@
                     <a href="{{ url_for('employee.dashboard') }}" data-tutorial="dashboard" class="{{ 'active' if 'dashboard' in request.endpoint else '' }}">Dashboard</a>
                     <a href="{{ url_for('employee.schedules_list') }}" data-tutorial="schedule" class="{{ 'active' if 'schedule' in request.endpoint else '' }}">Schedules</a>
                     {% endif %}
-                    <a href="{{ url_for('auth.logout') }}" class="nav-signout-mobile"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:8px;"></i>Sign out</a>
+                    <a href="{{ url_for('auth.logout', _external=True) }}" class="nav-signout-mobile"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:8px;"></i>Sign out</a>
                 </nav>
                 <div class="nav-actions">
                     <div class="user-profile">
                         {% if request.endpoint and request.endpoint.startswith('admin.') %}
                         <span class="user-name-nav" style="padding-right:8px;">Admin</span>
-                        <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
+                        <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon" title="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                         {% else %}
@@ -620,7 +620,7 @@
                         <span class="user-name-nav" style="padding-right:8px;">{{ current_user.email | mask_pii }}</span>
                         {% endif %}
 
-                        <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
+                        <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon" title="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                         {% endif %}
@@ -652,13 +652,45 @@
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');
         if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {
-            nav.querySelectorAll('.nav-links a, .nav-signout-mobile, .profile-pill-link').forEach(function(link) {
+            nav.querySelectorAll('.nav-links a, .profile-pill-link').forEach(function(link) {
                 link.addEventListener('click', function() {
                     nav.classList.remove('show');
                     if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); }
                 });
             });
+            // Sign out: navigate immediately so menu close doesn't cancel the link in WebViews
+            nav.querySelectorAll('a[href*="/logout"], .nav-signout-mobile').forEach(function(link) {
+                var href = link.getAttribute('href');
+                if (!href) return;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    nav.classList.remove('show');
+                    if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); }
+                    window.location.href = href;
+                });
+                link.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = href;
+                }, { passive: false });
+            });
         }
+        // Always attach logout navigation (for Android WebView where viewport/media can differ)
+        document.querySelectorAll('a[href*="/logout"], .nav-signout-mobile, .btn-logout-icon[href*="logout"]').forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (!href) return;
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = href;
+            });
+            link.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = href;
+            }, { passive: false });
+        });
         var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};
 
         window.createToast = function(message) {
