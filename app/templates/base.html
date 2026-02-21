@@ -583,13 +583,13 @@
                     <a href="{{ url_for('employee.dashboard') }}" data-tutorial="dashboard" class="{{ 'active' if 'dashboard' in request.endpoint else '' }}">Dashboard</a>
                     <a href="{{ url_for('employee.schedules_list') }}" data-tutorial="schedule" class="{{ 'active' if 'schedule' in request.endpoint else '' }}">Schedules</a>
                     {% endif %}
-                    <a href="{{ url_for('auth.logout', _external=True) }}" class="nav-signout-mobile"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:8px;"></i>Sign out</a>
+                    <a href="{{ request.url_root.rstrip('/') }}{{ url_for('auth.logout') }}" class="nav-signout-mobile"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:8px;"></i>Sign out</a>
                 </nav>
                 <div class="nav-actions">
                     <div class="user-profile">
                         {% if request.endpoint and request.endpoint.startswith('admin.') %}
                         <span class="user-name-nav" style="padding-right:8px;">Admin</span>
-                        <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon" title="Sign Out">
+                        <a href="{{ request.url_root.rstrip('/') }}{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                         {% else %}
@@ -620,7 +620,7 @@
                         <span class="user-name-nav" style="padding-right:8px;">{{ current_user.email | mask_pii }}</span>
                         {% endif %}
 
-                        <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon" title="Sign Out">
+                        <a href="{{ request.url_root.rstrip('/') }}{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                         {% endif %}
