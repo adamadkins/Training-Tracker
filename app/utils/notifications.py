@@ -13,17 +13,18 @@ logger = logging.getLogger(__name__)
 from flask import current_app, render_template
 
 from app import db
-from app.models import Notification
+from app.models import Notification, PushToken
 
 
 def notify(user, title, body, category='general', link_url=None, email_only=False, send_email=True):
     """
-    In-app notification (sync) + optional email.
+    In-app notification (sync) + optional email + optional push.
     Pass send_email=False to create only an in-app notification without consuming an email credit.
     """
     settings = getattr(user, 'settings', None)
     wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
     wants_email = getattr(settings, 'notify_email', True) if settings else True
+    wants_push = getattr(settings, 'notify_push', True) if settings else True
 
     if wants_in_app and not email_only:
         db.session.add(Notification(
@@ -37,6 +38,9 @@ def notify(user, title, body, category='general', link_url=None, email_only=Fals
     if send_email and wants_email and user.email:
         to_email = str(user.email)
         _enqueue_or_send_email(to_email, title, body, category, link_url)
+
+    if wants_push and not email_only:
+        _enqueue_or_send_push(user.id, title, body, link_url)
 
 
 def _get_redis_queue():
@@ -207,6 +211,71 @@ def _send_batch_emails_background(app, email_list, title, body, category='genera
     with app.app_context():
         for to_email in email_list:
             _send_html_email_impl(to_email, title, body, category, link_url)
+
+
+def _get_firebase_app():
+    """Return initialized Firebase app or None if not configured."""
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+        if firebase_admin.get_app():
+            return firebase_admin.get_app()
+        cred_json = current_app.config.get('FIREBASE_CREDENTIALS_JSON')
+        cred_path = current_app.config.get('FIREBASE_CREDENTIALS_PATH')
+        if cred_json:
+            import json
+            cred_dict = json.loads(cred_json)
+            return firebase_admin.initialize_app(credentials.Certificate(cred_dict))
+        if cred_path:
+            return firebase_admin.initialize_app(credentials.Certificate(cred_path))
+    except Exception as e:
+        logger.debug("Firebase not configured or init failed: %s", e)
+    return None
+
+
+def _send_push_impl(user_id, title, body, link_url=None):
+    """Send FCM messages to all push tokens for user_id. Remove invalid tokens."""
+    from firebase_admin import messaging
+    tokens = PushToken.query.filter_by(user_id=user_id).all()
+    if not tokens:
+        return
+    app = _get_firebase_app()
+    if not app:
+        return
+    for pt in tokens:
+        try:
+            msg = messaging.Message(
+                notification=messaging.Notification(title=title, body=body),
+                data={"url": link_url or "", "category": "general"},
+                token=pt.token,
+                android=messaging.AndroidConfig(priority='high'),
+                apns=messaging.APNSConfig(headers={'apns-priority': '10'}, payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            )
+            messaging.send(msg)
+        except Exception as e:
+            logger.warning("Push send failed for token %s: %s", pt.token[:20] + "...", e)
+            err = str(e).lower()
+            if 'unregistered' in err or 'invalid' in err or 'not found' in err or 'invalidargument' in err:
+                try:
+                    db.session.delete(pt)
+                    db.session.commit()
+                except Exception:
+                    pass
+
+
+def _enqueue_or_send_push(user_id, title, body, link_url=None):
+    """Send push in a background thread so the request returns immediately."""
+    app = current_app._get_current_object()
+    threading.Thread(
+        target=_send_push_background,
+        args=(app, user_id, title, body, link_url),
+        daemon=True,
+    ).start()
+
+
+def _send_push_background(app, user_id, title, body, link_url=None):
+    with app.app_context():
+        _send_push_impl(user_id, title, body, link_url)
 
 
 def send_notification_email(user, title, body):
