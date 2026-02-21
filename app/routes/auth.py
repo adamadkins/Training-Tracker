@@ -163,9 +163,34 @@ def tour():
     return render_template("tour.html")
 
 
-@auth_bp.get("/support")
+SUPPORT_EMAIL = "adkins.adam04@gmail.com"
+
+
+@auth_bp.route("/support", methods=["GET", "POST"])
 def support():
-    """Support page (contact, help)."""
+    """Support page and contact form; form submissions go to SUPPORT_EMAIL."""
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        subject = (request.form.get("subject") or "Support request").strip() or "Support request"
+        message = (request.form.get("message") or "").strip()
+        if not email:
+            flash("Please enter your email address.", "error")
+            return redirect(url_for("auth.support"))
+        try:
+            from app.utils.notifications import _enqueue_or_send_email
+            body = (
+                f"<h2>Support / Contact form</h2>"
+                f"<p><strong>From:</strong> {name or '(not provided)'} &lt;{email}&gt;</p>"
+                f"<p><strong>Subject:</strong> {subject}</p>"
+                f"<hr><p>{message.replace(chr(10), '<br>') if message else '(no message)'}</p>"
+            )
+            _enqueue_or_send_email(SUPPORT_EMAIL, f"[Training Tracker] {subject}", body)
+            flash("Thanks! Your message has been sent. We'll get back to you soon.", "success")
+        except Exception:
+            current_app.logger.exception("Support form send failed")
+            flash("Something went wrong sending your message. Please try again or email us directly.", "error")
+        return redirect(url_for("auth.support"))
     return render_template("support.html")
 
 
