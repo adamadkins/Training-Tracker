@@ -252,7 +252,7 @@ def login():
 
         session.permanent = True
         session['_last_active'] = datetime.now(timezone.utc).timestamp()
-        login_user(user)
+        login_user(user, remember=True)
 
         if org_id is None and getattr(user, "is_superuser", False):
             return redirect(url_for("admin.index"))

@@ -32,6 +32,10 @@ class Config:
     elif os.environ.get('PREFERRED_URL_SCHEME', 'https').lower() == 'https':
         SESSION_COOKIE_SAMESITE = 'None'
         SESSION_COOKIE_SECURE = True
+        REMEMBER_COOKIE_SECURE = True
+        REMEMBER_COOKIE_SAMESITE = 'None'
+    # Keep users logged in (e.g. in the app) for 365 days when "remember" is used
+    REMEMBER_COOKIE_DURATION = timedelta(days=int(os.environ.get('REMEMBER_COOKIE_DAYS', 365)))
 
     # --- Database Configuration ---
     # Use DATABASE_URL as-is so production (Railway) uses the internal URL (fast, private).
