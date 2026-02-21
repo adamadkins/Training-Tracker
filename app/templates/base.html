@@ -368,8 +368,25 @@
             .hide-on-mobile-title { display: none !important; }
         }
         .nav-link-mobile-only { display: none !important; }
+        .nav-signout-mobile { display: none !important; }
         @media (max-width: 900px) {
             .nav-link-mobile-only { display: block !important; }
+            .nav-signout-mobile {
+                display: flex !important;
+                align-items: center;
+                padding: 12px 14px;
+                width: 100%;
+                border-radius: 10px;
+                background: var(--bg-body);
+                font-weight: 600;
+                font-size: 14px;
+                color: #b91c1c;
+                text-decoration: none;
+                margin-top: 8px;
+                border-top: 1px solid var(--border);
+                padding-top: 16px;
+            }
+            .nav-signout-mobile:active { background: #fef2f2; }
         }
 
         /* ── Responsive nav (dropdown) ── */
@@ -566,6 +583,7 @@
                     <a href="{{ url_for('employee.dashboard') }}" data-tutorial="dashboard" class="{{ 'active' if 'dashboard' in request.endpoint else '' }}">Dashboard</a>
                     <a href="{{ url_for('employee.schedules_list') }}" data-tutorial="schedule" class="{{ 'active' if 'schedule' in request.endpoint else '' }}">Schedules</a>
                     {% endif %}
+                    <a href="{{ url_for('auth.logout') }}" class="nav-signout-mobile"><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:8px;"></i>Sign out</a>
                 </nav>
                 <div class="nav-actions">
                     <div class="user-profile">
@@ -634,7 +652,7 @@
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');
         if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {
-            nav.querySelectorAll('.nav-links a, .profile-pill-link').forEach(function(link) {
+            nav.querySelectorAll('.nav-links a, .nav-signout-mobile, .profile-pill-link').forEach(function(link) {
                 link.addEventListener('click', function() {
                     nav.classList.remove('show');
                     if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); }
