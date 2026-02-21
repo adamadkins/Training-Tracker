@@ -524,6 +524,7 @@ def quick_train():
             monday = today - timedelta(days=today.weekday())
             sunday = monday + timedelta(days=6)
             current_schedule = Schedule(
+                organization_id=_org_id(),
                 start_date=monday, end_date=sunday,
                 status='published', created_by_user_id=current_user.id
             )
