@@ -308,6 +308,7 @@ def schedules_list():
         enriched.append({
             'schedule': s,
             'week_start': week_start,
+            'week_end': s.end_date,
             'posted_count': 1,
             'my_count': my_count,
             'is_current': is_current,
@@ -332,6 +333,7 @@ def schedules_list():
                 enriched.append({
                     'schedule': None,
                     'week_start': week_start,
+                    'week_end': week_end,
                     'posted_count': 0,
                     'my_count': 0,
                     'is_current': week_start <= today <= week_end,

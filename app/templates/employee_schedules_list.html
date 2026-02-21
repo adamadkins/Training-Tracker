@@ -8,12 +8,12 @@
     .hs-list-wrapper { min-height: calc(100vh - 72px); background: var(--bg-body); padding: 24px 0; }
     .hs-list-content { max-width: 900px; margin: 0 auto; padding: 0 24px; }
 
-    /* Week section bar */
+    /* Week section bar: full width, not a card */
     .hs-week-bar {
-        display: flex; align-items: center; gap: 12px; padding: 14px 20px;
-        background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+        display: flex; align-items: center; gap: 12px; padding: 14px 24px; margin: 0 0 8px 0;
+        background: var(--bg-card); border: none; border-bottom: 1px solid var(--border);
         width: 100%; text-align: left; font-size: 15px; font-weight: 600; color: var(--text-main);
-        margin-bottom: 8px; box-shadow: 0 2px 4px var(--shadow);
+        box-sizing: border-box;
     }
     .hs-week-check { color: var(--primary); font-size: 16px; flex-shrink: 0; }
     .hs-week-bar span { flex: 1; min-width: 0; }
@@ -50,23 +50,17 @@
 </style>
 
 <div class="hs-list-wrapper">
-    <div class="hs-list-content">
-        {% if schedules %}
-            {% for item in schedules %}
-                {% set s = item.schedule %}
-                <div class="hs-week-bar">
-                    <i class="fa-solid fa-circle-check hs-week-check"></i>
-                    <span>
-                        {% if item.is_current %}
-                            THIS WEEK, {{ item.posted_count }} of 1 posted
-                        {% elif item.week_start > today %}
-                            NEXT WEEK, {{ item.posted_count }} of 1 posted
-                        {% else %}
-                            Week of {{ item.week_start.strftime('%b %d') }}, {{ item.posted_count }} of 1 posted
-                        {% endif %}
-                        <span class="hs-scheduled-hours">Scheduled sessions: {{ item.my_count }}</span>
-                    </span>
-                </div>
+    {% if schedules %}
+        {% for item in schedules %}
+            {% set s = item.schedule %}
+            <div class="hs-week-bar">
+                <i class="fa-solid fa-circle-check hs-week-check"></i>
+                <span>
+                    {{ item.week_start.strftime('%a, %b %d') }} – {{ item.week_end.strftime('%a, %b %d') }}, {{ item.posted_count }} of 1 posted
+                    <span class="hs-scheduled-hours">Scheduled sessions: {{ item.my_count }}</span>
+                </span>
+            </div>
+            <div class="hs-list-content">
                 {% for day in item.days %}
                     {% if s %}
                         <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=day.date.strftime('%Y-%m-%d')) }}"
@@ -104,14 +98,16 @@
                         {% if s %}<i class="fa-solid fa-chevron-right hs-day-arrow"></i>{% endif %}
                     {% if s %}</a>{% else %}</div>{% endif %}
                 {% endfor %}
-            {% endfor %}
-        {% else %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="hs-list-content">
             <div class="empty-state">
                 <i class="fa-solid fa-calendar-xmark empty-state-icon"></i>
                 <p class="empty-state-title">No schedules published yet</p>
                 <p class="empty-state-desc">When your manager publishes a training schedule, it will show up here.</p>
             </div>
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
