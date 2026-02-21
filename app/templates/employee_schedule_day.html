@@ -6,15 +6,7 @@
     body:has(.hs-day-wrapper) main { max-width: none !important; padding-top: 0 !important; }
 
     .hs-day-wrapper { min-height: calc(100vh - 72px); background: #f5f5f5; }
-    .hs-header {
-        background: #1a73e8; color: #fff; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
-    }
-    .hs-back { color: rgba(255,255,255,0.95); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-    .hs-back:hover { color: #fff; }
-    .hs-title { font-size: 22px; font-weight: 700; margin: 0 0 2px 0; letter-spacing: -0.02em; }
-    .hs-subtitle { font-size: 13px; opacity: 0.92; margin: 0; font-weight: 500; }
-
-    .hs-content { background: #fff; padding: 0 20px 24px; }
+    .hs-content { background: #fff; padding: 16px 20px 24px; }
     .hs-session-row {
         display: flex; align-items: center; gap: 12px; padding: 14px 0;
         border-bottom: 1px solid #eee; text-decoration: none; color: inherit;
@@ -45,17 +37,8 @@
 </style>
 
 <div class="hs-day-wrapper">
-    <div class="hs-header">
-        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back">
-            <i class="fa-solid fa-arrow-left"></i> My Schedule
-        </a>
-        <h1 class="hs-title">
-            {% if is_today %}Today{% else %}{{ day_date.strftime('%A, %B %d') }}{% endif %}
-        </h1>
-        <p class="hs-subtitle">{{ g.current_organization.name if g.current_organization else 'Training Tracker' }}</p>
-    </div>
-
     <div class="hs-content">
+        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back-inline" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#1a73e8;text-decoration:none;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
         {% if sessions %}
             {% for s in sessions %}
                 {% set is_teaching = s.trainer_employee_id == current_user.employee_id %}

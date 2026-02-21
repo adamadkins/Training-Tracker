@@ -71,17 +71,7 @@
 </style>
 
 <div class="hotschedule-wrapper">
-    {# HotSchedules-style blue header #}
-    <div class="hs-header">
-        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
-            <i class="fa-solid fa-arrow-left"></i> Schedules
-        </a>
-        <div class="hs-header-top">
-            <h1 class="hs-title">My Schedule</h1>
-        </div>
-        <p class="hs-subtitle">{{ g.current_organization.name if g.current_organization else 'Training Tracker' }}</p>
-    </div>
-
+    <a href="{{ url_for('employee.schedules_list') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#1a73e8;text-decoration:none;margin:12px 20px;padding:0;"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
     {# Week section bar: "THIS WEEK" or "NEXT WEEK", X of 1 posted, Scheduled sessions #}
     <button type="button" class="hs-week-bar" disabled aria-label="Current week">
         <i class="fa-solid fa-circle-check hs-week-check"></i>

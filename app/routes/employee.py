@@ -272,64 +272,78 @@ def api_tutorial_reset():
     return jsonify({'ok': True})
 
 
-# --- SCHEDULES (LIST: WEEKS IN ORDER, EACH WEEK HAS DAYS) ---
+# --- SCHEDULES (LIST: ONE DAY PER WEEK = TODAY'S WEEKDAY, PLACEHOLDER WEEKS 0 OF 1) ---
 @employee_bp.route("/schedules")
 @login_required
 def schedules_list():
+    tz = pytz.timezone('US/Eastern')
+    today = datetime.now(tz).date()
+    me = current_user.employee_id
+    # Week start = Monday (Python weekday 0 = Monday)
+    current_week_start = today - timedelta(days=today.weekday())
+    # Same weekday within a week (0..6)
+    weekday_offset = today.weekday()
+
     if current_user.role == 'manager':
         schedules = Schedule.query.filter_by(organization_id=_org_id()).order_by(Schedule.start_date.asc()).all()
     else:
         schedules = Schedule.query.filter_by(organization_id=_org_id(), status='published').order_by(Schedule.start_date.asc()).all()
 
-    tz = pytz.timezone('US/Eastern')
-    today = datetime.now(tz).date()
-    me = current_user.employee_id
-
+    # Build one entry per week: either from a schedule or placeholder (0 of 1 posted)
+    schedule_by_week_start = {s.start_date: s for s in schedules}
     enriched = []
+
     for s in schedules:
-        my_count = 0
-        completed_count = 0
-        total_count = len(s.sessions)
-        for sess in s.sessions:
-            if sess.trainee_employee_id == me or sess.trainer_employee_id == me:
-                my_count += 1
-            if sess.completed_at:
-                completed_count += 1
-        is_current = s.start_date <= today <= s.end_date
+        week_start = s.start_date
+        is_current = week_start <= today <= s.end_date
         is_past = s.end_date < today
-        # Build 7 days for this week; for each day, sessions that involve current user (or all if manager)
-        days = []
-        for i in range(7):
-            current_date = s.start_date + timedelta(days=i)
-            day_sessions = [sess for sess in s.sessions if sess.session_date == current_date]
-            # For list summary we only care about sessions for this user (or all if manager)
-            if current_user.role != 'manager':
-                day_sessions_for_user = [sess for sess in day_sessions if sess.trainee_employee_id == me or sess.trainer_employee_id == me]
-            else:
-                day_sessions_for_user = day_sessions
-            days.append({
-                'date': current_date,
-                'sessions': day_sessions_for_user,
-                'is_today': current_date == today,
-            })
+        # Single display day = same weekday as today within this week
+        display_date = week_start + timedelta(days=weekday_offset)
+        if display_date > s.end_date:
+            display_date = s.end_date
+        elif display_date < week_start:
+            display_date = week_start
+        day_sessions = [sess for sess in s.sessions if sess.session_date == display_date]
+        if current_user.role != 'manager':
+            day_sessions = [sess for sess in day_sessions if sess.trainee_employee_id == me or sess.trainer_employee_id == me]
+        my_count = sum(1 for sess in s.sessions if sess.trainee_employee_id == me or sess.trainer_employee_id == me)
         enriched.append({
             'schedule': s,
+            'week_start': week_start,
+            'posted_count': 1,
             'my_count': my_count,
-            'total_count': total_count,
-            'completed_count': completed_count,
             'is_current': is_current,
             'is_past': is_past,
-            'days': days,
+            'display_date': display_date,
+            'display_sessions': day_sessions,
         })
 
-    # Order: this week first, then future weeks (asc), then past weeks (desc)
+    # Placeholder weeks (no schedule yet): this week + next 6 weeks
+    if current_user.role != 'manager':
+        for i in range(0, 7):  # 0 = this week, 1..6 = next weeks
+            week_start = current_week_start + timedelta(weeks=i)
+            if week_start not in schedule_by_week_start:
+                display_date = week_start + timedelta(days=weekday_offset)
+                week_end = week_start + timedelta(days=6)
+                enriched.append({
+                    'schedule': None,
+                    'week_start': week_start,
+                    'posted_count': 0,
+                    'my_count': 0,
+                    'is_current': week_start <= today <= week_end,
+                    'is_past': week_end < today,
+                    'display_date': display_date,
+                    'display_sessions': [],
+                })
+
+    # Order: this week first, then future (asc), then past (desc)
     def sort_key(item):
-        s = item['schedule']
+        ws = item['week_start']
         if item['is_current']:
-            return (0, s.start_date)
-        if s.start_date > today:
-            return (1, s.start_date)
-        return (2, -s.start_date.toordinal())  # past: later weeks first
+            return (0, ws)
+        if ws > today:
+            return (1, ws)
+        return (2, -ws.toordinal())
 
     enriched.sort(key=sort_key)
 

@@ -6,15 +6,8 @@
     body:has(.hs-list-wrapper) main { max-width: none !important; padding-top: 0 !important; }
 
     .hs-list-wrapper { min-height: calc(100vh - 72px); background: #f5f5f5; }
-    .hs-header {
-        background: #1a73e8; color: #fff; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
-    }
-    .hs-header .hs-back { color: rgba(255,255,255,0.95); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-    .hs-header .hs-back:hover { color: #fff; }
-    .hs-title { font-size: 22px; font-weight: 700; margin: 0 0 2px 0; letter-spacing: -0.02em; }
-    .hs-subtitle { font-size: 13px; opacity: 0.92; margin: 0; font-weight: 500; }
 
-    /* Week section bar (grey, not clickable) */
+    /* Week section bar (grey) */
     .hs-week-bar {
         display: flex; align-items: center; gap: 12px; padding: 12px 20px;
         background: #e8e8e8; border: none; width: 100%; text-align: left;
@@ -24,7 +17,7 @@
     .hs-week-bar span { flex: 1; min-width: 0; }
     .hs-scheduled-hours { display: block; font-size: 13px; font-weight: 600; color: #444; margin-top: 4px; }
 
-    /* Day rows under the week bar */
+    /* Single day row under each week */
     .hs-list-content { background: #fff; }
     .hs-day-link {
         display: flex; align-items: flex-start; gap: 12px; padding: 14px 20px;
@@ -33,15 +26,14 @@
     }
     .hs-day-link:hover { background: #f9f9f9; }
     .hs-day-link:active { background: #f0f0f0; }
-    .hs-day-link:last-child { border-bottom: none; }
+    .hs-day-link.no-link { cursor: default; pointer-events: none; }
+    .hs-day-link.no-link:hover { background: #fff; }
     .hs-day-date {
         font-size: 15px; font-weight: 600; color: #1a1a1a; min-width: 130px; flex-shrink: 0;
     }
     .hs-day-date.today { color: #1a73e8; }
     .hs-day-summary { flex: 1; min-width: 0; }
-    .hs-day-training {
-        font-size: 14px; color: #555; font-weight: 500; margin-top: 2px;
-    }
+    .hs-day-training { font-size: 14px; color: #555; font-weight: 500; margin-top: 2px; }
     .hs-day-training.hidden { color: #888; font-style: italic; }
     .hs-day-arrow { font-size: 12px; color: #999; flex-shrink: 0; margin-top: 2px; }
     .empty-state { text-align: center; padding: 48px 24px; background: #fff; margin: 0; }
@@ -50,20 +42,12 @@
     .empty-state-desc { font-size: 14px; color: #666; margin: 0; }
 
     @media (max-width: 768px) {
-        .hs-header, .hs-week-bar, .hs-day-link { padding-left: 16px; padding-right: 16px; }
+        .hs-week-bar, .hs-day-link { padding-left: 16px; padding-right: 16px; }
         .hs-day-date { min-width: 110px; font-size: 14px; }
     }
 </style>
 
 <div class="hs-list-wrapper">
-    <div class="hs-header">
-        <a href="{{ url_for('employee.dashboard') }}" class="hs-back">
-            <i class="fa-solid fa-arrow-left"></i> Dashboard
-        </a>
-        <h1 class="hs-title">My Schedule</h1>
-        <p class="hs-subtitle">{{ g.current_organization.name if g.current_organization else 'Training Tracker' }}</p>
-    </div>
-
     <div class="hs-list-content">
         {% if schedules %}
             {% for item in schedules %}
@@ -72,24 +56,27 @@
                     <i class="fa-solid fa-circle-check hs-week-check"></i>
                     <span>
                         {% if item.is_current %}
-                            THIS WEEK, 1 of 1 posted
-                        {% elif s.start_date > today %}
-                            NEXT WEEK, 1 of 1 posted
+                            THIS WEEK, {{ item.posted_count }} of 1 posted
+                        {% elif item.week_start > today %}
+                            NEXT WEEK, {{ item.posted_count }} of 1 posted
                         {% else %}
-                            Week of {{ s.start_date.strftime('%b %d') }}, 1 of 1 posted
+                            Week of {{ item.week_start.strftime('%b %d') }}, {{ item.posted_count }} of 1 posted
                         {% endif %}
                         <span class="hs-scheduled-hours">Scheduled sessions: {{ item.my_count }}</span>
                     </span>
                 </div>
-                {% for day in item.days %}
-                    <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=day.date.strftime('%Y-%m-%d')) }}"
+                {% if s %}
+                    <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=item.display_date.strftime('%Y-%m-%d')) }}"
                        class="hs-day-link">
-                        <span class="hs-day-date {{ 'today' if day.is_today else '' }}">
-                            {{ day.date.strftime('%a, %b %d') }}{% if day.is_today %} - Today{% endif %}
+                {% else %}
+                    <div class="hs-day-link no-link">
+                {% endif %}
+                        <span class="hs-day-date {{ 'today' if item.display_date == today else '' }}">
+                            {{ item.display_date.strftime('%a, %b %d') }}{% if item.display_date == today %} - Today{% endif %}
                         </span>
                         <div class="hs-day-summary">
-                            {% if day.sessions %}
-                                {% for sess in day.sessions %}
+                            {% if item.display_sessions %}
+                                {% for sess in item.display_sessions %}
                                     <div class="hs-day-training {{ 'hidden' if sess.is_locked and current_user.role != 'manager' else '' }}">
                                         Training
                                         {% if sess.is_locked and current_user.role != 'manager' %}
@@ -108,12 +95,11 @@
                                     </div>
                                 {% endfor %}
                             {% else %}
-                                <div class="hs-day-training">No sessions</div>
+                                <div class="hs-day-training">{{ 'No schedule posted' if not s else 'No sessions' }}</div>
                             {% endif %}
                         </div>
-                        <i class="fa-solid fa-chevron-right hs-day-arrow"></i>
-                    </a>
-                {% endfor %}
+                        {% if s %}<i class="fa-solid fa-chevron-right hs-day-arrow"></i>{% endif %}
+                {% if s %}</a>{% else %}</div>{% endif %}
             {% endfor %}
         {% else %}
             <div class="empty-state">
