@@ -22,7 +22,7 @@ from app.models import (
     Organization, employee_locations,
 )
 from app import db, cache
-from app.utils.notifications import send_notification_email, notify
+from app.utils.notifications import send_notification_email, notify, _enqueue_or_send_push
 from app.utils.schedule_parser import parse_schedule_pdf
 from app.routes.helpers import manager_required, staff_required
 
@@ -2122,6 +2122,11 @@ def schedule_publish(schedule_id):
             email_recipients.append(str(user.email))
     if email_recipients:
         batch_enqueue_emails(email_recipients, title, body, 'schedule', link)
+    for user in users_to_notify:
+        settings = getattr(user, 'settings', None)
+        wants_push = getattr(settings, 'notify_push', True) if settings else True
+        if wants_push:
+            _enqueue_or_send_push(user.id, title, body, link)
     cache.delete(f"schedule_detail/{schedule_id}/{current_user.id}")
     flash("Schedule published and staff notified.")
     return redirect(url_for('manager.schedules_list'))
