@@ -50,7 +50,10 @@ def _org_trial_and_payment(org):
     """Return dict with trial_days_left (None if no trial, int days else) and payment_overdue (bool)."""
     trial_days_left = None
     if org.trial_ends_at:
-        delta = (org.trial_ends_at - datetime.now(timezone.utc)).days
+        end = org.trial_ends_at
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        delta = (end - datetime.now(timezone.utc)).days
         trial_days_left = max(0, delta)
     payment_overdue = org.stripe_subscription_status in ("past_due", "unpaid")
     return {"trial_days_left": trial_days_left, "payment_overdue": payment_overdue}
