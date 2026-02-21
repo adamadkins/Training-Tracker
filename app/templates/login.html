@@ -322,7 +322,7 @@
         </div>
 
         <p class="auth-learn-more">
-            {% if admin_login %}
+            {% if admin_login and not g.current_organization_id %}
             Want to try Training Tracker? <a href="{{ url_for('auth.home') }}">Learn More</a>
             {% else %}
             Use a different company? <a href="{{ url_for('auth.home') }}">Go back and enter a different company</a>
