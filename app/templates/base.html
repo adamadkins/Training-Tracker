@@ -332,17 +332,53 @@
             font-size: 11px;
         }
 
+        /* ── Mobile nav center (page title + location) ── */
+        .nav-mobile-center { display: none; }
+        @media (max-width: 900px) {
+            .nav-mobile-center {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                flex: 1;
+                min-width: 0;
+                padding: 0 8px;
+            }
+            .nav-mobile-center .nav-page-title {
+                font-size: 17px;
+                font-weight: 800;
+                color: var(--text-main);
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            .nav-mobile-center .nav-location-sub {
+                font-size: 11px;
+                font-weight: 500;
+                color: var(--text-muted);
+                margin-top: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+            .brand-logo:has(.brand-logo-img-wrap) .brand-logo-text { display: none; }
+        }
+
         /* ── Responsive nav (dropdown) ── */
         @media (max-width: 900px) {
             .main-header { position: relative; }
             .container { padding: 0 16px !important; }
-            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.2s; }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; transition: background 0.2s; flex-shrink: 0; }
             .mobile-menu-btn:hover { background: var(--bg-body); }
             .mobile-menu-btn .nav-icon-menu { display: block; }
             .mobile-menu-btn .nav-icon-close { display: none; }
             .mobile-menu-btn.open .nav-icon-menu { display: none; }
             .mobile-menu-btn.open .nav-icon-close { display: block !important; }
-            .nav-group { gap: 0; justify-content: space-between; }
+            .nav-group { gap: 0; justify-content: space-between; width: 100%; }
+            .nav-group .brand-logo { flex-shrink: 0; }
 
             .nav-content {
                 display: flex;
@@ -460,6 +496,35 @@
 </div>
 {% endif %}
 
+{% set _ep = request.endpoint or '' %}
+{% if _ep.startswith('admin.') %}
+    {% if _ep == 'admin.index' %}{% set _nav_page_title = 'Dashboard' %}{% elif 'organization' in _ep %}{% set _nav_page_title = 'Organizations' %}{% elif _ep == 'admin.users_list' %}{% set _nav_page_title = 'Users' %}{% else %}{% set _nav_page_title = 'Admin' %}{% endif %}
+    {% set _nav_location_sub = '' %}
+{% elif current_user.is_authenticated and current_user.role == 'manager' %}
+    {% if 'dashboard' in _ep %}{% set _nav_page_title = 'Dashboard' %}
+    {% elif 'employee' in _ep %}{% set _nav_page_title = 'People' %}
+    {% elif 'position' in _ep %}{% set _nav_page_title = 'Positions' %}
+    {% elif 'roadmap' in _ep %}{% set _nav_page_title = 'Roadmaps' %}
+    {% elif 'daypart' in _ep %}{% set _nav_page_title = 'Dayparts' %}
+    {% elif 'location' in _ep %}{% set _nav_page_title = 'Locations' %}
+    {% elif 'schedule' in _ep or _ep in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] %}{% set _nav_page_title = 'Schedules' %}
+    {% elif 'settings' in _ep %}{% set _nav_page_title = 'Settings' %}
+    {% elif 'messages' in _ep or 'inbox' in _ep or 'chat' in _ep %}{% set _nav_page_title = 'Messages' %}
+    {% elif 'notification' in _ep %}{% set _nav_page_title = 'Notifications' %}
+    {% else %}{% set _nav_page_title = 'Dashboard' %}{% endif %}
+    {% set _nav_location_sub = (g.system_settings.business_name or '') %}
+{% elif current_user.is_authenticated %}
+    {% if 'dashboard' in _ep %}{% set _nav_page_title = 'Dashboard' %}
+    {% elif 'schedule' in _ep %}{% set _nav_page_title = 'Schedules' %}
+    {% elif 'settings' in _ep %}{% set _nav_page_title = 'Settings' %}
+    {% elif 'messages' in _ep or 'inbox' in _ep or 'chat' in _ep %}{% set _nav_page_title = 'Messages' %}
+    {% elif 'notification' in _ep %}{% set _nav_page_title = 'Notifications' %}
+    {% else %}{% set _nav_page_title = 'Dashboard' %}{% endif %}
+    {% set _nav_location_sub = (g.system_settings.business_name or '') %}
+{% else %}
+    {% set _nav_page_title = '' %}
+    {% set _nav_location_sub = '' %}
+{% endif %}
 <header class="main-header">
     <div class="container nav-split">
         <div class="nav-group">
@@ -469,6 +534,11 @@
                 {% endif %}
                 <span class="brand-logo-text">{% if request.endpoint and request.endpoint.startswith('admin.') %}Training<b>Tracker</b> · Admin{% elif g.system_settings and g.system_settings.business_name %}{{ g.system_settings.business_name }} · Training<b>Tracker</b>{% else %}Training<b>Tracker</b>{% endif %}</span>
             </a>
+
+            <div class="nav-mobile-center">
+                <span class="nav-page-title">{{ _nav_page_title or 'Training Tracker' }}</span>
+                {% if _nav_location_sub %}<span class="nav-location-sub">{{ _nav_location_sub }}</span>{% endif %}
+            </div>
 
             <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-expanded="false" aria-label="Open menu"><i class="fa-solid fa-bars nav-icon-menu" aria-hidden="true"></i><i class="fa-solid fa-times nav-icon-close" aria-hidden="true"></i></button>
 
