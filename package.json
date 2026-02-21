@@ -1,0 +1,19 @@
+{
+  "name": "training-tracker-app",
+  "version": "1.0.0",
+  "description": "Training Tracker native app (Capacitor)",
+  "scripts": {
+    "build": "echo No build step - web app loads from live URL",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:add:android": "npx cap add android"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0"
+  }
+}

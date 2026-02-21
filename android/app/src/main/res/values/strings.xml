@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Training Tracker</string>
+    <string name="title_activity_main">Training Tracker</string>
+    <string name="package_name">me.trainingtracker.app</string>
+    <string name="custom_url_scheme">me.trainingtracker.app</string>
+</resources>

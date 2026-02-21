@@ -13,6 +13,9 @@ instance/
 .env.local
 app/static/uploads/
 
+# Node / Capacitor
+node_modules/
+
 # IDE / OS
 .idea/
 .vscode/
