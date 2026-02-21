@@ -2,345 +2,140 @@
 
 {% block content %}
 <style>
-    /* --- LAYOUT OVERRIDES --- */
-    body:has(.weekly-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
-    body:has(.weekly-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+    body:has(.hotschedule-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.hotschedule-wrapper) main { max-width: none !important; padding-top: 0 !important; }
 
-    .weekly-wrapper { background: var(--bg-body); min-height: calc(100vh - 72px); padding: 40px; }
-    .weekly-container { max-width: 1400px; margin: 0 auto; }
+    /* HotSchedules-style: blue header, white list, grey section bars */
+    .hotschedule-wrapper { min-height: calc(100vh - 72px); background: #f5f5f5; }
+    .hs-header {
+        background: #1a73e8; color: #fff; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
+    }
+    .hs-header-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+    .hs-title { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
+    .hs-subtitle { font-size: 13px; opacity: 0.92; margin: 0; font-weight: 500; }
+    .hs-back { color: rgba(255,255,255,0.95); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .hs-back:hover { color: #fff; }
 
-    /* --- HEADER --- */
-    .detail-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; gap: 20px; flex-wrap: wrap; }
-    .back-link { text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px; transition: color 0.2s; }
-    .back-link:hover { color: var(--primary); }
-    .status-badge { background: #dcfce7; color: #166534; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+    /* Week section bar (grey with checkmark, "THIS WEEK, 1 of 1 posted", arrow) */
+    .hs-week-bar {
+        display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+        background: #e8e8e8; border: none; width: 100%; text-align: left;
+        font-size: 15px; font-weight: 600; color: #1a1a1a; cursor: pointer;
+        transition: background 0.15s;
+    }
+    .hs-week-bar:hover { background: #ddd; }
+    .hs-week-bar .fa-chevron-right { margin-left: auto; font-size: 12px; color: #666; }
+    .hs-week-check { color: #1a73e8; font-size: 16px; flex-shrink: 0; }
+    .hs-scheduled-hours { display: block; font-size: 13px; font-weight: 600; color: #444; margin-top: 4px; padding-left: 0; }
 
-    /* --- HERO STATS --- */
-    .hero-card {
-        background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px;
-        padding: 32px; margin-bottom: 40px; border-top: 5px solid var(--primary);
-        box-shadow: 0 4px 6px -1px var(--shadow);
-    }
-    .hero-flex { display: flex; justify-content: space-between; align-items: center; gap: 32px; flex-wrap: wrap; }
-    .hero-stats { display: flex; gap: 12px; flex-wrap: wrap; }
-    .mini-stat {
-        padding: 14px 24px; border-radius: 16px; text-align: center;
-        border: 1px solid var(--border); background: var(--bg-body); min-width: 100px;
-        transition: transform 0.2s;
-    }
-    .mini-stat:hover { transform: translateY(-2px); }
-    .stat-label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.03em; }
-    .stat-val { font-size: 22px; font-weight: 900; color: var(--text-main); line-height: 1; }
-    .mini-stat.learning { background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.2); }
-    .mini-stat.learning .stat-label { color: #059669; }
-    .mini-stat.learning .stat-val { color: #15803d; }
-    .mini-stat.teaching { background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.2); }
-    .mini-stat.teaching .stat-label { color: #92400e; }
-    .mini-stat.teaching .stat-val { color: #b45309; }
+    /* White content area under week bar */
+    .hs-content { background: #fff; padding: 0 20px 24px; }
 
-    /* --- STICKY DAY NAV (DARK-MODE SAFE) --- */
-    .day-nav-wrapper {
-        position: sticky; top: 70px; z-index: 100;
-        background: var(--bg-body);
-        backdrop-filter: blur(12px);
-        padding: 16px 0; margin-bottom: 40px;
-        border-bottom: 1px solid var(--border);
-        margin-left: -40px; margin-right: -40px;
-        padding-left: 40px; padding-right: 40px;
+    /* Day row: "Sat, Feb 21 - Today" then shift rows */
+    .hs-day-row {
+        display: flex; align-items: center; gap: 12px; padding: 14px 0;
+        border-bottom: 1px solid #eee; text-decoration: none; color: inherit;
+        transition: background 0.15s; cursor: pointer;
     }
-    .day-nav-scroll { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
-    .day-nav-scroll::-webkit-scrollbar { display: none; }
+    .hs-day-row:last-child { border-bottom: none; }
+    .hs-day-row:hover { background: #f9f9f9; }
+    .hs-day-row:active { background: #f0f0f0; }
+    .hs-day-date {
+        font-size: 15px; font-weight: 600; color: #1a1a1a; min-width: 140px; flex-shrink: 0;
+    }
+    .hs-day-date.today { color: #1a73e8; }
+    .hs-day-shifts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+    .hs-shift-row {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .hs-tag {
+        background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700;
+        padding: 4px 8px; border-radius: 4px; flex-shrink: 0;
+    }
+    .hs-tag.learning { background: #0d7d4a; }
+    .hs-tag.teaching { background: #b45309; }
+    .hs-time { font-size: 14px; font-weight: 600; color: #333; }
+    .hs-role { font-size: 14px; color: #555; font-weight: 500; }
+    .hs-arrow { margin-left: auto; font-size: 12px; color: #999; flex-shrink: 0; }
+    .hs-day-empty { font-size: 14px; color: #888; font-weight: 500; }
 
-    .day-link {
-        text-decoration: none; padding: 10px 16px; border-radius: 14px; min-width: 64px;
-        text-align: center; background: var(--bg-card); color: var(--text-muted);
-        border: 1px solid var(--border); transition: all 0.2s; flex-shrink: 0;
-    }
-    .day-link:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
-    .active-day {
-        background: var(--primary); color: white !important; border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-    }
-    .past-day { opacity: 0.5; }
-    .past-day:hover { opacity: 0.8; }
-    .day-link-abbr { font-size: 11px; text-transform: uppercase; font-weight: 800; display: block; margin-bottom: 2px; }
-    .day-link-num { font-size: 18px; font-weight: 800; line-height: 1; }
-    .day-dot {
-        width: 6px; height: 6px; border-radius: 50%; margin: 4px auto 0;
-        background: currentColor; opacity: 0.5;
-    }
-    .active-day .day-dot { background: white; opacity: 0.8; }
+    /* Single shift link (whole row goes to first session of the day if only one) */
+    .hs-day-row.hs-single-shift { align-items: flex-start; }
+    .hs-day-row .hs-day-shifts a { text-decoration: none; color: inherit; display: block; }
 
-    /* --- DAY SECTIONS --- */
-    .day-section { scroll-margin-top: 180px; margin-bottom: 60px; }
-    .day-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-    .day-title { font-size: 24px; font-weight: 800; color: var(--text-main); margin: 0; }
-    .day-title-today { color: var(--primary); }
-    .day-line { height: 1px; flex: 1; background: var(--border); }
-    .today-tag {
-        font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px;
-        background: rgba(37, 99, 235, 0.1); color: var(--primary);
-        text-transform: uppercase; letter-spacing: 0.03em;
-    }
-
-    /* --- SESSION CARDS --- */
-    .sessions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
-
-    .session-card {
-        background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
-        padding: 24px; position: relative; transition: all 0.2s; overflow: hidden;
-    }
-    .session-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05); }
-
-    .my-session { border: 2px solid var(--primary); background-image: linear-gradient(rgba(37, 99, 235, 0.02), rgba(37, 99, 235, 0.02)); }
-    .completed-session { border-color: #10b981; }
-    .completed-session .session-completed-bar {
-        position: absolute; top: 0; left: 0; right: 0; height: 3px;
-        background: linear-gradient(90deg, #10b981, #34d399);
-    }
-
-    /* Blind mode */
-    .locked-session { cursor: not-allowed !important; border-style: dashed; border-color: var(--border); }
-    .locked-session:hover { transform: none; box-shadow: none; border-color: var(--border); }
-    .blur-text { filter: blur(5px); opacity: 0.6; user-select: none; }
-    .lock-overlay {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        z-index: 10; color: var(--text-muted); background: rgba(255, 255, 255, 0.1);
-    }
-    .lock-badge {
-        background: var(--bg-body); border: 1px solid var(--border);
-        padding: 8px 16px; border-radius: 50px;
-        font-size: 12px; font-weight: 700;
-        display: flex; align-items: center; gap: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    /* Card inner elements */
-    .card-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .card-time { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .role-pill {
-        font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px;
-        text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .role-learning { background: rgba(16, 185, 129, 0.1); color: #059669; }
-    .role-teaching { background: rgba(245, 158, 11, 0.1); color: #b45309; }
-    .card-position { font-weight: 800; font-size: 18px; color: var(--text-main); margin-bottom: 4px; line-height: 1.3; }
-    .completed-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 11px; font-weight: 700; color: #059669;
-        margin-top: 6px;
-    }
-
-    .people-flex { display: flex; gap: 16px; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 16px; }
-    .p-tag { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
-    .p-details { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); }
-    .p-img { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); object-fit: cover; }
-
-    /* --- EMPTY DAY --- */
-    .empty-day {
-        padding: 40px; text-align: center; color: var(--text-muted);
-        border: 2px dashed var(--border); border-radius: 20px;
-        background: var(--bg-card);
-    }
-    .empty-day-icon { font-size: 28px; opacity: 0.15; margin-bottom: 10px; display: block; }
-    .empty-day-text { font-size: 14px; font-weight: 600; margin: 0; }
-
-    /* --- RESPONSIVE --- */
     @media (max-width: 768px) {
-        .weekly-wrapper { padding: 24px 16px; }
-        .day-nav-wrapper { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; top: 60px; }
-        .sessions-grid { grid-template-columns: 1fr; }
-        .hero-flex { flex-direction: column; align-items: flex-start; gap: 20px; }
-        .hero-stats { width: 100%; }
-        .mini-stat { flex: 1; }
+        .hs-header, .hs-week-bar, .hs-content { padding-left: 16px; padding-right: 16px; }
+        .hs-day-date { min-width: 120px; font-size: 14px; }
+        .hs-shift-row { flex-wrap: wrap; }
     }
 </style>
 
-<div class="weekly-wrapper">
-    <div class="weekly-container">
-
-        {# --- HEADER --- #}
-        <div class="detail-header">
-            <div>
-                <a href="{{ url_for('employee.schedules_list') }}" class="back-link" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
-                    <i class="fa-solid fa-arrow-left"></i> <span>All Schedules</span>
-                </a>
-                <h1 style="font-size: clamp(24px, 5vw, 36px); font-weight: 900; margin: 4px 0; color: var(--text-main); letter-spacing: -0.02em;">
-                    Training Week
-                </h1>
-                <p style="color: var(--text-muted); font-size: 16px; margin: 0;">
-                    {{ schedule.start_date.strftime('%B %d') }} &mdash; {{ schedule.end_date.strftime('%B %d, %Y') }}
-                </p>
-            </div>
-            <div class="status-badge"><i class="fa-solid fa-circle-check"></i> Published</div>
+<div class="hotschedule-wrapper">
+    {# HotSchedules-style blue header #}
+    <div class="hs-header">
+        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }">
+            <i class="fa-solid fa-arrow-left"></i> Schedules
+        </a>
+        <div class="hs-header-top">
+            <h1 class="hs-title">My Schedule</h1>
         </div>
+        <p class="hs-subtitle">{{ g.current_organization.name if g.current_organization else 'Training Tracker' }}</p>
+    </div>
 
-        {# --- HERO STATS --- #}
-        <div class="hero-card">
-            <div class="hero-flex">
-                <div style="flex: 1; min-width: 200px;">
-                    <h3 style="font-size: 18px; font-weight: 800; margin: 0 0 6px 0; color: var(--text-main);">Your Week at a Glance</h3>
-                    <p style="font-size: 14px; color: var(--text-muted); margin: 0; line-height: 1.5;">
-                        {% if week_stats.total == 0 %}
-                            No sessions assigned to you this week.
-                        {% else %}
-                            You have {{ week_stats.total }} session{{ 's' if week_stats.total != 1 else '' }} this week.
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="hero-stats">
-                    <div class="mini-stat">
-                        <div class="stat-label">Total</div>
-                        <div class="stat-val">{{ week_stats.total }}</div>
-                    </div>
-                    <div class="mini-stat learning">
-                        <div class="stat-label">Learning</div>
-                        <div class="stat-val">{{ week_stats.learning }}</div>
-                    </div>
-                    <div class="mini-stat teaching">
-                        <div class="stat-label">Teaching</div>
-                        <div class="stat-val">{{ week_stats.teaching }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    {# Week section bar: "THIS WEEK" or "NEXT WEEK", X of 1 posted, Scheduled sessions #}
+    <button type="button" class="hs-week-bar" disabled aria-label="Current week">
+        <i class="fa-solid fa-circle-check hs-week-check"></i>
+        <span>
+            {% if schedule.start_date <= today_in_est <= schedule.end_date %}
+                THIS WEEK, 1 of 1 posted
+            {% elif schedule.start_date > today_in_est %}
+                NEXT WEEK, 1 of 1 posted
+            {% else %}
+                Week of {{ schedule.start_date.strftime('%b %d') }}, 1 of 1 posted
+            {% endif %}
+            <span class="hs-scheduled-hours">Scheduled sessions: {{ week_stats.total }}</span>
+        </span>
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
 
-        {# --- STICKY DAY NAV --- #}
-        <div class="day-nav-wrapper">
-            <div class="day-nav-scroll">
-                {% for day in days %}
-                    {% set has_sessions = day.sessions|length > 0 %}
-                    {% set is_past = day.date < schedule.start_date %}
-                    <a href="#day-{{ loop.index }}" class="day-link {{ 'active-day' if day.is_today else '' }} {{ 'past-day' if not day.is_today and day.date < days[0].date else '' }}">
-                        <span class="day-link-abbr">{{ day.date.strftime('%a') }}</span>
-                        <div class="day-link-num">{{ day.date.strftime('%d') }}</div>
-                        {% if has_sessions %}
-                            <div class="day-dot"></div>
-                        {% endif %}
-                    </a>
-                {% endfor %}
-            </div>
-        </div>
-
-        {# --- DAILY CONTENT --- #}
+    <div class="hs-content">
         {% for day in days %}
-        <div id="day-{{ loop.index }}" class="day-section">
-            <div class="day-header">
-                <h2 class="day-title {{ 'day-title-today' if day.is_today else '' }}">
-                    {% if day.is_today %}
-                        Today
-                    {% else %}
-                        {{ day.date.strftime('%A') }}
-                    {% endif %}
-                    <span style="font-weight: 500; color: var(--text-muted); font-size: 16px; margin-left: 6px;">
-                        {{ day.date.strftime('%b %d') }}
-                    </span>
-                </h2>
-                {% if day.is_today %}
-                    <span class="today-tag"><i class="fa-solid fa-bolt" style="font-size: 9px;"></i> Current Day</span>
-                {% endif %}
-                <div class="day-line"></div>
-            </div>
-
-            {% if day.sessions %}
-            <div class="sessions-grid">
-                {% for s in day.sessions %}
-                    {% set is_my_session = (s.trainee_employee_id == current_user.employee_id or s.trainer_employee_id == current_user.employee_id) %}
-                    {% set locked = s.is_locked and current_user.role != 'manager' %}
-                    {% set is_done = s.completed_at is not none %}
-                    {% set is_teaching = s.trainer_employee_id == current_user.employee_id %}
-
-                    <div class="session-card {{ 'my-session' if is_my_session and not is_done else '' }} {{ 'completed-session' if is_done else '' }} {{ 'locked-session' if locked else '' }}"
-                         {% if not locked %}onclick="window.location.href='{{ url_for('employee.session_rating', session_id=s.id) }}'" style="cursor: pointer;"{% endif %}>
-
-                        {% if is_done %}
-                            <div class="session-completed-bar"></div>
-                        {% endif %}
-
-                        {% if locked %}
-                        <div class="lock-overlay">
-                            <div class="lock-badge"><i class="fa-solid fa-lock"></i> Hidden</div>
-                            <span style="font-size: 11px; margin-top: 4px;">Reveals at Start Time</span>
-                        </div>
-                        {% endif %}
-
-                        <div class="card-header-row" style="{{ 'filter: blur(4px);' if locked else '' }}">
-                            <div class="card-time" style="color: {{ 'var(--primary)' if is_my_session and not is_done else '#059669' if is_done else 'var(--text-muted)' }};">
-                                <i class="fa-regular fa-clock"></i>
-                                {% if s.custom_start_time %}
-                                    {{ s.custom_start_time.strftime('%I:%M %p').lstrip('0') }}
-                                {% elif s.daypart %}
-                                    {{ s.daypart.name }}
-                                {% else %}
-                                    Scheduled
-                                {% endif %}
-                            </div>
-                            {% if is_my_session %}
-                                <span class="role-pill {{ 'role-teaching' if is_teaching else 'role-learning' }}">
+            <div class="hs-day-row">
+                <span class="hs-day-date {{ 'today' if day.is_today else '' }}">
+                    {{ day.date.strftime('%a, %b %d') }}{% if day.is_today %} - Today{% endif %}
+                </span>
+                <div class="hs-day-shifts">
+                    {% for s in day.sessions %}
+                        {% set is_my_session = (s.trainee_employee_id == current_user.employee_id or s.trainer_employee_id == current_user.employee_id) %}
+                        {% set is_teaching = s.trainer_employee_id == current_user.employee_id %}
+                        {% set start_t = s.custom_start_time or (s.daypart.start_time if s.daypart else none) %}
+                        {% set end_t = s.custom_end_time or (s.daypart.end_time if s.daypart else none) %}
+                        {% if is_my_session or current_user.role == 'manager' %}
+                            <a href="{{ url_for('employee.session_rating', session_id=s.id) if not s.is_locked or current_user.role == 'manager' else '#' }}"
+                               class="hs-shift-row" style="text-decoration:none; color:inherit;{% if s.is_locked and current_user.role != 'manager' %} opacity:0.7; pointer-events:none;{% endif %}">
+                                <span class="hs-tag {{ 'teaching' if is_teaching else 'learning' }}">
                                     {{ 'Teaching' if is_teaching else 'Learning' }}
                                 </span>
-                            {% endif %}
-                        </div>
-
-                        <div class="{{ 'blur-text' if locked else '' }}" style="margin-bottom: 4px;">
-                            <div class="card-position">{{ s.position.name if not locked else 'Hidden Position' }}</div>
-                            {% if is_done %}
-                                <div class="completed-badge">
-                                    <i class="fa-solid fa-circle-check"></i> Completed
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <div class="people-flex {{ 'blur-text' if locked else '' }}">
-                            <div style="flex: 1; min-width: 0;">
-                                <div class="p-tag">Trainee</div>
-                                <div class="p-details">
-                                    <img src="{{ s.trainee.avatar(24) }}" class="p-img">
-                                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.trainee.first_name if not locked else '---' }}</span>
-                                </div>
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <div class="p-tag">Trainer</div>
-                                <div class="p-details">
-                                    <img src="{{ s.trainer.avatar(24) }}" class="p-img">
-                                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ s.trainer.first_name if not locked else '---' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
+                                <span class="hs-time">
+                                    {% if start_t %}
+                                        {{ start_t.strftime('%I:%M %p').lstrip('0') }}{% if end_t %} - {{ end_t.strftime('%I:%M %p').lstrip('0') }}{% endif %}
+                                    {% elif s.daypart %}
+                                        {{ s.daypart.name }}
+                                    {% else %}
+                                        Scheduled
+                                    {% endif %}
+                                </span>
+                                <span class="hs-role">{{ s.position.name }}</span>
+                                <i class="fa-solid fa-chevron-right hs-arrow"></i>
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if not day.sessions %}
+                        <span class="hs-day-empty">No sessions scheduled</span>
+                    {% endif %}
+                </div>
             </div>
-            {% else %}
-            <div class="empty-day">
-                {% if day.is_today %}
-                    <i class="fa-solid fa-couch empty-day-icon"></i>
-                    <p class="empty-day-text">Nothing on today's plate. Enjoy the breather!</p>
-                {% else %}
-                    <i class="fa-solid fa-mug-hot empty-day-icon"></i>
-                    <p class="empty-day-text">No sessions scheduled.</p>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
         {% endfor %}
-
     </div>
 </div>
-
-<script>
-    document.querySelectorAll('.day-link').forEach(function(anchor) {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            var target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                var offset = 180;
-                var bodyRect = document.body.getBoundingClientRect().top;
-                var elementRect = target.getBoundingClientRect().top;
-                var offsetPosition = (elementRect - bodyRect) - offset;
-                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-            }
-        });
-    });
-</script>
 {% endblock %}

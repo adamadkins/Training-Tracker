@@ -353,7 +353,8 @@ def weekly_schedule(schedule_id):
         "employee_schedule_detail.html",
         schedule=schedule,
         days=days,
-        week_stats=week_stats
+        week_stats=week_stats,
+        today_in_est=today_in_est
     )
 
 
