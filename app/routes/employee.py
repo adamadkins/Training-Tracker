@@ -221,7 +221,8 @@ def api_push_token_register():
     token = (data.get('token') or '').strip()
     platform = (data.get('platform') or 'android').lower()[:20]
     if not token:
-        return jsonify({'error': 'token required'}), 400
+        # Client may POST with empty token to confirm flow (e.g. emulator has no FCM token)
+        return jsonify({'ok': True, 'registered': False})
     if platform not in ('android', 'ios'):
         platform = 'android'
     existing = PushToken.query.filter_by(user_id=current_user.id, token=token).first()

@@ -783,13 +783,15 @@
   var apiUrl = '/employee/api/push-token';
   var once = false;
   function onToken(e) {
-    if (!e.data || e.data.type !== 'TrainingTrackerPushToken' || !e.data.token || once) return;
+    if (!e.data || e.data.type !== 'TrainingTrackerPushToken' || once) return;
     once = true;
+    var token = (e.data.token || '').trim();
+    var platform = e.data.platform || 'web';
     fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       credentials: 'include',
-      body: JSON.stringify({ token: e.data.token, platform: e.data.platform || 'web' })
+      body: JSON.stringify({ token: token, platform: platform })
     }).catch(function() { once = false; });
   }
   window.addEventListener('message', onToken);
