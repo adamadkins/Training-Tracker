@@ -109,6 +109,39 @@ def create_app():
     def inject_version():
         return {'app_version': APP_VERSION}
 
+    @app.context_processor
+    def inject_support_mode():
+        from flask import session
+        return {
+            'spectator_mode': session.get('_spectator', False),
+            'impersonating': session.get('_impersonating', False),
+        }
+
+    def mask_pii(value):
+        """In spectator mode mask emails/phones; otherwise return as-is."""
+        if not value or not session.get('_spectator'):
+            return value
+        s = str(value).strip()
+        if '@' in s and '.' in s:
+            parts = s.split('@', 1)
+            a, b = parts[0], parts[1]
+            if len(a) > 2:
+                a = a[:2] + '***'
+            else:
+                a = '***'
+            if len(b) > 2:
+                b = '***' + b[-2:]
+            else:
+                b = '***'
+            return f'{a}@{b}'
+        if s.isdigit() and len(s) >= 4:
+            return '***' + s[-4:]
+        if len(s) > 4:
+            return s[:2] + '***' + s[-1] if len(s) > 3 else '***'
+        return '***'
+
+    app.jinja_env.filters['mask_pii'] = mask_pii
+
     # Error handlers
     from flask import render_template as _render
 
@@ -162,7 +195,8 @@ def create_app():
             request.endpoint.startswith('static') or
             request.endpoint.startswith('guest.') or
             request.endpoint in ('auth.login', 'auth.logout',
-                                 'auth.forgot_password', 'auth.reset_token')
+                                 'auth.forgot_password', 'auth.reset_token',
+                                 'auth.enter_support', 'auth.spectator_entry', 'auth.exit_support')
         ):
             return
 

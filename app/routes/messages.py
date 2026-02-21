@@ -30,6 +30,11 @@ def _org_id():
 @messages_bp.before_request
 def update_last_seen():
     """Update current user's last_seen for online status when they hit any messages route."""
+    from flask import session
+    if session.get("_spectator") and request.method not in ("GET", "HEAD", "OPTIONS"):
+        from flask import flash, redirect, url_for
+        flash("Read-only spectator mode. Changes are disabled.", "warning")
+        return redirect(request.referrer or url_for("manager.dashboard"))
     if current_user.is_authenticated and getattr(current_user, 'id', None):
         User.query.filter_by(id=current_user.id).update({'last_seen': datetime.now(timezone.utc)})
         db.session.commit()

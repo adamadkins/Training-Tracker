@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 
 import flask
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app, Response, g
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, jsonify, current_app, Response, g, session
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
@@ -32,6 +32,10 @@ manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
 @manager_bp.before_request
 def _require_tenant():
     g._manager_org_id = _org_id()
+    if session.get("_spectator") and request.method not in ("GET", "HEAD", "OPTIONS"):
+        from flask import flash, redirect, url_for
+        flash("Read-only spectator mode. Changes are disabled.", "warning")
+        return redirect(request.referrer or url_for("manager.dashboard"))
 
 
 def _org_id():

@@ -2,6 +2,7 @@
 import stripe
 from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
+from itsdangerous import URLSafeTimedSerializer
 from flask import Blueprint, render_template, redirect, url_for, flash, request, g, abort, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -125,14 +126,37 @@ def _signup_request_gmail_url(signup_request):
 
 @admin_bp.route("/")
 def index():
-    """Dashboard: key metrics and org list."""
+    """Dashboard: key metrics and org list. Optional q (search), org_status, signup_plan."""
+    q = (request.args.get("q") or "").strip()
+    org_status = request.args.get("org_status", "").strip().lower() or None
+    signup_plan = request.args.get("signup_plan", "").strip().lower() or None
+
     orgs = Organization.query.order_by(Organization.created_at.desc()).all()
-    total_orgs = len(orgs)
-    active_orgs = sum(1 for o in orgs if o.status == "active")
+    if org_status and org_status in ("active", "suspended"):
+        orgs = [o for o in orgs if o.status == org_status]
+    if q:
+        ql = q.lower()
+        orgs = [o for o in orgs if ql in (o.name or "").lower() or ql in (o.subdomain or "").lower()]
+    total_orgs = len(Organization.query.all())
+    active_orgs = Organization.query.filter_by(status="active").count()
     total_users = User.query.filter(User.organization_id.isnot(None)).count()
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
     orgs_with_stats = [(org, _org_stats(org.id), _org_trial_and_payment(org)) for org in orgs[:20]]
-    signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(50).all()
+
+    signup_query = SignupRequest.query.order_by(SignupRequest.created_at.desc())
+    if signup_plan and signup_plan in ("standard", "pro"):
+        signup_query = signup_query.filter_by(plan=signup_plan)
+    signup_search = (request.args.get("signup_q") or "").strip()
+    if signup_search:
+        s = f"%{signup_search}%"
+        signup_query = signup_query.filter(
+            db.or_(
+                SignupRequest.email.ilike(s),
+                SignupRequest.business.ilike(s),
+                SignupRequest.name.ilike(s),
+            )
+        )
+    signup_requests = signup_query.limit(50).all()
     signup_requests_with_mailto = [
         (r, _signup_request_mailto(r), _signup_request_gmail_url(r)) for r in signup_requests
     ]
@@ -144,6 +168,10 @@ def index():
         total_users=total_users,
         total_employees=total_employees,
         signup_requests_with_mailto=signup_requests_with_mailto,
+        filter_q=q,
+        filter_org_status=org_status,
+        filter_signup_plan=signup_plan,
+        filter_signup_q=signup_search,
     )
 
 
@@ -166,12 +194,55 @@ def signup_request_delete(req_id):
     return redirect(url_for("admin.index"))
 
 
+@admin_bp.route("/users")
+def users_list():
+    """List all platform users (by org). Optional q (search), org_id, role filter."""
+    q = (request.args.get("q") or "").strip()
+    org_id = request.args.get("org_id", type=int)
+    role = (request.args.get("role") or "").strip().lower() or None
+
+    users = User.query.filter(User.organization_id.isnot(None))
+    if org_id:
+        users = users.filter(User.organization_id == org_id)
+    if role and role in ("manager", "trainee"):
+        users = users.filter(User.role == role)
+    users = users.all()
+    org_ids = [u.organization_id for u in users]
+    orgs_map = {o.id: o for o in Organization.query.filter(Organization.id.in_(org_ids)).all()} if org_ids else {}
+    users_with_org = [(u, orgs_map.get(u.organization_id)) for u in users]
+    if q:
+        ql = q.lower()
+        users_with_org = [(u, o) for u, o in users_with_org if ql in (u.email or "").lower()]
+    users_with_org.sort(key=lambda x: ((x[1].name or "") if x[1] else "", x[0].email or ""))
+    all_orgs = Organization.query.order_by(Organization.name).all()
+    return render_template(
+        "admin/users.html",
+        users_with_org=users_with_org,
+        all_orgs=all_orgs,
+        filter_q=q,
+        filter_org_id=org_id,
+        filter_role=role,
+    )
+
+
 @admin_bp.route("/organizations")
 def organizations_list():
-    """List all organizations with stats."""
+    """List all organizations with stats. Optional q (search), status filter."""
+    q = (request.args.get("q") or "").strip()
+    status_filter = (request.args.get("status") or "").strip().lower() or None
     orgs = Organization.query.order_by(Organization.name).all()
+    if status_filter and status_filter in ("active", "suspended"):
+        orgs = [o for o in orgs if o.status == status_filter]
+    if q:
+        ql = q.lower()
+        orgs = [o for o in orgs if ql in (o.name or "").lower() or ql in (o.subdomain or "").lower()]
     orgs_with_stats = [(org, _org_stats(org.id), _org_trial_and_payment(org)) for org in orgs]
-    return render_template("admin/organizations.html", organizations=orgs_with_stats)
+    return render_template(
+        "admin/organizations.html",
+        organizations=orgs_with_stats,
+        filter_q=q,
+        filter_status=status_filter,
+    )
 
 
 @admin_bp.route("/organizations/<int:org_id>")
@@ -355,6 +426,76 @@ def organization_customer_portal(org_id):
 def _base_domain():
     host = request.host.split(":")[0]
     return host[4:] if host.startswith("www.") else host
+
+
+def _support_token_serializer():
+    return URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"],
+        salt="admin-support-spectator",
+    )
+
+
+def _create_support_token(admin_id, user_id, org_id, kind, expires_sec=3600):
+    """Create signed token for impersonate or spectator. kind = 'impersonate' | 'spectator'."""
+    s = _support_token_serializer()
+    return s.dumps({"admin_id": admin_id, "user_id": user_id, "org_id": org_id, "type": kind})
+
+
+@admin_bp.route("/users/<int:user_id>/send-reset", methods=["POST"])
+def user_send_reset(user_id):
+    """Send password reset email to this user (support)."""
+    user = User.query.get_or_404(user_id)
+    if not user.organization_id:
+        flash("Cannot send reset for platform admins.", "error")
+        return redirect(url_for("admin.users_list"))
+    try:
+        token = user.get_reset_token()
+        reset_url = url_for("auth.reset_token", token=token, _external=True)
+        send_notification_email(
+            user,
+            "Reset your Training Tracker password",
+            f"Someone requested a password reset. If it was you, click: {reset_url}<br><br>Link expires in 30 minutes.",
+        )
+        flash(f"Password reset email sent to {user.email}.", "success")
+    except Exception as e:
+        flash(f"Failed to send email: {str(e)}", "error")
+    return redirect(request.referrer or url_for("admin.users_list"))
+
+
+@admin_bp.route("/users/<int:user_id>/impersonate")
+def user_impersonate(user_id):
+    """Redirect to tenant as this user (full access, for support)."""
+    user = User.query.get_or_404(user_id)
+    if not user.organization_id:
+        flash("Cannot impersonate platform admins.", "error")
+        return redirect(url_for("admin.users_list"))
+    org = Organization.query.get(user.organization_id)
+    if not org:
+        flash("Organization not found.", "error")
+        return redirect(url_for("admin.users_list"))
+    token = _create_support_token(current_user.id, user.id, org.id, "impersonate")
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    base = _base_domain()
+    url = f"{scheme}://{org.subdomain}.{base}/enter-support?token={quote(token)}"
+    return redirect(url)
+
+
+@admin_bp.route("/users/<int:user_id>/spectate")
+def user_spectate(user_id):
+    """Redirect to tenant as this user in spectator mode (read-only, PII masked)."""
+    user = User.query.get_or_404(user_id)
+    if not user.organization_id:
+        flash("Cannot spectate platform admins.", "error")
+        return redirect(url_for("admin.users_list"))
+    org = Organization.query.get(user.organization_id)
+    if not org:
+        flash("Organization not found.", "error")
+        return redirect(url_for("admin.users_list"))
+    token = _create_support_token(current_user.id, user.id, org.id, "spectator")
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    base = _base_domain()
+    url = f"{scheme}://{org.subdomain}.{base}/spectator-entry?token={quote(token)}"
+    return redirect(url)
 
 
 @admin_bp.route("/organizations/<int:org_id>/invite-first-user", methods=["GET", "POST"])

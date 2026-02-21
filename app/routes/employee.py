@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, date, timedelta, timezone
 import flask
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, g
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, g, session
 from flask_login import login_required, current_user
 import pytz
 from sqlalchemy.orm import joinedload
@@ -13,6 +13,13 @@ from app.models import (
 from app.utils.notifications import notify
 
 employee_bp = Blueprint('employee', __name__, url_prefix='/employee')
+
+
+@employee_bp.before_request
+def _block_spectator_write():
+    if session.get("_spectator") and request.method not in ("GET", "HEAD", "OPTIONS"):
+        flash("Read-only spectator mode. Changes are disabled.", "warning")
+        return redirect(request.referrer or url_for("employee.dashboard"))
 
 
 def _org_id():

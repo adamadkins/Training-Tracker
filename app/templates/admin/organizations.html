@@ -5,6 +5,15 @@
         <h1 class="page-title">Organizations</h1>
         <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New organization</a>
     </div>
+    <form method="get" class="admin-filters filter-form">
+        <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search name or subdomain">
+        <select name="status">
+            <option value="">All statuses</option>
+            <option value="active" {{ 'selected' if filter_status == 'active' else '' }}>Active</option>
+            <option value="suspended" {{ 'selected' if filter_status == 'suspended' else '' }}>Suspended</option>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
     <div class="table-card">
         <table class="admin-table">
             <thead>
@@ -64,5 +73,17 @@
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { opacity: 0.9; }
 .link-view { font-size: 13px; }
+.admin-filters.filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.admin-filters input[type="text"], .admin-filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+
+@media (max-width: 768px) {
+    .admin-page { padding: 0 4px; }
+    .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
+    .page-title { font-size: 22px; }
+    .page-header .btn { justify-content: center; min-height: 44px; }
+    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px; margin-left: -4px; margin-right: -4px; }
+    .admin-table { min-width: 700px; }
+    .admin-table th, .admin-table td { padding: 10px 12px; font-size: 13px; }
+}
 </style>
 {% endblock %}

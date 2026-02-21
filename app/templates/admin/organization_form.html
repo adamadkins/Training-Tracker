@@ -37,6 +37,13 @@
 .form-hint { font-size: 13px; color: var(--text-muted); margin: 0; }
 .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; background: var(--primary); color: white; width: fit-content; }
 .btn:hover { opacity: 0.9; }
+
+@media (max-width: 768px) {
+    .admin-page { max-width: 100%; padding: 0 4px; }
+    .form-card { padding: 20px; }
+    .admin-form input, .admin-form select { min-height: 48px; }
+    .btn { min-height: 48px; width: 100%; justify-content: center; }
+}
 </style>
 <script>
 document.getElementById('subdomain').addEventListener('input', function() {

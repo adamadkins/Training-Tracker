@@ -148,5 +148,18 @@
 .billing-note { font-size: 13px; color: var(--text-muted); }
 .billing-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .btn:hover { opacity: 0.9; }
+
+@media (max-width: 768px) {
+    .admin-page { max-width: 100%; padding: 0 4px; }
+    .detail-card { padding: 20px; }
+    .detail-list { grid-template-columns: 1fr; gap: 8px 0; }
+    .detail-list dt { margin-bottom: 2px; }
+    .billing-actions { flex-direction: column; }
+    .billing-actions form { width: 100%; }
+    .billing-actions .btn { min-height: 44px; justify-content: center; width: 100%; }
+    .detail-actions .btn { min-height: 44px; }
+    .danger-zone { padding: 16px; }
+    .delete-form .confirm-input { max-width: 100%; }
+}
 </style>
 {% endblock %}

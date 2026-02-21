@@ -279,6 +279,92 @@ def reset_token(token):
     return render_template("auth/reset_token.html", token=token)
 
 
+def _verify_support_token(token, max_age=3600):
+    """Verify admin support/spectator token; return payload dict or None."""
+    from itsdangerous import URLSafeTimedSerializer
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt="admin-support-spectator")
+    try:
+        return s.loads(token, salt="admin-support-spectator", max_age=max_age)
+    except Exception:
+        return None
+
+
+@auth_bp.get("/enter-support")
+def enter_support():
+    """On tenant: log in as target user (impersonation) using admin token."""
+    if getattr(g, "current_organization_id", None) is None:
+        abort(404)
+    token = request.args.get("token")
+    if not token:
+        flash("Invalid or missing link.", "error")
+        return redirect(url_for("auth.login"))
+    payload = _verify_support_token(token)
+    if not payload or payload.get("type") != "impersonate":
+        flash("Link expired or invalid.", "error")
+        return redirect(url_for("auth.login"))
+    if payload.get("org_id") != g.current_organization_id:
+        flash("Wrong organization.", "error")
+        return redirect(url_for("auth.login"))
+    user = User.query.get(payload.get("user_id"))
+    if not user or user.organization_id != g.current_organization_id:
+        flash("User not found.", "error")
+        return redirect(url_for("auth.login"))
+    session["_impersonating_admin_id"] = payload.get("admin_id")
+    session["_impersonating"] = True
+    login_user(user)
+    session.permanent = True
+    if user.role == "manager":
+        return redirect(url_for("manager.dashboard"))
+    return redirect(url_for("employee.dashboard"))
+
+
+@auth_bp.get("/spectator-entry")
+def spectator_entry():
+    """On tenant: log in as target user in spectator mode (read-only, PII masked)."""
+    if getattr(g, "current_organization_id", None) is None:
+        abort(404)
+    token = request.args.get("token")
+    if not token:
+        flash("Invalid or missing link.", "error")
+        return redirect(url_for("auth.login"))
+    payload = _verify_support_token(token)
+    if not payload or payload.get("type") != "spectator":
+        flash("Link expired or invalid.", "error")
+        return redirect(url_for("auth.login"))
+    if payload.get("org_id") != g.current_organization_id:
+        flash("Wrong organization.", "error")
+        return redirect(url_for("auth.login"))
+    user = User.query.get(payload.get("user_id"))
+    if not user or user.organization_id != g.current_organization_id:
+        flash("User not found.", "error")
+        return redirect(url_for("auth.login"))
+    session["_spectator_admin_id"] = payload.get("admin_id")
+    session["_spectator"] = True
+    login_user(user)
+    session.permanent = True
+    if user.role == "manager":
+        return redirect(url_for("manager.dashboard"))
+    return redirect(url_for("employee.dashboard"))
+
+
+@auth_bp.get("/exit-support")
+def exit_support():
+    """Exit impersonation or spectator; restore admin and redirect to main domain."""
+    admin_id = session.pop("_impersonating_admin_id", None) or session.pop("_spectator_admin_id", None)
+    session.pop("_impersonating", None)
+    session.pop("_spectator", None)
+    logout_user()
+    if admin_id:
+        admin = User.query.get(admin_id)
+        if admin:
+            login_user(admin)
+            session.permanent = True
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    host = request.host.split(":")[0]
+    base = host[4:] if host.startswith("www.") else host
+    return redirect(f"{scheme}://{base}{url_for('admin.index')}")
+
+
 @auth_bp.get("/logout")
 @login_required
 def logout():

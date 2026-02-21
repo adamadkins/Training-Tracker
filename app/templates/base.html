@@ -301,6 +301,27 @@
             border-bottom: 1px solid #fecaca;
         }
 
+        .support-banner {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid #fde68a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .support-banner-exit {
+            color: #b45309;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+        .support-banner-exit:hover { color: #92400e; }
+
         /* ── Footer ── */
         .site-footer {
             text-align: center;
@@ -432,6 +453,13 @@
 </div>
 {% endif %}
 
+{% if (spectator_mode or impersonating) and request.endpoint and not request.endpoint.startswith('admin.') %}
+<div class="support-banner">
+    <span>{% if spectator_mode %}Spectator mode (read-only, PII masked){% else %}Impersonating {{ current_user.email }}{% endif %}</span>
+    <a href="{{ url_for('auth.exit_support') }}" class="support-banner-exit">Exit</a>
+</div>
+{% endif %}
+
 <header class="main-header">
     <div class="container nav-split">
         <div class="nav-group">
@@ -450,6 +478,7 @@
                     {% if request.endpoint and request.endpoint.startswith('admin.') %}
                     <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' else '' }}">Dashboard</a>
                     <a href="{{ url_for('admin.organizations_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.organization') else '' }}">Organizations</a>
+                    <a href="{{ url_for('admin.users_list') }}" class="{{ 'active' if request.endpoint == 'admin.users_list' else '' }}">Users</a>
                     {% elif current_user.role == 'manager' %}
                     <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>
                     <a href="{{ url_for('manager.positions_list') }}" data-tutorial="positions" class="{{ 'active' if 'position' in request.endpoint else '' }}">Positions</a>
@@ -494,7 +523,7 @@
                             </div>
                         </a>
                         {% else %}
-                        <span class="user-name-nav" style="padding-right:8px;">{{ current_user.email }}</span>
+                        <span class="user-name-nav" style="padding-right:8px;">{{ current_user.email | mask_pii }}</span>
                         {% endif %}
 
                         <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">

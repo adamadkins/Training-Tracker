@@ -28,8 +28,31 @@
         <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New organization</a>
     </div>
 
+    <div class="admin-filters">
+        <form method="get" class="filter-form">
+            <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search orgs (name/subdomain)">
+            <select name="org_status">
+                <option value="">All statuses</option>
+                <option value="active" {{ 'selected' if filter_org_status == 'active' else '' }}>Active</option>
+                <option value="suspended" {{ 'selected' if filter_org_status == 'suspended' else '' }}>Suspended</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter orgs</button>
+        </form>
+    </div>
+
     <div class="table-card">
         <h2 class="section-title">Signup requests</h2>
+        <form method="get" class="signup-filter-form">
+            <input type="hidden" name="q" value="{{ filter_q or '' }}">
+            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
+            <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}" placeholder="Search email, business, name">
+            <select name="signup_plan">
+                <option value="">All plans</option>
+                <option value="standard" {{ 'selected' if filter_signup_plan == 'standard' else '' }}>Standard</option>
+                <option value="pro" {{ 'selected' if filter_signup_plan == 'pro' else '' }}>Pro</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+        </form>
         <p class="section-desc">Landing-page submissions. For multiple locations with the same business name (e.g. Chick-fil-A), use a unique subdomain when creating the org (e.g. <code>chickfila-store4521</code>, <code>chickfila-downtown</code>). <strong>Email</strong> opens Gmail; <strong>Copy</strong> copies their email.</p>
         <div class="signup-requests-actions">
             <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
@@ -83,6 +106,7 @@
 
     <div class="table-card">
         <h2 class="section-title">Recent organizations</h2>
+        {% if filter_q or filter_org_status %}<p class="section-desc">Filtered by {% if filter_q %}q={{ filter_q }}{% endif %}{% if filter_org_status %} status={{ filter_org_status }}{% endif %}.</p>{% endif %}
         <table class="admin-table">
             <thead>
                 <tr>
@@ -115,6 +139,11 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div class="admin-ideas table-card">
+        <h2 class="section-title">More control</h2>
+        <p class="section-desc">You have <a href="{{ url_for('admin.users_list') }}">Platform users</a> for a full list. Other ideas: search/filter orgs and signup requests; export signups to CSV; extend or override trial end date; mark signups as contacted; maintenance mode; activity log (logins, errors).</p>
     </div>
 </div>
 <style>
@@ -154,11 +183,36 @@
 .btn-copy { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
 .btn-copy.copied { background: #dcfce7; color: #166534; border-color: #166534; }
 .signup-requests-actions { margin-bottom: 12px; }
+.admin-ideas { margin-top: 24px; }
+.admin-filters { margin-bottom: 16px; }
+.admin-filters .filter-form, .signup-filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.admin-filters input[type="text"], .admin-filters select, .signup-filter-form input[type="text"], .signup-filter-form select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+.signup-filter-form { margin-bottom: 12px; }
 .signup-requests-actions .clear-form { display: inline-block; }
 .btn-outline-danger { background: transparent; border: 1px solid #dc2626; color: #dc2626; }
 .btn-outline-danger:hover { background: #fef2f2; }
 .btn-remove { background: transparent; border: none; color: var(--text-muted); padding: 4px 8px; }
 .btn-remove:hover { color: #dc2626; }
+
+/* Mobile-friendly admin */
+@media (max-width: 768px) {
+    .admin-page { padding: 0 4px; }
+    .page-title { font-size: 22px; }
+    .page-subtitle { font-size: 13px; }
+    .admin-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { padding: 16px; }
+    .stat-value { font-size: 24px; }
+    .page-actions { flex-direction: column; align-items: stretch; }
+    .page-actions .btn { justify-content: center; min-height: 44px; }
+    .table-card { padding: 16px; margin-left: -4px; margin-right: -4px; border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-table { min-width: 800px; }
+    .admin-table th, .admin-table td { padding: 10px 12px; font-size: 13px; }
+    .section-title { font-size: 16px; }
+    .section-desc { font-size: 12px; }
+    .actions-cell .btn-sm { min-height: 40px; padding: 8px 12px; }
+    .btn-remove { min-width: 44px; min-height: 44px; padding: 10px; }
+    .signup-requests-actions .btn-sm { min-height: 44px; }
+}
 </style>
 <script>
 document.querySelectorAll('.btn-copy').forEach(function(btn) {
