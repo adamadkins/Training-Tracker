@@ -103,10 +103,11 @@ def _signup_request_email_content(signup_request):
 def _signup_request_mailto(signup_request):
     """Build a mailto URL (opens default desktop mail client)."""
     r = signup_request
+    email = (r.email or "").strip()
     subject, body = _signup_request_email_content(r)
     body = body.replace("\r\n", "\n").replace("\n", "\r\n")
     return (
-        "mailto:" + quote(r.email, safe="")
+        "mailto:" + quote(email, safe="")
         + "?subject=" + quote(subject, safe="")
         + "&body=" + quote(body, safe="")
     )
@@ -115,12 +116,13 @@ def _signup_request_mailto(signup_request):
 def _signup_request_gmail_url(signup_request):
     """Build Gmail compose URL so the Email button opens Gmail in the browser."""
     r = signup_request
+    email = (r.email or "").strip()
     subject, body = _signup_request_email_content(r)
     body = body.replace("\r\n", "\n")  # Gmail uses \n in body
     base = "https://mail.google.com/mail/?view=cm&fs=1"
     return (
         base
-        + "&to=" + quote(r.email, safe="")
+        + "&to=" + quote(email, safe="")
         + "&su=" + quote(subject, safe="")
         + "&body=" + quote(body, safe="")
     )

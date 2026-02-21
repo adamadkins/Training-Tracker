@@ -721,7 +721,7 @@
         {% endif %}
         {% endwith %}
 
-        {% if current_user.is_authenticated %}
+        {% if current_user.is_authenticated and g.current_organization_id %}
         function checkUpdates() {
             if (document.hidden) return;  // skip when tab is in background
             {% if g.system_settings and g.system_settings.dm_enabled %}
@@ -776,5 +776,26 @@
         v{{ app_version }}
     </span>
 </footer>
+{% if current_user.is_authenticated and g.current_organization_id %}
+<script>
+(function() {
+  if (window === window.parent) return;
+  var apiUrl = '{{ url_for("employee.api_push_token_register", _external=False) }}';
+  var once = false;
+  function onToken(e) {
+    if (!e.data || e.data.type !== 'TrainingTrackerPushToken' || !e.data.token || once) return;
+    once = true;
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'include',
+      body: JSON.stringify({ token: e.data.token, platform: e.data.platform || 'web' })
+    }).catch(function() { once = false; });
+  }
+  window.addEventListener('message', onToken);
+  window.parent.postMessage({ type: 'TrainingTrackerGetPushToken' }, '*');
+})();
+</script>
+{% endif %}
 </body>
 </html>
