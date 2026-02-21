@@ -271,6 +271,20 @@ def login():
     return resp
 
 
+@auth_bp.get("/leave-company")
+def leave_company():
+    """Minimal page that tells the app shell (when in iframe) to show the company picker."""
+    html = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Switch company</title></head><body style="margin:0;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;color:#1e293b;">
+<script>
+(function(){
+  try { window.parent.postMessage({ type: 'TrainingTrackerShowCompanyPicker' }, '*'); } catch (e) {}
+})();
+</script>
+<p style="font-size:15px;color:#64748b;">Returning to company selection&hellip;</p>
+</body></html>"""
+    return Response(html, mimetype="text/html", headers={"Cache-Control": "no-store"})
+
+
 # --- New: Forgot Password Request ---
 
 @auth_bp.route("/forgot_password", methods=['GET', 'POST'])
@@ -434,9 +448,11 @@ def exit_support():
 def logout():
     current_app.logger.info("Logout requested for user_id=%s", getattr(current_user, "id", None))
     logout_user()
-    # Stay on same company's login page (same host)
-    login_url = url_for("auth.login", _external=True)
-    resp = redirect(login_url)
+    # Redirect to same host (subdomain) so user stays on company login, not main domain
+    scheme = request.environ.get("wsgi.url_scheme") or current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    host = request.host or ""
+    login_path = url_for("auth.login")
+    resp = redirect(f"{scheme}://{host}{login_path}")
     # Clear the "remember me" cookie so the user is not auto-logged back in (e.g. in app WebView).
     cookie_name = current_app.config.get("REMEMBER_COOKIE_NAME", "remember_token")
     resp.delete_cookie(
