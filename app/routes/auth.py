@@ -254,8 +254,18 @@ def reset_token(token):
 @auth_bp.get("/logout")
 @login_required
 def logout():
+    current_app.logger.info("Logout requested for user_id=%s", getattr(current_user, "id", None))
     logout_user()
-    return redirect(url_for("auth.login"))
+    resp = redirect(url_for("auth.login"))
+    # Clear the "remember me" cookie so the user is not auto-logged back in (e.g. in app WebView).
+    cookie_name = current_app.config.get("REMEMBER_COOKIE_NAME", "remember_token")
+    resp.delete_cookie(
+        cookie_name,
+        path="/",
+        secure=current_app.config.get("REMEMBER_COOKIE_SECURE", False),
+        samesite=current_app.config.get("REMEMBER_COOKIE_SAMESITE") or "Lax",
+    )
+    return resp
 
 
 @auth_bp.route("/change_password", methods=["POST"])

@@ -482,7 +482,7 @@
                             </div>
                         </a>
 
-                        <a href="{{ url_for('auth.logout') }}" class="btn-logout-icon" title="Sign Out">
+                        <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon nav-logout-link" title="Sign Out" aria-label="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         </a>
                     </div>
@@ -513,13 +513,39 @@
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');
         if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {
-            nav.querySelectorAll('.nav-links a, .profile-pill-link').forEach(function(link) {
-                link.addEventListener('click', function() {
+            nav.querySelectorAll('.nav-links a, .profile-pill-link, .nav-logout-form').forEach(function(el) {
+                el.addEventListener('click', function() {
                     nav.classList.remove('show');
                     if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); btn.setAttribute('aria-label', 'Open menu'); }
                 });
             });
         }
+        // Ensure Sign out works in app WebView: force navigation (link and form) so tap is reliable
+        function attachLogoutNav(el, url) {
+            if (!url) return;
+            el.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = url;
+            });
+            el.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = url;
+            }, { passive: false });
+        }
+        document.querySelectorAll('.nav-logout-form').forEach(function(form) {
+            var url = form.getAttribute('action') || form.action || '';
+            if (url) {
+                form.addEventListener('submit', function(e) { e.preventDefault(); window.location.href = url; });
+                var btn = form.querySelector('button[type="submit"]');
+                if (btn) attachLogoutNav(btn, url);
+            }
+        });
+        document.querySelectorAll('a[href*="/logout"], .nav-logout-link').forEach(function(link) {
+            var url = link.getAttribute('href');
+            if (url) attachLogoutNav(link, url);
+        });
         var notifyInApp = {{ 'true' if not current_user.is_authenticated or (current_user.settings and current_user.settings.notify_in_app) else 'false' }};
 
         window.createToast = function(message) {
