@@ -2124,9 +2124,15 @@ def schedule_publish(schedule_id):
         batch_enqueue_emails(email_recipients, title, body, 'schedule', link)
     for user in users_to_notify:
         settings = getattr(user, 'settings', None)
-        wants_push = getattr(settings, 'notify_push', True) if settings else True
+        try:
+            wants_push = getattr(settings, 'notify_push', True) if settings else True
+        except Exception:
+            wants_push = True
         if wants_push:
-            _enqueue_or_send_push(user.id, title, body, link)
+            try:
+                _enqueue_or_send_push(user.id, title, body, link)
+            except Exception:
+                pass
     cache.delete(f"schedule_detail/{schedule_id}/{current_user.id}")
     flash("Schedule published and staff notified.")
     return redirect(url_for('manager.schedules_list'))

@@ -16,15 +16,25 @@ from app import db
 from app.models import Notification, PushToken
 
 
+def _wants_pref(settings, name, default=True):
+    """Safely read a user setting (avoids 500 if column missing before migration)."""
+    if not settings:
+        return default
+    try:
+        return getattr(settings, name, default)
+    except Exception:
+        return default
+
+
 def notify(user, title, body, category='general', link_url=None, email_only=False, send_email=True):
     """
     In-app notification (sync) + optional email + optional push.
     Pass send_email=False to create only an in-app notification without consuming an email credit.
     """
     settings = getattr(user, 'settings', None)
-    wants_in_app = getattr(settings, 'notify_in_app', True) if settings else True
-    wants_email = getattr(settings, 'notify_email', True) if settings else True
-    wants_push = getattr(settings, 'notify_push', True) if settings else True
+    wants_in_app = _wants_pref(settings, 'notify_in_app', True)
+    wants_email = _wants_pref(settings, 'notify_email', True)
+    wants_push = _wants_pref(settings, 'notify_push', True)
 
     if wants_in_app and not email_only:
         db.session.add(Notification(
@@ -40,7 +50,10 @@ def notify(user, title, body, category='general', link_url=None, email_only=Fals
         _enqueue_or_send_email(to_email, title, body, category, link_url)
 
     if wants_push and not email_only:
-        _enqueue_or_send_push(user.id, title, body, link_url)
+        try:
+            _enqueue_or_send_push(user.id, title, body, link_url)
+        except Exception as e:
+            logger.warning("Push enqueue failed for user %s: %s", user.id, e)
 
 
 def _get_redis_queue():
