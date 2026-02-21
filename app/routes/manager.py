@@ -2099,7 +2099,12 @@ def schedule_publish(schedule_id):
         .options(joinedload(User.settings))
         .all()
     ) if emp_ids else []
-    link = url_for('employee.weekly_schedule', schedule_id=sch.id, _external=True)
+    # Use tenant host so employees open the link on the app subdomain (where they're logged in)
+    org = sch.organization or Organization.query.get(sch.organization_id)
+    scheme = current_app.config.get('PREFERRED_URL_SCHEME', 'https')
+    base_domain = current_app.config.get('MAIN_DOMAIN', 'trainingtracker.me')
+    path = url_for('employee.schedules_list', _external=False)
+    link = f"{scheme}://{org.subdomain}.{base_domain}{path}" if org else url_for('employee.schedules_list', _external=True)
     title = "New Schedule Published"
     body = f"A training schedule for {sch.start_date.strftime('%b %d')} has been published. Check your upcoming sessions."
     # Create in-app notifications in bulk (no email yet)

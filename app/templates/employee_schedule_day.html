@@ -5,40 +5,39 @@
     body:has(.hs-day-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
     body:has(.hs-day-wrapper) main { max-width: none !important; padding-top: 0 !important; }
 
-    .hs-day-wrapper { min-height: calc(100vh - 72px); background: #f5f5f5; }
-    .hs-content { background: #fff; padding: 16px 20px 24px; }
+    .hs-day-wrapper { min-height: calc(100vh - 72px); background: var(--bg-body); }
+    .hs-content { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .hs-back-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; margin-bottom: 16px; }
+    .hs-back-inline:hover { text-decoration: underline; }
     .hs-session-row {
-        display: flex; align-items: center; gap: 12px; padding: 14px 0;
-        border-bottom: 1px solid #eee; text-decoration: none; color: inherit;
-        transition: background 0.15s; cursor: pointer; flex-wrap: wrap;
+        display: flex; align-items: center; gap: 12px; padding: 16px 20px; margin-bottom: 8px;
+        border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
+        text-decoration: none; color: inherit; transition: all 0.2s; cursor: pointer; flex-wrap: wrap;
+        box-shadow: 0 1px 2px var(--shadow);
     }
-    .hs-session-row:hover { background: #f9f9f9; }
-    .hs-session-row:last-child { border-bottom: none; }
+    .hs-session-row:hover { border-color: var(--primary); box-shadow: 0 4px 12px var(--shadow); }
     .hs-session-row.locked { opacity: 0.85; cursor: default; pointer-events: none; }
     .hs-tag {
-        background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700;
-        padding: 4px 8px; border-radius: 4px; flex-shrink: 0;
+        background: var(--text-main); color: var(--bg-card); font-size: 11px; font-weight: 700;
+        padding: 4px 8px; border-radius: 8px; flex-shrink: 0;
     }
-    .hs-tag.learning { background: #0d7d4a; }
-    .hs-tag.teaching { background: #b45309; }
-    .hs-time { font-size: 14px; font-weight: 600; color: #333; }
-    .hs-position { font-size: 14px; color: #555; font-weight: 500; }
-    .hs-people { font-size: 13px; color: #666; margin-top: 4px; width: 100%; }
-    .hs-arrow { margin-left: auto; font-size: 12px; color: #999; flex-shrink: 0; }
-    .hs-lock-badge {
-        display: inline-flex; align-items: center; gap: 6px;
-        font-size: 12px; font-weight: 600; color: #666; margin-top: 4px;
-    }
-    .hs-day-empty { padding: 32px 0; text-align: center; font-size: 15px; color: #888; font-weight: 500; }
+    .hs-tag.learning { background: #059669; color: #fff; }
+    .hs-tag.teaching { background: #b45309; color: #fff; }
+    .hs-time { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .hs-position { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .hs-people { font-size: 13px; color: var(--text-muted); margin-top: 4px; width: 100%; }
+    .hs-arrow { margin-left: auto; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+    .hs-lock-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
+    .hs-day-empty { padding: 32px 0; text-align: center; font-size: 15px; color: var(--text-muted); font-weight: 500; }
 
     @media (max-width: 768px) {
-        .hs-header, .hs-content { padding-left: 16px; padding-right: 16px; }
+        .hs-content { padding: 16px; }
     }
 </style>
 
 <div class="hs-day-wrapper">
     <div class="hs-content">
-        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back-inline" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#1a73e8;text-decoration:none;margin-bottom:12px;"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
+        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back-inline"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
         {% if sessions %}
             {% for s in sessions %}
                 {% set is_teaching = s.trainer_employee_id == current_user.employee_id %}

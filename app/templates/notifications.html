@@ -15,7 +15,7 @@
         padding-top: 0 !important;
     }
 
-    /* --- LAYOUT --- */
+    /* --- LAYOUT (match dashboard) --- */
     .notif-wrapper {
         background: var(--bg-body);
         min-height: calc(100vh - 72px);
@@ -23,7 +23,7 @@
     }
 
     .notif-container {
-        max-width: 1600px;
+        max-width: 1400px;
         margin: 0 auto;
     }
 
@@ -197,11 +197,11 @@
                     {% set is_unread = n.read_at is none %}
                     {% set cat = n.category or 'general' %}
 
-                    {# Deep link from notification, fallback to dashboard #}
-                    {% if n.link_url %}
-                        {% set target_url = n.link_url %}
-                    {% elif cat == 'schedule' %}
+                    {# Use relative URL for schedule so click stays on current host (avoids "need to log in") #}
+                    {% if cat == 'schedule' %}
                         {% set target_url = url_for('manager.schedules_list') if current_user.role == 'manager' else url_for('employee.schedules_list') %}
+                    {% elif n.link_url %}
+                        {% set target_url = n.link_url %}
                     {% else %}
                         {% set target_url = url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') %}
                     {% endif %}

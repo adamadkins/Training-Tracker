@@ -5,73 +5,43 @@
     body:has(.hotschedule-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
     body:has(.hotschedule-wrapper) main { max-width: none !important; padding-top: 0 !important; }
 
-    /* HotSchedules-style: blue header, white list, grey section bars */
-    .hotschedule-wrapper { min-height: calc(100vh - 72px); background: #f5f5f5; }
-    .hs-header {
-        background: #1a73e8; color: #fff; padding: 16px 20px; padding-top: max(16px, env(safe-area-inset-top));
-    }
-    .hs-header-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
-    .hs-title { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.02em; }
-    .hs-subtitle { font-size: 13px; opacity: 0.92; margin: 0; font-weight: 500; }
-    .hs-back { color: rgba(255,255,255,0.95); text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
-    .hs-back:hover { color: #fff; }
-
-    /* Week section bar (grey with checkmark, "THIS WEEK, 1 of 1 posted", arrow) */
+    .hotschedule-wrapper { min-height: calc(100vh - 72px); background: var(--bg-body); padding: 24px 0; }
+    .hotschedule-wrapper > a { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; margin: 0 24px 16px; padding: 0; }
+    .hotschedule-wrapper > a:hover { text-decoration: underline; }
     .hs-week-bar {
-        display: flex; align-items: center; gap: 12px; padding: 12px 20px;
-        background: #e8e8e8; border: none; width: 100%; text-align: left;
-        font-size: 15px; font-weight: 600; color: #1a1a1a; cursor: pointer;
-        transition: background 0.15s;
+        display: flex; align-items: center; gap: 12px; padding: 14px 20px; margin: 0 24px 8px; max-width: 900px;
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+        font-size: 15px; font-weight: 600; color: var(--text-main); box-shadow: 0 2px 4px var(--shadow);
     }
-    .hs-week-bar:hover { background: #ddd; }
-    .hs-week-bar .fa-chevron-right { margin-left: auto; font-size: 12px; color: #666; }
-    .hs-week-check { color: #1a73e8; font-size: 16px; flex-shrink: 0; }
-    .hs-scheduled-hours { display: block; font-size: 13px; font-weight: 600; color: #444; margin-top: 4px; padding-left: 0; }
-
-    /* White content area under week bar */
-    .hs-content { background: #fff; padding: 0 20px 24px; }
-
-    /* Day row: "Sat, Feb 21 - Today" then shift rows */
+    .hs-week-check { color: var(--primary); font-size: 16px; flex-shrink: 0; }
+    .hs-scheduled-hours { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
+    .hs-content { max-width: 900px; margin: 0 24px 24px; padding: 0; }
     .hs-day-row {
-        display: flex; align-items: center; gap: 12px; padding: 14px 0;
-        border-bottom: 1px solid #eee; text-decoration: none; color: inherit;
-        transition: background 0.15s; cursor: pointer;
+        display: flex; align-items: center; gap: 12px; padding: 14px 20px; margin-bottom: 4px;
+        border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
+        transition: all 0.2s; box-shadow: 0 1px 2px var(--shadow);
     }
-    .hs-day-row:last-child { border-bottom: none; }
-    .hs-day-row:hover { background: #f9f9f9; }
-    .hs-day-row:active { background: #f0f0f0; }
-    .hs-day-date {
-        font-size: 15px; font-weight: 600; color: #1a1a1a; min-width: 140px; flex-shrink: 0;
-    }
-    .hs-day-date.today { color: #1a73e8; }
+    .hs-day-row:hover { border-color: var(--primary); box-shadow: 0 4px 12px var(--shadow); }
+    .hs-day-date { font-size: 15px; font-weight: 600; color: var(--text-main); min-width: 140px; flex-shrink: 0; }
+    .hs-day-date.today { color: var(--primary); }
     .hs-day-shifts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-    .hs-shift-row {
-        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-    .hs-tag {
-        background: #1a1a1a; color: #fff; font-size: 11px; font-weight: 700;
-        padding: 4px 8px; border-radius: 4px; flex-shrink: 0;
-    }
-    .hs-tag.learning { background: #0d7d4a; }
-    .hs-tag.teaching { background: #b45309; }
-    .hs-time { font-size: 14px; font-weight: 600; color: #333; }
-    .hs-role { font-size: 14px; color: #555; font-weight: 500; }
-    .hs-arrow { margin-left: auto; font-size: 12px; color: #999; flex-shrink: 0; }
-    .hs-day-empty { font-size: 14px; color: #888; font-weight: 500; }
-
-    /* Single shift link (whole row goes to first session of the day if only one) */
-    .hs-day-row.hs-single-shift { align-items: flex-start; }
-    .hs-day-row .hs-day-shifts a { text-decoration: none; color: inherit; display: block; }
-
+    .hs-day-shifts a { text-decoration: none; color: inherit; }
+    .hs-shift-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .hs-tag { background: var(--text-main); color: var(--bg-card); font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 8px; flex-shrink: 0; }
+    .hs-tag.learning { background: #059669; color: #fff; }
+    .hs-tag.teaching { background: #b45309; color: #fff; }
+    .hs-time { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .hs-role { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .hs-arrow { margin-left: auto; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+    .hs-day-empty { font-size: 14px; color: var(--text-muted); font-weight: 500; }
     @media (max-width: 768px) {
-        .hs-header, .hs-week-bar, .hs-content { padding-left: 16px; padding-right: 16px; }
+        .hotschedule-wrapper, .hs-content { padding-left: 16px; padding-right: 16px; margin-left: 0; margin-right: 0; }
         .hs-day-date { min-width: 120px; font-size: 14px; }
-        .hs-shift-row { flex-wrap: wrap; }
     }
 </style>
 
 <div class="hotschedule-wrapper">
-    <a href="{{ url_for('employee.schedules_list') }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#1a73e8;text-decoration:none;margin:12px 20px;padding:0;"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
+    <a href="{{ url_for('employee.schedules_list') }}"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
     {# Week section bar: "THIS WEEK" or "NEXT WEEK", X of 1 posted, Scheduled sessions #}
     <button type="button" class="hs-week-bar" disabled aria-label="Current week">
         <i class="fa-solid fa-circle-check hs-week-check"></i>
