@@ -260,10 +260,15 @@ def login():
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
 
+    # Don't cache login page so app WebView always gets latest (e.g. "Use different company" text)
     if org_id is None:
         # Main domain: show login form for platform admins (no_tenant_login for anonymous would go on landing)
-        return render_template("login.html", admin_login=True)
-    return render_template("login.html")
+        resp = current_app.make_response(render_template("login.html", admin_login=True))
+    else:
+        resp = current_app.make_response(render_template("login.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 
 # --- New: Forgot Password Request ---
