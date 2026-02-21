@@ -1260,11 +1260,20 @@ def employee_create():
             db.session.flush()
 
             if email:
-                new_user = User(email=email, role=role, employee_id=new_emp.id)
+                new_user = User(
+                    organization_id=g._manager_org_id,
+                    email=email,
+                    role=role,
+                    employee_id=new_emp.id,
+                )
                 db.session.add(new_user)
                 db.session.commit()
-                send_invite_email(new_user)
-                flash(f"{first_name} has been added and an invitation email was sent.")
+                try:
+                    send_invite_email(new_user)
+                    flash(f"{first_name} has been added and an invitation email was sent.")
+                except Exception as email_err:
+                    current_app.logger.warning("Invite email failed for %s: %s", email, email_err)
+                    flash(f"{first_name} has been added. The invitation email could not be sent; you can resend from their profile.", "warning")
             else:
                 db.session.commit()
                 flash(f"{first_name} has been added (no email — login access not enabled).")
