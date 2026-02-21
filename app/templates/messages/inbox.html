@@ -351,7 +351,7 @@
             <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="back-link" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"><i class="fa-solid fa-arrow-left"></i> Back</a>
 
             <div class="inbox-hero">
-                <h1 class="inbox-title">Messages</h1>
+                <h1 class="inbox-title hide-on-mobile-title">Messages</h1>
                 <p class="inbox-subtitle">{{ conversations|length }} conversation{{ 's' if conversations|length != 1 else '' }}</p>
             </div>
 

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
-    <h1 class="page-title">Platform Admin</h1>
+    <h1 class="page-title hide-on-mobile-title">Platform Admin</h1>
     <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{% set h = request.host.split(':')[0] %}{% set base_domain = h[4:] if h[:4] == 'www.' else h %}{{ base_domain }}</strong></p>
 
     <div class="admin-stats">

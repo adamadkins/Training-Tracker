@@ -365,6 +365,11 @@
                 max-width: 100%;
             }
             .brand-logo:has(.brand-logo-img-wrap) .brand-logo-text { display: none; }
+            .hide-on-mobile-title { display: none !important; }
+        }
+        .nav-link-mobile-only { display: none !important; }
+        @media (max-width: 900px) {
+            .nav-link-mobile-only { display: block !important; }
         }
 
         /* ── Responsive nav (dropdown) ── */
@@ -550,6 +555,7 @@
                     <a href="{{ url_for('admin.organizations_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.organization') else '' }}">Organizations</a>
                     <a href="{{ url_for('admin.users_list') }}" class="{{ 'active' if request.endpoint == 'admin.users_list' else '' }}">Users</a>
                     {% elif current_user.role == 'manager' %}
+                    <a href="{{ url_for('manager.dashboard') }}" class="nav-link-mobile-only {{ 'active' if request.endpoint == 'manager.dashboard' else '' }}">Dashboard</a>
                     <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>
                     <a href="{{ url_for('manager.positions_list') }}" data-tutorial="positions" class="{{ 'active' if 'position' in request.endpoint else '' }}">Positions</a>
                     <a href="{{ url_for('manager.roadmaps_list') }}" data-tutorial="roadmaps" class="{{ 'active' if 'roadmap' in request.endpoint and request.endpoint not in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] else '' }}">Roadmaps</a>

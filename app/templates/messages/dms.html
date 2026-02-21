@@ -275,7 +275,7 @@
 
         <div class="inbox-hero" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
             <div>
-                <h1 class="inbox-title"><i class="fa-regular fa-comment-dots" style="color:var(--primary); margin-right:8px;"></i>Direct Messages</h1>
+                <h1 class="inbox-title hide-on-mobile-title"><i class="fa-regular fa-comment-dots" style="color:var(--primary); margin-right:8px;"></i>Direct Messages</h1>
                 <p class="inbox-subtitle">{{ conversations|length }} conversation{{ 's' if conversations|length != 1 else '' }}</p>
             </div>
             <button class="btn-new-dm" onclick="openNewDmModal()">

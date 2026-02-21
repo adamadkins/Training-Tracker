@@ -335,7 +335,7 @@
         <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="back-link" onclick="if (window.history.length > 1) { event.preventDefault(); history.back(); }"><i class="fa-solid fa-arrow-left"></i> Back</a>
 
         <div class="settings-hero">
-            <h1 class="settings-title">Settings</h1>
+            <h1 class="settings-title hide-on-mobile-title">Settings</h1>
             <p class="settings-subtitle">Personal preferences{% if current_user.role == 'manager' %} & system configuration{% endif %}</p>
         </div>
 

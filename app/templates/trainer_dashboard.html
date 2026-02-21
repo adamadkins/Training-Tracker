@@ -181,7 +181,7 @@
                 <img src="{{ employee.avatar(80) }}" class="avatar-img" alt="Profile">
                 <div>
                     <h1 class="welcome-text" id="greetingText">Hello, {{ employee.first_name }}</h1>
-                    <p class="welcome-sub">{{ 'Dashboard' if employee.role == 'manager' else 'Trainer Dashboard' }}</p>
+                    <p class="welcome-sub hide-on-mobile-title">{{ 'Dashboard' if employee.role == 'manager' else 'Trainer Dashboard' }}</p>
                 </div>
             </div>
             <a href="{{ url_for('employee.quick_train') }}" class="btn-primary" style="padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 700;">

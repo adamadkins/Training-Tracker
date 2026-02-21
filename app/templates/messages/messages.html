@@ -865,7 +865,7 @@ body.msg-active { overflow: hidden; }
         <div class="channel-header">
             <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}" class="channel-header-back" title="Back to app"><i class="fa-solid fa-chevron-left"></i><span class="back-text">Back to app</span></a>
             <div class="channel-header-info">
-                <h1 class="channel-header-name">Messages</h1>
+                <h1 class="channel-header-name hide-on-mobile-title">Messages</h1>
                 <span class="channel-header-meta">Choose a conversation or start a new one</span>
             </div>
         </div>
