@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from app import db
 from app.models import (
     Employee, TrainingSession, SessionRating, Schedule,
-    Position, Daypart, PositionDescriptor, Notification, SystemSettings, User
+    Position, Daypart, PositionDescriptor, Notification, SystemSettings, User, PushToken
 )
 from app.utils.notifications import notify
 
@@ -203,6 +203,56 @@ def notifications_clear():
 def api_notification_count():
     count = Notification.query.filter_by(user_id=current_user.id, read_at=None).count()
     return jsonify({'count': count})
+
+
+@employee_bp.route("/api/push-token", methods=['POST'])
+@login_required
+def api_push_token_register():
+    """Register or update FCM/APNs token for the current user (called from app when logged in)."""
+    # #region agent log
+    try:
+        import json
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "A", "location": "employee.api_push_token_register:entry", "message": "push token register called", "data": {"user_id": current_user.id}, "timestamp": __import__("time").time() * 1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    data = request.get_json(force=True, silent=True) or {}
+    token = (data.get('token') or '').strip()
+    platform = (data.get('platform') or 'android').lower()[:20]
+    if not token:
+        return jsonify({'error': 'token required'}), 400
+    if platform not in ('android', 'ios'):
+        platform = 'android'
+    existing = PushToken.query.filter_by(user_id=current_user.id, token=token).first()
+    if existing:
+        existing.platform = platform
+        existing.updated_at = datetime.now(timezone.utc)
+    else:
+        db.session.add(PushToken(user_id=current_user.id, token=token, platform=platform))
+    db.session.commit()
+    # #region agent log
+    try:
+        import json
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "A", "location": "employee.api_push_token_register:success", "message": "push token saved", "data": {"user_id": current_user.id, "platform": platform, "token_len": len(token)}, "timestamp": __import__("time").time() * 1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    return jsonify({'ok': True})
+
+
+@employee_bp.route("/api/push-token/remove", methods=['POST'])
+@login_required
+def api_push_token_remove():
+    """Remove a device token (e.g. on logout)."""
+    data = request.get_json(force=True, silent=True) or {}
+    token = (data.get('token') or '').strip()
+    if not token:
+        return jsonify({'error': 'token required'}), 400
+    PushToken.query.filter_by(user_id=current_user.id, token=token).delete()
+    db.session.commit()
+    return jsonify({'ok': True})
 
 
 @employee_bp.route("/api/tutorial-seen", methods=['POST'])

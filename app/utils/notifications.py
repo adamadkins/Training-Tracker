@@ -250,9 +250,25 @@ def _send_push_impl(user_id, title, body, link_url=None):
     """Send FCM messages to all push tokens for user_id. Remove invalid tokens."""
     from firebase_admin import messaging
     tokens = PushToken.query.filter_by(user_id=user_id).all()
+    # #region agent log
+    try:
+        import json, time
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "B", "location": "notifications._send_push_impl:tokens", "message": "token count", "data": {"user_id": user_id, "token_count": len(tokens)}, "timestamp": time.time() * 1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     if not tokens:
         return
     app = _get_firebase_app()
+    # #region agent log
+    try:
+        import json, time
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "C", "location": "notifications._send_push_impl:firebase", "message": "firebase app", "data": {"user_id": user_id, "firebase_ok": app is not None}, "timestamp": time.time() * 1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     if not app:
         return
     for pt in tokens:
@@ -265,7 +281,23 @@ def _send_push_impl(user_id, title, body, link_url=None):
                 apns=messaging.APNSConfig(headers={'apns-priority': '10'}, payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             )
             messaging.send(msg)
+            # #region agent log
+            try:
+                import json, time
+                with open("debug-23c2de.log", "a") as _f:
+                    _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "E", "location": "notifications._send_push_impl:sent", "message": "FCM send ok", "data": {"user_id": user_id}, "timestamp": time.time() * 1000}) + "\n")
+            except Exception:
+                pass
+            # #endregion
         except Exception as e:
+            # #region agent log
+            try:
+                import json, time
+                with open("debug-23c2de.log", "a") as _f:
+                    _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "E", "location": "notifications._send_push_impl:send_failed", "message": "FCM send failed", "data": {"user_id": user_id, "error": str(e)[:200]}, "timestamp": time.time() * 1000}) + "\n")
+            except Exception:
+                pass
+            # #endregion
             logger.warning("Push send failed for token %s: %s", pt.token[:20] + "...", e)
             err = str(e).lower()
             if 'unregistered' in err or 'invalid' in err or 'not found' in err or 'invalidargument' in err:
@@ -278,6 +310,14 @@ def _send_push_impl(user_id, title, body, link_url=None):
 
 def _enqueue_or_send_push(user_id, title, body, link_url=None):
     """Send push in a background thread so the request returns immediately."""
+    # #region agent log
+    try:
+        import json, time
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "D", "location": "notifications._enqueue_or_send_push", "message": "push enqueued", "data": {"user_id": user_id, "title": title[:50] if title else ""}, "timestamp": time.time() * 1000}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     app = current_app._get_current_object()
     threading.Thread(
         target=_send_push_background,
