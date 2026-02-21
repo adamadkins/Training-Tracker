@@ -248,7 +248,24 @@ def _get_firebase_app():
 
 def _send_push_impl(user_id, title, body, link_url=None):
     """Send FCM messages to all push tokens for user_id. Remove invalid tokens."""
-    from firebase_admin import messaging
+    # #region agent log
+    try:
+        import json, time
+        with open("debug-23c2de.log", "a") as _f:
+            _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "B", "location": "notifications._send_push_impl:entry", "message": "thread started", "data": {"user_id": user_id}, "timestamp": time.time() * 1000}) + "\n")
+    except Exception as _ex:
+        pass
+    # #endregion
+    try:
+        from firebase_admin import messaging
+    except Exception as _e:
+        try:
+            import json, time
+            with open("debug-23c2de.log", "a") as _f:
+                _f.write(json.dumps({"sessionId": "23c2de", "hypothesisId": "E", "location": "notifications._send_push_impl:import_err", "message": "firebase_admin import failed", "data": {"user_id": user_id, "error": str(_e)[:200]}, "timestamp": time.time() * 1000}) + "\n")
+        except Exception:
+            pass
+        return
     tokens = PushToken.query.filter_by(user_id=user_id).all()
     # #region agent log
     try:
