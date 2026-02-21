@@ -532,6 +532,7 @@ def quick_train():
             db.session.flush()
 
         new_session = TrainingSession(
+            organization_id=_org_id(),
             schedule_id=current_schedule.id,
             trainer_employee_id=current_user.employee.id,
             trainee_employee_id=trainee_id,
