@@ -272,14 +272,14 @@ def api_tutorial_reset():
     return jsonify({'ok': True})
 
 
-# --- SCHEDULES (THE WEEKLY VIEW) ---
+# --- SCHEDULES (LIST: WEEKS IN ORDER, EACH WEEK HAS DAYS) ---
 @employee_bp.route("/schedules")
 @login_required
 def schedules_list():
     if current_user.role == 'manager':
-        schedules = Schedule.query.filter_by(organization_id=_org_id()).order_by(Schedule.start_date.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=_org_id()).order_by(Schedule.start_date.asc()).all()
     else:
-        schedules = Schedule.query.filter_by(organization_id=_org_id(), status='published').order_by(Schedule.start_date.desc()).all()
+        schedules = Schedule.query.filter_by(organization_id=_org_id(), status='published').order_by(Schedule.start_date.asc()).all()
 
     tz = pytz.timezone('US/Eastern')
     today = datetime.now(tz).date()
@@ -297,6 +297,21 @@ def schedules_list():
                 completed_count += 1
         is_current = s.start_date <= today <= s.end_date
         is_past = s.end_date < today
+        # Build 7 days for this week; for each day, sessions that involve current user (or all if manager)
+        days = []
+        for i in range(7):
+            current_date = s.start_date + timedelta(days=i)
+            day_sessions = [sess for sess in s.sessions if sess.session_date == current_date]
+            # For list summary we only care about sessions for this user (or all if manager)
+            if current_user.role != 'manager':
+                day_sessions_for_user = [sess for sess in day_sessions if sess.trainee_employee_id == me or sess.trainer_employee_id == me]
+            else:
+                day_sessions_for_user = day_sessions
+            days.append({
+                'date': current_date,
+                'sessions': day_sessions_for_user,
+                'is_today': current_date == today,
+            })
         enriched.append({
             'schedule': s,
             'my_count': my_count,
@@ -304,9 +319,52 @@ def schedules_list():
             'completed_count': completed_count,
             'is_current': is_current,
             'is_past': is_past,
+            'days': days,
         })
 
+    # Order: this week first, then future weeks (asc), then past weeks (desc)
+    def sort_key(item):
+        s = item['schedule']
+        if item['is_current']:
+            return (0, s.start_date)
+        if s.start_date > today:
+            return (1, s.start_date)
+        return (2, -s.start_date.toordinal())  # past: later weeks first
+
+    enriched.sort(key=sort_key)
+
     return render_template("employee_schedules_list.html", schedules=enriched, today=today)
+
+
+@employee_bp.route("/schedule/<int:schedule_id>/day/<date_str>")
+@login_required
+def schedule_day(schedule_id, date_str):
+    """Single-day view: all training sessions for that day (list links here)."""
+    schedule = Schedule.query.filter_by(organization_id=_org_id(), id=schedule_id).first_or_404()
+    if schedule.status != 'published' and current_user.role == 'trainee':
+        abort(403)
+    try:
+        day_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        abort(404)
+    if not (schedule.start_date <= day_date <= schedule.end_date):
+        abort(404)
+
+    tz = pytz.timezone('US/Eastern')
+    today_in_est = datetime.now(tz).date()
+    sessions = [s for s in schedule.sessions if s.session_date == day_date]
+    # For non-managers, only show sessions they're in
+    me = current_user.employee_id
+    if current_user.role != 'manager':
+        sessions = [s for s in sessions if s.trainee_employee_id == me or s.trainer_employee_id == me]
+
+    return render_template(
+        "employee_schedule_day.html",
+        schedule=schedule,
+        day_date=day_date,
+        sessions=sessions,
+        is_today=(day_date == today_in_est),
+    )
 
 
 @employee_bp.route("/schedule/<int:schedule_id>")

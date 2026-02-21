@@ -14,36 +14,44 @@
     .hs-title { font-size: 22px; font-weight: 700; margin: 0 0 2px 0; letter-spacing: -0.02em; }
     .hs-subtitle { font-size: 13px; opacity: 0.92; margin: 0; font-weight: 500; }
 
-    /* Week rows: grey bar, checkmark, "THIS WEEK, 1 of 1 posted", sessions count, arrow */
-    .hs-list-content { background: #fff; margin-top: 0; }
-    .hs-week-link {
-        display: flex; align-items: center; gap: 12px; padding: 14px 20px;
-        background: #fff; border: none; border-bottom: 1px solid #eee;
-        width: 100%; text-align: left; font-size: 15px; font-weight: 600; color: #1a1a1a;
-        text-decoration: none; color: inherit; cursor: pointer; transition: background 0.15s;
+    /* Week section bar (grey, not clickable) */
+    .hs-week-bar {
+        display: flex; align-items: center; gap: 12px; padding: 12px 20px;
+        background: #e8e8e8; border: none; width: 100%; text-align: left;
+        font-size: 15px; font-weight: 600; color: #1a1a1a;
     }
-    .hs-week-link:hover { background: #f5f5f5; }
-    .hs-week-link:active { background: #eee; }
-    .hs-week-link.current { background: #e8f0fe; border-left: 4px solid #1a73e8; }
-    .hs-week-link.past { opacity: 0.75; }
-    .hs-week-link.past:hover { opacity: 1; }
     .hs-week-check { color: #1a73e8; font-size: 16px; flex-shrink: 0; }
-    .hs-week-text { flex: 1; min-width: 0; }
-    .hs-week-label {
-        display: block; font-weight: 600; color: #1a1a1a;
-    }
-    .hs-week-meta { font-size: 13px; font-weight: 500; color: #555; margin-top: 2px; }
-    .hs-week-arrow { font-size: 12px; color: #999; flex-shrink: 0; }
+    .hs-week-bar span { flex: 1; min-width: 0; }
+    .hs-scheduled-hours { display: block; font-size: 13px; font-weight: 600; color: #444; margin-top: 4px; }
 
-    .empty-state {
-        text-align: center; padding: 48px 24px; background: #fff; margin: 0;
+    /* Day rows under the week bar */
+    .hs-list-content { background: #fff; }
+    .hs-day-link {
+        display: flex; align-items: flex-start; gap: 12px; padding: 14px 20px;
+        border-bottom: 1px solid #eee; text-decoration: none; color: inherit;
+        transition: background 0.15s; cursor: pointer;
     }
+    .hs-day-link:hover { background: #f9f9f9; }
+    .hs-day-link:active { background: #f0f0f0; }
+    .hs-day-link:last-child { border-bottom: none; }
+    .hs-day-date {
+        font-size: 15px; font-weight: 600; color: #1a1a1a; min-width: 130px; flex-shrink: 0;
+    }
+    .hs-day-date.today { color: #1a73e8; }
+    .hs-day-summary { flex: 1; min-width: 0; }
+    .hs-day-training {
+        font-size: 14px; color: #555; font-weight: 500; margin-top: 2px;
+    }
+    .hs-day-training.hidden { color: #888; font-style: italic; }
+    .hs-day-arrow { font-size: 12px; color: #999; flex-shrink: 0; margin-top: 2px; }
+    .empty-state { text-align: center; padding: 48px 24px; background: #fff; margin: 0; }
     .empty-state-icon { font-size: 40px; color: #ccc; margin-bottom: 12px; display: block; }
     .empty-state-title { font-size: 17px; font-weight: 700; color: #333; margin: 0 0 6px 0; }
     .empty-state-desc { font-size: 14px; color: #666; margin: 0; }
 
     @media (max-width: 768px) {
-        .hs-header, .hs-week-link { padding-left: 16px; padding-right: 16px; }
+        .hs-header, .hs-week-bar, .hs-day-link { padding-left: 16px; padding-right: 16px; }
+        .hs-day-date { min-width: 110px; font-size: 14px; }
     }
 </style>
 
@@ -60,31 +68,52 @@
         {% if schedules %}
             {% for item in schedules %}
                 {% set s = item.schedule %}
-                <a href="{{ url_for('employee.weekly_schedule', schedule_id=s.id) }}"
-                   class="hs-week-link {{ 'current' if item.is_current else 'past' if item.is_past else '' }}">
+                <div class="hs-week-bar">
                     <i class="fa-solid fa-circle-check hs-week-check"></i>
-                    <span class="hs-week-text">
-                        <span class="hs-week-label">
-                            {% if item.is_current %}
-                                THIS WEEK, 1 of 1 posted
-                            {% elif s.start_date > today %}
-                                NEXT WEEK, 1 of 1 posted
-                            {% else %}
-                                Week of {{ s.start_date.strftime('%b %d') }}, 1 of 1 posted
-                            {% endif %}
-                        </span>
-                        <span class="hs-week-meta">
-                            {{ s.start_date.strftime('%b %d') }} – {{ s.end_date.strftime('%b %d, %Y') }}
-                            {% if item.my_count > 0 %}
-                                · {{ item.my_count }} session{{ 's' if item.my_count != 1 else '' }} for you
-                            {% endif %}
-                            {% if item.completed_count > 0 %}
-                                · {{ item.completed_count }}/{{ item.total_count }} done
-                            {% endif %}
-                        </span>
+                    <span>
+                        {% if item.is_current %}
+                            THIS WEEK, 1 of 1 posted
+                        {% elif s.start_date > today %}
+                            NEXT WEEK, 1 of 1 posted
+                        {% else %}
+                            Week of {{ s.start_date.strftime('%b %d') }}, 1 of 1 posted
+                        {% endif %}
+                        <span class="hs-scheduled-hours">Scheduled sessions: {{ item.my_count }}</span>
                     </span>
-                    <i class="fa-solid fa-chevron-right hs-week-arrow"></i>
-                </a>
+                </div>
+                {% for day in item.days %}
+                    <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=day.date.strftime('%Y-%m-%d')) }}"
+                       class="hs-day-link">
+                        <span class="hs-day-date {{ 'today' if day.is_today else '' }}">
+                            {{ day.date.strftime('%a, %b %d') }}{% if day.is_today %} - Today{% endif %}
+                        </span>
+                        <div class="hs-day-summary">
+                            {% if day.sessions %}
+                                {% for sess in day.sessions %}
+                                    <div class="hs-day-training {{ 'hidden' if sess.is_locked and current_user.role != 'manager' else '' }}">
+                                        Training
+                                        {% if sess.is_locked and current_user.role != 'manager' %}
+                                            · Hidden until start time
+                                        {% else %}
+                                            {% set start_t = sess.custom_start_time or (sess.daypart.start_time if sess.daypart else none) %}
+                                            {% set end_t = sess.custom_end_time or (sess.daypart.end_time if sess.daypart else none) %}
+                                            {% if start_t %}
+                                                · {{ start_t.strftime('%I:%M %p').lstrip('0') }}{% if end_t %} - {{ end_t.strftime('%I:%M %p').lstrip('0') }}{% endif %}
+                                            {% elif sess.daypart %}
+                                                · {{ sess.daypart.name }}
+                                            {% else %}
+                                                · Scheduled
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="hs-day-training">No sessions</div>
+                            {% endif %}
+                        </div>
+                        <i class="fa-solid fa-chevron-right hs-day-arrow"></i>
+                    </a>
+                {% endfor %}
             {% endfor %}
         {% else %}
             <div class="empty-state">
