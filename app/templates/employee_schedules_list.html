@@ -65,18 +65,19 @@
                         <span class="hs-scheduled-hours">Scheduled sessions: {{ item.my_count }}</span>
                     </span>
                 </div>
-                {% if s %}
-                    <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=item.display_date.strftime('%Y-%m-%d')) }}"
-                       class="hs-day-link">
-                {% else %}
-                    <div class="hs-day-link no-link">
-                {% endif %}
-                        <span class="hs-day-date {{ 'today' if item.display_date == today else '' }}">
-                            {{ item.display_date.strftime('%a, %b %d') }}{% if item.display_date == today %} - Today{% endif %}
+                {% for day in item.days %}
+                    {% if s %}
+                        <a href="{{ url_for('employee.schedule_day', schedule_id=s.id, date_str=day.date.strftime('%Y-%m-%d')) }}"
+                           class="hs-day-link">
+                    {% else %}
+                        <div class="hs-day-link no-link">
+                    {% endif %}
+                        <span class="hs-day-date {{ 'today' if day.is_today else '' }}">
+                            {{ day.date.strftime('%a, %b %d') }}{% if day.is_today %} - Today{% endif %}
                         </span>
                         <div class="hs-day-summary">
-                            {% if item.display_sessions %}
-                                {% for sess in item.display_sessions %}
+                            {% if day.sessions %}
+                                {% for sess in day.sessions %}
                                     <div class="hs-day-training {{ 'hidden' if sess.is_locked and current_user.role != 'manager' else '' }}">
                                         Training
                                         {% if sess.is_locked and current_user.role != 'manager' %}
@@ -99,7 +100,8 @@
                             {% endif %}
                         </div>
                         {% if s %}<i class="fa-solid fa-chevron-right hs-day-arrow"></i>{% endif %}
-                {% if s %}</a>{% else %}</div>{% endif %}
+                    {% if s %}</a>{% else %}</div>{% endif %}
+                {% endfor %}
             {% endfor %}
         {% else %}
             <div class="empty-state">
