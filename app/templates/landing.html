@@ -1502,7 +1502,7 @@
 
         .footer-top {
             display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
             gap: 48px;
             margin-bottom: 48px;
         }
@@ -3094,6 +3094,12 @@
                 <a href="{{ url_for('auth.support') }}">Support</a>
                 <a href="{{ url_for('legacy.about') }}">About Classic</a>
                 <a href="mailto:hello@trainingtracker.me">Contact</a>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+                <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+                <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>
             </div>
         </div>
         <div class="footer-bottom">

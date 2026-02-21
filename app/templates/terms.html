@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service &mdash; Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.7; }
+        .legal-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
+        .back-link:hover { color: #4f46e5; }
+        .legal-header { margin-bottom: 36px; }
+        .legal-header h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px 0; color: #0f172a; }
+        .legal-header .updated { color: #64748b; font-size: 14px; }
+        .legal-section { margin-bottom: 28px; }
+        .legal-section h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #1e293b; }
+        .legal-section p, .legal-section li { font-size: 15px; color: #334155; margin: 0 0 10px 0; }
+        .legal-section ul { padding-left: 22px; margin: 0 0 10px 0; }
+        .legal-section a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+        .legal-section a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="legal-wrap">
+        <a href="{{ url_for('auth.home') }}" class="back-link">← Back to home</a>
+        <div class="legal-header">
+            <h1>Terms of Service</h1>
+            <p class="updated">Last updated: February 2025</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>1. Agreement to terms</h2>
+            <p>By accessing or using Training Tracker (“Service”), including our website and software, you agree to be bound by these Terms of Service (“Terms”). If you are using the Service on behalf of an organization, you represent that you have authority to bind that organization to these Terms. If you do not agree, do not use the Service.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Description of service</h2>
+            <p>Training Tracker is a software-as-a-service platform that helps restaurant and quick-service teams manage training, schedules, employees, and progress. The Service is provided on a subscription or trial basis. We may update features, pricing, or availability from time to time and will communicate material changes as appropriate.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Accounts and access</h2>
+            <p>You must provide accurate information when creating an account or requesting access. You are responsible for keeping your password confidential and for all activity under your account. Each organization (company) has its own secure portal (e.g. yourcompany.trainingtracker.me). You must use the Service only for lawful purposes and in line with these Terms and any applicable policies.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. Acceptable use</h2>
+            <p>You agree not to:</p>
+            <ul>
+                <li>Use the Service for any illegal purpose or in violation of any laws.</li>
+                <li>Share access credentials or allow unauthorized use of your account.</li>
+                <li>Attempt to gain unauthorized access to the Service, other accounts, or our systems.</li>
+                <li>Transmit malware, spam, or any content that is harmful, abusive, or infringing.</li>
+                <li>Reverse-engineer, copy, or resell the Service or its underlying technology except as permitted.</li>
+                <li>Use the Service in a way that could harm, overload, or impair our infrastructure or other users.</li>
+            </ul>
+            <p>We may suspend or terminate access if we reasonably believe you have violated these Terms or acceptable use.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Intellectual property</h2>
+            <p>Training Tracker and its content, design, and technology are owned by us or our licensors. We grant you a limited, non-exclusive, non-transferable right to use the Service for your internal business purposes during your subscription. You do not acquire any ownership rights. Your data (e.g. employee names, schedules) remains yours; we do not claim ownership of your content.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Payment and subscription</h2>
+            <p>Where the Service is paid, you agree to pay the fees applicable to your plan. Fees may be billed in advance (e.g. monthly or annually). If you pay by card or other payment method, you authorize us (or our payment processor, e.g. Stripe) to charge that method. Prices and plans may change with notice. Refunds are handled in line with our then-current policy (e.g. as stated at signup or on the billing page).</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Trial and free offerings</h2>
+            <p>We may offer free trials or free tiers. Trial or free access may be limited in time or features. When a trial ends, your account may convert to a paid plan or be restricted until you subscribe. We may discontinue or change free offerings with reasonable notice where feasible.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>8. Termination</h2>
+            <p>You may stop using the Service at any time. We may suspend or terminate your or your organization’s access for breach of these Terms, non-payment, or for operational or legal reasons, with notice where reasonable. On termination, your right to use the Service ends. We may retain or delete your data in line with our <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>9. Disclaimers</h2>
+            <p>The Service is provided “as is” and “as available.” We disclaim all warranties, express or implied, including merchantability, fitness for a particular purpose, and non-infringement. We do not guarantee that the Service will be uninterrupted, error-free, or secure. You use it at your own risk.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>10. Limitation of liability</h2>
+            <p>To the fullest extent permitted by law, we (and our affiliates, directors, employees, and suppliers) are not liable for any indirect, incidental, special, consequential, or punitive damages, or for loss of profits, data, or business opportunities, arising from or related to the Service or these Terms. Our total liability for any claims in connection with the Service is limited to the amount you paid us in the twelve (12) months before the claim (or one hundred dollars if greater). Some jurisdictions do not allow these limitations; in such cases our liability is limited to the maximum permitted.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>11. Indemnity</h2>
+            <p>You agree to indemnify and hold harmless Training Tracker and its affiliates, officers, and employees from any claims, damages, losses, or costs (including reasonable legal fees) arising from your use of the Service, your content, or your breach of these Terms.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>12. Governing law and disputes</h2>
+            <p>These Terms are governed by the laws of the United States and the Commonwealth of Kentucky, without regard to conflict-of-law principles. Any dispute shall be resolved in the state or federal courts located in Kentucky. If you are in the European Union, you may also have rights under mandatory consumer laws in your country.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>13. Changes to these terms</h2>
+            <p>We may update these Terms from time to time. We will post the updated version on this page and update the “Last updated” date. For material changes, we may notify you by email or through the Service. Continued use after the effective date of changes constitutes acceptance. If you do not agree, you must stop using the Service.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>14. Contact</h2>
+            <p>Questions about these Terms? Contact us at <a href="{{ url_for('auth.support') }}">Support</a> or <a href="mailto:hello@trainingtracker.me">hello@trainingtracker.me</a>.</p>
+        </div>
+    </div>
+</body>
+</html>

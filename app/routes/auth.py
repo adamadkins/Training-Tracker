@@ -163,6 +163,21 @@ def tour():
     return render_template("tour.html")
 
 
+@auth_bp.get("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+@auth_bp.get("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@auth_bp.get("/cookies")
+def cookies():
+    return render_template("cookies.html")
+
+
 SUPPORT_EMAIL = "adkins.adam04@gmail.com"
 
 
