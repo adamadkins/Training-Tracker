@@ -14,16 +14,19 @@ from app import db
 class User(db.Model, UserMixin):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(255), nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), nullable=False, default="trainee")
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.id"), nullable=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=True)
+    is_superuser = db.Column(db.Boolean, default=False, nullable=False)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
     last_seen = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     employee = db.relationship("Employee", foreign_keys=[employee_id],
                                backref=db.backref("user_account", uselist=False))
+    organization = db.relationship("Organization", foreign_keys=[organization_id])
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -426,3 +429,48 @@ class GuestTrainerToken(db.Model):
         if self.used_at:
             return False
         return datetime.now(timezone.utc) < self.expires_at.replace(tzinfo=timezone.utc)
+
+
+class Organization(db.Model):
+    __tablename__ = "organizations"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    subdomain = db.Column(db.String(80), nullable=False, unique=True, index=True)
+    status = db.Column(db.String(20), nullable=False, default="active")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    stripe_customer_id = db.Column(db.String(255), nullable=True, index=True)
+    stripe_subscription_id = db.Column(db.String(255), nullable=True, index=True)
+    stripe_subscription_status = db.Column(db.String(30), nullable=True)
+    trial_ends_at = db.Column(db.DateTime, nullable=True)
+    trial_plan = db.Column(db.String(20), nullable=True)
+    billing_plan = db.Column(db.String(20), nullable=True)
+    free_plan = db.Column(db.String(20), nullable=True)
+
+
+class SignupRequest(db.Model):
+    __tablename__ = "signup_requests"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, default="")
+    email = db.Column(db.String(255), nullable=False, index=True)
+    business = db.Column(db.String(200), nullable=False, default="")
+    size = db.Column(db.String(40), nullable=True)
+    plan = db.Column(db.String(20), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    location_identifier = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(40), nullable=True)
+    address_line1 = db.Column(db.String(255), nullable=True)
+    city = db.Column(db.String(80), nullable=True)
+    state = db.Column(db.String(80), nullable=True)
+    postal_code = db.Column(db.String(20), nullable=True)
+
+
+class PushToken(db.Model):
+    __tablename__ = "push_tokens"
+    __table_args__ = (db.UniqueConstraint("user_id", "token", name="uq_push_token_user_token"),)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token = db.Column(db.String(500), nullable=False, index=True)
+    platform = db.Column(db.String(20), nullable=False, default="android")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    user = db.relationship("User", backref=db.backref("push_tokens", lazy="dynamic", cascade="all, delete-orphan"))
