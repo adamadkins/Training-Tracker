@@ -60,6 +60,7 @@ employee_locations = db.Table(
 class Location(db.Model):
     __tablename__ = "locations"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     name = db.Column(db.String(80), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -69,6 +70,7 @@ class Location(db.Model):
 class Employee(db.Model):
     __tablename__ = "employees"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     first_name = db.Column(db.String(80), nullable=False)
     last_name = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="trainee")
@@ -152,7 +154,8 @@ class Employee(db.Model):
 class Position(db.Model):
     __tablename__ = "positions"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True, nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
     active = db.Column(db.Boolean, default=True, nullable=False)
     location_id = db.Column(db.Integer, db.ForeignKey("locations.id"), nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -172,7 +175,8 @@ class PositionDescriptor(db.Model):
 class Daypart(db.Model):
     __tablename__ = "dayparts"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
+    name = db.Column(db.String(80), nullable=False)
     start_time = db.Column(db.Time, nullable=True)
     end_time = db.Column(db.Time, nullable=True)
     active = db.Column(db.Boolean, default=True, nullable=False)
@@ -182,6 +186,7 @@ class Daypart(db.Model):
 class Schedule(db.Model):
     __tablename__ = "schedules"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default='draft')
@@ -201,6 +206,7 @@ class TrainingSession(db.Model):
         Index("ix_training_sessions_trainee_completed", "trainee_employee_id", "completed_at"),
     )
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     schedule_id = db.Column(db.Integer, db.ForeignKey("schedules.id"), nullable=False)
     session_date = db.Column(db.Date, nullable=False)
     daypart_id = db.Column(db.Integer, db.ForeignKey("dayparts.id"), nullable=True)
@@ -294,6 +300,7 @@ class Channel(db.Model):
     """Slack-like channel: either a group channel (name) or a DM (name null, exactly 2 participants)."""
     __tablename__ = "channels"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     name = db.Column(db.String(80), nullable=True)  # null for DM
     channel_type = db.Column(db.String(20), nullable=False, default="channel")  # 'channel' | 'dm'
     description = db.Column(db.String(255), nullable=True)
@@ -391,6 +398,7 @@ class MessageReaction(db.Model):
 class TrainingRoadmap(db.Model):
     __tablename__ = "training_roadmaps"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     name = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
