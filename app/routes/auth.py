@@ -4,9 +4,9 @@ from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app, send_file, Response, abort, g
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, SystemSettings
+from app.models import User, SystemSettings, Organization, SignupRequest, PushToken
 from app import db
 # ADDED: Import your notification helper
 from app.utils.notifications import send_notification_email
@@ -93,9 +93,9 @@ _LOGO_CACHE_HEADERS = {"Cache-Control": "public, max-age=3600"}
 
 @auth_bp.get("/logo")
 def logo():
-    """Serve the configured system logo (no auth). Used by navbar and login page."""
-    settings = SystemSettings.query.first()
-    if not settings or not settings.custom_logo_url:
+    """Serve the configured system logo (no auth). Used by navbar and login page. Resolved from current tenant (g.system_settings)."""
+    settings = getattr(g, "system_settings", None)
+    if not settings or not getattr(settings, "custom_logo_url", None):
         abort(404)
     logo_url = (settings.custom_logo_url or "").strip()
     if not logo_url:
@@ -150,6 +150,8 @@ def logo():
 @auth_bp.get("/")
 def home():
     if current_user.is_authenticated:
+        if getattr(current_user, "is_superuser", False) and getattr(g, "current_organization_id", None) is None:
+            return redirect(url_for("admin.index"))
         if current_user.role == "manager":
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
@@ -161,34 +163,126 @@ def tour():
     return render_template("tour.html")
 
 
+@auth_bp.get("/terms")
+def terms():
+    return render_template("terms.html")
+
+
+@auth_bp.get("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@auth_bp.get("/cookies")
+def cookies():
+    return render_template("cookies.html")
+
+
+SUPPORT_EMAIL = "adkins.adam04@gmail.com"
+
+
+@auth_bp.route("/support", methods=["GET", "POST"])
+def support():
+    """Support page and contact form; form submissions go to SUPPORT_EMAIL."""
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        subject = (request.form.get("subject") or "Support request").strip() or "Support request"
+        message = (request.form.get("message") or "").strip()
+        if not email:
+            flash("Please enter your email address.", "error")
+            return redirect(url_for("auth.support"))
+        try:
+            from app.utils.notifications import _enqueue_or_send_email
+            body = (
+                f"<h2>Support / Contact form</h2>"
+                f"<p><strong>From:</strong> {name or '(not provided)'} &lt;{email}&gt;</p>"
+                f"<p><strong>Subject:</strong> {subject}</p>"
+                f"<hr><p>{message.replace(chr(10), '<br>') if message else '(no message)'}</p>"
+            )
+            _enqueue_or_send_email(SUPPORT_EMAIL, f"[Training Tracker] {subject}", body)
+            flash("Thanks! Your message has been sent. We'll get back to you soon.", "success")
+        except Exception:
+            current_app.logger.exception("Support form send failed")
+            flash("Something went wrong sending your message. Please try again or email us directly.", "error")
+        return redirect(url_for("auth.support"))
+    return render_template("support.html")
+
+
+@auth_bp.route("/open-in-app")
+def open_in_app():
+    """Prompt to open the Training Tracker app (for invite/set-password links), then go to their company."""
+    from urllib.parse import quote
+    redirect_url = request.args.get("redirect", "").strip()
+    if not redirect_url or not (redirect_url.startswith("https://") or redirect_url.startswith("http://")):
+        flash("Invalid link. Please use the link from your invitation email.", "error")
+        return redirect(url_for("auth.home"))
+    # Deep link for the native app: trainingtracker://open?url=ENCODED_URL
+    app_url = "trainingtracker://open?url=" + quote(redirect_url, safe="")
+    return render_template("open_in_app.html", redirect_url=redirect_url, app_url=app_url)
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("auth.home"))
 
+    org_id = getattr(g, "current_organization_id", None)
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
-        user = User.query.filter_by(email=email).first()
+        if org_id is not None:
+            user = User.query.filter_by(organization_id=org_id, email=email).first()
+        else:
+            # Main domain: only superusers (organization_id is None) can log in
+            user = User.query.filter_by(organization_id=None, email=email).first()
 
         if user and user.password_hash is None:
             flash("Your account is not set up yet. Please use the link sent to your email.")
             return redirect(url_for("auth.login"))
 
         if not user or not user.check_password(password):
-            flash("Invalid email or password.")
+            if org_id is None:
+                flash("No platform admin account found. Use your company URL to sign in (e.g. app.yourdomain.com).")
+            else:
+                flash("Invalid email or password.")
             return render_template("login.html"), 401
 
         session.permanent = True
         session['_last_active'] = datetime.now(timezone.utc).timestamp()
-        login_user(user)
+        login_user(user, remember=True)
 
+        if org_id is None and getattr(user, "is_superuser", False):
+            return redirect(url_for("admin.index"))
         if user.role == "manager":
             return redirect(url_for("manager.dashboard"))
         return redirect(url_for("employee.dashboard"))
 
-    return render_template("login.html")
+    # Don't cache login page so app WebView always gets latest (e.g. "Use different company" text)
+    if org_id is None:
+        # Main domain: show login form for platform admins (no_tenant_login for anonymous would go on landing)
+        resp = current_app.make_response(render_template("login.html", admin_login=True))
+    else:
+        resp = current_app.make_response(render_template("login.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+@auth_bp.get("/leave-company")
+def leave_company():
+    """Minimal page that tells the app shell (when in iframe) to show the company picker."""
+    html = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Switch company</title></head><body style="margin:0;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;color:#1e293b;">
+<script>
+(function(){
+  try { window.parent.postMessage({ type: 'TrainingTrackerShowCompanyPicker' }, '*'); } catch (e) {}
+})();
+</script>
+<p style="font-size:15px;color:#64748b;">Returning to company selection&hellip;</p>
+</body></html>"""
+    return Response(html, mimetype="text/html", headers={"Cache-Control": "no-store"})
 
 
 # --- New: Forgot Password Request ---
@@ -200,7 +294,11 @@ def forgot_password():
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        user = User.query.filter_by(email=email).first()
+        org_id = getattr(g, "current_organization_id", None)
+        if org_id is not None:
+            user = User.query.filter_by(organization_id=org_id, email=email).first()
+        else:
+            user = User.query.filter_by(email=email).first()
 
         # We show success regardless of whether the email exists for security
         if user:
@@ -245,18 +343,120 @@ def reset_token(token):
         user.set_password(password)
         db.session.commit()
 
+        # If tenant user, send them to their org's login page so they can sign in right away
+        if getattr(user, "organization_id", None) and user.organization_id:
+            org = Organization.query.get(user.organization_id)
+            if org:
+                host = request.host.split(":")[0]
+                base_domain = host[4:] if host.startswith("www.") else host
+                login_url = f"https://{org.subdomain}.{base_domain}/login?password_set=1"
+                return redirect(login_url)
         flash('Your password has been updated! You can now log in.', 'success')
         return redirect(url_for('auth.login'))
 
     return render_template("auth/reset_token.html", token=token)
 
 
+def _verify_support_token(token, max_age=3600):
+    """Verify admin support/spectator token; return payload dict or None."""
+    from itsdangerous import URLSafeTimedSerializer
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt="admin-support-spectator")
+    try:
+        return s.loads(token, salt="admin-support-spectator", max_age=max_age)
+    except Exception:
+        return None
+
+
+@auth_bp.get("/enter-support")
+def enter_support():
+    """On tenant: log in as target user (impersonation) using admin token."""
+    if getattr(g, "current_organization_id", None) is None:
+        abort(404)
+    token = request.args.get("token")
+    if not token:
+        flash("Invalid or missing link.", "error")
+        return redirect(url_for("auth.login"))
+    payload = _verify_support_token(token)
+    if not payload or payload.get("type") != "impersonate":
+        flash("Link expired or invalid.", "error")
+        return redirect(url_for("auth.login"))
+    if payload.get("org_id") != g.current_organization_id:
+        flash("Wrong organization.", "error")
+        return redirect(url_for("auth.login"))
+    user = User.query.get(payload.get("user_id"))
+    if not user or user.organization_id != g.current_organization_id:
+        flash("User not found.", "error")
+        return redirect(url_for("auth.login"))
+    session["_impersonating_admin_id"] = payload.get("admin_id")
+    session["_impersonating"] = True
+    login_user(user)
+    session.permanent = True
+    if user.role == "manager":
+        return redirect(url_for("manager.dashboard"))
+    return redirect(url_for("employee.dashboard"))
+
+
+@auth_bp.get("/spectator-entry")
+def spectator_entry():
+    """On tenant: log in as target user in spectator mode (read-only, PII masked)."""
+    if getattr(g, "current_organization_id", None) is None:
+        abort(404)
+    token = request.args.get("token")
+    if not token:
+        flash("Invalid or missing link.", "error")
+        return redirect(url_for("auth.login"))
+    payload = _verify_support_token(token)
+    if not payload or payload.get("type") != "spectator":
+        flash("Link expired or invalid.", "error")
+        return redirect(url_for("auth.login"))
+    if payload.get("org_id") != g.current_organization_id:
+        flash("Wrong organization.", "error")
+        return redirect(url_for("auth.login"))
+    user = User.query.get(payload.get("user_id"))
+    if not user or user.organization_id != g.current_organization_id:
+        flash("User not found.", "error")
+        return redirect(url_for("auth.login"))
+    session["_spectator_admin_id"] = payload.get("admin_id")
+    session["_spectator"] = True
+    login_user(user)
+    session.permanent = True
+    if user.role == "manager":
+        return redirect(url_for("manager.dashboard"))
+    return redirect(url_for("employee.dashboard"))
+
+
+@auth_bp.get("/exit-support")
+def exit_support():
+    """Exit impersonation or spectator; restore admin and redirect to main domain."""
+    admin_id = session.pop("_impersonating_admin_id", None) or session.pop("_spectator_admin_id", None)
+    session.pop("_impersonating", None)
+    session.pop("_spectator", None)
+    logout_user()
+    if admin_id:
+        admin = User.query.get(admin_id)
+        if admin:
+            login_user(admin)
+            session.permanent = True
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    host = request.host.split(":")[0]
+    base = host[4:] if host.startswith("www.") else host
+    return redirect(f"{scheme}://{base}{url_for('admin.index')}")
+
+
 @auth_bp.get("/logout")
 @login_required
 def logout():
     current_app.logger.info("Logout requested for user_id=%s", getattr(current_user, "id", None))
+    uid = getattr(current_user, "id", None)
+    if uid:
+        PushToken.query.filter_by(user_id=uid).delete()
+        db.session.commit()
     logout_user()
-    resp = redirect(url_for("auth.login"))
+    # Redirect to same host (subdomain) so user stays on company login, not main domain
+    scheme = request.environ.get("wsgi.url_scheme") or current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    host = request.host or ""
+    login_path = url_for("auth.login")
+    resp = redirect(f"{scheme}://{host}{login_path}")
     # Clear the "remember me" cookie so the user is not auto-logged back in (e.g. in app WebView).
     cookie_name = current_app.config.get("REMEMBER_COOKIE_NAME", "remember_token")
     resp.delete_cookie(
@@ -287,26 +487,61 @@ def change_password():
 
 @auth_bp.route("/waitlist", methods=["POST"])
 def waitlist():
-    """Capture landing page interest form submissions and email the admin."""
+    """Capture landing page interest form submissions; save to DB and email the admin."""
     data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     business = data.get("business", "").strip()
+    location_identifier = data.get("location_identifier", "").strip() or None
+    phone = data.get("phone", "").strip() or None
+    address_line1 = data.get("address_line1", "").strip() or None
+    city = data.get("city", "").strip() or None
+    state = data.get("state", "").strip() or None
+    postal_code = data.get("postal_code", "").strip() or None
     size = data.get("size", "").strip()
+    plan = (data.get("plan") or "").strip().lower() or None  # 'standard' | 'pro'
 
     if email:
+        try:
+            req = SignupRequest(
+                name=name or "",
+                email=email,
+                business=business or "",
+                location_identifier=location_identifier,
+                phone=phone,
+                address_line1=address_line1,
+                city=city,
+                state=state,
+                postal_code=postal_code,
+                size=size or None,
+                plan=plan if plan in ("standard", "pro") else None,
+            )
+            db.session.add(req)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         try:
             from app.utils.notifications import send_notification_email
             import os
             admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
-            subject = f"New Training Tracker Interest: {business or email}"
+            loc_part = f" — {location_identifier}" if location_identifier else ""
+            subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
             body = (
-                f"<h2>New Waitlist Signup</h2>"
+                f"<h2>New signup request</h2>"
                 f"<p><strong>Name:</strong> {name}</p>"
                 f"<p><strong>Email:</strong> {email}</p>"
                 f"<p><strong>Business:</strong> {business}</p>"
-                f"<p><strong>Team size:</strong> {size}</p>"
             )
+            if location_identifier:
+                body += f"<p><strong>Location / store:</strong> {location_identifier}</p>"
+            if phone:
+                body += f"<p><strong>Phone:</strong> {phone}</p>"
+            addr_parts = [a for a in [address_line1, city, state, postal_code] if a]
+            if addr_parts:
+                body += f"<p><strong>Address:</strong> {', '.join(addr_parts)}</p>"
+            body += f"<p><strong>Team size:</strong> {size or '—'}</p>"
+            if plan:
+                body += f"<p><strong>Plan interested in:</strong> {plan.capitalize()}</p>"
             send_notification_email(admin_email, subject, body)
         except Exception:
             pass

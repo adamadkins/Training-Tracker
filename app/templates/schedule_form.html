@@ -54,10 +54,12 @@
         justify-content: center;
         margin: 0 auto 16px;
         background: color-mix(in srgb, var(--primary) 8%, transparent);
-        color: var(--primary);
+        color: var(--primary) !important;
         border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
         font-size: 22px;
     }
+    .form-icon i,
+    .form-header .form-icon i { color: var(--primary) !important; }
     .form-title {
         font-size: 22px;
         font-weight: 900;
@@ -216,7 +218,7 @@
 
         <div class="form-header">
             <div class="form-icon">
-                <i class="fa-solid fa-calendar-plus"></i>
+                <i class="fa-solid fa-calendar-plus" style="color: var(--primary) !important;"></i>
             </div>
             <h1 class="form-title">
                 {% if mode == 'edit' %}Modify Schedule{% else %}Plan Training Week{% endif %}

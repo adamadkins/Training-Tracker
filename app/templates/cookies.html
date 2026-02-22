@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookies Policy &mdash; Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.7; }
+        .legal-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
+        .back-link:hover { color: #4f46e5; }
+        .legal-header { margin-bottom: 36px; }
+        .legal-header h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px 0; color: #0f172a; }
+        .legal-header .updated { color: #64748b; font-size: 14px; }
+        .legal-section { margin-bottom: 28px; }
+        .legal-section h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #1e293b; }
+        .legal-section h3 { font-size: 16px; font-weight: 700; margin: 20px 0 8px 0; color: #334155; }
+        .legal-section p, .legal-section li { font-size: 15px; color: #334155; margin: 0 0 10px 0; }
+        .legal-section ul { padding-left: 22px; margin: 0 0 10px 0; }
+        .legal-section a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+        .legal-section a:hover { text-decoration: underline; }
+        .cookie-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+        .cookie-table th, .cookie-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+        .cookie-table th { font-weight: 700; color: #1e293b; background: #f8fafc; }
+    </style>
+</head>
+<body>
+    <div class="legal-wrap">
+        <a href="{{ url_for('auth.home') }}" class="back-link">← Back to home</a>
+        <div class="legal-header">
+            <h1>Cookies Policy</h1>
+            <p class="updated">Last updated: February 2025</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>1. What are cookies?</h2>
+            <p>Cookies are small text files that websites place on your device (computer, tablet, or phone) when you visit. They are widely used to make sites work properly, remember your preferences, and understand how the site is used. This policy describes how Training Tracker uses cookies and similar technologies.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Cookies we use</h2>
+            <p>We use cookies that are necessary for the Service to function and to keep you signed in. We do not use advertising or third-party tracking cookies on the core Training Tracker application. Below is a summary of the main types we use.</p>
+
+            <h3>Strictly necessary / essential cookies</h3>
+            <p>These are required for the website and app to work. They include:</p>
+            <table class="cookie-table">
+                <thead>
+                    <tr>
+                        <th>Purpose</th>
+                        <th>What it does</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Session</td>
+                        <td>Keeps you logged in and maintains your session as you move between pages (e.g. session cookie).</td>
+                        <td>Session (deleted when you close the browser) or short-lived (e.g. 24 hours)</td>
+                    </tr>
+                    <tr>
+                        <td>Security / CSRF</td>
+                        <td>Helps prevent cross-site request forgery and protect forms.</td>
+                        <td>Session or short-lived</td>
+                    </tr>
+                    <tr>
+                        <td>Preferences</td>
+                        <td>Stores basic preferences (e.g. language or display options) if we offer them.</td>
+                        <td>As needed (e.g. 1 year)</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>You cannot turn off these cookies without affecting how the Service works (e.g. you may not stay logged in).</p>
+
+            <h3>Functional cookies (if any)</h3>
+            <p>If we add cookies that remember choices or improve experience (e.g. “remember me,” dashboard layout), we will list them here and treat them in line with your consent where required by law.</p>
+
+            <h3>Analytics (if any)</h3>
+            <p>If we use first-party or third-party analytics cookies to understand usage (e.g. how many people visit, which pages are used), we will describe them here and, where required, ask for your consent before using non-essential analytics cookies.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Third-party cookies</h2>
+            <p>Our payment provider (e.g. Stripe) may set cookies when you use payment or billing pages we host or redirect to. Those cookies are governed by the provider’s privacy policy. We do not control third-party cookies; we recommend reviewing Stripe’s (or other providers’) policies if you use those flows.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. How to manage or disable cookies</h2>
+            <p>You can control cookies through your browser settings. Most browsers let you:</p>
+            <ul>
+                <li>See which cookies are stored and delete them.</li>
+                <li>Block third-party cookies.</li>
+                <li>Block cookies from specific sites.</li>
+                <li>Block all cookies.</li>
+            </ul>
+            <p>If you block or delete essential cookies, parts of Training Tracker may not work (e.g. you may need to log in again on each visit or some features may fail). For more detail, check your browser’s “Help” or “Privacy” section (e.g. Chrome, Firefox, Safari, Edge).</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Other technologies</h2>
+            <p>We may use similar technologies such as local storage (e.g. HTML5 local storage) to store preferences or session-related data. These are used for the same kinds of purposes as essential cookies (e.g. keeping you signed in, security). You can clear local storage via your browser settings.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Updates</h2>
+            <p>We may update this Cookies Policy from time to time to reflect changes in our practices or the law. The “Last updated” date at the top will be revised when we do. We encourage you to check this page periodically.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Contact</h2>
+            <p>Questions about our use of cookies? See our <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a> or contact us at <a href="mailto:adkins.adam04@gmail.com">adkins.adam04@gmail.com</a> or via <a href="{{ url_for('auth.support') }}">Support</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
