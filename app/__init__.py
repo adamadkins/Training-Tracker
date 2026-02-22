@@ -37,6 +37,7 @@ def create_app():
     from app.routes.messages import messages_bp
     from app.routes.legacy import legacy_bp
     from app.routes.guest import guest_bp
+    from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(manager_bp, url_prefix='/manager')
@@ -44,6 +45,27 @@ def create_app():
     app.register_blueprint(messages_bp)
     app.register_blueprint(legacy_bp)
     app.register_blueprint(guest_bp)
+    app.register_blueprint(admin_bp)
+
+    # Multi-tenant: resolve current org from subdomain so routes and system_settings can use it
+    @app.before_request
+    def resolve_tenant():
+        from flask import g
+        from app.models import Organization
+        host = (request.host or "").split(":")[0].lower()
+        main = (app.config.get("MAIN_DOMAIN") or "trainingtracker.me").split(":")[0].lower()
+        # Main domain (or IP with no subdomain) = platform admin / no tenant
+        if host == main or host.startswith("www.") or "." not in host:
+            g.current_organization_id = None
+            return
+        # subdomain.main.tld -> subdomain
+        parts = host.replace("www.", "").split(".")
+        subdomain = parts[0] if len(parts) >= 2 else None
+        if not subdomain:
+            g.current_organization_id = None
+            return
+        org = Organization.query.filter_by(subdomain=subdomain).first()
+        g.current_organization_id = org.id if org else None
 
     # 5. Inject app version and system_settings into all templates
     @app.before_request
@@ -51,10 +73,15 @@ def create_app():
         import hashlib
         from flask import g
         from app.models import SystemSettings
-        settings = SystemSettings.query.first()
+        org_id = getattr(g, "current_organization_id", None)
+        if org_id is not None:
+            settings = SystemSettings.query.filter_by(organization_id=org_id).first()
+        else:
+            # Main domain: no tenant, so no tenant-specific settings (admin uses its own UI)
+            settings = None
         g.system_settings = settings
         # Stable cache key per logo so img src doesn't flicker on refresh; changes when logo changes
-        logo_url = (settings and settings.custom_logo_url) or ""
+        logo_url = (settings and getattr(settings, "custom_logo_url", None)) or ""
         g.logo_version = hashlib.md5(logo_url.encode()).hexdigest()[:12] if logo_url else ""
 
     @app.context_processor

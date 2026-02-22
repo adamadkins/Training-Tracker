@@ -347,6 +347,7 @@ class Message(db.Model):
 class SystemSettings(db.Model):
     __tablename__ = "system_settings"
     id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False)
     dm_enabled = db.Column(db.Boolean, default=True)
     allow_trainee_to_trainee_dm = db.Column(db.Boolean, default=True)
     share_trainee_data_with_trainees = db.Column(db.Boolean, default=True)  # When False, trainees cannot see their own training data
