@@ -433,7 +433,7 @@
 <header class="main-header">
     <div class="container nav-split">
         <div class="nav-group">
-            <a href="{{ url_for('manager.dashboard') if current_user.is_authenticated and current_user.role == 'manager' else url_for('employee.dashboard') }}" class="brand-logo">
+            <a href="{% if current_user.is_authenticated and getattr(current_user, 'is_superuser', False) and not current_user.employee %}{{ url_for('admin.index') }}{% elif current_user.is_authenticated and current_user.role == 'manager' %}{{ url_for('manager.dashboard') }}{% else %}{{ url_for('employee.dashboard') }}{% endif %}" class="brand-logo">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
                 <span class="brand-logo-img-wrap"><img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" class="brand-logo-img" referrerpolicy="no-referrer" decoding="sync"></span>
                 {% endif %}
@@ -445,7 +445,9 @@
             <div class="nav-content" id="navContent">
                 {% if current_user.is_authenticated %}
                 <nav class="nav-links">
-                    {% if current_user.role == 'manager' %}
+                    {% if not current_user.employee %}
+                    <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.') else '' }}">Platform Admin</a>
+                    {% elif current_user.role == 'manager' %}
                     <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>
                     <a href="{{ url_for('manager.positions_list') }}" data-tutorial="positions" class="{{ 'active' if 'position' in request.endpoint else '' }}">Positions</a>
                     <a href="{{ url_for('manager.roadmaps_list') }}" data-tutorial="roadmaps" class="{{ 'active' if 'roadmap' in request.endpoint and request.endpoint not in ['manager.roadmap_smart_builder', 'manager.smart_builder_build'] else '' }}">Roadmaps</a>
@@ -459,6 +461,7 @@
                 </nav>
                 <div class="nav-actions">
                     <div class="user-profile">
+                        {% if current_user.employee %}
                         {% if g.system_settings and not g.system_settings.dm_enabled %}
                         <div class="notif-btn disabled" title="Messaging Disabled"><i class="fa-regular fa-paper-plane"></i></div>
                         {% else %}
@@ -474,13 +477,23 @@
                         <a href="{{ url_for('manager.settings') }}" data-tutorial="settings" class="notif-btn {{ 'active' if 'settings' in request.endpoint else '' }}">
                             <i class="fa-solid fa-gear"></i>
                         </a>
+                        {% endif %}
 
+                        {% if current_user.employee %}
                         <a href="{{ url_for('manager.employee_detail', employee_id=current_user.employee_id, back=request.path) }}" class="profile-pill-link">
                             <div class="pill-container">
                                 <img src="{{ current_user.employee.avatar(26) }}" class="nav-avatar">
                                 <span class="user-name-nav">{{ current_user.employee.first_name }}</span>
                             </div>
                         </a>
+                        {% else %}
+                        <a href="{{ url_for('admin.index') }}" class="profile-pill-link">
+                            <div class="pill-container">
+                                <span class="nav-avatar" style="width:26px;height:26px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">A</span>
+                                <span class="user-name-nav">Admin</span>
+                            </div>
+                        </a>
+                        {% endif %}
 
                         <a href="{{ url_for('auth.logout', _external=True) }}" class="btn-logout-icon nav-logout-link" title="Sign Out" aria-label="Sign Out">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
