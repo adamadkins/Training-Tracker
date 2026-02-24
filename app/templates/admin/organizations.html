@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Organizations</span>
+    </nav>
     <div class="page-header">
-        <h1 class="page-title hide-on-mobile-title">Organizations</h1>
+        <h1 class="page-title">Organizations</h1>
         <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New organization</a>
     </div>
     <form method="get" class="admin-filters filter-form">
@@ -15,6 +20,22 @@
         <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
     </form>
     <div class="table-card">
+        <p class="table-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table to see all columns.</p>
+        <div class="admin-mobile-cards">
+            {% for org, stats, trial_pay in organizations %}
+            <div class="admin-mobile-card">
+                <div class="card-row"><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}"><strong>{{ org.name }}</strong></a> <code>{{ org.subdomain }}</code></div>
+                <div class="card-row"><span class="status status-{{ org.status }}">{{ org.status }}</span> · {{ stats.user_count }} users · {{ stats.employee_count }} employees</div>
+                <div class="card-row">{% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d trial left{% else %}Trial ended{% endif %}{% else %}—{% endif %}{% if trial_pay.payment_overdue %} · <span class="status status-past-due">Overdue</span>{% endif %}</div>
+                <div class="card-actions">
+                    <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</p>
+            {% endfor %}
+        </div>
+        <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -51,45 +72,11 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 <style>
-.admin-page { max-width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
-.page-title { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); }
-.admin-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.admin-table td { font-size: 14px; color: var(--text-main); }
-.admin-table a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.admin-table a:hover { text-decoration: underline; }
-.admin-table code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
-.status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-.status-active { background: #dcfce7; color: #166534; }
-.status-suspended { background: #fee2e2; color: #991b1b; }
-.status-past-due { background: #fef3c7; color: #92400e; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { opacity: 0.9; }
-.link-view { font-size: 13px; }
-.admin-filters.filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-.admin-filters input[type="text"], .admin-filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
-
-@media (max-width: 768px) {
-    .admin-page { padding: 0 2px; max-width: 100%; box-sizing: border-box; }
-    .admin-page .page-title.hide-on-mobile-title { display: block !important; }
-    .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
-    .page-title { font-size: 22px; margin: 0; }
-    .page-header .btn { justify-content: center; min-height: 48px; font-size: 15px; }
-    .admin-filters.filter-form { flex-direction: column; align-items: stretch; }
-    .admin-filters.filter-form input[type="text"],
-    .admin-filters.filter-form select { width: 100%; min-height: 44px; box-sizing: border-box; }
-    .admin-filters.filter-form .btn { min-height: 48px; justify-content: center; }
-    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 14px; margin-left: -2px; margin-right: -2px; border-radius: 12px; }
-    .admin-table { min-width: 700px; }
-    .admin-table th, .admin-table td { padding: 10px 10px; font-size: 13px; }
-    .admin-table .link-view { display: inline-block; min-height: 44px; line-height: 44px; padding: 0 12px; }
-}
+.page-header .page-title { margin: 0; }
 </style>
 {% endblock %}

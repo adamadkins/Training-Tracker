@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <a href="{{ url_for('admin.organizations_list') }}">Organizations</a>
+        <span class="sep">/</span>
+        <span>{{ org.name }}</span>
+    </nav>
     <div class="page-header">
         <a href="{{ url_for('admin.organizations_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Organizations</a>
     </div>
@@ -111,19 +118,13 @@
     </div>
 </div>
 <style>
-.admin-page { max-width: 640px; }
-.page-header { margin-bottom: 20px; }
-.back-link { color: var(--text-muted); font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.back-link:hover { color: var(--primary); }
-.detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
-.page-title { font-size: 24px; font-weight: 800; margin: 0 0 20px 0; color: var(--text-main); }
+.admin-page .detail-card { max-width: 640px; }
+.admin-page .page-header { margin-bottom: 20px; }
 .detail-list { margin: 0; display: grid; gap: 12px 20px; grid-template-columns: auto 1fr; }
 .detail-list dt { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
 .detail-list dd { margin: 0; font-size: 15px; color: var(--text-main); }
 .detail-list code { font-size: 13px; background: var(--bg-body); padding: 4px 10px; border-radius: 8px; }
 .login-url-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.btn-copy { padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); cursor: pointer; }
-.btn-copy:hover { border-color: var(--primary); color: var(--primary); }
 .detail-actions { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .invite-first-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .invite-first-text { margin: 0 0 12px 0; color: var(--text-muted); font-size: 14px; }
@@ -133,41 +134,14 @@
 .delete-form { display: flex; flex-direction: column; gap: 10px; max-width: 320px; }
 .delete-form label { font-size: 13px; font-weight: 600; color: var(--text-main); }
 .confirm-input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 100%; max-width: 200px; }
-.btn-danger { background: #dc2626; color: white; }
-.status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
 .status-note { font-size: 13px; color: var(--text-muted); margin-left: 6px; }
-.status-active { background: #dcfce7; color: #166534; }
-.status-suspended { background: #fee2e2; color: #991b1b; }
-.status-past-due { background: #fef3c7; color: #92400e; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-warning { background: #f59e0b; color: white; }
-.btn-sm { padding: 6px 12px; font-size: 13px; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 .billing-note { font-size: 13px; color: var(--text-muted); }
 .billing-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-.btn:hover { opacity: 0.9; }
-
 @media (max-width: 768px) {
-    .admin-page { max-width: 100%; padding: 0 2px; box-sizing: border-box; }
-    .back-link { min-height: 48px; align-items: center; }
-    .detail-card { padding: 18px; }
-    .page-title { font-size: 20px; word-break: break-word; }
-    .detail-list { grid-template-columns: 1fr; gap: 8px 0; }
-    .detail-list dt { margin-bottom: 2px; }
-    .login-url-row { flex-direction: column; align-items: flex-start; }
-    .btn-copy { min-height: 44px; padding: 10px 16px; }
-    .billing-actions { flex-direction: column; gap: 10px; }
-    .billing-actions form { width: 100%; }
-    .billing-actions .btn { min-height: 48px; justify-content: center; width: 100%; }
+    .admin-page .detail-card { max-width: 100%; padding: 18px; }
+    .admin-page .page-title { font-size: 20px; word-break: break-word; }
     .detail-actions { display: flex; flex-direction: column; gap: 10px; }
-    .detail-actions .btn { min-height: 48px; width: 100%; justify-content: center; }
-    .invite-first-section .btn { min-height: 48px; width: 100%; justify-content: center; }
-    .danger-zone { padding: 16px; }
-    .delete-form { max-width: 100%; }
-    .delete-form .confirm-input { max-width: 100%; min-height: 48px; }
-    .delete-form .btn-danger { min-height: 48px; width: 100%; justify-content: center; }
+    .invite-first-section .btn { width: 100%; justify-content: center; }
 }
 </style>
 {% endblock %}

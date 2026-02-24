@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Platform users</span>
+    </nav>
     <div class="page-header">
-        <h1 class="page-title hide-on-mobile-title">Platform users</h1>
+        <h1 class="page-title">Platform users</h1>
         <a href="{{ url_for('admin.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
     </div>
     <p class="page-subtitle">All users across organizations. Superusers (main-domain admins) are not listed.</p>
@@ -22,6 +27,26 @@
         <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
     </form>
     <div class="table-card">
+        <p class="table-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table to see all columns.</p>
+        <div class="admin-mobile-cards">
+            {% for user, org in users_with_org %}
+            <div class="admin-mobile-card">
+                <div class="card-row"><strong>{{ user.email }}</strong></div>
+                <div class="card-row">{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</div>
+                <div class="card-row"><span class="role-badge role-{{ user.role }}">{{ user.role }}</span>{% if user.last_seen %} · {{ user.last_seen.strftime('%Y-%m-%d %H:%M') }}{% endif %}</div>
+                <div class="card-actions">
+                    <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate">Spectate</a>
+                    <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate">Impersonate</a>
+                    <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to this user?');">
+                        <button type="submit" class="btn btn-sm btn-reset">Send reset</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No tenant users yet.</p>
+            {% endfor %}
+        </div>
+        <div class="admin-table-wrap">
         <table class="admin-table">
             <thead>
                 <tr>
@@ -52,49 +77,14 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 <style>
-.admin-page { max-width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
-.page-title { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
-.page-subtitle { color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); }
-.admin-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.admin-table td { font-size: 14px; color: var(--text-main); }
-.admin-table a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.admin-table a:hover { text-decoration: underline; }
-.admin-table code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
-.role-badge { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-.role-manager { background: #dbeafe; color: #1e40af; }
-.role-trainee { background: #e0e7ff; color: #3730a3; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
-.btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.btn:hover { opacity: 0.9; }
-.support-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.page-header .page-title { margin: 0; }
 .btn-spectate { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 .btn-impersonate { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
 .btn-reset { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.admin-filters.filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-.admin-filters input[type="text"], .admin-filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
-@media (max-width: 768px) {
-    .admin-page { padding: 0 2px; max-width: 100%; box-sizing: border-box; }
-    .admin-page .page-title.hide-on-mobile-title { display: block !important; }
-    .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
-    .page-title { font-size: 22px; margin: 0; }
-    .page-subtitle { font-size: 13px; word-break: break-word; }
-    .page-header .btn { justify-content: center; min-height: 48px; font-size: 15px; }
-    .admin-filters.filter-form { flex-direction: column; align-items: stretch; }
-    .admin-filters.filter-form input[type="text"],
-    .admin-filters.filter-form select { width: 100%; min-height: 44px; box-sizing: border-box; }
-    .admin-filters.filter-form .btn { min-height: 48px; justify-content: center; }
-    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 14px; margin-left: -2px; margin-right: -2px; border-radius: 12px; }
-    .admin-table { min-width: 640px; }
-    .admin-table th, .admin-table td { padding: 10px 10px; font-size: 13px; }
-    .support-actions { gap: 10px; }
-    .support-actions .btn-sm { min-height: 44px; padding: 10px 14px; font-size: 12px; }
-}
 </style>
 {% endblock %}

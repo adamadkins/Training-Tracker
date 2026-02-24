@@ -10,6 +10,9 @@
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% if request.endpoint is defined and request.endpoint and request.endpoint.startswith('admin.') %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    {% endif %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -507,6 +510,14 @@
 </header>
 
 <main class="container py-xl fade-in-up">
+    {% if current_user.is_authenticated and not current_user.employee %}
+    <nav class="admin-subnav" aria-label="Admin sections">
+        <a href="{{ url_for('admin.index') }}" class="{% if request.endpoint == 'admin.index' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        <a href="{{ url_for('admin.organizations_list') }}" class="{% if request.endpoint and request.endpoint.startswith('admin.organization') %}active{% endif %}"><i class="fa-solid fa-building"></i> Organizations</a>
+        <a href="{{ url_for('admin.index') }}#signup-requests"><i class="fa-solid fa-inbox"></i> Signup requests</a>
+        <a href="{{ url_for('admin.users_list') }}" class="{% if request.endpoint == 'admin.users_list' %}active{% endif %}"><i class="fa-solid fa-users"></i> Users</a>
+    </nav>
+    {% endif %}
     {% block content %}{% endblock %}
 </main>
 

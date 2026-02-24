@@ -167,9 +167,14 @@ def index():
     signup_requests_with_mailto = [
         (r, _signup_request_mailto(r), _signup_request_gmail_url(r)) for r in signup_requests
     ]
+    orgs_needing_first_user = [
+        o for o, st, _ in orgs_with_stats
+        if st["user_count"] == 0 and o.status == "active"
+    ]
     return render_template(
         "admin/index.html",
         organizations=orgs_with_stats,
+        orgs_needing_first_user=orgs_needing_first_user,
         total_orgs=total_orgs,
         active_orgs=active_orgs,
         total_users=total_users,

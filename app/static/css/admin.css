@@ -1,0 +1,303 @@
+/* ─── Platform Admin: shared styles + mobile-first QOL ─── */
+
+/* Sub-nav (shown in base when on admin) */
+.admin-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.admin-subnav a {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: var(--bg-body);
+  border: 1px solid transparent;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.admin-subnav a:hover {
+  color: var(--text-main);
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+.admin-subnav a.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Page wrapper */
+.admin-page {
+  max-width: 1100px;
+  box-sizing: border-box;
+}
+
+/* Breadcrumb */
+.admin-breadcrumb {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.admin-breadcrumb a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.admin-breadcrumb a:hover { text-decoration: underline; }
+.admin-breadcrumb .sep { opacity: 0.6; }
+
+/* Titles & subtitles */
+.admin-page .page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 4px 0;
+}
+.admin-page .page-subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 24px 0;
+  line-height: 1.45;
+}
+
+/* Stats row */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-value { display: block; font-size: 28px; font-weight: 800; color: var(--primary); line-height: 1.2; }
+.stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+
+/* Action buttons row */
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+/* Cards */
+.table-card, .form-card, .detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.section-title { font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: var(--text-main); }
+.section-desc { color: var(--text-muted); font-size: 13px; margin: -8px 0 16px 0; line-height: 1.5; }
+
+/* Tables (desktop) */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-table th,
+.admin-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.admin-table th {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.admin-table td { font-size: 14px; color: var(--text-main); }
+.admin-table a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.admin-table a:hover { text-decoration: underline; }
+.admin-table code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
+
+/* Status & badges */
+.status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.status-active { background: #dcfce7; color: #166534; }
+.status-suspended { background: #fee2e2; color: #991b1b; }
+.status-past-due { background: #fef3c7; color: #92400e; }
+.plan-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 6px; }
+.plan-standard { background: #dbeafe; color: #1e40af; }
+.plan-pro { background: #fae8ff; color: #86198f; }
+.role-badge { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.role-manager { background: #dbeafe; color: #1e40af; }
+.role-trainee { background: #e0e7ff; color: #3730a3; }
+
+/* Buttons */
+.admin-page .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+.admin-page .btn-primary { background: var(--primary); color: white; }
+.admin-page .btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+.admin-page .btn-sm { padding: 8px 14px; font-size: 13px; min-height: 40px; }
+.admin-page .btn:hover { opacity: 0.9; }
+.admin-page .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+.admin-page .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.admin-page .btn-warning { background: #f59e0b; color: white; }
+.admin-page .btn-danger { background: #dc2626; color: white; }
+.admin-page .btn-outline-danger { background: transparent; border: 1px solid #dc2626; color: #dc2626; }
+.admin-page .btn-outline-danger:hover { background: #fef2f2; }
+.admin-page .btn-remove { background: transparent; border: none; color: var(--text-muted); padding: 8px 12px; min-height: 44px; min-width: 44px; }
+.admin-page .btn-remove:hover { color: #dc2626; }
+.admin-page .btn-copy { padding: 8px 14px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); cursor: pointer; min-height: 44px; }
+.admin-page .btn-copy:hover { border-color: var(--primary); color: var(--primary); }
+.admin-page .btn-copy.copied { background: #dcfce7; color: #166534; border-color: #166534; }
+.admin-page .btn-email { background: var(--primary); color: white; }
+.admin-page .link-view { font-size: 13px; }
+.actions-cell { white-space: nowrap; }
+.signup-requests-actions { margin-bottom: 12px; }
+
+/* Filters */
+.admin-filters .filter-form,
+.signup-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.admin-filters input[type="text"],
+.admin-filters select,
+.signup-filter-form input[type="text"],
+.signup-filter-form select {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+/* Back link */
+.admin-page .back-link {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  align-items: center;
+}
+.admin-page .back-link:hover { color: var(--primary); }
+
+/* Table scroll hint (mobile) */
+.table-scroll-hint {
+  display: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: var(--bg-body);
+  border-radius: 8px;
+}
+
+/* ─── Mobile card layouts (replace wide tables on small screens) ─── */
+.admin-mobile-cards { display: none; }
+.admin-mobile-card {
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.admin-mobile-card .card-row { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 8px; font-size: 14px; }
+.admin-mobile-card .card-row:last-child { margin-bottom: 0; }
+.admin-mobile-card .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-right: 6px; }
+.admin-mobile-card .card-actions { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-mobile-card .card-actions .btn { min-height: 44px; }
+
+@media (max-width: 768px) {
+  .admin-subnav {
+    margin-bottom: 16px;
+    padding: 10px 0;
+    gap: 8px;
+  }
+  .admin-subnav a {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  .admin-page { padding: 0 4px; max-width: 100%; }
+  .admin-page .page-title { font-size: 22px; }
+  .admin-page .page-subtitle { font-size: 13px; word-break: break-word; }
+  .admin-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { padding: 16px 12px; }
+  .stat-value { font-size: 24px; }
+  .stat-label { font-size: 11px; }
+  .page-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+  .page-actions .btn { width: 100%; min-height: 48px; font-size: 15px; }
+  .admin-filters .filter-form,
+  .signup-filter-form { flex-direction: column; align-items: stretch; }
+  .admin-filters input[type="text"],
+  .admin-filters select,
+  .signup-filter-form input[type="text"],
+  .signup-filter-form select { width: 100%; }
+  .admin-filters .btn,
+  .signup-filter-form .btn { width: 100%; min-height: 48px; justify-content: center; }
+  .table-card { padding: 16px; border-radius: 12px; overflow: visible; }
+  .section-title { font-size: 16px; margin-bottom: 12px; }
+  .section-desc { font-size: 12px; line-height: 1.5; word-break: break-word; }
+  /* Hide table on mobile when cards exist */
+  .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+  .admin-table-wrap .admin-table { min-width: 640px; }
+  .table-scroll-hint { display: block; }
+  .detail-list { grid-template-columns: 1fr; gap: 8px 0; }
+  .detail-list dt { margin-bottom: 2px; }
+  .billing-actions { flex-direction: column; }
+  .billing-actions form { width: 100%; }
+  .billing-actions .btn { width: 100%; min-height: 48px; justify-content: center; }
+  .detail-actions .btn,
+  .invite-first-section .btn { width: 100%; min-height: 48px; justify-content: center; }
+  .danger-zone { padding: 16px; }
+  .delete-form .confirm-input,
+  .delete-form .btn-danger { width: 100%; max-width: none; min-height: 48px; }
+  .login-url-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .support-actions { flex-wrap: wrap; gap: 10px; }
+  .support-actions .btn-sm { min-height: 44px; }
+}
+
+@media (max-width: 600px) {
+  /* Show card layout, hide table */
+  .admin-mobile-cards { display: block; }
+  .admin-table-wrap { display: none !important; }
+  .table-scroll-hint { display: none; }
+  .admin-stats { grid-template-columns: 1fr; }
+  .stat-value { font-size: 26px; }
+}
+
+@media (min-width: 601px) {
+  .admin-mobile-cards { display: none !important; }
+}

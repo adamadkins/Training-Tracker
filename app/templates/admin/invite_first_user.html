@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <a href="{{ url_for('admin.organizations_list') }}">Organizations</a>
+        <span class="sep">/</span>
+        <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a>
+        <span class="sep">/</span>
+        <span>Invite first user</span>
+    </nav>
     <div class="page-header">
         <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> {{ org.name }}</a>
     </div>
