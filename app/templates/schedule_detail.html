@@ -273,7 +273,9 @@
         text-align: center;
         color: var(--text-muted);
     }
-    .empty-state i { font-size: 32px; opacity: 0.15; display: block; margin-bottom: 12px; }
+    .empty-state,
+.empty-state i { color: var(--text-muted) !important; }
+.empty-state i { font-size: 32px; opacity: 0.4; display: block; margin-bottom: 12px; }
     .empty-state p { font-size: 13px; font-weight: 500; margin: 0; }
 
     /* ── Sidebar ── */
@@ -570,7 +572,7 @@
                                 {% else %}
                                 <tr>
                                     <td colspan="{{ 4 if schedule.status == 'draft' else 3 }}" class="empty-state">
-                                        <i class="fa-regular fa-calendar"></i>
+                                        <i class="fa-regular fa-calendar" style="color: var(--text-muted) !important;"></i>
                                         <p>No sessions added yet. Use the form to add your first session.</p>
                                     </td>
                                 </tr>

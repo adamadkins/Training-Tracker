@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Platform Admin</span>
+    </nav>
+    <h1 class="page-title">Platform Admin</h1>
+    <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{% set h = request.host.split(':')[0] %}{% set base_domain = h[4:] if h[:4] == 'www.' else h %}{{ base_domain }}</strong></p>
+
+    <div class="admin-stats">
+        <div class="stat-card">
+            <span class="stat-value">{{ total_orgs }}</span>
+            <span class="stat-label">Organizations</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ active_orgs }}</span>
+            <span class="stat-label">Active</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ total_users }}</span>
+            <span class="stat-label">Total users</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ total_employees }}</span>
+            <span class="stat-label">Total employees</span>
+        </div>
+    </div>
+
+    <div class="page-actions">
+        <a href="{{ url_for('admin.organizations_list') }}" class="btn btn-secondary">View all organizations</a>
+        <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New organization</a>
+    </div>
+
+    {% if orgs_needing_first_user %}
+    <div class="table-card quick-links-card">
+        <h2 class="section-title">Need attention</h2>
+        <p class="section-desc">{{ orgs_needing_first_user|length }} organization{{ 's' if orgs_needing_first_user|length != 1 else '' }} with no users yet. Invite the first manager so they can log in.</p>
+        <ul class="quick-links-list" style="list-style:none; padding:0; margin:0; display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for o in orgs_needing_first_user %}
+            <li><a href="{{ url_for('admin.organization_invite_first_user', org_id=o.id) }}" class="btn btn-sm btn-primary"><i class="fa-solid fa-user-plus"></i> {{ o.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="admin-filters">
+        <form method="get" class="filter-form">
+            <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search orgs (name/subdomain)">
+            <select name="org_status">
+                <option value="">All statuses</option>
+                <option value="active" {{ 'selected' if filter_org_status == 'active' else '' }}>Active</option>
+                <option value="suspended" {{ 'selected' if filter_org_status == 'suspended' else '' }}>Suspended</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter orgs</button>
+        </form>
+    </div>
+
+    <div class="table-card" id="signup-requests">
+        <h2 class="section-title">Signup requests</h2>
+        <form method="get" class="signup-filter-form">
+            <input type="hidden" name="q" value="{{ filter_q or '' }}">
+            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
+            <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}" placeholder="Search email, business, name">
+            <select name="signup_plan">
+                <option value="">All plans</option>
+                <option value="standard" {{ 'selected' if filter_signup_plan == 'standard' else '' }}>Standard</option>
+                <option value="pro" {{ 'selected' if filter_signup_plan == 'pro' else '' }}>Pro</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+        </form>
+        <p class="section-desc">Landing-page submissions. For multiple locations with the same business name (e.g. Chick-fil-A), use a unique subdomain when creating the org (e.g. <code>chickfila-store4521</code>, <code>chickfila-downtown</code>). <strong>Email</strong> opens Gmail; <strong>Copy</strong> copies their email.</p>
+        <div class="signup-requests-actions">
+            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i> Clear all</button>
+            </form>
+        </div>
+        <p class="table-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table to see all columns.</p>
+        <div class="admin-mobile-cards">
+            {% for r, mailto_href, gmail_url in signup_requests_with_mailto %}
+            <div class="admin-mobile-card">
+                <div class="card-row"><strong>{{ r.name or '—' }}</strong> {{ r.email }}</div>
+                <div class="card-row">{{ r.business or '—' }}{% if r.plan %} · <span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% endif %}</div>
+                <div class="card-row">{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '—' }}</div>
+                <div class="card-actions">
+                    <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
+                    <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"><i class="fa-solid fa-copy"></i> Copy</button>
+                    <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                        <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No signup requests yet.</p>
+            {% endfor %}
+        </div>
+        <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Business</th>
+                    <th>Location</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Plan</th>
+                    <th>Size</th>
+                    <th>Date</th>
+                    <th>Reach out</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r, mailto_href, gmail_url in signup_requests_with_mailto %}
+                <tr>
+                    <td>{{ r.name or '—' }}</td>
+                    <td><a href="{{ gmail_url }}" target="_blank" rel="noopener">{{ r.email }}</a></td>
+                    <td>{{ r.business or '—' }}</td>
+                    <td>{{ r.location_identifier or '—' }}</td>
+                    <td>{% if r.address_line1 or r.city or r.state or r.postal_code %}{{ r.address_line1 or '' }}{% if r.city %}{% if r.address_line1 %}, {% endif %}{{ r.city }}{% endif %}{% if r.state %} {{ r.state }}{% endif %}{% if r.postal_code %} {{ r.postal_code }}{% endif %}{% else %}—{% endif %}</td>
+                    <td>{{ r.phone or '—' }}</td>
+                    <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
+                    <td>{{ r.size or '—' }}</td>
+                    <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') if r.created_at else '—' }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Gmail"><i class="fa-solid fa-envelope"></i> Email</a>
+                        <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
+                    </td>
+                    <td>
+                        <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                            <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="11">No signup requests yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h2 class="section-title">Recent organizations</h2>
+        {% if filter_q or filter_org_status %}<p class="section-desc">Filtered by {% if filter_q %}q={{ filter_q }}{% endif %}{% if filter_org_status %} status={{ filter_org_status }}{% endif %}.</p>{% endif %}
+        <p class="table-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table to see all columns.</p>
+        <div class="admin-mobile-cards">
+            {% for org, stats, trial_pay in organizations %}
+            <div class="admin-mobile-card">
+                <div class="card-row"><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}"><strong>{{ org.name }}</strong></a> <code>{{ org.subdomain }}</code></div>
+                <div class="card-row"><span class="status status-{{ org.status }}">{{ org.status }}</span> · {{ stats.user_count }} users · {{ stats.employee_count }} employees</div>
+                <div class="card-row">{% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d trial left{% else %}Trial ended{% endif %}{% else %}—{% endif %}{% if trial_pay.payment_overdue %} · <span class="status status-past-due">Overdue</span>{% endif %}</div>
+                <div class="card-actions">
+                    <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</p>
+            {% endfor %}
+        </div>
+        <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Subdomain</th>
+                    <th>Status</th>
+                    <th>Trial</th>
+                    <th>Payment</th>
+                    <th>Users</th>
+                    <th>Employees</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for org, stats, trial_pay in organizations %}
+                <tr>
+                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a></td>
+                    <td><code>{{ org.subdomain }}</code></td>
+                    <td><span class="status status-{{ org.status }}">{{ org.status }}</span></td>
+                    <td>{% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}{% else %}—{% endif %}</td>
+                    <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
+                    <td>{{ stats.user_count }}</td>
+                    <td>{{ stats.employee_count }}</td>
+                    <td>{{ org.created_at.strftime('%Y-%m-%d') if org.created_at else '—' }}</td>
+                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <div class="admin-ideas table-card">
+        <h2 class="section-title">More control</h2>
+        <p class="section-desc">You have <a href="{{ url_for('admin.users_list') }}">Platform users</a> for a full list. Other ideas: search/filter orgs and signup requests; export signups to CSV; extend or override trial end date; mark signups as contacted; maintenance mode; activity log (logins, errors).</p>
+    </div>
+</div>
+<style>
+.admin-ideas { margin-top: 24px; }
+.signup-requests-actions .clear-form { display: inline-block; }
+.quick-links-list .btn { flex-shrink: 0; }
+</style>
+<script>
+document.querySelectorAll('.btn-copy').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var email = this.getAttribute('data-email');
+        if (!email) return;
+        navigator.clipboard.writeText(email).then(function() {
+            var t = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; btn.classList.add('copied');
+            setTimeout(function() { btn.innerHTML = t; btn.classList.remove('copied'); }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

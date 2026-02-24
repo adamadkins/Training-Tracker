@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    body:has(.hs-day-wrapper) main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    body:has(.hs-day-wrapper) main { max-width: none !important; padding-top: 0 !important; }
+
+    .hs-day-wrapper { min-height: calc(100vh - 72px); background: var(--bg-body); }
+    .hs-content { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .hs-back-inline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--primary); text-decoration: none; margin-bottom: 16px; }
+    .hs-back-inline:hover { text-decoration: underline; }
+    .hs-session-row {
+        display: flex; align-items: center; gap: 12px; padding: 16px 20px; margin-bottom: 8px;
+        border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
+        text-decoration: none; color: inherit; transition: all 0.2s; cursor: pointer; flex-wrap: wrap;
+        box-shadow: 0 1px 2px var(--shadow);
+    }
+    .hs-session-row:hover { border-color: var(--primary); box-shadow: 0 4px 12px var(--shadow); }
+    .hs-session-row.locked { opacity: 0.85; cursor: default; pointer-events: none; }
+    .hs-tag {
+        background: var(--text-main); color: var(--bg-card); font-size: 11px; font-weight: 700;
+        padding: 4px 8px; border-radius: 8px; flex-shrink: 0;
+    }
+    .hs-tag.learning { background: #059669; color: #fff; }
+    .hs-tag.teaching { background: #b45309; color: #fff; }
+    .hs-time { font-size: 14px; font-weight: 600; color: var(--text-main); }
+    .hs-position { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .hs-people { font-size: 13px; color: var(--text-muted); margin-top: 4px; width: 100%; }
+    .hs-arrow { margin-left: auto; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+    .hs-lock-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-top: 4px; }
+    .hs-day-empty { padding: 32px 0; text-align: center; font-size: 15px; color: var(--text-muted); font-weight: 500; }
+
+    @media (max-width: 768px) {
+        .hs-content { padding: 16px; }
+    }
+</style>
+
+<div class="hs-day-wrapper">
+    <div class="hs-content">
+        <a href="{{ url_for('employee.schedules_list') }}" class="hs-back-inline"><i class="fa-solid fa-arrow-left"></i> My Schedule</a>
+        {% if sessions %}
+            {% for s in sessions %}
+                {% set is_teaching = s.trainer_employee_id == current_user.employee_id %}
+                {% set start_t = s.custom_start_time or (s.daypart.start_time if s.daypart else none) %}
+                {% set end_t = s.custom_end_time or (s.daypart.end_time if s.daypart else none) %}
+                {% set locked = s.is_locked and current_user.role != 'manager' %}
+                <a href="{{ url_for('employee.session_rating', session_id=s.id) if not locked else '#' }}"
+                   class="hs-session-row {{ 'locked' if locked else '' }}">
+                    <span class="hs-tag {{ 'teaching' if is_teaching else 'learning' }}">
+                        {{ 'Teaching' if is_teaching else 'Learning' }}
+                    </span>
+                    <span class="hs-time">
+                        {% if start_t %}
+                            {{ start_t.strftime('%I:%M %p').lstrip('0') }}{% if end_t %} – {{ end_t.strftime('%I:%M %p').lstrip('0') }}{% endif %}
+                        {% elif s.daypart %}
+                            {{ s.daypart.name }}
+                        {% else %}
+                            Scheduled
+                        {% endif %}
+                    </span>
+                    <span class="hs-position">{{ 'Hidden' if locked else s.position.name }}</span>
+                    {% if locked %}
+                        <span class="hs-lock-badge" style="width:100%;"><i class="fa-solid fa-lock"></i> Reveals at start time</span>
+                    {% else %}
+                        <span class="hs-people">
+                            {{ s.trainee.first_name }} with {{ s.trainer.first_name if s.trainer else 'TBD' }}
+                        </span>
+                    {% endif %}
+                    <i class="fa-solid fa-chevron-right hs-arrow"></i>
+                </a>
+            {% endfor %}
+        {% else %}
+            <p class="hs-day-empty">No training sessions this day.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+    <nav class="admin-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('admin.index') }}">Dashboard</a>
+        <span class="sep">/</span>
+        <span>Platform users</span>
+    </nav>
+    <div class="page-header">
+        <h1 class="page-title">Platform users</h1>
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    </div>
+    <p class="page-subtitle">All users across organizations. Superusers (main-domain admins) are not listed.</p>
+    <form method="get" class="admin-filters filter-form">
+        <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search email">
+        <select name="org_id">
+            <option value="">All organizations</option>
+            {% for o in all_orgs %}
+            <option value="{{ o.id }}" {{ 'selected' if filter_org_id == o.id else '' }}>{{ o.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="role">
+            <option value="">All roles</option>
+            <option value="manager" {{ 'selected' if filter_role == 'manager' else '' }}>Manager</option>
+            <option value="trainee" {{ 'selected' if filter_role == 'trainee' else '' }}>Trainee</option>
+        </select>
+        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+    </form>
+    <div class="table-card">
+        <p class="table-scroll-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table to see all columns.</p>
+        <div class="admin-mobile-cards">
+            {% for user, org in users_with_org %}
+            <div class="admin-mobile-card">
+                <div class="card-row"><strong>{{ user.email }}</strong></div>
+                <div class="card-row">{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</div>
+                <div class="card-row"><span class="role-badge role-{{ user.role }}">{{ user.role }}</span>{% if user.last_seen %} · {{ user.last_seen.strftime('%Y-%m-%d %H:%M') }}{% endif %}</div>
+                <div class="card-actions">
+                    <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate">Spectate</a>
+                    <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate">Impersonate</a>
+                    <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to this user?');">
+                        <button type="submit" class="btn btn-sm btn-reset">Send reset</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No tenant users yet.</p>
+            {% endfor %}
+        </div>
+        <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Last seen</th>
+                    <th>Support</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user, org in users_with_org %}
+                <tr>
+                    <td>{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
+                    <td>{% if user.last_seen %}{{ user.last_seen.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}</td>
+                    <td class="support-actions">
+                        <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate" title="View as them (read-only, PII masked)">Spectate</a>
+                        <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate" title="Full access as this user">Impersonate</a>
+                        <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to this user?');">
+                            <button type="submit" class="btn btn-sm btn-reset">Send reset</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5">No tenant users yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+<style>
+.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+.page-header .page-title { margin: 0; }
+.btn-spectate { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.btn-impersonate { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+.btn-reset { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+</style>
+{% endblock %}

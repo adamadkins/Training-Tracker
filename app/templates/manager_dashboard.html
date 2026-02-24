@@ -19,6 +19,10 @@
         background: var(--bg-body);
         min-height: calc(100vh - 72px);
         padding: 28px 32px;
+        padding-left: calc(32px + env(safe-area-inset-left));
+        padding-right: calc(32px + env(safe-area-inset-right));
+        padding-bottom: calc(28px + env(safe-area-inset-bottom));
+        overflow-x: hidden;
     }
     .manager-container {
         max-width: 1400px;
@@ -447,9 +451,35 @@
     .empty-grid i { font-size: 36px; color: var(--text-muted); opacity: 0.15; margin-bottom: 14px; display: block; }
     .empty-grid p { color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0; }
 
+    /* ── Quick actions (QOL) ── */
+    .quick-actions-bar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .quick-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 18px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        transition: all 0.2s;
+        min-height: 44px;
+    }
+    .quick-action-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--bg-body); }
+    .quick-action-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .quick-action-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
     /* ── Responsive ── */
     @media (max-width: 1100px) {
-        .manager-wrapper { padding: 18px 14px; }
+        .manager-wrapper { padding: 18px 16px; padding-left: calc(16px + env(safe-area-inset-left)); padding-right: calc(16px + env(safe-area-inset-right)); }
         .cockpit-grid { grid-template-columns: 1fr; }
         .launchpad-sidebar { order: -1; }
         .launch-grid { grid-template-columns: repeat(3, 1fr); }
@@ -458,13 +488,14 @@
     }
 
     @media (max-width: 700px) {
+        .manager-wrapper { padding: 14px 12px; padding-left: calc(12px + env(safe-area-inset-left)); padding-right: calc(12px + env(safe-area-inset-right)); }
         .hero-title { font-size: 22px; }
-        .manager-hero { margin-bottom: 20px; gap: 16px; }
+        .manager-hero { margin-bottom: 20px; gap: 16px; flex-direction: column; align-items: flex-start; }
         .kpi-row {
             width: 100%;
             background: var(--bg-card);
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 12px;
             border: 1px solid var(--border);
             gap: 0;
             flex-wrap: nowrap;
@@ -475,21 +506,42 @@
             border: none;
             border-right: 1px solid var(--border);
             border-radius: 0;
-            padding: 4px;
+            padding: 6px 4px;
             min-width: 0;
         }
         .kpi-card:last-child { border-right: none; }
         .kpi-val { font-size: 16px; }
         .kpi-label { font-size: 8px; }
 
-        .launch-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .launch-btn { padding: 10px 6px; border-radius: 10px; }
-        .launch-icon { width: 30px; height: 30px; font-size: 13px; border-radius: 8px; }
-        .launch-label { font-size: 10px; }
+        .launch-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .launch-btn { padding: 14px 8px; border-radius: 12px; min-height: 72px; }
+        .launch-icon { width: 32px; height: 32px; font-size: 14px; border-radius: 10px; }
+        .launch-label { font-size: 11px; }
 
-        .trainee-grid { grid-template-columns: 1fr; gap: 10px; }
+        .trainee-grid { grid-template-columns: 1fr; gap: 12px; }
         .activity-table .mobile-hide { display: none; }
         .search-container { width: 100%; }
+        .filter-bar { width: 100%; }
+        .filter-pill { min-height: 44px; padding: 10px 16px; }
+        .activity-table { font-size: 13px; }
+        .activity-table th, .activity-table td { padding: 10px 12px; }
+        .activity-table td { white-space: nowrap; }
+        .table-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -12px; padding: 0 12px; }
+        .table-scroll-wrap .activity-table { min-width: 320px; }
+    }
+
+    @media (max-width: 480px) {
+        .manager-wrapper { padding: 12px 10px; padding-left: calc(10px + env(safe-area-inset-left)); padding-right: calc(10px + env(safe-area-inset-right)); }
+        .hero-title { font-size: 20px; }
+        .hero-subtitle { font-size: 13px; }
+        .section-title { font-size: 16px; }
+        .quick-actions-bar { margin-bottom: 16px; gap: 8px; }
+        .quick-action-btn { padding: 12px 14px; font-size: 12px; min-height: 44px; }
+        .location-filter-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; margin: 0 -10px 16px; padding: 0 10px 8px; }
+        .location-filter-bar .location-pill { flex-shrink: 0; }
+        .flagged-sessions-banner { padding: 16px; border-radius: 16px; }
+        .flagged-sessions-banner > div:last-child { gap: 8px; }
+        .flagged-session-row { padding: 12px 14px !important; }
     }
 </style>
 
@@ -533,6 +585,13 @@
             </div>
         </div>
 
+        {# ── Quick actions (QOL) ── #}
+        <div class="quick-actions-bar">
+            <a href="{{ url_for('manager.employee_create') }}" class="quick-action-btn primary"><i class="fa-solid fa-user-plus"></i> Add employee</a>
+            <a href="{{ url_for('manager.schedules_list') }}" class="quick-action-btn"><i class="fa-solid fa-calendar-days"></i> Schedules</a>
+            <a href="{{ url_for('manager.employees_list') }}" class="quick-action-btn"><i class="fa-solid fa-users"></i> People</a>
+        </div>
+
         {# ── Location filter (when manager is in multiple locations) ── #}
         {% if manager_locations %}
         <div class="location-filter-bar" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -554,8 +613,8 @@
 
         {# ── FLAGGED SESSIONS ALERT ── #}
         {% if flagged_sessions %}
-        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; padding: 24px; margin-bottom: 28px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <div class="flagged-sessions-banner" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 20px; padding: 24px; margin-bottom: 28px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 40px; height: 40px; border-radius: 12px; background: #ef4444; color: white; display: flex; align-items: center; justify-content: center; font-size: 16px;">
                         <i class="fa-solid fa-flag"></i>
@@ -569,7 +628,7 @@
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 {% for fs in flagged_sessions %}
-                <div style="background: white; border: 1px solid #fecaca; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div class="flagged-session-row" style="background: white; border: 1px solid #fecaca; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <div style="flex-shrink: 0;">
                         <img src="{{ fs.trainee.avatar(36) }}" style="width: 36px; height: 36px; border-radius: 10px;">
                     </div>
@@ -599,7 +658,7 @@
                 <h2 class="section-title"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i> Overdue Sessions <span style="font-size:12px; font-weight:700; color:#ef4444; background:rgba(239,68,68,0.08); border-radius:6px; padding:2px 8px; margin-left:6px;">{{ overdue_sessions|length }}</span></h2>
             </div>
             <div class="activity-card">
-                <div style="overflow-x:auto;">
+                <div class="table-scroll-wrap" style="overflow-x:auto;">
                     <table class="activity-table">
                         <thead>
                             <tr>
@@ -665,7 +724,7 @@
                     <h2 class="section-title"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Recent Activity</h2>
                 </div>
                 <div class="activity-card">
-                    <div style="overflow-x:auto;">
+                    <div class="table-scroll-wrap" style="overflow-x:auto;">
                         <table class="activity-table">
                             <thead>
                                 <tr>
