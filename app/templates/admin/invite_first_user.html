@@ -1,25 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="admin-page">
+<div class="admin-page invite-first-page">
     <div class="page-header">
         <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> {{ org.name }}</a>
     </div>
     <div class="form-card">
         <h1 class="page-title">Invite first user</h1>
         <p class="form-intro">Create the first manager for <strong>{{ org.name }}</strong>. They'll receive an email to set their password, then can log in at <code>{% set h = request.host.split(':')[0] %}{{ org.subdomain }}.{{ h[4:] if h[:4] == 'www.' else h }}</code>.</p>
+        {% if signup_requests %}
+        <div class="prefill-row">
+            <label for="signup_picker">Pre-fill from signup request</label>
+            <select id="signup_picker" class="prefill-select" aria-label="Choose a signup to fill name and email">
+                <option value="">— Choose one (optional) —</option>
+                {% for r in signup_requests %}
+                <option value="" data-email="{{ r.email }}" data-name="{{ r.name or '' }}">{{ r.name or 'No name' }} — {{ r.email }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
         <form method="post" class="admin-form">
             <label for="first_name">First name</label>
-            <input type="text" id="first_name" name="first_name" required placeholder="Jane">
+            <input type="text" id="first_name" name="first_name" required placeholder="Jane" value="{{ request.form.get('first_name', '') }}">
             <label for="last_name">Last name</label>
-            <input type="text" id="last_name" name="last_name" required placeholder="Doe">
+            <input type="text" id="last_name" name="last_name" required placeholder="Doe" value="{{ request.form.get('last_name', '') }}">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required placeholder="jane@company.com">
+            <input type="email" id="email" name="email" required placeholder="jane@company.com" value="{{ request.form.get('email', '') }}">
             <button type="submit" class="btn btn-primary">Send invite</button>
         </form>
     </div>
 </div>
 <style>
-.admin-page { max-width: 480px; }
+.admin-page.invite-first-page { max-width: 520px; }
 .page-header { margin-bottom: 20px; }
 .back-link { color: var(--text-muted); font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
 .back-link:hover { color: var(--primary); }
@@ -27,11 +38,39 @@
 .page-title { font-size: 24px; font-weight: 800; margin: 0 0 12px 0; color: var(--text-main); }
 .form-intro { font-size: 14px; color: var(--text-muted); margin: 0 0 24px 0; line-height: 1.5; }
 .form-intro code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
+.prefill-row { margin-bottom: 20px; }
+.prefill-row label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+.prefill-select { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: var(--input-bg); color: var(--text-main); }
 .admin-form { display: flex; flex-direction: column; gap: 16px; }
 .admin-form label { font-size: 13px; font-weight: 700; color: var(--text-main); }
 .admin-form input { padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; background: var(--input-bg); color: var(--text-main); }
 .admin-form input:focus { outline: none; border-color: var(--primary); }
 .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; background: var(--primary); color: white; width: fit-content; }
 .btn:hover { opacity: 0.9; }
+@media (max-width: 768px) {
+    .form-card { padding: 20px; }
+    .prefill-select { font-size: 16px; }
+}
 </style>
+<script>
+(function() {
+    var picker = document.getElementById('signup_picker');
+    if (!picker) return;
+    picker.addEventListener('change', function() {
+        var opt = this.options[this.selectedIndex];
+        var email = opt.getAttribute('data-email');
+        var name = (opt.getAttribute('data-name') || '').trim();
+        if (!email) return;
+        document.getElementById('email').value = email || '';
+        var parts = name.split(/\s+/);
+        if (parts.length >= 2) {
+            document.getElementById('first_name').value = parts[0];
+            document.getElementById('last_name').value = parts.slice(1).join(' ');
+        } else if (parts.length === 1 && parts[0]) {
+            document.getElementById('first_name').value = parts[0];
+            document.getElementById('last_name').value = '';
+        }
+    });
+})();
+</script>
 {% endblock %}

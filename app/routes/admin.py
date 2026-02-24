@@ -523,10 +523,12 @@ def organization_invite_first_user(org_id):
         last_name = (request.form.get("last_name") or "").strip()
         if not email or not first_name or not last_name:
             flash("Email, first name, and last name are required.", "error")
-            return render_template("admin/invite_first_user.html", org=org)
+            signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(30).all()
+            return render_template("admin/invite_first_user.html", org=org, signup_requests=signup_requests)
         if User.query.filter_by(organization_id=org_id, email=email).first():
             flash("A user with that email already exists for this organization.", "error")
-            return render_template("admin/invite_first_user.html", org=org)
+            signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(30).all()
+            return render_template("admin/invite_first_user.html", org=org, signup_requests=signup_requests)
         try:
             emp = Employee(
                 organization_id=org_id,
@@ -560,9 +562,11 @@ def organization_invite_first_user(org_id):
         except Exception as e:
             db.session.rollback()
             flash(f"Error: {str(e)}", "error")
-            return render_template("admin/invite_first_user.html", org=org)
+            signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(30).all()
+            return render_template("admin/invite_first_user.html", org=org, signup_requests=signup_requests)
 
-    return render_template("admin/invite_first_user.html", org=org)
+    signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(30).all()
+    return render_template("admin/invite_first_user.html", org=org, signup_requests=signup_requests)
 
 
 @admin_bp.route("/organizations/<int:org_id>/delete", methods=["POST"])

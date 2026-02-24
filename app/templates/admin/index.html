@@ -53,6 +53,7 @@
             </select>
             <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
         </form>
+        <p class="table-scroll-hint-mobile" aria-hidden="true">Scroll table horizontally →</p>
         <p class="section-desc">Landing-page submissions. For multiple locations with the same business name (e.g. Chick-fil-A), use a unique subdomain when creating the org (e.g. <code>chickfila-store4521</code>, <code>chickfila-downtown</code>). <strong>Email</strong> opens Gmail; <strong>Copy</strong> copies their email.</p>
         <div class="signup-requests-actions">
             <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
@@ -179,7 +180,9 @@
 .status-past-due { background: #fef3c7; color: #92400e; }
 .actions-cell { white-space: nowrap; }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
-.btn-email { background: var(--primary); color: white; }
+/* Email/Copy links: force visible text (override table link color) */
+a.btn-email, a.btn-email:hover { background: var(--primary); color: #fff !important; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.btn-email { background: var(--primary); color: #fff !important; }
 .btn-copy { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
 .btn-copy.copied { background: #dcfce7; color: #166534; border-color: #166534; }
 .signup-requests-actions { margin-bottom: 12px; }
@@ -193,25 +196,39 @@
 .btn-outline-danger:hover { background: #fef2f2; }
 .btn-remove { background: transparent; border: none; color: var(--text-muted); padding: 4px 8px; }
 .btn-remove:hover { color: #dc2626; }
+.table-scroll-hint-mobile { display: none; }
 
 /* Mobile-friendly admin */
 @media (max-width: 768px) {
-    .admin-page { padding: 0 4px; }
+    .admin-page { padding: 0 8px; max-width: 100%; }
     .page-title { font-size: 22px; }
-    .page-subtitle { font-size: 13px; }
+    .page-subtitle { font-size: 13px; word-break: break-word; }
     .admin-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-    .stat-card { padding: 16px; }
+    .stat-card { padding: 16px 12px; }
     .stat-value { font-size: 24px; }
-    .page-actions { flex-direction: column; align-items: stretch; }
-    .page-actions .btn { justify-content: center; min-height: 44px; }
-    .table-card { padding: 16px; margin-left: -4px; margin-right: -4px; border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .admin-table { min-width: 800px; }
+    .stat-label { font-size: 11px; }
+    .page-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+    .page-actions .btn { justify-content: center; min-height: 48px; width: 100%; }
+    .admin-filters .filter-form, .signup-filter-form { flex-direction: column; align-items: stretch; gap: 10px; }
+    .admin-filters input, .admin-filters select, .signup-filter-form input, .signup-filter-form select { width: 100%; min-height: 44px; }
+    .admin-filters .btn, .signup-filter-form .btn { width: 100%; min-height: 48px; justify-content: center; }
+    .table-scroll-hint-mobile { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; padding: 8px 12px; background: var(--bg-body); border-radius: 8px; }
+    .table-card { padding: 16px 12px; margin-left: -8px; margin-right: -8px; border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .admin-table { min-width: 880px; }
     .admin-table th, .admin-table td { padding: 10px 12px; font-size: 13px; }
-    .section-title { font-size: 16px; }
-    .section-desc { font-size: 12px; }
-    .actions-cell .btn-sm { min-height: 40px; padding: 8px 12px; }
+    .section-title { font-size: 16px; margin-bottom: 12px; }
+    .section-desc { font-size: 12px; line-height: 1.5; margin-bottom: 12px; }
+    .actions-cell { white-space: nowrap; }
+    .actions-cell .btn-sm { min-height: 44px; padding: 8px 12px; font-size: 13px; }
+    a.btn-email, .btn-email { min-width: 5em; color: #fff !important; }
+    .btn-copy { min-width: 5em; }
     .btn-remove { min-width: 44px; min-height: 44px; padding: 10px; }
     .signup-requests-actions .btn-sm { min-height: 44px; }
+    .hide-on-mobile-title { display: block; }
+}
+@media (max-width: 480px) {
+    .admin-page { padding: 0 4px; }
+    .admin-stats { grid-template-columns: 1fr; }
 }
 </style>
 <script>
