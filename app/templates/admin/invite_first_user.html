@@ -7,7 +7,7 @@
     <div class="form-card">
         <h1 class="page-title">Invite first user</h1>
         <p class="form-intro">Create the first manager for <strong>{{ org.name }}</strong>. They'll receive an email to set their password, then can log in at <code>{% set h = request.host.split(':')[0] %}{{ org.subdomain }}.{{ h[4:] if h[:4] == 'www.' else h }}</code>.</p>
-        <form method="post" class="admin-form">
+        <form method="post" class="admin-form" id="inviteFirstUserForm">
             <label for="first_name">First name</label>
             <input type="text" id="first_name" name="first_name" required placeholder="Jane">
             <label for="last_name">Last name</label>
@@ -16,10 +16,27 @@
             <input type="email" id="email" name="email" required placeholder="jane@company.com">
             <button type="submit" class="btn btn-primary">Send invite</button>
         </form>
+        {% if signup_requests %}
+        <div class="signup-picker">
+            <p class="signup-picker-title">From signup requests</p>
+            <p class="signup-picker-hint">Click &ldquo;Use this&rdquo; to fill the form so you don&rsquo;t have to type name and email.</p>
+            <ul class="signup-picker-list">
+                {% for sr in signup_requests %}
+                {% set parts = sr.name.strip().split(' ', 1) %}
+                {% set fn = parts[0] if parts else '' %}
+                {% set ln = parts[1] if parts|length > 1 else '' %}
+                <li class="signup-picker-item">
+                    <span class="signup-picker-info"><strong>{{ sr.name }}</strong> &middot; {{ sr.email }}{% if sr.business %} &middot; {{ sr.business }}{% endif %}</span>
+                    <button type="button" class="btn-use-this" data-first="{{ fn }}" data-last="{{ ln }}" data-email="{{ sr.email }}">Use this</button>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
 </div>
 <style>
-.admin-page { max-width: 480px; }
+.admin-page { max-width: 560px; }
 .page-header { margin-bottom: 20px; }
 .back-link { color: var(--text-muted); font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
 .back-link:hover { color: var(--primary); }
@@ -33,5 +50,28 @@
 .admin-form input:focus { outline: none; border-color: var(--primary); }
 .btn { padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; background: var(--primary); color: white; width: fit-content; }
 .btn:hover { opacity: 0.9; }
+.signup-picker { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.signup-picker-title { font-size: 13px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 6px 0; }
+.signup-picker-hint { font-size: 13px; color: var(--text-muted); margin: 0 0 12px 0; }
+.signup-picker-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+.signup-picker-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: 10px; }
+.signup-picker-info { font-size: 13px; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.btn-use-this { padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.btn-use-this:hover { background: var(--primary); color: white; }
 </style>
+<script>
+(function() {
+    document.querySelectorAll('.btn-use-this').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var first = document.getElementById('first_name');
+            var last = document.getElementById('last_name');
+            var email = document.getElementById('email');
+            if (first) first.value = this.getAttribute('data-first') || '';
+            if (last) last.value = this.getAttribute('data-last') || '';
+            if (email) email.value = this.getAttribute('data-email') || '';
+            if (first) first.focus();
+        });
+    });
+})();
+</script>
 {% endblock %}

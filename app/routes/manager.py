@@ -1151,7 +1151,22 @@ def employee_create():
             db.session.rollback()
             flash(f"Error creating account: {str(e)}")
 
-    return render_template("employee_form.html", mode="new", employee=None, locations=locations)
+    # Recently added employees in this org so manager can "Use this" to pre-fill name/email
+    recent_employees = []
+    if getattr(current_user, "organization_id", None):
+        recent_employees = (
+            Employee.query.filter_by(organization_id=current_user.organization_id)
+            .order_by(Employee.created_at.desc())
+            .limit(8)
+            .all()
+        )
+    return render_template(
+        "employee_form.html",
+        mode="new",
+        employee=None,
+        locations=locations,
+        recent_employees=recent_employees,
+    )
 
 
 @manager_bp.route("/employees/<int:employee_id>/edit", methods=['GET', 'POST'])

@@ -309,6 +309,21 @@
                 </div>
             </form>
 
+            {% if mode == "new" and recent_employees is defined and recent_employees %}
+            <div class="recent-employees-picker" style="margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <p class="recent-picker-title" style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 6px 0;">Recently added</p>
+                <p class="recent-picker-hint" style="font-size: 13px; color: var(--text-muted); margin: 0 0 12px 0;">Click &ldquo;Use this&rdquo; to copy name and email into the form.</p>
+                <ul class="recent-picker-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+                    {% for emp in recent_employees %}
+                    <li class="recent-picker-item" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: 10px;">
+                        <span class="recent-picker-info" style="font-size: 13px; color: var(--text-main); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>{{ emp.first_name }} {{ emp.last_name }}</strong>{% if emp.user_account %} &middot; {{ emp.user_account.email }}{% endif %}</span>
+                        <button type="button" class="btn-use-this-recent" data-first="{{ emp.first_name }}" data-last="{{ emp.last_name }}" data-email="{{ emp.user_account.email if emp.user_account else '' }}" style="padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid var(--primary); background: transparent; color: var(--primary); cursor: pointer; flex-shrink: 0;">Use this</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
             <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
                 {# SMART BACK BUTTON FOR CANCEL #}
                 <a href="javascript:history.back()"
@@ -356,5 +371,17 @@
         updateEmailRequired();
     })();
     {% endif %}
+
+    document.querySelectorAll('.btn-use-this-recent').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var first = document.getElementById('first_name');
+            var last = document.getElementById('last_name');
+            var email = document.getElementById('email');
+            if (first) first.value = this.getAttribute('data-first') || '';
+            if (last) last.value = this.getAttribute('data-last') || '';
+            if (email) email.value = this.getAttribute('data-email') || '';
+            if (first) first.focus();
+        });
+    });
 </script>
 {% endblock %}
