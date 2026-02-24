@@ -87,7 +87,7 @@
                     <td>{{ r.phone or '—' }}</td>
                     <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
                     <td>{{ r.size or '—' }}</td>
-                    <td>{{ r.created_at | est('%Y-%m-%d %I:%M %p') }}</td>
+                    <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
                     <td class="actions-cell">
                         <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Gmail"><i class="fa-solid fa-envelope"></i> Email</a>
                         <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
@@ -153,7 +153,7 @@
                     <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
                     <td>{{ stats.user_count }}</td>
                     <td>{{ stats.employee_count }}</td>
-                    <td>{{ org.created_at | est('%Y-%m-%d') }}</td>
+                    <td>{{ org.created_at | est('%m-%d-%Y') }}</td>
                     <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
                 </tr>
                 {% else %}

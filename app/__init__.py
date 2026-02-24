@@ -142,7 +142,7 @@ def create_app():
 
     app.jinja_env.filters['mask_pii'] = mask_pii
 
-    def format_est(dt, fmt='%Y-%m-%d %I:%M %p'):
+    def format_est(dt, fmt='%m-%d-%Y %I:%M %p'):
         """Format a datetime in Eastern (EST/EDT). Expects UTC or naive UTC. Returns '—' if None."""
         if dt is None:
             return '—'

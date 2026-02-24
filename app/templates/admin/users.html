@@ -38,7 +38,7 @@
                     <td>{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</td>
                     <td>{{ user.email }}</td>
                     <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
-                    <td>{{ user.last_seen | est('%Y-%m-%d %I:%M %p') }}</td>
+                    <td>{{ user.last_seen | est('%m-%d-%Y %I:%M %p') }}</td>
                     <td class="support-actions">
                         <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate" title="View as them (read-only, PII masked)">Spectate</a>
                         <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate" title="Full access as this user">Impersonate</a>

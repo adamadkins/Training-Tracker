@@ -36,7 +36,7 @@
                 {% endif %}
             </dd>
             <dt>Employees</dt><dd>{{ employee_count }}</dd>
-            <dt>Created</dt><dd>{{ org.created_at | est('%Y-%m-%d %I:%M %p ET') }}</dd>
+            <dt>Created</dt><dd>{{ org.created_at | est('%m-%d-%Y %I:%M %p ET') }}</dd>
             <dt>Trial</dt>
             <dd>
                 {% if trial_days_left is not none %}
