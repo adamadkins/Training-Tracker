@@ -1,11 +1,12 @@
 #!/bin/bash
 # Run on the VPS after you push changes to GitHub.
+# Deploys the multi-tenant-admin branch.
 # Usage: cd /opt/training-tracker && sudo ./deploy/deploy.sh
 
 set -e
 cd /opt/training-tracker
-BRANCH=$(git branch --show-current)
-git pull --no-rebase origin "$BRANCH"
+git fetch origin
+git reset --hard origin/multi-tenant-admin
 .venv/bin/pip install -r requirements.txt --quiet
 set -a
 source .env

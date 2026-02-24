@@ -1299,9 +1299,9 @@
 
         .pricing-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr;
             gap: 24px;
-            max-width: 960px;
+            max-width: 440px;
             margin: 0 auto;
         }
 
@@ -1622,6 +1622,12 @@
 
         .modal-form { display: flex; flex-direction: column; gap: 14px; }
 
+        .modal-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
         .modal-form label {
             font-size: 12px;
             font-weight: 700;
@@ -1684,12 +1690,19 @@
         .modal-success p { font-size: 14px; color: var(--muted); }
 
         /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr !important;
+                max-width: 100% !important;
+            }
+        }
+
         @media (max-width: 900px) {
             .features-grid { grid-template-columns: repeat(2, 1fr); }
             .steps-grid::before { display: none; }
             .steps-grid { grid-template-columns: 1fr; gap: 40px; }
             .highlight-grid { grid-template-columns: 1fr; gap: 40px; }
-            .pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
+            .pricing-grid { max-width: 440px; }
             .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
         }
 
@@ -1721,6 +1734,22 @@
             .m-trainee-grid { grid-template-columns: 1fr; }
             .footer-top { grid-template-columns: 1fr; gap: 28px; }
             .footer-bottom { flex-direction: column; align-items: flex-start; }
+            .pricing { padding: 56px 20px 72px; }
+            .pricing-header { margin-bottom: 36px; }
+            .pricing-grid { grid-template-columns: 1fr !important; max-width: 100% !important; gap: 20px; }
+            .pricing-card { padding: 24px 20px; }
+            .pricing-price .dollar { font-size: 18px; }
+            .pricing-price .amount { font-size: 42px; }
+            .pricing-price .period { font-size: 13px; }
+            .pricing-features { gap: 10px; margin-bottom: 22px; }
+            .pricing-features li { font-size: 13px; }
+            .pricing-note { margin-top: 24px; padding: 0 8px; font-size: 12px; line-height: 1.55; }
+            .modal-overlay { padding: 12px; align-items: flex-start; overflow-y: auto; }
+            .modal { padding: 28px 20px 32px; max-height: min(90vh, 640px); overflow-y: auto; margin: auto 0; }
+            .modal h2 { font-size: 20px; }
+            .modal-form input, .modal-form select { min-height: 44px; padding: 12px 14px; font-size: 16px; }
+            .modal-form-row { grid-template-columns: 1fr; }
+            .modal-submit { min-height: 48px; padding: 14px; }
         }
     </style>
 </head>
@@ -3009,7 +3038,7 @@
             <h2 class="section-title">Two plans, no surprises</h2>
             <p class="section-sub">No per-seat fees. No hidden costs. Unlimited locations on both plans.</p>
         </div>
-        <div class="pricing-grid" style="max-width:720px; margin:0 auto; grid-template-columns: 1fr 1fr;">
+        <div class="pricing-grid">
             <div class="pricing-card">
                 <div class="pricing-plan-name">Standard</div>
                 <div class="pricing-price">
@@ -3142,7 +3171,7 @@
                     <label>Street address</label>
                     <input type="text" name="address_line1" placeholder="123 Main St">
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="modal-form-row">
                     <div>
                         <label>City</label>
                         <input type="text" name="city" placeholder="City">
