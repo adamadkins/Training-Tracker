@@ -51,21 +51,22 @@ def create_app():
     @app.before_request
     def resolve_tenant():
         from flask import g
-        from app.models import Organization
-        host = (request.host or "").split(":")[0].lower()
-        main = (app.config.get("MAIN_DOMAIN") or "trainingtracker.me").split(":")[0].lower()
-        # Main domain (or IP with no subdomain) = platform admin / no tenant
-        if host == main or host.startswith("www.") or "." not in host:
+        g.current_organization_id = None
+        try:
+            from app.models import Organization
+            host = (request.host or "").split(":")[0].lower()
+            main = (app.config.get("MAIN_DOMAIN") or "trainingtracker.me").split(":")[0].lower()
+            if host == main or host.startswith("www.") or "." not in host:
+                return
+            parts = host.replace("www.", "").split(".")
+            subdomain = parts[0] if len(parts) >= 2 else None
+            if not subdomain:
+                return
+            org = Organization.query.filter_by(subdomain=subdomain).first()
+            g.current_organization_id = org.id if org else None
+        except Exception:
+            app.logger.exception("resolve_tenant failed")
             g.current_organization_id = None
-            return
-        # subdomain.main.tld -> subdomain
-        parts = host.replace("www.", "").split(".")
-        subdomain = parts[0] if len(parts) >= 2 else None
-        if not subdomain:
-            g.current_organization_id = None
-            return
-        org = Organization.query.filter_by(subdomain=subdomain).first()
-        g.current_organization_id = org.id if org else None
 
     # 5. Inject app version and system_settings into all templates
     @app.before_request
@@ -114,10 +115,23 @@ def create_app():
 
     @app.errorhandler(500)
     def server_error(e):
+        import os
+        import sys
+        import traceback
+        tb = None
+        if sys.exc_info()[0]:
+            tb = traceback.format_exc()
+            app.logger.error("500 error:\n%s", tb)
+        if os.environ.get("SHOW_500_TRACEBACK"):
+            msg = (tb or str(e) or "Unknown error") if tb else "No traceback captured. Check server logs: sudo journalctl -u training-tracker -n 80 --no-pager"
+            return _render('error.html',
+                code=500, icon='⚠️',
+                title="Something Went Wrong",
+                message=msg), 500
         return _render('error.html',
             code=500, icon='⚠️',
             title="Something Went Wrong",
-            message="An unexpected error occurred on our end. Try refreshing the page or come back in a moment."), 500
+            message="An unexpected error occurred. Try again or check server logs: sudo journalctl -u training-tracker -n 80 --no-pager"), 500
 
     @app.errorhandler(401)
     def unauthorized(e):
