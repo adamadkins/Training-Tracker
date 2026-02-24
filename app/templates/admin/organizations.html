@@ -43,7 +43,7 @@
                     <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
                     <td>{{ stats.user_count }}</td>
                     <td>{{ stats.employee_count }}</td>
-                    <td>{{ org.created_at.strftime('%Y-%m-%d') if org.created_at else '—' }}</td>
+                    <td>{{ org.created_at | est('%Y-%m-%d') }}</td>
                     <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
                 </tr>
                 {% else %}

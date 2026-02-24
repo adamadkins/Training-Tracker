@@ -142,6 +142,23 @@ def create_app():
 
     app.jinja_env.filters['mask_pii'] = mask_pii
 
+    def format_est(dt, fmt='%Y-%m-%d %I:%M %p'):
+        """Format a datetime in Eastern (EST/EDT). Expects UTC or naive UTC. Returns '—' if None."""
+        if dt is None:
+            return '—'
+        try:
+            import pytz
+            utc = pytz.UTC
+            eastern = pytz.timezone('America/New_York')
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=utc)
+            local = dt.astimezone(eastern)
+            return local.strftime(fmt)
+        except Exception:
+            return str(dt) if dt else '—'
+
+    app.jinja_env.filters['est'] = format_est
+
     # Error handlers
     from flask import render_template as _render
 
