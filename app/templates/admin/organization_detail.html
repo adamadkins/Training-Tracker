@@ -23,7 +23,18 @@
                 <code id="login-url">{{ login_host }}</code>
                 <button type="button" class="btn-copy" id="copy-btn" onclick="var u='https://'+document.getElementById('login-url').textContent; var b=document.getElementById('copy-btn'); navigator.clipboard.writeText(u); b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; }, 1500);">Copy</button>
             </dd>
-            <dt>Users</dt><dd>{{ user_count }}</dd>
+            <dt>Users</dt>
+            <dd>
+                {% if org_users %}
+                <ul class="org-user-emails">
+                    {% for u in org_users %}
+                    <li><a href="{{ url_for('admin.users_list', org_id=org.id) }}">{{ u.email }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                {{ user_count }} (none yet)
+                {% endif %}
+            </dd>
             <dt>Employees</dt><dd>{{ employee_count }}</dd>
             <dt>Created</dt><dd>{{ org.created_at.strftime('%Y-%m-%d %H:%M UTC') if org.created_at else '—' }}</dd>
             <dt>Trial</dt>
@@ -148,6 +159,10 @@
 .billing-note { font-size: 13px; color: var(--text-muted); }
 .billing-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
 .btn:hover { opacity: 0.9; }
+.org-user-emails { margin: 0; padding-left: 20px; list-style: disc; }
+.org-user-emails li { margin-bottom: 4px; }
+.org-user-emails a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.org-user-emails a:hover { text-decoration: underline; }
 
 @media (max-width: 768px) {
     .admin-page { max-width: 100%; padding: 0 4px; }

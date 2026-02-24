@@ -46,6 +46,11 @@ def _org_stats(org_id):
     }
 
 
+def _org_users(org_id):
+    """Return list of users (with email) for an org, for display in admin."""
+    return User.query.filter_by(organization_id=org_id).order_by(User.email).all()
+
+
 def _org_trial_and_payment(org):
     """Return dict with trial_days_left (None if no trial, int days else) and payment_overdue (bool)."""
     trial_days_left = None
@@ -148,7 +153,10 @@ def index():
     active_orgs = Organization.query.filter_by(status="active").count()
     total_users = User.query.filter(User.organization_id.isnot(None)).count()
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
-    orgs_with_stats = [(org, _org_stats(org.id), _org_trial_and_payment(org)) for org in orgs[:20]]
+    orgs_with_stats = [
+        (org, _org_stats(org.id), _org_trial_and_payment(org), _org_users(org.id))
+        for org in orgs[:20]
+    ]
 
     signup_query = SignupRequest.query.order_by(SignupRequest.created_at.desc())
     if signup_plan and signup_plan in ("standard", "pro"):
@@ -263,12 +271,14 @@ def organization_detail(org_id):
     elif request.args.get("billing") == "canceled":
         flash("Checkout was canceled.", "info")
     trial_payment = _org_trial_and_payment(org)
+    org_users = _org_users(org_id)
     return render_template(
         "admin/organization_detail.html",
         org=org,
         has_users=has_users,
         user_count=stats["user_count"],
         employee_count=stats["employee_count"],
+        org_users=org_users,
         trial_days_left=trial_payment["trial_days_left"],
         payment_overdue=trial_payment["payment_overdue"],
     )
