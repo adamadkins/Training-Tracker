@@ -164,7 +164,7 @@ def create_app():
         return _render('error.html',
             code=410, icon='⏰',
             title="Link Expired",
-            message="This link is no longer valid. It may have already been used or it expired. Ask your manager to generate a new one."), 410
+            message="This link is no longer valid. It may have already been used or it expired. You can still log in at your company's Training Tracker using the button below, or ask your manager to send a new link."), 410
 
     @app.errorhandler(500)
     def server_error(e):

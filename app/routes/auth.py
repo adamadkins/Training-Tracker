@@ -329,7 +329,19 @@ def reset_token(token):
 
     user = User.verify_reset_token(token)
     if user is None:
-        flash('That is an invalid or expired token', 'warning')
+        # Try to decode token without time check so we can send them to their org's login
+        user_id = User.get_user_id_from_reset_token_unsafe(token)
+        if user_id:
+            user = User.query.get(user_id)
+            if user and getattr(user, "organization_id", None) and user.organization_id:
+                org = Organization.query.get(user.organization_id)
+                if org:
+                    host = request.host.split(":")[0]
+                    base_domain = host[4:] if host.startswith("www.") else host
+                    login_url = f"https://{org.subdomain}.{base_domain}/login"
+                    flash("That link has expired, but you can log in here at your Training Tracker.", "info")
+                    return redirect(login_url)
+        flash("That link is invalid or expired. Ask your manager to send a new one, or log in below.", "warning")
         return redirect(url_for('auth.login'))
 
     if request.method == "POST":

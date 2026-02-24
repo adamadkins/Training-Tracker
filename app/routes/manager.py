@@ -288,7 +288,7 @@ def send_invite_email(user):
         f"If you have the Training Tracker app installed, the link will prompt you to open it "
         f"and take you straight to your company.\n\n"
         f"{open_in_app_url}\n\n"
-        f"This link will expire in 30 minutes."
+        f"This link will expire in 7 days."
     )
     send_notification_email(user, title, body)
 

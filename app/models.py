@@ -75,14 +75,28 @@ class User(db.Model, UserMixin):
         s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
 
+    # 7 days for invite/set-password and password reset so client links don't expire quickly
+    RESET_TOKEN_EXPIRY_SEC = 604800
+
     @staticmethod
-    def verify_reset_token(token, expires_sec=1800):
+    def verify_reset_token(token, expires_sec=None):
+        if expires_sec is None:
+            expires_sec = User.RESET_TOKEN_EXPIRY_SEC
         s = Serializer(current_app.config['SECRET_KEY'])
         try:
             user_id = s.loads(token, max_age=expires_sec)['user_id']
-        except:
+        except Exception:
             return None
         return User.query.get(user_id)
+
+    @staticmethod
+    def get_user_id_from_reset_token_unsafe(token):
+        """Decode token without expiry check (signature still validated). Used to redirect expired links to the right org login."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            return s.loads(token, max_age=None)['user_id']
+        except Exception:
+            return None
 
 
 # Many-to-many: employees can be assigned to multiple locations (e.g. cross-training, managers)
