@@ -15,49 +15,73 @@
         <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
     </form>
     <div class="table-card">
-        <table class="admin-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Subdomain</th>
-                    <th>Status</th>
-                    <th>Trial</th>
-                    <th>Payment</th>
-                    <th>Users</th>
-                    <th>Employees</th>
-                    <th>Created</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for org, stats, trial_pay in organizations %}
-                <tr>
-                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a></td>
-                    <td><code>{{ org.subdomain }}</code></td>
-                    <td><span class="status status-{{ org.status }}">{{ org.status }}</span></td>
-                    <td>
-                        {% if trial_pay.trial_days_left is not none %}
-                            {% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}
-                        {% else %}—{% endif %}
-                    </td>
-                    <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
-                    <td>{{ stats.user_count }}</td>
-                    <td>{{ stats.employee_count }}</td>
-                    <td>{{ org.created_at | est('%m-%d-%Y') }}</td>
-                    <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
-                </tr>
-                {% else %}
-                <tr><td colspan="9">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="org-table-wrap desktop-only">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Subdomain</th>
+                        <th>Status</th>
+                        <th>Trial</th>
+                        <th>Payment</th>
+                        <th>Users</th>
+                        <th>Employees</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for org, stats, trial_pay in organizations %}
+                    <tr>
+                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a></td>
+                        <td><code>{{ org.subdomain }}</code></td>
+                        <td><span class="status status-{{ org.status }}">{{ org.status }}</span></td>
+                        <td>
+                            {% if trial_pay.trial_days_left is not none %}
+                                {% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
+                        <td>{{ stats.user_count }}</td>
+                        <td>{{ stats.employee_count }}</td>
+                        <td>{{ org.created_at | est('%m-%d-%Y') }}</td>
+                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="link-view">View</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="9">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="org-cards mobile-only">
+            {% for org, stats, trial_pay in organizations %}
+            <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="org-card">
+                <div class="org-card-header">
+                    <span class="org-card-name">{{ org.name }}</span>
+                    <span class="status status-{{ org.status }}">{{ org.status }}</span>
+                </div>
+                <div class="org-card-meta"><code>{{ org.subdomain }}</code> · {{ stats.user_count }} users · {{ stats.employee_count }} employees</div>
+                <div class="org-card-row">
+                    {% if trial_pay.trial_days_left is not none %}
+                        {% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d trial left{% else %}Trial ended{% endif %}
+                    {% else %}—{% endif %}
+                    {% if trial_pay.payment_overdue %} · <span class="status status-past-due">Overdue</span>{% endif %}
+                </div>
+                <div class="org-card-date">{{ org.created_at | est('%m-%d-%Y') }}</div>
+            </a>
+            {% else %}
+            <p class="org-cards-empty">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 <style>
 .admin-page { max-width: 100%; }
 .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
 .page-title { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; padding: 16px; }
+.org-table-wrap.desktop-only { display: block; }
+.org-cards.mobile-only { display: none; }
 .admin-table { width: 100%; border-collapse: collapse; }
 .admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); }
 .admin-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
@@ -76,14 +100,28 @@
 .admin-filters.filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
 .admin-filters input[type="text"], .admin-filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
 
+.org-cards { flex-direction: column; gap: 12px; }
+.org-card { display: block; background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-decoration: none; color: inherit; min-height: 44px; }
+.org-card:hover { border-color: var(--primary); }
+.org-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.org-card-name { font-weight: 700; font-size: 16px; color: var(--text-main); }
+.org-card-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.org-card-meta code { font-size: 11px; background: var(--bg-card); padding: 2px 6px; border-radius: 4px; }
+.org-card-row { font-size: 13px; color: var(--text-main); }
+.org-card-date { font-size: 12px; color: var(--text-muted); }
+.org-cards-empty { margin: 0; padding: 24px; color: var(--text-muted); }
+.org-cards-empty a { color: var(--primary); font-weight: 600; }
+
 @media (max-width: 768px) {
     .admin-page { padding: 0 4px; }
     .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
     .page-title { font-size: 22px; }
     .page-header .btn { justify-content: center; min-height: 44px; }
-    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px; margin-left: -4px; margin-right: -4px; }
-    .admin-table { min-width: 700px; }
-    .admin-table th, .admin-table td { padding: 10px 12px; font-size: 13px; }
+    .admin-filters.filter-form { flex-direction: column; align-items: stretch; }
+    .admin-filters input[type="text"], .admin-filters select { min-height: 44px; font-size: 16px; }
+    .admin-filters .btn { min-height: 44px; justify-content: center; }
+    .org-table-wrap.desktop-only { display: none !important; }
+    .org-cards.mobile-only { display: flex !important; }
 }
 </style>
 {% endblock %}

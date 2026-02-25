@@ -166,6 +166,7 @@
 
 @media (max-width: 768px) {
     .admin-page { max-width: 100%; padding: 0 4px; }
+    .back-link { min-height: 44px; align-items: center; display: inline-flex; }
     .detail-card { padding: 20px; }
     .detail-list { grid-template-columns: 1fr; gap: 8px 0; }
     .detail-list dt { margin-bottom: 2px; }
@@ -173,8 +174,11 @@
     .billing-actions form { width: 100%; }
     .billing-actions .btn { min-height: 44px; justify-content: center; width: 100%; }
     .detail-actions .btn { min-height: 44px; }
+    .invite-first-section .btn { min-height: 44px; display: inline-flex; }
+    .btn-copy { min-height: 44px; padding: 10px 16px; }
+    .danger-zone .btn { min-height: 44px; }
     .danger-zone { padding: 16px; }
-    .delete-form .confirm-input { max-width: 100%; }
+    .delete-form .confirm-input { max-width: 100%; min-height: 44px; }
 }
 </style>
 {% endblock %}

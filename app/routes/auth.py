@@ -183,16 +183,20 @@ SUPPORT_EMAIL = "adkins.adam04@gmail.com"
 
 @auth_bp.route("/support", methods=["GET", "POST"])
 def support():
-    """Support page and contact form; form submissions go to SUPPORT_EMAIL."""
+    """Support page and contact form; submissions saved to DB and emailed to SUPPORT_EMAIL."""
     if request.method == "POST":
+        from app.models import SupportRequest
         name = (request.form.get("name") or "").strip()
-        email = (request.form.get("email") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
         subject = (request.form.get("subject") or "Support request").strip() or "Support request"
         message = (request.form.get("message") or "").strip()
         if not email:
             flash("Please enter your email address.", "error")
             return redirect(url_for("auth.support"))
         try:
+            req = SupportRequest(name=name or None, email=email, subject=subject, message=message or None)
+            db.session.add(req)
+            db.session.commit()
             from app.utils.notifications import _enqueue_or_send_email
             body = (
                 f"<h2>Support / Contact form</h2>"
@@ -203,6 +207,7 @@ def support():
             _enqueue_or_send_email(SUPPORT_EMAIL, f"[Training Tracker] {subject}", body)
             flash("Thanks! Your message has been sent. We'll get back to you soon.", "success")
         except Exception:
+            db.session.rollback()
             current_app.logger.exception("Support form send failed")
             flash("Something went wrong sending your message. Please try again or email us directly.", "error")
         return redirect(url_for("auth.support"))

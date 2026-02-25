@@ -574,6 +574,7 @@
                     <a href="{{ url_for('admin.index') }}" class="{{ 'active' if request.endpoint == 'admin.index' else '' }}">Dashboard</a>
                     <a href="{{ url_for('admin.organizations_list') }}" class="{{ 'active' if request.endpoint and request.endpoint.startswith('admin.organization') else '' }}">Organizations</a>
                     <a href="{{ url_for('admin.users_list') }}" class="{{ 'active' if request.endpoint == 'admin.users_list' else '' }}">Users</a>
+                    <a href="{{ url_for('admin.support_requests_list') }}" class="{{ 'active' if request.endpoint == 'admin.support_requests_list' else '' }}">Support</a>
                     {% elif current_user.role == 'manager' %}
                     <a href="{{ url_for('manager.dashboard') }}" class="nav-link-mobile-only {{ 'active' if request.endpoint == 'manager.dashboard' else '' }}">Dashboard</a>
                     <a href="{{ url_for('manager.employees_list') }}" data-tutorial="staff" class="{{ 'active' if 'employee' in request.endpoint else '' }}">People</a>

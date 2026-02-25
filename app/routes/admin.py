@@ -10,7 +10,7 @@ from app.models import (
     Organization, SystemSettings, User, Employee, Location, Position, PositionDescriptor,
     Daypart, Schedule, TrainingSession, Channel, Message, Notification, TrainingRoadmap,
     RoadmapStep, ChannelParticipant, MessageReaction, SessionRating, GuestTrainerToken,
-    EmployeeNote, UserSettings, SignupRequest,
+    EmployeeNote, UserSettings, SignupRequest, SupportRequest,
 )
 from app.utils.notifications import send_notification_email
 
@@ -238,6 +238,13 @@ def users_list():
         filter_org_id=org_id,
         filter_role=role,
     )
+
+
+@admin_bp.route("/support-requests")
+def support_requests_list():
+    """List support/contact form submissions from the public support page (newest first)."""
+    requests = SupportRequest.query.order_by(SupportRequest.created_at.desc()).all()
+    return render_template("admin/support_requests.html", support_requests=requests)
 
 
 @admin_bp.route("/organizations")

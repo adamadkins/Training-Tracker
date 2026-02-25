@@ -46,6 +46,17 @@ class SignupRequest(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
+class SupportRequest(db.Model):
+    """Support/contact form submissions from the public support page; viewable in admin."""
+    __tablename__ = "support_requests"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=True)
+    email = db.Column(db.String(255), nullable=False, index=True)
+    subject = db.Column(db.String(200), nullable=False, default="Support request")
+    message = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
 class User(db.Model, UserMixin):
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("organization_id", "email", name="uq_user_org_email"),)
