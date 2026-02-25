@@ -214,6 +214,15 @@ def support():
     return render_template("support.html")
 
 
+@auth_bp.route("/app-coming-soon")
+def app_coming_soon():
+    """Mobile app coming soon page; optional ?redirect= URL to continue in browser."""
+    redirect_url = request.args.get("redirect", "").strip()
+    if not redirect_url or not (redirect_url.startswith("https://") or redirect_url.startswith("http://")):
+        redirect_url = None
+    return render_template("app_coming_soon.html", redirect_url=redirect_url)
+
+
 @auth_bp.route("/open-in-app")
 def open_in_app():
     """Prompt to open the Training Tracker app (for invite/set-password links), then go to their company."""
@@ -224,7 +233,8 @@ def open_in_app():
         return redirect(url_for("auth.home"))
     # Deep link for the native app: trainingtracker://open?url=ENCODED_URL
     app_url = "trainingtracker://open?url=" + quote(redirect_url, safe="")
-    return render_template("open_in_app.html", redirect_url=redirect_url, app_url=app_url)
+    coming_soon_url = url_for("auth.app_coming_soon", redirect=redirect_url) if redirect_url else url_for("auth.app_coming_soon")
+    return render_template("open_in_app.html", redirect_url=redirect_url, app_url=app_url, coming_soon_url=coming_soon_url)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

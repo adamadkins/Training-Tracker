@@ -23,26 +23,29 @@
     <div class="wrap">
         <div class="card">
             <h1>Open in Training Tracker</h1>
-            <p>You can open this link in the Training Tracker app (if you have it installed) or continue in your browser.</p>
-            <a href="{{ app_url }}" class="btn btn-primary" id="open-app">Open in app</a>
+            <p>Get the mobile app or continue in your browser.</p>
+            <a href="{{ coming_soon_url }}" class="btn btn-primary">Download app</a>
             <a href="{{ redirect_url }}" class="btn btn-secondary">Continue in browser</a>
+            <p style="margin: 20px 0 0; font-size: 13px; color: #94a3b8;">Already have the app? <a href="{{ app_url }}" id="open-app" style="color: #4f46e5; font-weight: 600;">Open this link in the app</a></p>
         </div>
     </div>
     <script>
         var redirectUrl = {{ redirect_url|tojson }};
         var appLink = document.getElementById('open-app');
-        var tried = false;
-        appLink.addEventListener('click', function(e) {
-            if (tried) return;
-            tried = true;
-            window.location.href = appLink.href;
-            setTimeout(function() {
-                if (!document.hidden && confirm('If the app didn’t open, tap OK to continue in your browser instead.')) {
-                    window.location.href = redirectUrl;
-                }
-            }, 1500);
-            e.preventDefault();
-        });
+        if (appLink) {
+            var tried = false;
+            appLink.addEventListener('click', function(e) {
+                if (tried) return;
+                tried = true;
+                window.location.href = appLink.href;
+                setTimeout(function() {
+                    if (!document.hidden && confirm('If the app didn’t open, tap OK to continue in your browser instead.')) {
+                        window.location.href = redirectUrl;
+                    }
+                }, 1500);
+                e.preventDefault();
+            });
+        }
     </script>
 </body>
 </html>
