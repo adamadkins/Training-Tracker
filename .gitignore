@@ -13,6 +13,10 @@ instance/
 .env.local
 app/static/uploads/
 
+# Secrets (never commit)
+secrets/
+**/firebase-key.json
+
 # Node / Capacitor
 node_modules/
 
