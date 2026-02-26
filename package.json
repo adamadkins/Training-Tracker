@@ -8,14 +8,16 @@
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
     "cap:add:ios": "npx cap add ios",
-    "cap:add:android": "npx cap add android"
+    "cap:add:android": "npx cap add android",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/app": "^6.0.0",
-    "@capacitor/cli": "^6.0.0",
-    "@capacitor/core": "^6.0.0",
+    "@capacitor/cli": "^6.2.1",
+    "@capacitor/core": "^6.2.1",
     "@capacitor/ios": "^6.0.0",
-    "@capacitor/push-notifications": "^6.0.0"
+    "@capacitor/push-notifications": "^6.0.0",
+    "patch-package": "^8.0.1"
   }
 }

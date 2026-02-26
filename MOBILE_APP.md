@@ -35,6 +35,10 @@ Edit **`web/index.html`** and replace `https://trainingtracker.me` with your rea
 - The app handles launch URLs: if opened via `trainingtracker://open?url=ENCODED_URL`, it loads that URL directly (e.g. set-password or company login).
 - **Platform admin:** On the app’s first screen, “Platform admin?” opens the main domain login so superusers can sign in and use `/admin` on the main site.
 
+## Login in the native app (iOS)
+
+The app uses **top-level navigation** to the server (not an iframe) so that login cookies work in iOS. After you enter a company and tap "Go to sign in", the WebView navigates to `https://subdomain.trainingtracker.me/login`. "Use a different company?" uses the `trainingtracker://picker` URL so the app loads the company picker again. The `trainingtracker` URL scheme is declared in `ios/App/App/Info.plist`.
+
 ## Notes
 
 - The app ID is `me.trainingtracker.app` (in `capacitor.config.json`). Change it if you want a different bundle ID.

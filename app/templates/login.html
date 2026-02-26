@@ -285,6 +285,9 @@
                 Having trouble logging in? <br>
                 <span style="color: var(--text-main); font-weight: 700;">Contact your manager for assistance.</span>
             </div>
+            <p style="margin-top: 16px; font-size: 14px; text-align: center;">
+                <a href="{{ url_for('auth.leave_company') }}" id="different-company-link" style="color: var(--primary); font-weight: 600;">Use a different company?</a>
+            </p>
         </div>
 
     </div>
@@ -321,5 +324,16 @@
             submitBtn.style.cursor = 'wait';
         }
     });
+
+    // Native app: use custom URL so we can return to company picker; listen for open to go back
+    if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App) {
+        var link = document.getElementById('different-company-link');
+        if (link) link.setAttribute('href', 'trainingtracker://picker');
+        Capacitor.Plugins.App.addListener('appUrlOpen', function(e) {
+            if (e.url && e.url.indexOf('trainingtracker://picker') === 0) {
+                window.location.href = 'capacitor://localhost/';
+            }
+        });
+    }
 </script>
 {% endblock %}

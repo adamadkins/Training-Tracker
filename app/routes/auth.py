@@ -273,10 +273,17 @@ def login():
 
 @auth_bp.get("/leave-company")
 def leave_company():
-    """Minimal page that tells the app shell (when in iframe) to show the company picker."""
+    """Minimal page that tells the app shell (when in iframe) to show the company picker, or redirects in native app."""
     html = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Switch company</title></head><body style="margin:0;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;color:#1e293b;">
 <script>
 (function(){
+  if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App) {
+    Capacitor.Plugins.App.addListener('appUrlOpen', function(e) {
+      if (e.url && e.url.indexOf('trainingtracker://picker') === 0) window.location.href = 'capacitor://localhost/';
+    });
+    window.location.href = 'trainingtracker://picker';
+    return;
+  }
   try { window.parent.postMessage({ type: 'TrainingTrackerShowCompanyPicker' }, '*'); } catch (e) {}
 })();
 </script>

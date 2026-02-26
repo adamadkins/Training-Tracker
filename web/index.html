@@ -113,9 +113,15 @@
       return (val || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
     }
 
+    var inCapacitor = typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App;
+
     function loadCompany(subdomain) {
       if (!subdomain) return;
       var url = 'https://' + subdomain + '.' + BASE_DOMAIN + '/login?nocache=' + Date.now();
+      if (inCapacitor) {
+        window.location.href = url;
+        return;
+      }
       appFrame.src = url;
       barSubdomain.textContent = subdomain;
       formWrap.classList.add('hidden');
@@ -123,13 +129,22 @@
     }
 
     function loadMainLogin() {
-      appFrame.src = 'https://' + BASE_DOMAIN + '/login?nocache=' + Date.now();
+      var url = 'https://' + BASE_DOMAIN + '/login?nocache=' + Date.now();
+      if (inCapacitor) {
+        window.location.href = url;
+        return;
+      }
+      appFrame.src = url;
       barSubdomain.textContent = 'Platform admin';
       formWrap.classList.add('hidden');
       iframeWrap.classList.remove('hidden');
     }
 
     function loadUrlDirect(url) {
+      if (inCapacitor) {
+        window.location.href = url;
+        return;
+      }
       appFrame.src = url;
       barSubdomain.textContent = 'Invitation';
       formWrap.classList.add('hidden');

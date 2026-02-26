@@ -1,0 +1,39 @@
+require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
+
+platform :ios, '13.0'
+use_frameworks!
+
+# workaround to avoid Xcode caching of Pods that requires
+# Product -> Clean Build Folder after new Cordova plugins installed
+# Requires CocoaPods 1.6 or newer
+install! 'cocoapods', :disable_input_output_paths => true
+
+def capacitor_pods
+  pod 'Capacitor', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
+  pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
+  pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
+end
+
+target 'App' do
+  capacitor_pods
+  # Add your Pods here
+end
+
+post_install do |installer|
+  assertDeploymentTarget(installer)
+
+  # Silence "Run script build phase will be run during every build" for [CP] Embed Pods Frameworks.
+  # We use disable_input_output_paths above, so the script has no outputs; marking it always out of date
+  # tells Xcode we intentionally run it every build.
+  project_path = File.dirname(__FILE__) + '/App.xcodeproj'
+  project = Xcodeproj::Project.open(project_path)
+  project.native_targets.each do |target|
+    target.build_phases.each do |phase|
+      if phase.respond_to?(:name) && phase.name == '[CP] Embed Pods Frameworks'
+        phase.always_out_of_date = '1'
+      end
+    end
+  end
+  project.save
+end
