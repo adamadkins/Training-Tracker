@@ -21,7 +21,7 @@
         box-sizing: border-box !important;
     }
 
-    /* --- CENTERED LAYOUT --- */
+    /* --- CENTERED LAYOUT (safe area for notch/Dynamic Island when header hidden) --- */
     .auth-wrapper {
         display: flex;
         flex-direction: column;
@@ -29,6 +29,10 @@
         justify-content: center;
         min-height: 100dvh;
         padding: 24px;
+        padding-top: max(24px, env(safe-area-inset-top));
+        padding-left: max(24px, env(safe-area-inset-left));
+        padding-right: max(24px, env(safe-area-inset-right));
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
         width: 100%;
     }
 

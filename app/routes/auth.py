@@ -292,6 +292,27 @@ def leave_company():
     return Response(html, mimetype="text/html", headers={"Cache-Control": "no-store"})
 
 
+@auth_bp.route("/api/register-push-token", methods=["POST"])
+@login_required
+def register_push_token():
+    """Register device push token for the current user (native app only)."""
+    data = request.get_json(silent=True) or {}
+    token = (data.get("token") or "").strip()
+    platform = (data.get("platform") or "ios").lower()
+    if platform not in ("ios", "android"):
+        platform = "ios"
+    if not token:
+        return jsonify({"ok": False, "error": "token required"}), 400
+    existing = PushToken.query.filter_by(user_id=current_user.id, token=token).first()
+    if existing:
+        existing.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        return jsonify({"ok": True})
+    db.session.add(PushToken(user_id=current_user.id, token=token, platform=platform))
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
 # --- New: Forgot Password Request ---
 
 @auth_bp.route("/forgot_password", methods=['GET', 'POST'])

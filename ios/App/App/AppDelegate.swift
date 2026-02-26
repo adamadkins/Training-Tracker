@@ -6,9 +6,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    private let launchBackgroundColor = UIColor(red: 241/255, green: 245/255, blue: 249/255, alpha: 1)
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        window?.backgroundColor = launchBackgroundColor
+        window?.rootViewController?.view.backgroundColor = launchBackgroundColor
+        DispatchQueue.main.async { [weak self] in
+            self?.applyLaunchBackground()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.applyLaunchBackground()
+        }
         return true
+    }
+
+    private func applyLaunchBackground() {
+        window?.backgroundColor = launchBackgroundColor
+        window?.rootViewController?.view.backgroundColor = launchBackgroundColor
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -26,7 +40,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        applyLaunchBackground()
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

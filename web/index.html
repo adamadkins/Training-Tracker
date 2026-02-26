@@ -3,11 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f1f5f9">
   <title>Training Tracker</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; }
-    .container { display: flex; flex-direction: column; height: 100%; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9 !important; color: #1e293b; }
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding-top: 60px;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
     .bar {
       flex-shrink: 0;
       padding: 10px 14px;
@@ -68,18 +77,19 @@
       border: none;
     }
     .hidden { display: none !important; }
+    .form-wrap.hide-until-ready { display: none !important; }
     /* Top bar hidden so iframe is full-screen; use "Use a different company?" on login page to return to picker */
     #bar { display: none !important; }
   </style>
 </head>
-<body>
+<body style="background-color:#f1f5f9;">
   <div class="container">
     <div class="bar hidden" id="bar">
       <span>Company: <strong id="bar-subdomain"></strong></span>
       <a href="#" id="change-company">Switch company</a>
     </div>
-    <!-- Shown when no company selected: subdomain entry form -->
-    <div class="form-wrap" id="form-wrap">
+    <!-- Hidden until we know we need to show picker; avoids flash when going straight to server -->
+    <div class="form-wrap hide-until-ready" id="form-wrap">
       <div class="form-card">
         <h1>Training Tracker</h1>
         <p>Enter your company&rsquo;s sign-in address. For example, if you sign in at <strong>acme</strong>.trainingtracker.me, enter <strong>acme</strong>.</p>
@@ -113,12 +123,14 @@
       return (val || '').trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
     }
 
-    var inCapacitor = typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App;
+    function isInCapacitor() {
+      return typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App;
+    }
 
     function loadCompany(subdomain) {
       if (!subdomain) return;
       var url = 'https://' + subdomain + '.' + BASE_DOMAIN + '/login?nocache=' + Date.now();
-      if (inCapacitor) {
+      if (isInCapacitor()) {
         window.location.href = url;
         return;
       }
@@ -130,7 +142,7 @@
 
     function loadMainLogin() {
       var url = 'https://' + BASE_DOMAIN + '/login?nocache=' + Date.now();
-      if (inCapacitor) {
+      if (isInCapacitor()) {
         window.location.href = url;
         return;
       }
@@ -141,7 +153,7 @@
     }
 
     function loadUrlDirect(url) {
-      if (inCapacitor) {
+      if (isInCapacitor()) {
         window.location.href = url;
         return;
       }
@@ -179,7 +191,7 @@
 
     function showForm() {
       appFrame.src = '';
-      formWrap.classList.remove('hidden');
+      formWrap.classList.remove('hidden', 'hide-until-ready');
       iframeWrap.classList.add('hidden');
       bar.classList.add('hidden');
       subdomainInput.value = '';
@@ -188,43 +200,27 @@
 
     function runSavedOrForm() {
       var saved = localStorage.getItem(STORAGE_KEY);
+      saved = saved ? subdomainFromInput(saved) : '';
       if (saved) {
-        saved = subdomainFromInput(saved);
-        if (saved) { loadCompany(saved); return; }
+        loadCompany(saved);
+        return;
       }
-      formWrap.classList.remove('hidden');
+      formWrap.classList.remove('hide-until-ready');
     }
 
-    // Hide form until we've checked launch URL / saved company (avoids flash)
-    formWrap.classList.add('hidden');
+    runSavedOrForm();
 
-    // If app was opened via invite link (trainingtracker://open?url=...), load that URL in the iframe
+    // Only check launch URL for deep links (invite links). If one exists, navigate; otherwise picker is already visible.
     (function checkLaunchUrl() {
-      var done = false;
-      function showUi() {
-        if (done) return;
-        done = true;
-        runSavedOrForm();
-      }
-      function go() {
-        if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App) {
-          Capacitor.Plugins.App.getLaunchUrl().then(function(r) {
-            if (done) return;
-            if (r && r.url && r.url.indexOf('trainingtracker://open') === 0) {
-              try {
-                var u = new URL(r.url);
-                var target = u.searchParams.get('url');
-                if (target) { done = true; loadUrlDirect(target); return; }
-              } catch (e) {}
-            }
-            showUi();
-          }).catch(showUi);
-          setTimeout(showUi, 1500);
-        } else {
-          showUi();
-        }
-      }
-      go();
+      if (typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.App) return;
+      Capacitor.Plugins.App.getLaunchUrl().then(function(r) {
+        if (!r || !r.url || r.url.indexOf('trainingtracker://open') !== 0) return;
+        try {
+          var u = new URL(r.url);
+          var target = u.searchParams.get('url');
+          if (target) loadUrlDirect(target);
+        } catch (e) {}
+      }).catch(function() {});
     })();
 
     document.getElementById('platform-admin-link').addEventListener('click', function(e) {

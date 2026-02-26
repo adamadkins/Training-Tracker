@@ -546,3 +546,12 @@ input:focus, select:focus, textarea:focus {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* Safe area: keep nav bar below notch/Dynamic Island on iOS (WebView often reports 0 for env()) */
+body {
+    padding-top: 60px !important;
+}
+.main-header {
+    padding-top: 60px !important;
+    padding-bottom: 12px;
+}

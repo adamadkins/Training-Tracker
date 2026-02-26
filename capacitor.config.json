@@ -1,5 +1,9 @@
 {
   "appId": "me.trainingtracker.app",
   "appName": "Training Tracker",
-  "webDir": "web"
+  "webDir": "web",
+  "backgroundColor": "#f1f5f9",
+  "server": {
+    "allowNavigation": ["trainingtracker.me", "*.trainingtracker.me"]
+  }
 }

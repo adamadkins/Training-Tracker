@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
     {% if request.endpoint is defined and request.endpoint and request.endpoint.startswith('admin.') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     {% endif %}
@@ -96,7 +96,14 @@
             color: var(--text-main);
         }
 
-        /* ── Header ── */
+        /* ── Safe area: fixed top so nav bar is always below Dynamic Island/notch (env() often 0 in WebView) ── */
+        body {
+            padding-top: 60px !important;
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        /* ── Header: same top padding so header content is tappable ── */
         .main-header {
             position: sticky;
             top: 0;
@@ -105,6 +112,7 @@
             border-bottom: 1px solid var(--border);
             box-shadow: 0 1px 3px var(--shadow);
             width: 100%;
+            padding-top: 60px !important;
         }
         .container.nav-split {
             max-width: 1400px;
@@ -114,6 +122,8 @@
             justify-content: space-between;
             height: 64px;
             padding: 0 24px;
+            padding-left: max(24px, env(safe-area-inset-left));
+            padding-right: max(24px, env(safe-area-inset-right));
         }
 
         .nav-group {
@@ -418,12 +428,19 @@
         }
 
         /* ── Global content padding ── */
-        main.container { padding-top: 32px !important; }
-        @media (max-width: 900px) { main.container { padding-top: 20px !important; } }
+        main.container {
+            padding-top: 32px !important;
+            padding-left: max(24px, env(safe-area-inset-left)) !important;
+            padding-right: max(24px, env(safe-area-inset-right)) !important;
+            padding-bottom: max(24px, env(safe-area-inset-bottom)) !important;
+        }
+        @media (max-width: 900px) {
+            main.container { padding-top: 20px !important; }
+        }
         main { flex: 1; }
     </style>
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}" style="background-color:#f8fafc;padding-top:60px;">
 <div id="toast-container" class="toast-container"></div>
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
@@ -630,6 +647,26 @@
         setInterval(checkUpdates, 45000);  // 45s to reduce server load (was 15s)
         checkUpdates();
         {% endif %}
+
+        // Register push token when in native app and logged in
+        if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.PushNotifications && {{ 'true' if current_user.is_authenticated else 'false' }}) {
+            var Push = Capacitor.Plugins.PushNotifications;
+            var platform = (typeof Capacitor.platform !== 'undefined') ? Capacitor.platform : 'ios';
+            Push.requestPermissions().then(function() {
+                return Push.addListener('registration', function(ev) {
+                    var token = ev.value || ev.token || '';
+                    if (!token) return;
+                    fetch('{{ url_for("auth.register_push_token") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ token: token, platform: platform }),
+                        credentials: 'same-origin'
+                    }).catch(function() {});
+                });
+            }).then(function() {
+                Push.register();
+            }).catch(function() {});
+        }
     });
 </script>
 {% if current_user.is_authenticated and not current_user.has_seen_tutorial %}
