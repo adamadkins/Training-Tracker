@@ -9,7 +9,7 @@
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
     {% if request.endpoint is defined and request.endpoint and request.endpoint.startswith('admin.') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     {% endif %}
@@ -96,23 +96,26 @@
             color: var(--text-main);
         }
 
-        /* ── Safe area: fixed top so nav bar is always below Dynamic Island/notch (env() often 0 in WebView) ── */
+        /* ── Safe area: nav MUST sit below Dynamic Island/notch (88px covers all iPhones; env() when WebView reports it) ── */
+        :root {
+            --safe-top: max(88px, calc(env(safe-area-inset-top, 0px) + 44px));
+        }
         body {
-            padding-top: 60px !important;
+            padding-top: var(--safe-top) !important;
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             padding-bottom: env(safe-area-inset-bottom);
         }
-        /* ── Header: same top padding so header content is tappable ── */
         .main-header {
             position: sticky;
-            top: 0;
+            top: var(--safe-top);
             z-index: 100;
             background: var(--header-bg);
             border-bottom: 1px solid var(--border);
             box-shadow: 0 1px 3px var(--shadow);
             width: 100%;
-            padding-top: 60px !important;
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
         }
         .container.nav-split {
             max-width: 1400px;
@@ -440,7 +443,7 @@
         main { flex: 1; }
     </style>
 </head>
-<body class="{% block body_class %}{% endblock %}" style="background-color:#f8fafc;padding-top:60px;">
+<body class="{% block body_class %}{% endblock %}" style="background-color:#f8fafc;padding-top:88px;">
 <div id="toast-container" class="toast-container"></div>
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
