@@ -9,7 +9,7 @@
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ app_version }}">
     {% if request.endpoint is defined and request.endpoint and request.endpoint.startswith('admin.') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     {% endif %}
@@ -447,7 +447,7 @@
         main { flex: 1; }
     </style>
 </head>
-<body class="{% block body_class %}{% endblock %}{% if ios_app %} ios-app{% endif %}" style="background-color:#f8fafc;">
+<body class="{% block body_class %}{% endblock %}{% if ios_app %} ios-app{% endif %}" data-app-version="{{ app_version }}" style="background-color:#f8fafc;">
 <div id="toast-container" class="toast-container"></div>
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}

@@ -84,6 +84,11 @@ def create_app():
         from flask import g
         if getattr(g, 'set_native_ios_cookie', False):
             response.set_cookie(IOS_COOKIE, '1', max_age=31536000, samesite='Lax')
+        # Prevent WebView from caching HTML when opened from the native iOS app
+        if getattr(g, 'ios_app', False) and response.content_type and 'text/html' in response.content_type:
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
         return response
 
     # 5. Inject app version and system_settings into all templates
