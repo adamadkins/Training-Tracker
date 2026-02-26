@@ -96,25 +96,25 @@
             color: var(--text-main);
         }
 
-        /* ── Safe area: nav MUST sit below Dynamic Island/notch (88px covers all iPhones; env() when WebView reports it) ── */
+        /* ── Safe area: nav bar extends to top of screen (seamless); content sits just below notch. ── */
         :root {
-            --safe-top: max(88px, calc(env(safe-area-inset-top, 0px) + 44px));
+            --safe-top: max(44px, env(safe-area-inset-top, 0px));
         }
         body {
-            padding-top: var(--safe-top) !important;
+            padding-top: 0 !important;
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
             padding-bottom: env(safe-area-inset-bottom);
         }
         .main-header {
             position: sticky;
-            top: var(--safe-top);
+            top: 0;
             z-index: 100;
             background: var(--header-bg);
             border-bottom: 1px solid var(--border);
             box-shadow: 0 1px 3px var(--shadow);
             width: 100%;
-            padding-top: 12px !important;
+            padding-top: calc(var(--safe-top) + 8px) !important;
             padding-bottom: 12px !important;
         }
         .container.nav-split {
@@ -284,7 +284,7 @@
             flex-direction: column;
             gap: 8px;
             position: fixed;
-            top: 74px;
+            top: calc(var(--safe-top) + 84px);
             right: 16px;
         }
         .toast-message {
@@ -324,6 +324,10 @@
             border-top: 1px solid var(--border);
             color: var(--text-muted);
             font-size: 11px;
+        }
+        /* Hide "2026 Training Tracker built by Adam Adkins" footer on iOS app only */
+        body.ios-app .site-footer {
+            display: none !important;
         }
 
         /* ── Responsive nav (dropdown) ── */
@@ -443,7 +447,7 @@
         main { flex: 1; }
     </style>
 </head>
-<body class="{% block body_class %}{% endblock %}" style="background-color:#f8fafc;padding-top:88px;">
+<body class="{% block body_class %}{% endblock %}{% if ios_app %} ios-app{% endif %}" style="background-color:#f8fafc;">
 <div id="toast-container" class="toast-container"></div>
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
@@ -554,6 +558,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        var isIOS = (typeof Capacitor !== 'undefined') && ((typeof Capacitor.getPlatform === 'function' ? Capacitor.getPlatform() : Capacitor.platform) || '').toLowerCase() === 'ios';
+        if (isIOS) {
+            document.body.classList.add('ios-app');
+            var siteFooter = document.querySelector('.site-footer');
+            if (siteFooter) siteFooter.style.display = 'none';
+        }
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');
         if (nav && btn && window.matchMedia('(max-width: 900px)').matches) {

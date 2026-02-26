@@ -68,6 +68,24 @@ def create_app():
             app.logger.exception("resolve_tenant failed")
             g.current_organization_id = None
 
+    # Native iOS app: detect via ?native=ios (set by app shell) or cookie so we can hide footer etc.
+    IOS_COOKIE = 'tt_native_ios'
+
+    @app.before_request
+    def detect_ios_app():
+        from flask import g
+        g.ios_app = request.cookies.get(IOS_COOKIE) == '1'
+        if request.args.get('native') == 'ios':
+            g.ios_app = True
+            g.set_native_ios_cookie = True
+
+    @app.after_request
+    def set_ios_cookie_if_requested(response):
+        from flask import g
+        if getattr(g, 'set_native_ios_cookie', False):
+            response.set_cookie(IOS_COOKIE, '1', max_age=31536000, samesite='Lax')
+        return response
+
     # 5. Inject app version and system_settings into all templates
     @app.before_request
     def inject_system_settings():
@@ -86,8 +104,9 @@ def create_app():
         g.logo_version = hashlib.md5(logo_url.encode()).hexdigest()[:12] if logo_url else ""
 
     @app.context_processor
-    def inject_version():
-        return {'app_version': APP_VERSION}
+    def inject_version_and_ios():
+        from flask import g
+        return {'app_version': APP_VERSION, 'ios_app': getattr(g, 'ios_app', False)}
 
     # Error handlers
     from flask import render_template as _render

@@ -547,10 +547,7 @@ input:focus, select:focus, textarea:focus {
     }
 }
 
-/* Safe area: nav below notch/Dynamic Island (88px min; base.html sets --safe-top and sticky top) */
-body {
-    padding-top: 88px !important;
-}
+/* Safe area: nav below notch/Dynamic Island — base.html sets --safe-top and body padding; do not override padding-top here so iOS gets correct inset */
 .main-header {
     padding-top: 12px !important;
     padding-bottom: 12px;

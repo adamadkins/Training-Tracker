@@ -127,11 +127,22 @@
       return typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.App;
     }
 
+    function isIOSNative() {
+      if (!isInCapacitor()) return false;
+      var p = (typeof Capacitor.getPlatform === 'function') ? Capacitor.getPlatform() : (Capacitor.platform || '');
+      return (p || '').toLowerCase() === 'ios';
+    }
+
+    function appendNativeIos(url) {
+      if (!isIOSNative()) return url;
+      return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'native=ios';
+    }
+
     function loadCompany(subdomain) {
       if (!subdomain) return;
       var url = 'https://' + subdomain + '.' + BASE_DOMAIN + '/login?nocache=' + Date.now();
       if (isInCapacitor()) {
-        window.location.href = url;
+        window.location.href = appendNativeIos(url);
         return;
       }
       appFrame.src = url;
@@ -143,7 +154,7 @@
     function loadMainLogin() {
       var url = 'https://' + BASE_DOMAIN + '/login?nocache=' + Date.now();
       if (isInCapacitor()) {
-        window.location.href = url;
+        window.location.href = appendNativeIos(url);
         return;
       }
       appFrame.src = url;
@@ -154,7 +165,7 @@
 
     function loadUrlDirect(url) {
       if (isInCapacitor()) {
-        window.location.href = url;
+        window.location.href = appendNativeIos(url);
         return;
       }
       appFrame.src = url;
