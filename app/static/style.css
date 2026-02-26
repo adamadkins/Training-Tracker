@@ -35,11 +35,11 @@ a:hover { text-decoration: underline; }
 
 .py-xl { padding-top: 40px; padding-bottom: 40px; }
 
-/* 2. Header & Navigation */
+/* 2. Header & Navigation — padding-top is set by base.html (safe area for iOS notch) */
 .main-header {
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 12px 0;
+    padding-bottom: 12px;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -547,7 +547,4 @@ input:focus, select:focus, textarea:focus {
     }
 }
 
-/* Nav: base.html sets .main-header padding-top (safe area + 8px) and seamless top; do not override here */
-.main-header {
-    padding-bottom: 12px;
-}
+/* Nav: base.html controls .main-header padding-top and top position */

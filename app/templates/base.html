@@ -9,7 +9,7 @@
     {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
     <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
     {% if request.endpoint is defined and request.endpoint and request.endpoint.startswith('admin.') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     {% endif %}
@@ -558,11 +558,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        var isIOS = (typeof Capacitor !== 'undefined') && ((typeof Capacitor.getPlatform === 'function' ? Capacitor.getPlatform() : Capacitor.platform) || '').toLowerCase() === 'ios';
-        if (isIOS) {
+        var ua = navigator.userAgent || '';
+        var isIOSApp = (/iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua)) || (typeof Capacitor !== 'undefined' && ((typeof Capacitor.getPlatform === 'function' ? Capacitor.getPlatform() : Capacitor.platform) || '').toLowerCase() === 'ios');
+        if (isIOSApp) {
             document.body.classList.add('ios-app');
-            var siteFooter = document.querySelector('.site-footer');
-            if (siteFooter) siteFooter.style.display = 'none';
+            document.querySelectorAll('.site-footer').forEach(function(el) { el.style.display = 'none'; });
         }
         var nav = document.getElementById('navContent');
         var btn = document.getElementById('mobileMenuBtn');

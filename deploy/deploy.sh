@@ -4,7 +4,8 @@
 
 set -e
 cd /opt/training-tracker
-git pull origin main
+git fetch origin
+git reset --hard origin/main
 .venv/bin/pip install -r requirements.txt --quiet
 set -a
 source .env
