@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from app import create_app, db
 from app.models import (
-    User, Employee, SystemSettings, Position, Daypart,
+    Organization, User, Employee, SystemSettings, Position, Daypart,
     Schedule, TrainingSession, PositionDescriptor,
     SessionRating, Message, Notification,
     Channel, ChannelParticipant,
@@ -86,29 +86,46 @@ def _run_seed(app, drop_first=True):
         else:
             print("\n📥 Database empty — inserting demo data...")
 
+        # ─── 0. Demo organization (multi-tenant: one org for seed) ───
+        org = Organization.query.filter_by(subdomain="demo").first()
+        if not org:
+            org = Organization(
+                name="Demo",
+                subdomain="demo",
+                status="active",
+            )
+            db.session.add(org)
+            db.session.flush()
+        print(f"📌 Using organization: {org.name} (id={org.id})")
+
         # ─── 1. System settings ───
         print("⚙️  System settings...")
-        settings = SystemSettings(
-            dm_enabled=True,
-            allow_trainee_to_trainee_dm=True,
-            setup_completed=True,
-            default_rating_scale=5,
-        )
-        db.session.add(settings)
+        settings = SystemSettings.query.filter_by(organization_id=org.id).first()
+        if not settings:
+            settings = SystemSettings(
+                organization_id=org.id,
+                dm_enabled=True,
+                allow_trainee_to_trainee_dm=True,
+                setup_completed=True,
+                default_rating_scale=5,
+            )
+            db.session.add(settings)
         db.session.commit()
 
-        # ─── 2. Positions & descriptors ───
+        # ─── 2. Positions & descriptors (idempotent: get-or-create per org) ───
         print("📋 Positions & rubric descriptors...")
         position_names = list(POSITION_DESCRIPTORS.keys())
         db_positions = []
         for name in position_names:
-            pos = Position(name=name, active=True)
-            db.session.add(pos)
-            db.session.flush()
+            pos = Position.query.filter_by(organization_id=org.id, name=name).first()
+            if not pos:
+                pos = Position(organization_id=org.id, name=name, active=True)
+                db.session.add(pos)
+                db.session.flush()
+                for text in POSITION_DESCRIPTORS[name]:
+                    desc = PositionDescriptor(position_id=pos.id, text=text, active=True)
+                    db.session.add(desc)
             db_positions.append(pos)
-            for text in POSITION_DESCRIPTORS[name]:
-                desc = PositionDescriptor(position_id=pos.id, text=text, active=True)
-                db.session.add(desc)
         db.session.commit()
 
         # ─── 3. Dayparts ───
@@ -120,8 +137,11 @@ def _run_seed(app, drop_first=True):
         ]
         db_dayparts = []
         for name, start, end in dayparts_data:
-            dp = Daypart(name=name, start_time=start, end_time=end)
-            db.session.add(dp)
+            dp = Daypart.query.filter_by(organization_id=org.id, name=name).first()
+            if not dp:
+                dp = Daypart(organization_id=org.id, name=name, start_time=start, end_time=end)
+                db.session.add(dp)
+                db.session.flush()
             db_dayparts.append(dp)
         db.session.commit()
 
@@ -148,6 +168,7 @@ def _run_seed(app, drop_first=True):
         for first, last, role in team_data:
             start = date(2022, 1, 1) if role in ("manager", "trainer") else date(2023, 6, 1) + timedelta(days=random.randint(0, 200))
             emp = Employee(
+                organization_id=org.id,
                 first_name=first,
                 last_name=last,
                 role=role,
@@ -159,7 +180,7 @@ def _run_seed(app, drop_first=True):
             login_emails = ["admin@local", "trainer@local", "trainee@local"]
             idx = len(all_employees)
             email = login_emails[idx] if idx < 3 else f"{first.lower()}.{last.lower()}@demo.local"
-            user = User(email=email, role=role, employee_id=emp.id)
+            user = User(email=email, role=role, employee_id=emp.id, organization_id=org.id)
             user.set_password("admin1234" if email == "admin@local" else "password123")
             db.session.add(user)
             all_employees.append(emp)
@@ -178,7 +199,7 @@ def _run_seed(app, drop_first=True):
 
         for start_dt, status in [(last_monday, "published"), (this_monday, "published"), (next_monday, "draft")]:
             end_dt = start_dt + timedelta(days=6)
-            sched = Schedule(start_date=start_dt, end_date=end_dt, status=status)
+            sched = Schedule(organization_id=org.id, start_date=start_dt, end_date=end_dt, status=status)
             db.session.add(sched)
             db.session.flush()
 
@@ -195,6 +216,7 @@ def _run_seed(app, drop_first=True):
                     c_end = time(13, 0) if not use_dp else None
 
                     session = TrainingSession(
+                        organization_id=org.id,
                         schedule_id=sched.id,
                         trainer_employee_id=tr.id,
                         trainee_employee_id=trainee.id,
@@ -231,6 +253,7 @@ def _run_seed(app, drop_first=True):
 
         # General channel (everyone)
         ch_general = Channel(
+            organization_id=org.id,
             name="general",
             channel_type="channel",
             description="Store-wide announcements and chat.",
@@ -260,6 +283,7 @@ def _run_seed(app, drop_first=True):
 
         # Managers-only (private)
         ch_managers = Channel(
+            organization_id=org.id,
             name="managers",
             channel_type="channel",
             description="Manager-only discussions.",
@@ -280,6 +304,7 @@ def _run_seed(app, drop_first=True):
 
         # Schedule updates (read-only for trainees)
         ch_schedule = Channel(
+            organization_id=org.id,
             name="schedule-updates",
             channel_type="channel",
             description="Schedule and roster updates. Only managers post here.",
@@ -301,7 +326,7 @@ def _run_seed(app, drop_first=True):
         # DM channel: Terry (trainer) <-> Tim (trainee)
         terry = next(e for e in all_employees if e.first_name == "Terry" and e.role == "trainer")
         tim = next(e for e in all_employees if e.first_name == "Tim" and e.role == "trainee")
-        ch_dm = Channel(name=None, channel_type="dm", created_by_id=terry.id)
+        ch_dm = Channel(organization_id=org.id, name=None, channel_type="dm", created_by_id=terry.id)
         db.session.add(ch_dm)
         db.session.flush()
         db.session.add(ChannelParticipant(channel_id=ch_dm.id, employee_id=terry.id))
@@ -343,11 +368,13 @@ def _run_seed(app, drop_first=True):
         print("  • Trainer:  trainer@local / password123 (Terry Trainer)")
         print("  • Trainee:  trainee@local / password123 (Tim Trainee)")
         print("  • Others:  firstname.lastname@demo.local / password123")
+        print("  • Sign in at: https://demo.<your-domain>/login")
         print("=" * 60)
 
 
 def seed_if_empty(app):
-    """If the database has no system settings (empty), run seed without dropping. Call from app startup."""
+    """If the database has no system settings (empty), run seed without dropping. Call from app startup.
+    Uses get-or-create for positions/dayparts per org so re-runs are idempotent (no duplicate key errors)."""
     from sqlalchemy.exc import OperationalError, IntegrityError
     with app.app_context():
         try:
@@ -359,7 +386,7 @@ def seed_if_empty(app):
         try:
             _run_seed(app, drop_first=False)
         except IntegrityError:
-            # Another worker/process already seeded
+            # Rare: another process seeded concurrently, or legacy duplicate
             db.session.rollback()
             return
 

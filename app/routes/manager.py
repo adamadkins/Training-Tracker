@@ -1390,8 +1390,13 @@ def employee_add_note(employee_id):
 @manager_bp.route("/positions")
 @manager_required
 def positions_list():
-    positions = Position.query.all()
-    locations = Location.query.order_by(Location.name).all()
+    org_id = getattr(flask.g, "current_organization_id", None)
+    if org_id is not None:
+        positions = Position.query.filter_by(organization_id=org_id).all()
+        locations = Location.query.filter_by(organization_id=org_id).order_by(Location.name).all()
+    else:
+        positions = Position.query.all()
+        locations = Location.query.order_by(Location.name).all()
     return render_template("positions_list.html", positions=positions, locations=locations)
 
 
@@ -1407,7 +1412,11 @@ def position_create():
         if not name:
             flash("Position name is required.")
             return redirect(url_for('manager.position_create'))
-        new_pos = Position(name=name, active=True, location_id=loc_id)
+        org_id = getattr(flask.g, "current_organization_id", None)
+        if not org_id:
+            flash("Company context is required to create a position.", "error")
+            return redirect(url_for('manager.positions_list'))
+        new_pos = Position(organization_id=org_id, name=name, active=True, location_id=loc_id)
         db.session.add(new_pos)
         db.session.flush()
         for text in descriptor_texts:
