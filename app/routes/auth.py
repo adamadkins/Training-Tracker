@@ -236,8 +236,10 @@ def login():
         if org_id is not None:
             user = User.query.filter_by(organization_id=org_id, email=email).first()
         else:
-            # Main domain: only superusers (organization_id is None) can log in
+            # Main domain: platform admins (superusers). Prefer user with no org; else any superuser with this email.
             user = User.query.filter_by(organization_id=None, email=email).first()
+            if not user:
+                user = User.query.filter_by(email=email).filter(User.is_superuser == True).first()
 
         if user and user.password_hash is None:
             flash("Your account is not set up yet. Please use the link sent to your email.")
@@ -248,7 +250,7 @@ def login():
                 flash("No platform admin account found. Use your company URL to sign in (e.g. app.yourdomain.com).")
             else:
                 flash("Invalid email or password.")
-            return render_template("login.html"), 401
+            return render_template("login.html", admin_login=(org_id is None)), 401
 
         session.permanent = True
         session['_last_active'] = datetime.now(timezone.utc).timestamp()
