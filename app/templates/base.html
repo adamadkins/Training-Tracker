@@ -8,11 +8,21 @@
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
-    {% if g.system_settings and g.system_settings.custom_logo_url and g.logo_version %}
-    <link rel="preload" href="{{ url_for('auth.logo', v=g.logo_version) }}" as="image">
-    {% endif %}
+    {% if current_user.is_authenticated and current_user.settings %}
+    {% set theme_pref = current_user.settings.theme_pref or 'system' %}
+    {% if theme_pref == 'light' %}
+    <meta name="theme-color" content="#f8fafc">
+    {% elif theme_pref == 'dark' %}
+    <meta name="theme-color" content="#0b0f1a">
+    {% else %}
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
+    {% endif %}
+    {% else %}
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
+    {% endif %}
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% if request.path.startswith('/admin') %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v={{ app_version }}">
@@ -141,6 +151,24 @@
 
             {
             % endif %
+        }
+
+            {
+            % else %
+        }
+
+        /* Default to system if not logged in */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0b0f1a;
+                --bg-card: #161e2e;
+                --text-main: #f9fafb;
+                --text-muted: #9ca3af;
+                --border: #2d3748;
+                --header-bg: #161e2e;
+                --shadow: rgba(0, 0, 0, 0.4);
+                --input-bg: #1f2937;
+            }
         }
 
             {
@@ -1315,28 +1343,53 @@
             var touchEndX = 0;
             var touchStartY = 0;
             var touchEndY = 0;
-            var threshold = 80; // Minimum swipe distance
-            var restraint = 50; // Maximum vertical variance allowed
+            var startTime = 0;
+            var threshold = 60; // Minimum swipe distance
+            var restraint = 100; // Maximum vertical variance allowed
+            var maxTime = 300; // Maximum time allowed for swipe
 
             document.body.addEventListener('touchstart', function (e) {
                 // Ignore horizontal swipes inside specific scrolling carousels or chat views
                 if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
+                startTime = new Date().getTime();
             }, { passive: true });
+
+            document.body.addEventListener('touchmove', function (e) {
+                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
+
+                var currentX = e.changedTouches[0].screenX;
+                var currentY = e.changedTouches[0].screenY;
+
+                var dragDx = Math.abs(currentX - touchStartX);
+                var dragDy = Math.abs(currentY - touchStartY);
+
+                // If the user is dragging horizontally way more than vertically, prevent default iOS spring bounce
+                if (dragDx > dragDy && dragDx > 10) {
+                    if (e.cancelable) e.preventDefault();
+                }
+            }, { passive: false });
 
             document.body.addEventListener('touchend', function (e) {
                 if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
-                touchEndX = e.changedTouches[0].screenX;
-                touchEndY = e.changedTouches[0].screenY;
-                handleSwipe();
+
+                var touchObj = e.changedTouches[0];
+                touchEndX = touchObj.screenX;
+                touchEndY = touchObj.screenY;
+                var elapsedTime = new Date().getTime() - startTime;
+
+                // Only trigger if it was a quick swipe
+                if (elapsedTime <= maxTime) {
+                    handleSwipe();
+                }
             }, { passive: true });
 
             function handleSwipe() {
                 var dx = touchEndX - touchStartX;
                 var dy = touchEndY - touchStartY;
 
-                // Ensure it's mostly a horizontal swipe
+                // Ensure it's mostly a horizontal swipe and fast enough
                 if (Math.abs(dx) >= threshold && Math.abs(dy) <= restraint) {
                     var tabsContainer = document.querySelector('.bottom-tab-bar .tab-bar-inner');
                     if (!tabsContainer || window.getComputedStyle(tabsContainer.parentElement).display === 'none') return;
