@@ -30,6 +30,10 @@ class Organization(db.Model):
     hs_api_url = db.Column(db.String(500), nullable=True)      # e.g. https://api.hotschedules.io/NAMESPACE/
     hs_api_username = db.Column(db.String(255), nullable=True)  # Basic Auth username
     hs_api_password = db.Column(db.String(255), nullable=True)  # Basic Auth password
+    # 7Shifts API integration
+    sevenshifts_client_id = db.Column(db.String(255), nullable=True)
+    sevenshifts_client_secret = db.Column(db.String(500), nullable=True)
+    sevenshifts_company_id = db.Column(db.String(100), nullable=True)
 
 
 class SignupRequest(db.Model):

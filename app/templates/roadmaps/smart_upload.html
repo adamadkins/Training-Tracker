@@ -85,19 +85,20 @@
 
     .mode-tab {
         flex: 1;
-        padding: 10px 16px;
+        padding: 10px 12px;
         border-radius: 10px;
         border: none;
         background: transparent;
         color: var(--text-muted);
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         transition: all 0.2s;
+        white-space: nowrap;
     }
 
     .mode-tab.active {
@@ -272,7 +273,7 @@
         background: rgba(239, 68, 68, 0.06);
     }
 
-    /* Submit button */
+    /* Submit / action buttons */
     .upload-submit {
         width: 100%;
         padding: 16px;
@@ -304,7 +305,6 @@
         box-shadow: none;
     }
 
-    /* Supported format note */
     .format-note {
         text-align: center;
         margin-top: 20px;
@@ -317,7 +317,6 @@
         margin-right: 4px;
     }
 
-    /* Back link */
     .back-row {
         text-align: center;
         margin-top: 24px;
@@ -338,12 +337,12 @@
         color: var(--primary);
     }
 
-    /* HotSchedules API panel */
-    .hs-form-group {
+    /* API form groups */
+    .api-form-group {
         margin-bottom: 16px;
     }
 
-    .hs-form-group label {
+    .api-form-group label {
         display: block;
         font-size: 13px;
         font-weight: 700;
@@ -351,12 +350,12 @@
         margin-bottom: 6px;
     }
 
-    .hs-form-group label span {
+    .api-form-group label span {
         font-weight: 500;
         color: var(--text-muted);
     }
 
-    .hs-form-group input {
+    .api-form-group input {
         width: 100%;
         padding: 12px 14px;
         border-radius: 12px;
@@ -368,13 +367,13 @@
         box-sizing: border-box;
     }
 
-    .hs-form-group input:focus {
+    .api-form-group input:focus {
         outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
 
-    .hs-connected-badge {
+    .api-connected-badge {
         display: flex;
         align-items: center;
         gap: 10px;
@@ -385,18 +384,18 @@
         margin-bottom: 20px;
     }
 
-    .hs-connected-badge i {
+    .api-connected-badge i {
         color: #10b981;
         font-size: 18px;
     }
 
-    .hs-connected-badge span {
+    .api-connected-badge span {
         font-size: 14px;
         font-weight: 700;
         color: #10b981;
     }
 
-    .hs-connected-badge .hs-disconnect-btn {
+    .api-disconnect-btn {
         margin-left: auto;
         font-size: 12px;
         font-weight: 700;
@@ -409,13 +408,13 @@
         transition: all 0.15s;
     }
 
-    .hs-connected-badge .hs-disconnect-btn:hover {
+    .api-disconnect-btn:hover {
         border-color: #ef4444;
         color: #ef4444;
         background: rgba(239, 68, 68, 0.06);
     }
 
-    .hs-submit {
+    .api-submit-hs {
         width: 100%;
         padding: 16px;
         border-radius: 14px;
@@ -434,9 +433,65 @@
         box-shadow: 0 4px 16px rgba(249, 115, 22, 0.2);
     }
 
-    .hs-submit:hover {
+    .api-submit-hs:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(249, 115, 22, 0.3);
+    }
+
+    .api-submit-ss {
+        width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+        border: none;
+        background: #7c3aed;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2);
+    }
+
+    .api-submit-ss:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Blind mode bar */
+    .blind-mode-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        margin-bottom: 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+
+    .blind-mode-bar input {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+    }
+
+    .blind-mode-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .blind-mode-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin-top: 2px;
     }
 
     @media (max-width: 480px) {
@@ -451,6 +506,11 @@
         .upload-header h1 {
             font-size: 24px;
         }
+
+        .mode-tab {
+            font-size: 11px;
+            padding: 9px 8px;
+        }
     }
 </style>
 
@@ -460,8 +520,7 @@
         <div class="upload-header">
             <div class="upload-header-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
             <h1>Smart Schedule Builder</h1>
-            <p>Upload a schedule PDF or connect to HotSchedules<br>to auto-match trainers with trainees for the week.
-            </p>
+            <p>Upload a schedule PDF or connect to your scheduling<br>platform to auto-match trainers with trainees.</p>
         </div>
 
         <!-- Mode Tabs -->
@@ -470,7 +529,10 @@
                 <i class="fa-solid fa-file-pdf"></i> Upload PDF
             </button>
             <button class="mode-tab" data-panel="hs-panel" id="tabHs">
-                <i class="fa-solid fa-plug"></i> HotSchedules API
+                <i class="fa-solid fa-fire"></i> HotSchedules
+            </button>
+            <button class="mode-tab" data-panel="ss-panel" id="tabSs">
+                <i class="fa-solid fa-calendar-check"></i> 7Shifts
             </button>
         </div>
 
@@ -509,17 +571,11 @@
                     </div>
                 </div>
 
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 20px;
-                              background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-                              padding: 12px 16px;">
-                    <input type="checkbox" name="hide_assignments" id="hideAssignments"
-                        style="width:16px; height:16px; cursor:pointer;">
+                <label class="blind-mode-bar">
+                    <input type="checkbox" name="hide_assignments" id="hideAssignments">
                     <span>
-                        <span style="display:block; font-size:13px; font-weight:700; color:var(--text-main);">Blind
-                            Mode</span>
-                        <span
-                            style="display:block; font-size:11px; color:var(--text-muted); font-weight:500; margin-top:2px;">Hide
-                            trainee names from trainers (same as manual schedule blind mode)</span>
+                        <span class="blind-mode-label">Blind Mode</span>
+                        <span class="blind-mode-desc">Hide trainee names from trainers</span>
                     </span>
                 </label>
 
@@ -531,19 +587,18 @@
 
             <div class="format-note">
                 <i class="fa-solid fa-circle-info"></i>
-                Supports 7Shifts, WhenIWork, HotSchedules, and more... powered by AI
+                Supports HotSchedules, 7Shifts, WhenIWork, and more&hellip; powered by AI
             </div>
         </div>
 
         <!-- ====== HotSchedules API Panel ====== -->
         <div class="mode-panel" id="hs-panel">
             {% if hs_connected %}
-            <!-- Connected state: show fetch form -->
-            <div class="hs-connected-badge">
+            <div class="api-connected-badge">
                 <i class="fa-solid fa-circle-check"></i>
                 <span>HotSchedules Connected</span>
                 <form method="POST" action="{{ url_for('manager.hs_disconnect') }}" style="margin-left:auto;">
-                    <button type="submit" class="hs-disconnect-btn">Disconnect</button>
+                    <button type="submit" class="api-disconnect-btn">Disconnect</button>
                 </form>
             </div>
 
@@ -551,59 +606,108 @@
                 <div style="margin-bottom: 20px;">
                     <label
                         style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
-                        Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday of the
-                            schedule week)</span>
+                        Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday)</span>
                     </label>
-                    <input type="date" name="week_start" id="hsWeekStart" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
-                                      background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600;
-                                      box-sizing: border-box;">
+                    <input type="date" name="week_start" id="hsWeekStart" required class="api-date-input"
+                        style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+                                      background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600; box-sizing: border-box;">
                 </div>
 
-                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 20px;
-                                  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-                                  padding: 12px 16px;">
-                    <input type="checkbox" name="hide_assignments" style="width:16px; height:16px; cursor:pointer;">
+                <label class="blind-mode-bar">
+                    <input type="checkbox" name="hide_assignments">
                     <span>
-                        <span style="display:block; font-size:13px; font-weight:700; color:var(--text-main);">Blind
-                            Mode</span>
-                        <span
-                            style="display:block; font-size:11px; color:var(--text-muted); font-weight:500; margin-top:2px;">Hide
-                            trainee names from trainers</span>
+                        <span class="blind-mode-label">Blind Mode</span>
+                        <span class="blind-mode-desc">Hide trainee names from trainers</span>
                     </span>
                 </label>
 
-                <button type="submit" class="hs-submit" id="hsFetchBtn">
+                <button type="submit" class="api-submit-hs" id="hsFetchBtn">
                     <i class="fa-solid fa-cloud-arrow-down"></i>
                     Fetch Schedule from HotSchedules
                 </button>
             </form>
-
             {% else %}
-            <!-- Not connected: show credential form -->
             <form method="POST" action="{{ url_for('manager.hs_connect') }}">
-                <div class="hs-form-group">
-                    <label>API Root URL <span>(provided by Fourth)</span></label>
+                <div class="api-form-group">
+                    <label>API Root URL <span>(from Fourth)</span></label>
                     <input type="url" name="hs_api_url" placeholder="https://api.hotschedules.io/NAMESPACE/" required>
                 </div>
-
-                <div class="hs-form-group">
+                <div class="api-form-group">
                     <label>API Username</label>
                     <input type="text" name="hs_api_username" placeholder="Your API username" required>
                 </div>
-
-                <div class="hs-form-group">
+                <div class="api-form-group">
                     <label>API Password</label>
                     <input type="password" name="hs_api_password" placeholder="Your API password" required>
                 </div>
-
-                <button type="submit" class="hs-submit">
+                <button type="submit" class="api-submit-hs">
                     <i class="fa-solid fa-plug"></i>
                     Connect HotSchedules
                 </button>
-
                 <div class="format-note" style="margin-top: 16px;">
                     <i class="fa-solid fa-circle-info"></i>
-                    API credentials must be requested from your Fourth/HotSchedules representative
+                    Credentials issued by your Fourth/HotSchedules representative
+                </div>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- ====== 7Shifts API Panel ====== -->
+        <div class="mode-panel" id="ss-panel">
+            {% if ss_connected %}
+            <div class="api-connected-badge">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>7Shifts Connected</span>
+                <form method="POST" action="{{ url_for('manager.ss_disconnect') }}" style="margin-left:auto;">
+                    <button type="submit" class="api-disconnect-btn">Disconnect</button>
+                </form>
+            </div>
+
+            <form method="POST" action="{{ url_for('manager.smart_builder_fetch_7shifts') }}">
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+                        Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday)</span>
+                    </label>
+                    <input type="date" name="week_start" id="ssWeekStart" required
+                        style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+                                      background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600; box-sizing: border-box;">
+                </div>
+
+                <label class="blind-mode-bar">
+                    <input type="checkbox" name="hide_assignments">
+                    <span>
+                        <span class="blind-mode-label">Blind Mode</span>
+                        <span class="blind-mode-desc">Hide trainee names from trainers</span>
+                    </span>
+                </label>
+
+                <button type="submit" class="api-submit-ss" id="ssFetchBtn">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                    Fetch Schedule from 7Shifts
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('manager.ss_connect') }}">
+                <div class="api-form-group">
+                    <label>Client ID <span>(from 7Shifts Developer Portal)</span></label>
+                    <input type="text" name="ss_client_id" placeholder="Your OAuth Client ID" required>
+                </div>
+                <div class="api-form-group">
+                    <label>Client Secret</label>
+                    <input type="password" name="ss_client_secret" placeholder="Your OAuth Client Secret" required>
+                </div>
+                <div class="api-form-group">
+                    <label>Company ID <span>(found in 7Shifts settings)</span></label>
+                    <input type="text" name="ss_company_id" placeholder="e.g. 12345" required>
+                </div>
+                <button type="submit" class="api-submit-ss">
+                    <i class="fa-solid fa-plug"></i>
+                    Connect 7Shifts
+                </button>
+                <div class="format-note" style="margin-top: 16px;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Set up API access at <b>developers.7shifts.com</b>
                 </div>
             </form>
             {% endif %}
@@ -627,10 +731,10 @@
         var mm = String(sunday.getMonth() + 1).padStart(2, '0');
         var dd = String(sunday.getDate()).padStart(2, '0');
         var val = yyyy + '-' + mm + '-' + dd;
-        var ws = document.getElementById('weekStart');
-        if (ws) ws.value = val;
-        var hsWs = document.getElementById('hsWeekStart');
-        if (hsWs) hsWs.value = val;
+        ['weekStart', 'hsWeekStart', 'ssWeekStart'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.value = val;
+        });
     })();
 
     // Tab switching
@@ -644,9 +748,11 @@
                 document.getElementById(tab.getAttribute('data-panel')).classList.add('active');
             });
         });
+        // Auto-switch to connected tab
         {% if hs_connected %}
-        // If HS is connected, default to the HS tab
         document.getElementById('tabHs').click();
+        {% elif ss_connected %}
+        document.getElementById('tabSs').click();
         {% endif %}
     })();
 
@@ -677,7 +783,6 @@
             var dt = new DataTransfer();
             dt.items.add(file);
             fileInput.files = dt.files;
-
             fileName.textContent = file.name;
             fileSize.textContent = formatSize(file.size);
             filePreview.classList.add('active');
@@ -700,29 +805,14 @@
             if (e.target.closest('.file-preview-remove') || e.target.closest('.file-preview')) return;
             fileInput.click();
         });
+        fileInput.addEventListener('change', function () { if (this.files[0]) setFile(this.files[0]); });
+        fileRemove.addEventListener('click', function (e) { e.stopPropagation(); clearFile(); });
 
-        fileInput.addEventListener('change', function () {
-            if (this.files[0]) setFile(this.files[0]);
-        });
-
-        fileRemove.addEventListener('click', function (e) {
-            e.stopPropagation();
-            clearFile();
-        });
-
-        dropZone.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-        dropZone.addEventListener('dragleave', function (e) {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-        });
+        dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', function (e) { e.preventDefault(); dropZone.classList.remove('drag-over'); });
         dropZone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            var files = e.dataTransfer.files;
-            if (files.length > 0) setFile(files[0]);
+            e.preventDefault(); dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
         });
 
         form.addEventListener('submit', function () {
@@ -730,14 +820,16 @@
             submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
         });
 
-        // HS fetch button spinner
-        var hsFetchBtn = document.getElementById('hsFetchBtn');
-        if (hsFetchBtn) {
-            hsFetchBtn.closest('form').addEventListener('submit', function () {
-                hsFetchBtn.disabled = true;
-                hsFetchBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Fetching...';
-            });
-        }
+        // API fetch button spinners
+        ['hsFetchBtn', 'ssFetchBtn'].forEach(function (id) {
+            var btn = document.getElementById(id);
+            if (btn) {
+                btn.closest('form').addEventListener('submit', function () {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Fetching...';
+                });
+            }
+        });
     })();
 </script>
 {% endblock %}
