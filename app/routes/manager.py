@@ -418,7 +418,15 @@ def dashboard():
     location_filter = request.args.get("location_id")
     visible_ids = get_visible_employee_ids(location_filter=location_filter)
     non_graduated_ids = [r[0] for r in Employee.query.filter_by(organization_id=oid).filter(Employee.graduated_at == None).with_entities(Employee.id).all()]
-    if visible_ids is not None:
+    # When manager has location restrictions but no employees in those locations, visible_ids can be [].
+    # Avoid passing empty lists to .in_() to prevent DB/driver issues.
+    empty_visible = visible_ids is not None and len(visible_ids) == 0
+    if empty_visible:
+        employees = []
+        sessions = []
+        overdue_sessions = []
+        overdue_sessions_count = 0
+    elif visible_ids is not None:
         active_ids = [eid for eid in visible_ids if eid in non_graduated_ids]
         employees = Employee.query.filter_by(organization_id=oid).filter(Employee.id.in_(visible_ids), Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
@@ -428,24 +436,29 @@ def dashboard():
             ),
         ).all()
         dash_cutoff = date.today() - timedelta(days=90)
-        sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
-            TrainingSession.trainee_employee_id.in_(active_ids),
-            TrainingSession.session_date >= dash_cutoff,
-        ).options(
-            joinedload(TrainingSession.position),
-            joinedload(TrainingSession.trainer),
-            joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.desc()).limit(200).all()
-        overdue_sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
-            TrainingSession.trainee_employee_id.in_(active_ids),
-            TrainingSession.completed_at == None,
-            TrainingSession.session_date < date.today(),
-        ).options(
-            joinedload(TrainingSession.position),
-            joinedload(TrainingSession.trainer),
-            joinedload(TrainingSession.trainee),
-        ).order_by(TrainingSession.session_date.asc()).all()
-        overdue_sessions_count = len(overdue_sessions)
+        if not active_ids:
+            sessions = []
+            overdue_sessions = []
+            overdue_sessions_count = 0
+        else:
+            sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
+                TrainingSession.trainee_employee_id.in_(active_ids),
+                TrainingSession.session_date >= dash_cutoff,
+            ).options(
+                joinedload(TrainingSession.position),
+                joinedload(TrainingSession.trainer),
+                joinedload(TrainingSession.trainee),
+            ).order_by(TrainingSession.session_date.desc()).limit(200).all()
+            overdue_sessions = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
+                TrainingSession.trainee_employee_id.in_(active_ids),
+                TrainingSession.completed_at == None,
+                TrainingSession.session_date < date.today(),
+            ).options(
+                joinedload(TrainingSession.position),
+                joinedload(TrainingSession.trainer),
+                joinedload(TrainingSession.trainee),
+            ).order_by(TrainingSession.session_date.asc()).all()
+            overdue_sessions_count = len(overdue_sessions)
     else:
         employees = Employee.query.filter_by(organization_id=oid).filter(Employee.graduated_at == None).options(
             selectinload(Employee.active_roadmap).selectinload(TrainingRoadmap.steps).joinedload(RoadmapStep.position),
@@ -473,11 +486,14 @@ def dashboard():
             joinedload(TrainingSession.trainee),
         ).order_by(TrainingSession.session_date.asc()).all()
         overdue_sessions_count = len(overdue_sessions)
-    assigned_employee_ids = db.session.query(User.employee_id).filter(User.employee_id != None)
-    emp_query = Employee.query.filter_by(organization_id=g._manager_org_id).filter(~Employee.id.in_(assigned_employee_ids))
-    if visible_ids is not None:
-        emp_query = emp_query.filter(Employee.id.in_(visible_ids))
-    unlinked_count = emp_query.count()
+    if empty_visible:
+        unlinked_count = 0
+    else:
+        assigned_employee_ids = db.session.query(User.employee_id).filter(User.employee_id != None)
+        emp_query = Employee.query.filter_by(organization_id=g._manager_org_id).filter(~Employee.id.in_(assigned_employee_ids))
+        if visible_ids is not None:
+            emp_query = emp_query.filter(Employee.id.in_(visible_ids))
+        unlinked_count = emp_query.count()
 
     require_signoff = getattr(sys_settings, 'require_digital_signoff', False) if sys_settings else False
 

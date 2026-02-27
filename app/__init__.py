@@ -185,6 +185,7 @@ def create_app():
 
     @app.errorhandler(500)
     def server_error(e):
+        app.logger.exception("500 Internal Server Error: %s", e)
         return _render('error.html',
             code=500, icon='⚠️',
             title="Something Went Wrong",
