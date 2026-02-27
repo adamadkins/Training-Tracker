@@ -1023,12 +1023,19 @@ def process_smart_schedule():
             trainee_stats[t.id] = t_data
 
         # Parse ALL 7 days from the PDF
+        week_start_str = request.form.get('week_start', '')
+        hide_assignments = 'hide_assignments' in request.form
+
+        try:
+            weekly_shifts = parse_schedule_pdf(filepath, week_start_str)
+        except Exception as e:
+            current_app.logger.error(f"Failed to batch parse schedule: {e}")
+            weekly_shifts = {str(i): [] for i in range(7)}
+
         days_data = {}
         for day_idx in range(7):
-            try:
-                parsed_shifts = parse_schedule_pdf(filepath, day_idx)
-            except Exception:
-                parsed_shifts = []
+            day_str = str(day_idx)
+            parsed_shifts = weekly_shifts.get(day_str, [])
 
             trainers = []
             trainees = []
@@ -1060,7 +1067,7 @@ def process_smart_schedule():
                     else:
                         trainees.append(data)
 
-            days_data[str(day_idx)] = {
+            days_data[day_str] = {
                 'trainers': trainers,
                 'trainees': trainees
             }
@@ -1072,8 +1079,6 @@ def process_smart_schedule():
             pass
 
         # Store parsed data in a per-user cache file (avoids cookie size limits)
-        week_start_str = request.form.get('week_start', '')
-        hide_assignments = 'hide_assignments' in request.form
         cache_data = {
             'days': days_data,
             'all_positions': all_positions,

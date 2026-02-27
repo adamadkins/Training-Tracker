@@ -7,23 +7,22 @@ from openai import OpenAI
 # Day names used for target selection
 DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-def parse_schedule_pdf(file_path, target_day_index):
+def parse_schedule_pdf(file_path, week_start_date):
     """
-    Parse a schedule PDF using an LLM to extract employee shifts for a specific day.
+    Parse a schedule PDF using an LLM to extract employee shifts for the ENTIRE week.
     
     Uses pdfplumber to extract raw text, then passes it to OpenAI GPT-4o-mini 
-    to extract a structured JSON list of shifts. This allows the system to support 
-    many popular formats (HotSchedules, 7Shifts, WhenIWork, etc.) without hardcoded 
-    column heuristics.
+    to extract a structured JSON list of shifts for all 7 days in a single call.
+    This provides massive latency improvements and better contextual tracking
+    for exact date alignments.
 
     Args:
         file_path: Path to the PDF file
-        target_day_index: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+        week_start_date: A string representing the week's start date (e.g., '2026-02-22')
 
     Returns:
-        List of dicts with 'name', 'start', and 'end' keys
+        Dict mapping day indexes string '0'-'6' to lists of dicts with 'name', 'start', and 'end' keys
     """
-    target_day = DAY_NAMES[target_day_index]
     
     # 1. Extract raw text from the PDF
     pdf_text = ""
@@ -39,29 +38,31 @@ def parse_schedule_pdf(file_path, target_day_index):
         raise
         
     if not pdf_text.strip():
-        return []
+        return {str(i): [] for i in range(7)}
 
     # 2. Extract using OpenAI
     api_key = current_app.config.get('OPENAI_API_KEY')
     if not api_key:
         print("Warning: OPENAI_API_KEY is not configured. Cannot process flexible schedules.")
-        return []
+        return {str(i): [] for i in range(7)}
         
     client = OpenAI(api_key=api_key)
     
     prompt = f"""
 You are an AI assistant designed to extract work schedules from raw text parsed from a PDF.
 
-The following text contains a weekly or daily work schedule. Your task is to extract ALL the working shifts 
-assigned to employees specifically for {target_day}.
+The following text contains a weekly or daily work schedule. The first day of the week (Sunday) falls on {week_start_date}.
+Your task is to extract ALL the working shifts assigned to ALL employees for the ENTIRE week.
 
-Output a JSON object with a single key "shifts" containing an array of objects.
+Output a JSON object perfectly mapping the 7 day integers (as strings "0" through "6") to an array of objects representing their shifts.
+0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday, 4 = Thursday, 5 = Friday, 6 = Saturday.
+
 Each object in the array must have exactly these three keys:
 - "name": The employee's full name (e.g. "John Doe"). Clean up any extra tags like "Training" or "Total".
 - "start": The start time in "H:MM AM/PM" format (e.g., "7:00 AM", "4:15 PM").
 - "end": The end time in "H:MM AM/PM" format (e.g., "3:00 PM").
 
-If the text has no shifts for {target_day}, return an empty array for "shifts".
+If a day has no shifts, return an empty array for that day's integer key.
 
 --- START OF PDF TEXT ---
 {pdf_text}
@@ -72,7 +73,7 @@ If the text has no shifts for {target_day}, return an empty array for "shifts".
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a helpful data extraction assistant that outputs strictly structured JSON."},
+                {"role": "system", "content": "You are a helpful data extraction assistant that outputs strictly structured JSON mapping days 0-6 to arrays of shifts."},
                 {"role": "user", "content": prompt}
             ],
             response_format={ "type": "json_object" }
@@ -80,37 +81,42 @@ If the text has no shifts for {target_day}, return an empty array for "shifts".
         content = response.choices[0].message.content
         data = json.loads(content)
         
-        shifts = data.get("shifts", [])
-        if not isinstance(shifts, list):
-            shifts = []
-            
-        # 3. Clean and deduplicate the extracted data
-        unique = []
-        seen = set()
-        for shift in shifts:
-            name = shift.get('name')
-            start = shift.get('start')
-            end = shift.get('end')
-            if not name or not start or not end:
-                continue
+        # 3. Clean and deduplicate the extracted data for ALL 7 days
+        weekly_shifts = {str(i): [] for i in range(7)}
+        
+        for day_str in weekly_shifts.keys():
+            shifts = data.get(day_str, [])
+            if not isinstance(shifts, list):
+                shifts = []
                 
-            # Use fallback regex normalizer just to ensure exact format compliance
-            start_norm = normalize_time(start) or start
-            end_norm = normalize_time(end) or end
+            unique = []
+            seen = set()
+            for shift in shifts:
+                name = shift.get('name')
+                start = shift.get('start')
+                end = shift.get('end')
+                if not name or not start or not end:
+                    continue
+                    
+                # Use fallback regex normalizer just to ensure exact format compliance
+                start_norm = normalize_time(start) or start
+                end_norm = normalize_time(end) or end
+                
+                key = (name, start_norm, end_norm)
+                if key not in seen:
+                    seen.add(key)
+                    unique.append({
+                        'name': str(name).strip(),
+                        'start': start_norm,
+                        'end': end_norm
+                    })
+            weekly_shifts[day_str] = unique
             
-            key = (name, start_norm, end_norm)
-            if key not in seen:
-                seen.add(key)
-                unique.append({
-                    'name': name.strip(),
-                    'start': start_norm,
-                    'end': end_norm
-                })
-        return unique
+        return weekly_shifts
 
     except Exception as e:
         print(f"Error querying OpenAI for schedule extraction: {e}")
-        return []
+        return {str(i): [] for i in range(7)}
 
 
 def normalize_time(time_str):
