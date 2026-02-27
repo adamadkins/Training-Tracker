@@ -26,6 +26,10 @@ class Organization(db.Model):
     trial_ends_at = db.Column(db.DateTime, nullable=True)  # 14-day trial; after this, billing_plan is the plan they chose
     trial_plan = db.Column(db.String(20), nullable=True)  # 'standard' | 'pro' plan to use during and after trial
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    # HotSchedules (Fourth) API integration
+    hs_api_url = db.Column(db.String(500), nullable=True)      # e.g. https://api.hotschedules.io/NAMESPACE/
+    hs_api_username = db.Column(db.String(255), nullable=True)  # Basic Auth username
+    hs_api_password = db.Column(db.String(255), nullable=True)  # Basic Auth password
 
 
 class SignupRequest(db.Model):

@@ -24,6 +24,7 @@ from app.models import (
 from app import db, cache
 from app.utils.notifications import send_notification_email, notify, _enqueue_or_send_push
 from app.utils.schedule_parser import parse_schedule_pdf
+from app.utils.hotschedules_client import fetch_weekly_shifts as hs_fetch_weekly
 from app.routes.helpers import manager_required, staff_required
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
@@ -880,7 +881,9 @@ def roadmap_smart_builder():
     path = _sb_data_path()
     if os.path.exists(path):
         return redirect(url_for('manager.smart_builder_build'))
-    return render_template('roadmaps/smart_upload.html')
+    org = Organization.query.get(g._manager_org_id)
+    hs_connected = bool(org and org.hs_api_url and org.hs_api_username)
+    return render_template('roadmaps/smart_upload.html', hs_connected=hs_connected)
 
 
 @manager_bp.route('/schedules/smart-builder/build')
@@ -1098,6 +1101,164 @@ def process_smart_schedule():
         flash(f"Failed to process schedule: {str(e)}", "danger")
         return redirect(url_for('manager.roadmap_smart_builder'))
 
+
+# --- HOTSCHEDULES API INTEGRATION ---
+
+@manager_bp.route('/settings/hotschedules/connect', methods=['POST'])
+@manager_required
+def hs_connect():
+    """Save HotSchedules API credentials for the current org."""
+    org = Organization.query.get(g._manager_org_id)
+    if not org:
+        flash("Organization not found.", "danger")
+        return redirect(url_for('manager.roadmap_smart_builder'))
+
+    org.hs_api_url = request.form.get('hs_api_url', '').strip()
+    org.hs_api_username = request.form.get('hs_api_username', '').strip()
+    org.hs_api_password = request.form.get('hs_api_password', '').strip()
+
+    if not org.hs_api_url or not org.hs_api_username or not org.hs_api_password:
+        flash("All three fields (API URL, username, password) are required.", "warning")
+        return redirect(url_for('manager.roadmap_smart_builder'))
+
+    db.session.commit()
+    flash("HotSchedules API connected successfully!", "success")
+    return redirect(url_for('manager.roadmap_smart_builder'))
+
+
+@manager_bp.route('/settings/hotschedules/disconnect', methods=['POST'])
+@manager_required
+def hs_disconnect():
+    """Clear HotSchedules API credentials for the current org."""
+    org = Organization.query.get(g._manager_org_id)
+    if org:
+        org.hs_api_url = None
+        org.hs_api_username = None
+        org.hs_api_password = None
+        db.session.commit()
+    flash("HotSchedules API disconnected.", "info")
+    return redirect(url_for('manager.roadmap_smart_builder'))
+
+
+@manager_bp.route('/schedules/smart-builder/fetch-api', methods=['POST'])
+@manager_required
+def smart_builder_fetch_api():
+    """Pull schedule from HotSchedules API and feed into Smart Builder pipeline."""
+    if not _org_has_pro():
+        flash("This is a Pro feature.", "info")
+        return redirect(url_for("manager.schedules_list"))
+
+    org = Organization.query.get(g._manager_org_id)
+    if not org or not org.hs_api_url or not org.hs_api_username:
+        flash("HotSchedules is not connected. Please enter your API credentials first.", "warning")
+        return redirect(url_for('manager.roadmap_smart_builder'))
+
+    week_start_str = request.form.get('week_start', '')
+    hide_assignments = 'hide_assignments' in request.form
+
+    try:
+        weekly_shifts = hs_fetch_weekly(
+            org.hs_api_url, org.hs_api_username, org.hs_api_password, week_start_str
+        )
+    except Exception as e:
+        current_app.logger.error(f"HotSchedules API fetch error: {e}", exc_info=True)
+        flash(f"Failed to fetch from HotSchedules: {str(e)}", "danger")
+        return redirect(url_for('manager.roadmap_smart_builder'))
+
+    # --- Reuse the same employee-matching + cache logic as PDF upload ---
+    positions = Position.query.filter_by(organization_id=g._manager_org_id, active=True).order_by(Position.name).all()
+    all_positions = [{'id': p.id, 'name': p.name, 'location_id': p.location_id} for p in positions]
+
+    active_trainees = Employee.query.filter_by(organization_id=g._manager_org_id).filter(
+        Employee.status == 'active', Employee.role == 'trainee', Employee.graduated_at == None
+    ).all()
+    all_history = TrainingSession.query.filter_by(organization_id=g._manager_org_id).filter(
+        TrainingSession.trainee_employee_id.in_([t.id for t in active_trainees]),
+        TrainingSession.completed_at != None
+    ).all()
+
+    history_map = {}
+    for s in all_history:
+        if not s.ratings:
+            continue
+        sess_avg = sum(r.rating_value for r in s.ratings) / len(s.ratings)
+        if s.trainee_employee_id not in history_map:
+            history_map[s.trainee_employee_id] = {}
+        if s.position_id not in history_map[s.trainee_employee_id]:
+            history_map[s.trainee_employee_id][s.position_id] = {'sum': 0, 'count': 0}
+        history_map[s.trainee_employee_id][s.position_id]['sum'] += sess_avg
+        history_map[s.trainee_employee_id][s.position_id]['count'] += 1
+
+    trainee_stats = {}
+    for t in active_trainees:
+        t_data = {'history': [], 'suggestion': None}
+        t_history = history_map.get(t.id, {})
+        t_loc_ids = t.location_ids()
+        t_positions = [p for p in positions if p.location_id is None or p.location_id in t_loc_ids]
+        for pos in t_positions:
+            if pos.id in t_history:
+                stats = t_history[pos.id]
+                final_avg = round(stats['sum'] / stats['count'], 1)
+                t_data['history'].append({'id': pos.id, 'name': pos.name, 'avg': final_avg, 'count': stats['count']})
+
+        roadmap_data = t.get_roadmap_progress()
+        if roadmap_data and roadmap_data.get('target_position'):
+            t_data['suggestion'] = {'id': roadmap_data['target_position'].id, 'name': roadmap_data['target_position'].name, 'reason': 'Roadmap Step'}
+        else:
+            trained_ids = [h['id'] for h in t_data['history']]
+            untrained = [p for p in t_positions if p.id not in trained_ids]
+            if untrained:
+                t_data['suggestion'] = {'id': untrained[0].id, 'name': untrained[0].name, 'reason': 'New Skill'}
+            elif t_data['history']:
+                lowest = min(t_data['history'], key=lambda x: x['avg'])
+                t_data['suggestion'] = {'id': lowest['id'], 'name': lowest['name'], 'reason': f"Needs Improvement ({lowest['avg']})"}
+        trainee_stats[t.id] = t_data
+
+    days_data = {}
+    for day_idx in range(7):
+        day_str = str(day_idx)
+        parsed_shifts = weekly_shifts.get(day_str, [])
+        trainers = []
+        trainees = []
+        for shift in parsed_shifts:
+            emp = Employee.query.filter_by(organization_id=g._manager_org_id).filter(
+                db.func.concat(Employee.first_name, ' ', Employee.last_name).ilike(f"%{shift['name']}%")
+            ).first()
+            if emp:
+                next_step = "General"
+                stats = trainee_stats.get(emp.id)
+                if stats and stats.get('suggestion'):
+                    next_step = stats['suggestion']['name']
+                elif emp.active_roadmap:
+                    prog = emp.get_roadmap_progress()
+                    if prog and prog.get('target_position'):
+                        next_step = prog['target_position'].name
+                data = {
+                    'id': emp.id,
+                    'name': f"{emp.first_name} {emp.last_name}",
+                    'start_time': shift['start'],
+                    'end_time': shift['end'],
+                    'next_step': next_step
+                }
+                if emp.role in ['manager', 'trainer']:
+                    trainers.append(data)
+                else:
+                    trainees.append(data)
+        days_data[day_str] = {'trainers': trainers, 'trainees': trainees}
+
+    cache_data = {
+        'days': days_data,
+        'all_positions': all_positions,
+        'trainee_stats': {str(k): v for k, v in trainee_stats.items()},
+        'file_size': 0,
+        'file_name': 'HotSchedules API',
+        'week_start': week_start_str,
+        'hide_assignments': hide_assignments,
+    }
+    with open(_sb_data_path(), 'w') as f:
+        json.dump(cache_data, f)
+
+    return redirect(url_for('manager.smart_builder_build'))
 
 @manager_bp.route('/schedules/smart-builder/create-session', methods=['POST'])
 @manager_required

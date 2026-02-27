@@ -5,123 +5,452 @@
 {% block content %}
 <style>
     body.form-page .site-header,
-    body.form-page .site-footer { display: none !important; }
-    body.form-page { background: var(--bg-body); }
-    body.form-page main.container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-    body.form-page main { max-width: none !important; padding-top: 0 !important; }
+    body.form-page .site-footer {
+        display: none !important;
+    }
+
+    body.form-page {
+        background: var(--bg-body);
+    }
+
+    body.form-page main.container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body.form-page main {
+        max-width: none !important;
+        padding-top: 0 !important;
+    }
 
     .upload-wrapper {
-        min-height: 100dvh; display: flex; align-items: center; justify-content: center;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 24px;
     }
 
-    .upload-container { width: 100%; max-width: 560px; }
+    .upload-container {
+        width: 100%;
+        max-width: 560px;
+    }
 
     /* Header */
-    .upload-header { text-align: center; margin-bottom: 32px; }
+    .upload-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
     .upload-header-icon {
-        width: 64px; height: 64px; border-radius: 20px; margin: 0 auto 16px;
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        margin: 0 auto 16px;
         background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(155, 114, 203, 0.1));
-        display: flex; align-items: center; justify-content: center;
-        font-size: 28px; color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: var(--primary);
     }
+
     .upload-header h1 {
-        font-size: 28px; font-weight: 900; color: var(--text-main);
-        letter-spacing: -0.02em; margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
+        margin: 0 0 8px 0;
     }
-    .upload-header p { color: var(--text-muted); font-size: 15px; margin: 0; font-weight: 500; line-height: 1.5; }
+
+    .upload-header p {
+        color: var(--text-muted);
+        font-size: 15px;
+        margin: 0;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    /* Mode tabs */
+    .mode-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 4px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        margin-bottom: 24px;
+    }
+
+    .mode-tab {
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .mode-tab.active {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    }
+
+    .mode-tab:not(.active):hover {
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--primary);
+    }
+
+    .mode-panel {
+        display: none;
+    }
+
+    .mode-panel.active {
+        display: block;
+    }
 
     /* Drop zone */
     .drop-zone {
-        border: 2px dashed var(--border); border-radius: 20px;
-        padding: 48px 32px; text-align: center;
-        background: var(--bg-card); cursor: pointer;
-        transition: all 0.25s; position: relative;
+        border: 2px dashed var(--border);
+        border-radius: 20px;
+        padding: 48px 32px;
+        text-align: center;
+        background: var(--bg-card);
+        cursor: pointer;
+        transition: all 0.25s;
+        position: relative;
     }
-    .drop-zone:hover { border-color: var(--primary); background: rgba(37, 99, 235, 0.02); }
+
+    .drop-zone:hover {
+        border-color: var(--primary);
+        background: rgba(37, 99, 235, 0.02);
+    }
+
     .drop-zone.drag-over {
-        border-color: var(--primary); border-style: solid;
+        border-color: var(--primary);
+        border-style: solid;
         background: rgba(37, 99, 235, 0.05);
         transform: scale(1.01);
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
     }
-    .drop-zone.has-file { border-color: #10b981; border-style: solid; }
+
+    .drop-zone.has-file {
+        border-color: #10b981;
+        border-style: solid;
+    }
 
     .drop-icon {
-        width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 16px;
-        background: var(--bg-body); border: 1px solid var(--border);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px; color: var(--text-muted);
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        margin: 0 auto 16px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: var(--text-muted);
         transition: all 0.25s;
     }
-    .drop-zone:hover .drop-icon,
-    .drop-zone.drag-over .drop-icon { color: var(--primary); border-color: var(--primary); background: rgba(37, 99, 235, 0.05); }
-    .drop-zone.has-file .drop-icon { color: #10b981; border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
 
-    .drop-title { font-size: 16px; font-weight: 800; color: var(--text-main); margin: 0 0 6px 0; }
-    .drop-desc { font-size: 13px; color: var(--text-muted); margin: 0; font-weight: 500; }
-    .drop-desc b { color: var(--primary); cursor: pointer; }
-    .drop-zone.drag-over .drop-title { color: var(--primary); }
+    .drop-zone:hover .drop-icon,
+    .drop-zone.drag-over .drop-icon {
+        color: var(--primary);
+        border-color: var(--primary);
+        background: rgba(37, 99, 235, 0.05);
+    }
+
+    .drop-zone.has-file .drop-icon {
+        color: #10b981;
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .drop-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0 0 6px 0;
+    }
+
+    .drop-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .drop-desc b {
+        color: var(--primary);
+        cursor: pointer;
+    }
+
+    .drop-zone.drag-over .drop-title {
+        color: var(--primary);
+    }
 
     /* File preview */
     .file-preview {
-        display: none; align-items: center; gap: 14px;
-        background: var(--bg-body); border: 1px solid var(--border);
-        border-radius: 12px; padding: 14px 16px; margin-top: 16px;
+        display: none;
+        align-items: center;
+        gap: 14px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-top: 16px;
         text-align: left;
     }
-    .file-preview.active { display: flex; }
+
+    .file-preview.active {
+        display: flex;
+    }
+
     .file-preview-icon {
-        width: 40px; height: 40px; border-radius: 10px;
-        background: rgba(239, 68, 68, 0.08); color: #ef4444;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 18px; flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.08);
+        color: #ef4444;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
     }
-    .file-preview-info { flex: 1; min-width: 0; }
+
+    .file-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
     .file-preview-name {
-        font-size: 13px; font-weight: 700; color: var(--text-main);
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    .file-preview-size { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+    .file-preview-size {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
     .file-preview-remove {
-        width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border);
-        background: var(--bg-card); color: var(--text-muted); cursor: pointer;
-        display: flex; align-items: center; justify-content: center; font-size: 14px;
-        flex-shrink: 0; transition: all 0.15s;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        transition: all 0.15s;
     }
-    .file-preview-remove:hover { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.06); }
+
+    .file-preview-remove:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.06);
+    }
 
     /* Submit button */
     .upload-submit {
-        width: 100%; padding: 16px; border-radius: 14px; border: none;
-        background: var(--primary); color: white;
-        font-size: 15px; font-weight: 800; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; gap: 10px;
-        margin-top: 24px; transition: all 0.2s;
+        width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 24px;
+        transition: all 0.2s;
         box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
     }
-    .upload-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3); }
-    .upload-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .upload-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+    }
+
+    .upload-submit:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
 
     /* Supported format note */
     .format-note {
-        text-align: center; margin-top: 20px;
-        font-size: 12px; color: var(--text-muted); font-weight: 600;
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
     }
-    .format-note i { margin-right: 4px; }
+
+    .format-note i {
+        margin-right: 4px;
+    }
 
     /* Back link */
-    .back-row { text-align: center; margin-top: 24px; }
-    .back-row a {
-        color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 700;
-        display: inline-flex; align-items: center; gap: 6px; transition: color 0.2s;
+    .back-row {
+        text-align: center;
+        margin-top: 24px;
     }
-    .back-row a:hover { color: var(--primary); }
+
+    .back-row a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.2s;
+    }
+
+    .back-row a:hover {
+        color: var(--primary);
+    }
+
+    /* HotSchedules API panel */
+    .hs-form-group {
+        margin-bottom: 16px;
+    }
+
+    .hs-form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+
+    .hs-form-group label span {
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .hs-form-group input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 600;
+        box-sizing: border-box;
+    }
+
+    .hs-form-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .hs-connected-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        background: rgba(16, 185, 129, 0.06);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 14px;
+        margin-bottom: 20px;
+    }
+
+    .hs-connected-badge i {
+        color: #10b981;
+        font-size: 18px;
+    }
+
+    .hs-connected-badge span {
+        font-size: 14px;
+        font-weight: 700;
+        color: #10b981;
+    }
+
+    .hs-connected-badge .hs-disconnect-btn {
+        margin-left: auto;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+
+    .hs-connected-badge .hs-disconnect-btn:hover {
+        border-color: #ef4444;
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.06);
+    }
+
+    .hs-submit {
+        width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+        border: none;
+        background: #f97316;
+        color: white;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+        transition: all 0.2s;
+        box-shadow: 0 4px 16px rgba(249, 115, 22, 0.2);
+    }
+
+    .hs-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(249, 115, 22, 0.3);
+    }
 
     @media (max-width: 480px) {
-        .upload-wrapper { padding: 16px; }
-        .drop-zone { padding: 36px 20px; }
-        .upload-header h1 { font-size: 24px; }
+        .upload-wrapper {
+            padding: 16px;
+        }
+
+        .drop-zone {
+            padding: 36px 20px;
+        }
+
+        .upload-header h1 {
+            font-size: 24px;
+        }
     }
 </style>
 
@@ -131,58 +460,153 @@
         <div class="upload-header">
             <div class="upload-header-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
             <h1>Smart Schedule Builder</h1>
-            <p>Upload a schedule PDF and we'll auto-match<br>trainers with trainees for the week.</p>
+            <p>Upload a schedule PDF or connect to HotSchedules<br>to auto-match trainers with trainees for the week.
+            </p>
         </div>
 
-        <form method="POST" action="{{ url_for('manager.process_smart_schedule') }}" enctype="multipart/form-data" id="uploadForm">
-            <input type="file" name="file" id="fileInput" hidden accept=".pdf">
-
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
-                    Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday of the schedule week)</span>
-                </label>
-                <input type="date" name="week_start" id="weekStart" required
-                       style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
-                              background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600;
-                              box-sizing: border-box;">
-            </div>
-
-            <div class="drop-zone" id="dropZone">
-                <div class="drop-icon" id="dropIcon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                <p class="drop-title" id="dropTitle">Drag & drop your schedule PDF</p>
-                <p class="drop-desc">or <b onclick="document.getElementById('fileInput').click()">browse files</b> to upload</p>
-
-                <div class="file-preview" id="filePreview">
-                    <div class="file-preview-icon"><i class="fa-solid fa-file-pdf"></i></div>
-                    <div class="file-preview-info">
-                        <div class="file-preview-name" id="fileName"></div>
-                        <div class="file-preview-size" id="fileSize"></div>
-                    </div>
-                    <button type="button" class="file-preview-remove" id="fileRemove" title="Remove">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-            </div>
-
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 20px;
-                          background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
-                          padding: 12px 16px;">
-                <input type="checkbox" name="hide_assignments" id="hideAssignments" style="width:16px; height:16px; cursor:pointer;">
-                <span>
-                    <span style="display:block; font-size:13px; font-weight:700; color:var(--text-main);">Blind Mode</span>
-                    <span style="display:block; font-size:11px; color:var(--text-muted); font-weight:500; margin-top:2px;">Hide trainee names from trainers (same as manual schedule blind mode)</span>
-                </span>
-            </label>
-
-            <button type="submit" class="upload-submit" id="submitBtn" disabled>
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                Process Schedule
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab active" data-panel="pdf-panel" id="tabPdf">
+                <i class="fa-solid fa-file-pdf"></i> Upload PDF
             </button>
-        </form>
+            <button class="mode-tab" data-panel="hs-panel" id="tabHs">
+                <i class="fa-solid fa-plug"></i> HotSchedules API
+            </button>
+        </div>
 
-        <div class="format-note">
-            <i class="fa-solid fa-circle-info"></i>
-            Supports 7Shifts, WhenIWork, HotSchedules, and more... powered by AI
+        <!-- ====== PDF Upload Panel ====== -->
+        <div class="mode-panel active" id="pdf-panel">
+            <form method="POST" action="{{ url_for('manager.process_smart_schedule') }}" enctype="multipart/form-data"
+                id="uploadForm">
+                <input type="file" name="file" id="fileInput" hidden accept=".pdf">
+
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+                        Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday of the
+                            schedule week)</span>
+                    </label>
+                    <input type="date" name="week_start" id="weekStart" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+                                  background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600;
+                                  box-sizing: border-box;">
+                </div>
+
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-icon" id="dropIcon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <p class="drop-title" id="dropTitle">Drag & drop your schedule PDF</p>
+                    <p class="drop-desc">or <b onclick="document.getElementById('fileInput').click()">browse files</b>
+                        to upload</p>
+
+                    <div class="file-preview" id="filePreview">
+                        <div class="file-preview-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div class="file-preview-info">
+                            <div class="file-preview-name" id="fileName"></div>
+                            <div class="file-preview-size" id="fileSize"></div>
+                        </div>
+                        <button type="button" class="file-preview-remove" id="fileRemove" title="Remove">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 20px;
+                              background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+                              padding: 12px 16px;">
+                    <input type="checkbox" name="hide_assignments" id="hideAssignments"
+                        style="width:16px; height:16px; cursor:pointer;">
+                    <span>
+                        <span style="display:block; font-size:13px; font-weight:700; color:var(--text-main);">Blind
+                            Mode</span>
+                        <span
+                            style="display:block; font-size:11px; color:var(--text-muted); font-weight:500; margin-top:2px;">Hide
+                            trainee names from trainers (same as manual schedule blind mode)</span>
+                    </span>
+                </label>
+
+                <button type="submit" class="upload-submit" id="submitBtn" disabled>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Process Schedule
+                </button>
+            </form>
+
+            <div class="format-note">
+                <i class="fa-solid fa-circle-info"></i>
+                Supports 7Shifts, WhenIWork, HotSchedules, and more... powered by AI
+            </div>
+        </div>
+
+        <!-- ====== HotSchedules API Panel ====== -->
+        <div class="mode-panel" id="hs-panel">
+            {% if hs_connected %}
+            <!-- Connected state: show fetch form -->
+            <div class="hs-connected-badge">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>HotSchedules Connected</span>
+                <form method="POST" action="{{ url_for('manager.hs_disconnect') }}" style="margin-left:auto;">
+                    <button type="submit" class="hs-disconnect-btn">Disconnect</button>
+                </form>
+            </div>
+
+            <form method="POST" action="{{ url_for('manager.smart_builder_fetch_api') }}">
+                <div style="margin-bottom: 20px;">
+                    <label
+                        style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
+                        Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday of the
+                            schedule week)</span>
+                    </label>
+                    <input type="date" name="week_start" id="hsWeekStart" required style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
+                                      background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600;
+                                      box-sizing: border-box;">
+                </div>
+
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 20px;
+                                  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+                                  padding: 12px 16px;">
+                    <input type="checkbox" name="hide_assignments" style="width:16px; height:16px; cursor:pointer;">
+                    <span>
+                        <span style="display:block; font-size:13px; font-weight:700; color:var(--text-main);">Blind
+                            Mode</span>
+                        <span
+                            style="display:block; font-size:11px; color:var(--text-muted); font-weight:500; margin-top:2px;">Hide
+                            trainee names from trainers</span>
+                    </span>
+                </label>
+
+                <button type="submit" class="hs-submit" id="hsFetchBtn">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                    Fetch Schedule from HotSchedules
+                </button>
+            </form>
+
+            {% else %}
+            <!-- Not connected: show credential form -->
+            <form method="POST" action="{{ url_for('manager.hs_connect') }}">
+                <div class="hs-form-group">
+                    <label>API Root URL <span>(provided by Fourth)</span></label>
+                    <input type="url" name="hs_api_url" placeholder="https://api.hotschedules.io/NAMESPACE/" required>
+                </div>
+
+                <div class="hs-form-group">
+                    <label>API Username</label>
+                    <input type="text" name="hs_api_username" placeholder="Your API username" required>
+                </div>
+
+                <div class="hs-form-group">
+                    <label>API Password</label>
+                    <input type="password" name="hs_api_password" placeholder="Your API password" required>
+                </div>
+
+                <button type="submit" class="hs-submit">
+                    <i class="fa-solid fa-plug"></i>
+                    Connect HotSchedules
+                </button>
+
+                <div class="format-note" style="margin-top: 16px;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    API credentials must be requested from your Fourth/HotSchedules representative
+                </div>
+            </form>
+            {% endif %}
         </div>
 
         <div class="back-row">
@@ -194,95 +618,126 @@
 </div>
 
 <script>
-(function() {
     // Default week_start to this week's Sunday
-    var today = new Date();
-    var sunday = new Date(today);
-    sunday.setDate(today.getDate() - today.getDay());
-    var yyyy = sunday.getFullYear();
-    var mm = String(sunday.getMonth() + 1).padStart(2, '0');
-    var dd = String(sunday.getDate()).padStart(2, '0');
-    document.getElementById('weekStart').value = yyyy + '-' + mm + '-' + dd;
-})();
+    (function () {
+        var today = new Date();
+        var sunday = new Date(today);
+        sunday.setDate(today.getDate() - today.getDay());
+        var yyyy = sunday.getFullYear();
+        var mm = String(sunday.getMonth() + 1).padStart(2, '0');
+        var dd = String(sunday.getDate()).padStart(2, '0');
+        var val = yyyy + '-' + mm + '-' + dd;
+        var ws = document.getElementById('weekStart');
+        if (ws) ws.value = val;
+        var hsWs = document.getElementById('hsWeekStart');
+        if (hsWs) hsWs.value = val;
+    })();
 
-(function() {
-    var dropZone = document.getElementById('dropZone');
-    var fileInput = document.getElementById('fileInput');
-    var filePreview = document.getElementById('filePreview');
-    var fileName = document.getElementById('fileName');
-    var fileSize = document.getElementById('fileSize');
-    var fileRemove = document.getElementById('fileRemove');
-    var submitBtn = document.getElementById('submitBtn');
-    var dropTitle = document.getElementById('dropTitle');
-    var dropIcon = document.getElementById('dropIcon');
-    var form = document.getElementById('uploadForm');
+    // Tab switching
+    (function () {
+        var tabs = document.querySelectorAll('.mode-tab');
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                document.querySelectorAll('.mode-panel').forEach(function (p) { p.classList.remove('active'); });
+                document.getElementById(tab.getAttribute('data-panel')).classList.add('active');
+            });
+        });
+        {% if hs_connected %}
+        // If HS is connected, default to the HS tab
+        document.getElementById('tabHs').click();
+        {% endif %}
+    })();
 
-    function formatSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / 1048576).toFixed(1) + ' MB';
-    }
+    // PDF upload interactions
+    (function () {
+        var dropZone = document.getElementById('dropZone');
+        var fileInput = document.getElementById('fileInput');
+        var filePreview = document.getElementById('filePreview');
+        var fileName = document.getElementById('fileName');
+        var fileSize = document.getElementById('fileSize');
+        var fileRemove = document.getElementById('fileRemove');
+        var submitBtn = document.getElementById('submitBtn');
+        var dropTitle = document.getElementById('dropTitle');
+        var dropIcon = document.getElementById('dropIcon');
+        var form = document.getElementById('uploadForm');
 
-    function setFile(file) {
-        if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
-            alert('Please select a PDF file.');
-            return;
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
         }
-        var dt = new DataTransfer();
-        dt.items.add(file);
-        fileInput.files = dt.files;
 
-        fileName.textContent = file.name;
-        fileSize.textContent = formatSize(file.size);
-        filePreview.classList.add('active');
-        dropZone.classList.add('has-file');
-        dropTitle.textContent = 'File ready';
-        dropIcon.innerHTML = '<i class="fa-solid fa-file-pdf"></i>';
-        submitBtn.disabled = false;
-    }
+        function setFile(file) {
+            if (!file || !file.name.toLowerCase().endsWith('.pdf')) {
+                alert('Please select a PDF file.');
+                return;
+            }
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
 
-    function clearFile() {
-        fileInput.value = '';
-        filePreview.classList.remove('active');
-        dropZone.classList.remove('has-file');
-        dropTitle.textContent = 'Drag & drop your schedule PDF';
-        dropIcon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
-        submitBtn.disabled = true;
-    }
+            fileName.textContent = file.name;
+            fileSize.textContent = formatSize(file.size);
+            filePreview.classList.add('active');
+            dropZone.classList.add('has-file');
+            dropTitle.textContent = 'File ready';
+            dropIcon.innerHTML = '<i class="fa-solid fa-file-pdf"></i>';
+            submitBtn.disabled = false;
+        }
 
-    dropZone.addEventListener('click', function(e) {
-        if (e.target.closest('.file-preview-remove') || e.target.closest('.file-preview')) return;
-        fileInput.click();
-    });
+        function clearFile() {
+            fileInput.value = '';
+            filePreview.classList.remove('active');
+            dropZone.classList.remove('has-file');
+            dropTitle.textContent = 'Drag & drop your schedule PDF';
+            dropIcon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
+            submitBtn.disabled = true;
+        }
 
-    fileInput.addEventListener('change', function() {
-        if (this.files[0]) setFile(this.files[0]);
-    });
+        dropZone.addEventListener('click', function (e) {
+            if (e.target.closest('.file-preview-remove') || e.target.closest('.file-preview')) return;
+            fileInput.click();
+        });
 
-    fileRemove.addEventListener('click', function(e) {
-        e.stopPropagation();
-        clearFile();
-    });
+        fileInput.addEventListener('change', function () {
+            if (this.files[0]) setFile(this.files[0]);
+        });
 
-    dropZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
-    });
-    dropZone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-    });
-    dropZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        var files = e.dataTransfer.files;
-        if (files.length > 0) setFile(files[0]);
-    });
+        fileRemove.addEventListener('click', function (e) {
+            e.stopPropagation();
+            clearFile();
+        });
 
-    form.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
-    });
-})();
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            var files = e.dataTransfer.files;
+            if (files.length > 0) setFile(files[0]);
+        });
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+        });
+
+        // HS fetch button spinner
+        var hsFetchBtn = document.getElementById('hsFetchBtn');
+        if (hsFetchBtn) {
+            hsFetchBtn.closest('form').addEventListener('submit', function () {
+                hsFetchBtn.disabled = true;
+                hsFetchBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Fetching...';
+            });
+        }
+    })();
 </script>
 {% endblock %}
