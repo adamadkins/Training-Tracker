@@ -3,17 +3,13 @@
 {% block content %}
 <style>
     /* ── Layout reset ── */
-    body.chat-active footer,
-    body.chat-active .bottom-tab-bar,
-    body:has(.chat-page-wrapper) footer,
-    body:has(.chat-page-wrapper) .bottom-tab-bar {
+    footer,
+    .bottom-tab-bar {
         display: none !important;
     }
 
-    body.chat-active main.container,
-    body.chat-active main,
-    body:has(.chat-page-wrapper) main.container,
-    body:has(.chat-page-wrapper) main {
+    main.container,
+    main {
         max-width: none !important;
         padding: 0 !important;
         margin: 0 !important;
