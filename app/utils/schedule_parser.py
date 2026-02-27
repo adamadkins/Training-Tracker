@@ -59,6 +59,12 @@ def _try_table_extraction(pdf):
     """
     Attempt to parse a grid-style schedule PDF by extracting tables.
 
+    Handles:
+      - Standard 9-column grids (Name, Total/Day, Sun–Sat)
+      - Continuation tables on later pages (no header row)
+      - Sub-sections within a single table (e.g. a "Training" section
+        that redefines its own column layout mid-table)
+
     Returns a week dict if successful, or None if the PDF does not appear
     to be a grid schedule.
     """
@@ -75,27 +81,43 @@ def _try_table_extraction(pdf):
         return None  # no tables → fall back to LLM
 
     found_schedule_grid = False
+    # Persist the last known column mapping across tables so that
+    # continuation tables (no header) can still be parsed.
+    last_day_col_map = {}
 
     for table in all_tables:
         if not table or len(table) < 2:
             continue
 
-        # ---- Detect the column layout ----
-        header = table[0]
-        if header is None:
-            continue
+        # Try to detect columns from the first row
+        day_col_map = _detect_day_columns(table[0])
+        if day_col_map:
+            last_day_col_map = day_col_map
+            found_schedule_grid = True
+            start_row = 1  # skip header
+        elif last_day_col_map:
+            # Continuation table — reuse the previous mapping
+            day_col_map = last_day_col_map
+            found_schedule_grid = True
+            start_row = 0  # every row is data
+        else:
+            continue  # nothing usable
 
-        day_col_map = _detect_day_columns(header)
-        if not day_col_map:
-            continue  # not a schedule grid
-
-        found_schedule_grid = True
         name_col = 0  # employee name is always the first column
 
         # ---- Walk data rows ----
-        for row in table[1:]:
+        for row in table[start_row:]:
             if not row:
                 continue
+
+            # Check if this row is a sub-section header that redefines
+            # the column layout (e.g. "Training [Status = Posted]"
+            # followed by new day-column positions).
+            new_map = _detect_day_columns(row)
+            if new_map:
+                day_col_map = new_map
+                last_day_col_map = new_map
+                continue  # this row is a header, skip it
 
             # Extract and clean the employee name
             raw_name = row[name_col] if name_col < len(row) else None
