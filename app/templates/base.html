@@ -145,6 +145,10 @@
             % endif %
         }
 
+        html {
+            background-color: var(--bg-body);
+        }
+
         body {
             background-color: var(--bg-body);
             color: var(--text-main);
@@ -410,7 +414,7 @@
             justify-content: center;
             flex: 1;
             gap: 2px;
-            text-decoration: none;
+            text-decoration: none !important;
             color: var(--text-muted);
             font-size: 10px;
             font-weight: 600;
@@ -427,6 +431,13 @@
 
         .tab-item.active {
             color: var(--primary);
+            text-decoration: none !important;
+        }
+
+        .tab-item:hover,
+        .tab-item:active,
+        .tab-item:focus {
+            text-decoration: none !important;
         }
 
         .tab-item.active i {
@@ -685,7 +696,7 @@
             .nav-content {
                 display: flex;
                 position: absolute;
-                top: calc(100% + var(--sat, 0px));
+                top: 100%;
                 left: 0;
                 right: 0;
                 width: 100%;
@@ -1217,9 +1228,6 @@
                 <span id="tab-notif-badge" class="tab-badge" style="display:none;"></span>
             </a>
             {% endif %}
-            <a href="#" class="tab-item" onclick="toggleMobileMenu(); return false;">
-                <i class="fa-solid fa-ellipsis"></i><span>More</span>
-            </a>
             {% else %}
             {# Employee / Trainer / Trainee tabs #}
             <a href="{{ url_for('employee.dashboard') }}" class="tab-item {{ 'active' if 'dashboard' in _ep }}">
