@@ -25,7 +25,7 @@ from app import db, cache
 from app.utils.notifications import send_notification_email, notify, _enqueue_or_send_push
 from app.utils.schedule_parser import parse_schedule_pdf
 from app.utils.hotschedules_client import fetch_weekly_shifts as hs_fetch_weekly
-from app.utils.sevenshifts_client import fetch_weekly_shifts as ss_fetch_weekly
+from app.utils.sevenshifts_client import fetch_weekly_shifts as ss_fetch_weekly, ensure_valid_token as ss_ensure_token
 from app.routes.helpers import manager_required, staff_required
 
 manager_bp = Blueprint("manager", __name__, url_prefix="/manager")
@@ -884,7 +884,7 @@ def roadmap_smart_builder():
         return redirect(url_for('manager.smart_builder_build'))
     org = Organization.query.get(g._manager_org_id)
     hs_connected = bool(org and org.hs_api_url and org.hs_api_username)
-    ss_connected = bool(org and org.sevenshifts_client_id and org.sevenshifts_client_secret)
+    ss_connected = bool(org and org.sevenshifts_company_id)
     return render_template('roadmaps/smart_upload.html', hs_connected=hs_connected, ss_connected=ss_connected)
 
 
@@ -1263,41 +1263,48 @@ def smart_builder_fetch_api():
     return redirect(url_for('manager.smart_builder_build'))
 
 
-# --- 7SHIFTS API INTEGRATION ---
+# --- 7SHIFTS API INTEGRATION (OAuth) ---
 
-@manager_bp.route('/settings/sevenshifts/connect', methods=['POST'])
+@manager_bp.route('/auth/7shifts/callback')
 @manager_required
-def ss_connect():
-    """Save 7Shifts API credentials for the current org."""
+def ss_callback():
+    """OAuth callback: 7Shifts redirects here after the client authorizes.
+    The callback URL receives ?company_id=...&guid=... query params."""
+    company_id = request.args.get('company_id') or request.args.get('guid', '').strip()
+    if not company_id:
+        flash("7Shifts authorization failed — no company ID received.", "danger")
+        return redirect(url_for('manager.roadmap_smart_builder'))
+
     org = Organization.query.get(g._manager_org_id)
     if not org:
         flash("Organization not found.", "danger")
         return redirect(url_for('manager.roadmap_smart_builder'))
 
-    org.sevenshifts_client_id = request.form.get('ss_client_id', '').strip()
-    org.sevenshifts_client_secret = request.form.get('ss_client_secret', '').strip()
-    org.sevenshifts_company_id = request.form.get('ss_company_id', '').strip()
+    org.sevenshifts_company_id = company_id
+    # Pre-fetch an access token so the connection is immediately usable
+    try:
+        ss_ensure_token(org, db.session)
+        flash("7Shifts connected successfully!", "success")
+    except Exception as e:
+        current_app.logger.error(f"7Shifts token fetch failed: {e}", exc_info=True)
+        flash(f"7Shifts authorized but token fetch failed: {e}", "warning")
+        db.session.commit()
 
-    if not org.sevenshifts_client_id or not org.sevenshifts_client_secret or not org.sevenshifts_company_id:
-        flash("All three fields (Client ID, Client Secret, Company ID) are required.", "warning")
-        return redirect(url_for('manager.roadmap_smart_builder'))
-
-    db.session.commit()
-    flash("7Shifts API connected successfully!", "success")
     return redirect(url_for('manager.roadmap_smart_builder'))
 
 
 @manager_bp.route('/settings/sevenshifts/disconnect', methods=['POST'])
 @manager_required
 def ss_disconnect():
-    """Clear 7Shifts API credentials for the current org."""
+    """Clear 7Shifts tokens for the current org."""
     org = Organization.query.get(g._manager_org_id)
     if org:
-        org.sevenshifts_client_id = None
-        org.sevenshifts_client_secret = None
         org.sevenshifts_company_id = None
+        org.sevenshifts_access_token = None
+        org.sevenshifts_refresh_token = None
+        org.sevenshifts_token_expires_at = None
         db.session.commit()
-    flash("7Shifts API disconnected.", "info")
+    flash("7Shifts disconnected.", "info")
     return redirect(url_for('manager.roadmap_smart_builder'))
 
 
@@ -1310,18 +1317,15 @@ def smart_builder_fetch_7shifts():
         return redirect(url_for("manager.schedules_list"))
 
     org = Organization.query.get(g._manager_org_id)
-    if not org or not org.sevenshifts_client_id or not org.sevenshifts_client_secret:
-        flash("7Shifts is not connected. Please enter your API credentials first.", "warning")
+    if not org or not org.sevenshifts_company_id:
+        flash("7Shifts is not connected. Click Connect 7Shifts first.", "warning")
         return redirect(url_for('manager.roadmap_smart_builder'))
 
     week_start_str = request.form.get('week_start', '')
     hide_assignments = 'hide_assignments' in request.form
 
     try:
-        weekly_shifts = ss_fetch_weekly(
-            org.sevenshifts_client_id, org.sevenshifts_client_secret,
-            org.sevenshifts_company_id, week_start_str
-        )
+        weekly_shifts = ss_fetch_weekly(org, db.session, week_start_str)
     except Exception as e:
         current_app.logger.error(f"7Shifts API fetch error: {e}", exc_info=True)
         flash(f"Failed to fetch from 7Shifts: {str(e)}", "danger")

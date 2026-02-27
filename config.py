@@ -75,6 +75,10 @@ class Config:
     # --- AI Data Extraction ---
     OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
+    # --- 7Shifts OAuth (partner-level — one set of creds for all orgs) ---
+    SEVENSHIFTS_CLIENT_ID = os.environ.get('SEVENSHIFTS_CLIENT_ID', '')
+    SEVENSHIFTS_CLIENT_SECRET = os.environ.get('SEVENSHIFTS_CLIENT_SECRET', '')
+
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.
     REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'

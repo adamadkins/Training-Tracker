@@ -454,6 +454,7 @@
         gap: 10px;
         margin-top: 20px;
         transition: all 0.2s;
+        text-decoration: none;
         box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2);
     }
 
@@ -492,6 +493,63 @@
         color: var(--text-muted);
         font-weight: 500;
         margin-top: 2px;
+    }
+
+    /* Info card for not-yet-configured integrations */
+    .api-info-card {
+        text-align: center;
+        padding: 40px 24px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+    }
+
+    .api-info-card .api-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .api-info-card h3 {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-main);
+        margin: 0 0 8px;
+    }
+
+    .api-info-card p {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin: 0 0 20px;
+        line-height: 1.6;
+    }
+
+    .api-not-configured {
+        text-align: center;
+        padding: 32px 24px;
+        background: rgba(250, 204, 21, 0.06);
+        border: 1px solid rgba(250, 204, 21, 0.3);
+        border-radius: 14px;
+        margin-top: 16px;
+    }
+
+    .api-not-configured i {
+        color: #eab308;
+        font-size: 20px;
+        margin-bottom: 8px;
+    }
+
+    .api-not-configured p {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin: 8px 0 0;
     }
 
     @media (max-width: 480px) {
@@ -608,7 +666,7 @@
                         style="display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px;">
                         Week Start Date <span style="font-weight: 500; color: var(--text-muted);">(Sunday)</span>
                     </label>
-                    <input type="date" name="week_start" id="hsWeekStart" required class="api-date-input"
+                    <input type="date" name="week_start" id="hsWeekStart" required
                         style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border);
                                       background: var(--bg-card); color: var(--text-main); font-size: 14px; font-weight: 600; box-sizing: border-box;">
                 </div>
@@ -627,32 +685,23 @@
                 </button>
             </form>
             {% else %}
-            <form method="POST" action="{{ url_for('manager.hs_connect') }}">
-                <div class="api-form-group">
-                    <label>API Root URL <span>(from Fourth)</span></label>
-                    <input type="url" name="hs_api_url" placeholder="https://api.hotschedules.io/NAMESPACE/" required>
+            <div class="api-info-card">
+                <div class="api-logo" style="background: rgba(249, 115, 22, 0.08); color: #f97316;">
+                    <i class="fa-solid fa-fire"></i>
                 </div>
-                <div class="api-form-group">
-                    <label>API Username</label>
-                    <input type="text" name="hs_api_username" placeholder="Your API username" required>
+                <h3>HotSchedules / Fourth</h3>
+                <p>Connect your HotSchedules account to pull schedules automatically.<br>
+                    Your administrator will set up this integration.</p>
+
+                <div class="api-not-configured">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p>Not connected yet &mdash; contact your admin to set up HotSchedules integration.</p>
                 </div>
-                <div class="api-form-group">
-                    <label>API Password</label>
-                    <input type="password" name="hs_api_password" placeholder="Your API password" required>
-                </div>
-                <button type="submit" class="api-submit-hs">
-                    <i class="fa-solid fa-plug"></i>
-                    Connect HotSchedules
-                </button>
-                <div class="format-note" style="margin-top: 16px;">
-                    <i class="fa-solid fa-circle-info"></i>
-                    Credentials issued by your Fourth/HotSchedules representative
-                </div>
-            </form>
+            </div>
             {% endif %}
         </div>
 
-        <!-- ====== 7Shifts API Panel ====== -->
+        <!-- ====== 7Shifts API Panel (OAuth) ====== -->
         <div class="mode-panel" id="ss-panel">
             {% if ss_connected %}
             <div class="api-connected-badge">
@@ -688,28 +737,27 @@
                 </button>
             </form>
             {% else %}
-            <form method="POST" action="{{ url_for('manager.ss_connect') }}">
-                <div class="api-form-group">
-                    <label>Client ID <span>(from 7Shifts Developer Portal)</span></label>
-                    <input type="text" name="ss_client_id" placeholder="Your OAuth Client ID" required>
+            <div class="api-info-card">
+                <div class="api-logo" style="background: rgba(124, 58, 237, 0.08); color: #7c3aed;">
+                    <i class="fa-solid fa-calendar-check"></i>
                 </div>
-                <div class="api-form-group">
-                    <label>Client Secret</label>
-                    <input type="password" name="ss_client_secret" placeholder="Your OAuth Client Secret" required>
-                </div>
-                <div class="api-form-group">
-                    <label>Company ID <span>(found in 7Shifts settings)</span></label>
-                    <input type="text" name="ss_company_id" placeholder="e.g. 12345" required>
-                </div>
-                <button type="submit" class="api-submit-ss">
+                <h3>7Shifts</h3>
+                <p>Connect your 7Shifts account to import schedules with one click.<br>
+                    Click below to authorize Training Tracker.</p>
+
+                {% if config.SEVENSHIFTS_CLIENT_ID %}
+                <a href="https://app.7shifts.com/partner/authorize?client_id={{ config.SEVENSHIFTS_CLIENT_ID }}&redirect_uri={{ url_for('manager.ss_callback', _external=True) | urlencode }}"
+                    class="api-submit-ss" style="margin-top: 24px;">
                     <i class="fa-solid fa-plug"></i>
                     Connect 7Shifts
-                </button>
-                <div class="format-note" style="margin-top: 16px;">
-                    <i class="fa-solid fa-circle-info"></i>
-                    Set up API access at <b>developers.7shifts.com</b>
+                </a>
+                {% else %}
+                <div class="api-not-configured">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p>7Shifts integration is not yet configured. Contact your admin.</p>
                 </div>
-            </form>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
 

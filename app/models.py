@@ -30,10 +30,11 @@ class Organization(db.Model):
     hs_api_url = db.Column(db.String(500), nullable=True)      # e.g. https://api.hotschedules.io/NAMESPACE/
     hs_api_username = db.Column(db.String(255), nullable=True)  # Basic Auth username
     hs_api_password = db.Column(db.String(255), nullable=True)  # Basic Auth password
-    # 7Shifts API integration
-    sevenshifts_client_id = db.Column(db.String(255), nullable=True)
-    sevenshifts_client_secret = db.Column(db.String(500), nullable=True)
-    sevenshifts_company_id = db.Column(db.String(100), nullable=True)
+    # 7Shifts API integration (OAuth tokens — credentials live in .env)
+    sevenshifts_company_id = db.Column(db.String(100), nullable=True)       # company GUID from onboarding callback
+    sevenshifts_access_token = db.Column(db.Text, nullable=True)            # Bearer token (expires ~1 hr)
+    sevenshifts_refresh_token = db.Column(db.Text, nullable=True)           # long-lived refresh token
+    sevenshifts_token_expires_at = db.Column(db.DateTime, nullable=True)    # UTC expiry of access_token
 
 
 class SignupRequest(db.Model):
