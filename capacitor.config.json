@@ -1,5 +1,14 @@
 {
   "appId": "me.trainingtracker.app",
   "appName": "Training Tracker",
-  "webDir": "web"
+  "webDir": "web",
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true,
+    "backgroundColor": "#f8fafc"
+  },
+  "android": {
+    "backgroundColor": "#f8fafc"
+  }
 }
