@@ -72,6 +72,9 @@ class Config:
     # Fallback if only one plan configured
     STRIPE_PRICE_ID = os.environ.get('STRIPE_PRICE_ID', '')
 
+    # --- AI Data Extraction ---
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
     # Redis (queue + cache). If not set, app falls back to thread for email and simple memory cache.
     REDIS_URL = os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')
     CACHE_TYPE = 'RedisCache' if (os.environ.get('REDIS_URL') or os.environ.get('REDIS_PRIVATE_URL')) else 'SimpleCache'
