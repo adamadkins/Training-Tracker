@@ -1307,6 +1307,56 @@
             setInterval(syncBadges, 2000);
             setTimeout(syncBadges, 1000);
         })();
+
+        // Swipe gestures between bottom tabs
+        (function () {
+            if (window.innerWidth > 768) return; // Mobile only
+            var touchStartX = 0;
+            var touchEndX = 0;
+            var touchStartY = 0;
+            var touchEndY = 0;
+            var threshold = 80; // Minimum swipe distance
+            var restraint = 50; // Maximum vertical variance allowed
+
+            document.body.addEventListener('touchstart', function (e) {
+                // Ignore horizontal swipes inside specific scrolling carousels or chat views
+                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: true });
+
+            document.body.addEventListener('touchend', function (e) {
+                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                var dx = touchEndX - touchStartX;
+                var dy = touchEndY - touchStartY;
+
+                // Ensure it's mostly a horizontal swipe
+                if (Math.abs(dx) >= threshold && Math.abs(dy) <= restraint) {
+                    var tabsContainer = document.querySelector('.bottom-tab-bar .tab-bar-inner');
+                    if (!tabsContainer || window.getComputedStyle(tabsContainer.parentElement).display === 'none') return;
+
+                    var tabs = Array.from(tabsContainer.querySelectorAll('a.tab-item'));
+                    var activeIndex = tabs.findIndex(function (tab) { return tab.classList.contains('active'); });
+                    if (activeIndex === -1) return;
+
+                    if (dx < 0 && activeIndex < tabs.length - 1) {
+                        // Swipe left -> Next tab
+                        showLoader();
+                        window.location.href = tabs[activeIndex + 1].href;
+                    } else if (dx > 0 && activeIndex > 0) {
+                        // Swipe right -> Previous tab
+                        showLoader();
+                        window.location.href = tabs[activeIndex - 1].href;
+                    }
+                }
+            }
+        })();
     </script>
     {% endif %}
 

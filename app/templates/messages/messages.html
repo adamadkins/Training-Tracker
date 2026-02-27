@@ -357,8 +357,8 @@
 
     /* Channel header */
     .channel-header {
-        padding: 10px 20px;
-        min-height: 52px;
+        padding: max(10px, env(safe-area-inset-top)) 20px 10px;
+        min-height: calc(52px + env(safe-area-inset-top));
         border-bottom: 1px solid var(--border);
         background: var(--bg-card);
         display: flex;

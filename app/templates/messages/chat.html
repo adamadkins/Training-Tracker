@@ -35,7 +35,7 @@
 
     /* ── Header ── */
     .chat-header {
-        padding: 8px 16px;
+        padding: max(8px, env(safe-area-inset-top)) 16px 8px;
         background: var(--bg-card);
         border-bottom: 1px solid var(--border);
         display: flex;
@@ -43,7 +43,7 @@
         gap: 10px;
         flex-shrink: 0;
         z-index: 60;
-        min-height: 56px;
+        min-height: calc(56px + env(safe-area-inset-top));
     }
 
     .btn-back {
