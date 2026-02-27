@@ -6,11 +6,26 @@
 <style>
     /* --- Hide header/footer on login --- */
     body.login-active .main-header,
-    body.login-active .site-footer { display: none !important; }
+    body.login-active .site-footer {
+        display: none !important;
+    }
+
     body.login-active main.container,
     body.login-active main {
-        max-width: none !important; width: 100% !important;
-        padding: 0 !important; margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    @media (max-width: 600px) {
+        body.login-active {
+            overflow: hidden !important;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
     }
 
     /* --- RESET & BOX MODEL SAFETY --- */
@@ -33,7 +48,8 @@
     }
 
     .auth-container {
-        max-width: 550px; /* Increased from 500px to remove the "skinny" look */
+        max-width: 550px;
+        /* Increased from 500px to remove the "skinny" look */
         width: 100%;
         margin: 0 auto;
         display: flex;
@@ -44,7 +60,8 @@
     /* --- SPECTACLE HEADER --- */
     .auth-spectacle {
         text-align: center;
-        margin-bottom: 32px; /* Tightened from 40px to reduce length */
+        margin-bottom: 32px;
+        /* Tightened from 40px to reduce length */
         width: 100%;
     }
 
@@ -73,7 +90,8 @@
     }
 
     .auth-title {
-        margin: 16px 0 4px 0; /* Reduced margins to tighten up the header */
+        margin: 16px 0 4px 0;
+        /* Reduced margins to tighten up the header */
         font-size: 36px;
         font-weight: 900;
         color: var(--text-main);
@@ -92,7 +110,8 @@
     /* --- AUTH CARD --- */
     .auth-card {
         background: var(--bg-card);
-        padding: 40px 48px; /* Adjusted padding to be wider and slightly shorter */
+        padding: 40px 48px;
+        /* Adjusted padding to be wider and slightly shorter */
         border-radius: 28px;
         border: 1px solid var(--border);
         box-shadow: 0 20px 25px -5px var(--shadow), 0 8px 10px -6px var(--shadow);
@@ -117,7 +136,8 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         display: block;
-        margin-bottom: 8px; /* Tightened label margin */
+        margin-bottom: 8px;
+        /* Tightened label margin */
     }
 
     .input-style {
@@ -133,7 +153,8 @@
         outline: none;
         display: block;
         min-width: 0 !important;
-        height: 54px; /* Slightly shorter to reduce overall length */
+        height: 54px;
+        /* Slightly shorter to reduce overall length */
         appearance: none;
         -webkit-appearance: none;
     }
@@ -181,7 +202,8 @@
         cursor: pointer;
         transition: all 0.2s;
         box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        margin-top: 8px; /* Reduced top margin */
+        margin-top: 8px;
+        /* Reduced top margin */
     }
 
     .btn-submit:hover {
@@ -224,7 +246,11 @@
         font-weight: 500;
         opacity: 0.7;
     }
-    .auth-attribution span { font-weight: 700; color: var(--text-muted); }
+
+    .auth-attribution span {
+        font-weight: 700;
+        color: var(--text-muted);
+    }
 
     .auth-learn-more {
         text-align: center;
@@ -233,22 +259,60 @@
         color: var(--text-muted);
         font-weight: 500;
     }
+
     .auth-learn-more a {
         color: var(--primary);
         font-weight: 700;
         text-decoration: none;
     }
-    .auth-learn-more a:hover { text-decoration: underline; }
 
-    /* --- MOBILE REFINEMENTS --- */
+    .auth-learn-more a:hover {
+        text-decoration: underline;
+    }
+
     @media (max-width: 600px) {
-        .auth-wrapper { padding: 24px 16px; }
-        .auth-card { padding: 32px 24px; }
-        .auth-title { font-size: 28px; }
-        .auth-subtitle { font-size: 14px; }
-        .auth-spectacle { margin-bottom: 24px; }
-        .icon-spectacle { width: 68px; height: 68px; }
-        .icon-spectacle i { font-size: 26px !important; }
+        .auth-wrapper {
+            padding: 16px;
+            height: 100dvh;
+            justify-content: center;
+        }
+
+        .auth-card {
+            padding: 24px 20px;
+        }
+
+        .auth-title {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            line-height: 1.3;
+        }
+
+        .auth-spectacle {
+            margin-bottom: 20px;
+        }
+
+        .icon-spectacle {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+        }
+
+        .icon-spectacle i {
+            font-size: 24px !important;
+        }
+
+        .input-style {
+            height: 48px;
+            padding: 12px 16px;
+        }
+
+        .btn-submit {
+            padding: 14px;
+        }
     }
 </style>
 
@@ -259,7 +323,8 @@
         <div class="auth-spectacle">
             <div class="icon-spectacle">
                 {% if g.system_settings and g.system_settings.custom_logo_url %}
-                <img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt="" style="max-width: 64px; max-height: 64px; object-fit: contain;" referrerpolicy="no-referrer">
+                <img src="{{ url_for('auth.logo', v=g.logo_version) }}" alt=""
+                    style="max-width: 64px; max-height: 64px; object-fit: contain;" referrerpolicy="no-referrer">
                 {% else %}
                 <i class="fa-solid fa-lock" style="font-size: 32px;"></i>
                 {% endif %}
@@ -281,29 +346,35 @@
         <div class="auth-card">
             {% if admin_login %}
             <p class="password-set-msg" style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">
-                <strong>Using admin@local or a company account?</strong> This page is for platform administrators only. Sign in on your <em>company</em> page instead: in the Training Tracker app enter company <strong>app</strong>, or open <strong>app.{% set h = (request.host.split(':')[0] if request.host else 'trainingtracker.me') %}{% set base = h[4:] if h.startswith('www.') else h %}{{ base }}</strong> in a browser, then use your email and password.
+                <strong>Using admin@local or a company account?</strong> This page is for platform administrators only.
+                Sign in on your <em>company</em> page instead: in the Training Tracker app enter company
+                <strong>app</strong>, or open <strong>app.{% set h = (request.host.split(':')[0] if request.host else
+                    'trainingtracker.me') %}{% set base = h[4:] if h.startswith('www.') else h %}{{ base }}</strong> in
+                a browser, then use your email and password.
             </p>
             {% endif %}
             {% if request.args.get('password_set') %}
             <p class="password-set-msg">Your password has been set. Sign in below with your email and new password.</p>
             {% endif %}
-            <form method="POST" action="{{ url_for('auth.login') }}" style="display: flex; flex-direction: column; gap: 20px;">
+            <form method="POST" action="{{ url_for('auth.login') }}"
+                style="display: flex; flex-direction: column; gap: 20px;">
 
                 <div>
                     <label for="email" class="form-label">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="name@company.com" required autofocus
-                           class="input-style">
+                        class="input-style">
                 </div>
 
                 <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
                         <label for="password" class="form-label" style="margin: 0;">Password</label>
                         <a href="{{ url_for('auth.forgot_password') }}" class="forgot-link">Forgot?</a>
                     </div>
 
                     <div class="password-container">
                         <input type="password" id="password" name="password" placeholder="••••••••" required
-                               class="input-style">
+                            class="input-style">
                         <button type="button" id="togglePassword" class="toggle-password">
                             <i class="fa-regular fa-eye" id="eyeIcon"></i>
                         </button>
@@ -325,14 +396,16 @@
             </p>
             {% else %}
             <p class="auth-learn-more" style="margin-top:20px; margin-bottom:0;">
-                Use a different company? <a href="{{ url_for('auth.leave_company') }}" style="color: var(--primary); font-weight: 700;">Go back and enter a different company</a>
+                Use a different company? <a href="{{ url_for('auth.leave_company') }}"
+                    style="color: var(--primary); font-weight: 700;">Go back and enter a different company</a>
             </p>
             {% endif %}
         </div>
 
     </div>
 
-    <div class="auth-attribution">Made by <span>Adam</span> <span style="opacity:0.5; font-size:10px;">· login-v2</span></div>
+    <div class="auth-attribution">Made by <span>Adam</span> <span style="opacity:0.5; font-size:10px;">· login-v2</span>
+    </div>
 </div>
 
 <script>
@@ -357,7 +430,7 @@
     });
 
     // QOL: Submission Loading State
-    loginForm.addEventListener('submit', function() {
+    loginForm.addEventListener('submit', function () {
         if (this.checkValidity()) {
             submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 12px;"></i> Authenticating...';
             submitBtn.style.opacity = '0.8';

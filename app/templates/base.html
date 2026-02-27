@@ -556,9 +556,56 @@
             }
         }
 
-        /* ── Mobile nav center (page title + location) ── */
-        .nav-mobile-center {
+        /* ── App Wrapper & Transition States ── */
+        .is-wrapper .site-footer,
+        .is-wrapper footer:last-of-type {
+            display: none !important;
+        }
+
+        #page-transition-overlay {
             display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--bg-body);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #ptr-spinner {
+            position: fixed;
+            top: env(safe-area-inset-top, 0px);
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            pointer-events: none;
+            z-index: 8000;
+            transform: translateY(-100%);
+            transition: transform 0.2s, opacity 0.2s;
+            opacity: 0;
+        }
+
+        #ptr-spinner .ptr-icon-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: var(--primary);
+            margin-top: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .nav-mobile-center {
+                display: block;
+            }
         }
 
         @media (max-width: 900px) {
@@ -845,7 +892,19 @@
     </style>
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
+<body class="fade-in-up {% block body_class %}{% endblock %}">
+
+    <!-- Page Transition Overlay -->
+    <div id="page-transition-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin fa-2x" style="color: var(--primary);"></i>
+    </div>
+
+    <!-- Pull to refresh spinner -->
+    <div id="ptr-spinner">
+        <div class="ptr-icon-wrap">
+            <i class="fa-solid fa-arrow-down" id="ptr-icon"></i>
+        </div>
+    </div>
     <div id="toast-container" class="toast-container"></div>
 
     {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint

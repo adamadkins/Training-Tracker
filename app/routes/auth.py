@@ -293,6 +293,11 @@ def leave_company():
 <script>
 (function(){
   try { window.parent.postMessage({ type: 'TrainingTrackerShowCompanyPicker' }, '*'); } catch (e) {}
+  setTimeout(function() {
+      if (window === window.parent) {
+          window.location.href = "/";
+      }
+  }, 100);
 })();
 </script>
 <p style="font-size:15px;color:#64748b;">Returning to company selection&hellip;</p>
