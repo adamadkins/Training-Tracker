@@ -134,8 +134,12 @@
 
     /* When bottom bar is visible, add padding so content isn't hidden */
     @media (max-width: 768px) {
-        .slack-wrapper {
-            padding-bottom: 0;
+        .slack-wrapper:not(.has-conversation) {
+            padding-bottom: 56px;
+        }
+
+        .slack-wrapper.has-conversation .msg-bottom-bar {
+            display: none;
         }
 
         .msg-left-strip {

@@ -6,7 +6,8 @@
     "contentInset": "always",
     "allowsLinkPreview": false,
     "scrollEnabled": true,
-    "backgroundColor": "#f8fafc"
+    "backgroundColor": "#f8fafc",
+    "allowsBackForwardNavigationGestures": true
   },
   "android": {
     "backgroundColor": "#f8fafc"
