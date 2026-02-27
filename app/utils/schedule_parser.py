@@ -7,47 +7,201 @@ from openai import OpenAI
 # Day names used for target selection
 DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+
 def parse_schedule_pdf(file_path, week_start_date):
     """
-    Parse a schedule PDF using an LLM to extract employee shifts for the ENTIRE week.
-    
-    Uses pdfplumber to extract raw text, then passes it to OpenAI GPT-4o-mini 
-    to extract a structured JSON list of shifts for all 7 days in a single call.
-    This provides massive latency improvements and better contextual tracking
-    for exact date alignments.
+    Parse a schedule PDF to extract employee shifts for the ENTIRE week.
+
+    Strategy:
+      1. Try structured table extraction first (fast, accurate for grid PDFs
+         like HotSchedules Extended Schedule Report).
+      2. Fall back to LLM-based extraction for free-form / unstructured PDFs.
 
     Args:
         file_path: Path to the PDF file
-        week_start_date: A string representing the week's start date (e.g., '2026-02-22')
+        week_start_date: ISO date string for the week's Sunday (e.g. '2026-02-15')
 
     Returns:
-        Dict mapping day indexes string '0'-'6' to lists of dicts with 'name', 'start', and 'end' keys
+        Dict mapping day index strings '0'-'6' to lists of shift dicts
+        with 'name', 'start', and 'end' keys.
     """
-    
-    # 1. Extract raw text from the PDF
-    pdf_text = ""
+    empty_week = {str(i): [] for i in range(7)}
+
     try:
         with pdfplumber.open(file_path) as pdf:
-            # We can extract text directly instead of reading tables
+            # --- Attempt 1: structured table extraction ---
+            result = _try_table_extraction(pdf)
+            if result is not None:
+                return result
+
+            # --- Attempt 2: LLM-based extraction ---
+            pdf_text = ""
             for page in pdf.pages:
                 text = page.extract_text()
                 if text:
                     pdf_text += text + "\n"
-    except Exception as e:
-        print(f"Error reading PDF: {str(e)}")
-        raise
-        
-    if not pdf_text.strip():
-        return {str(i): [] for i in range(7)}
 
-    # 2. Extract using OpenAI
+            if not pdf_text.strip():
+                return empty_week
+
+            return _llm_extraction(pdf_text, week_start_date)
+
+    except Exception as e:
+        print(f"Error in parse_schedule_pdf: {e}")
+        return empty_week
+
+
+# ---------------------------------------------------------------------------
+#  Strategy 1 – Table-based extraction (grid PDFs)
+# ---------------------------------------------------------------------------
+
+def _try_table_extraction(pdf):
+    """
+    Attempt to parse a grid-style schedule PDF by extracting tables.
+
+    Returns a week dict if successful, or None if the PDF does not appear
+    to be a grid schedule.
+    """
+    weekly_shifts = {str(i): [] for i in range(7)}
+
+    # Gather every table from every page
+    all_tables = []
+    for page in pdf.pages:
+        tables = page.extract_tables()
+        if tables:
+            all_tables.extend(tables)
+
+    if not all_tables:
+        return None  # no tables → fall back to LLM
+
+    found_schedule_grid = False
+
+    for table in all_tables:
+        if not table or len(table) < 2:
+            continue
+
+        # ---- Detect the column layout ----
+        header = table[0]
+        if header is None:
+            continue
+
+        day_col_map = _detect_day_columns(header)
+        if not day_col_map:
+            continue  # not a schedule grid
+
+        found_schedule_grid = True
+        name_col = 0  # employee name is always the first column
+
+        # ---- Walk data rows ----
+        for row in table[1:]:
+            if not row:
+                continue
+
+            # Extract and clean the employee name
+            raw_name = row[name_col] if name_col < len(row) else None
+            if not raw_name:
+                continue
+            name = _clean_name(raw_name)
+            if not name:
+                continue
+
+            # Extract shifts for each mapped day column
+            for day_idx, col_idx in day_col_map.items():
+                if col_idx >= len(row):
+                    continue
+                cell = row[col_idx]
+                if not cell or not cell.strip():
+                    continue
+
+                shifts = _parse_cell_shifts(cell)
+                for start, end in shifts:
+                    start_n = normalize_time(start) or start
+                    end_n = normalize_time(end) or end
+                    weekly_shifts[str(day_idx)].append({
+                        'name': name,
+                        'start': start_n,
+                        'end': end_n,
+                    })
+
+    return weekly_shifts if found_schedule_grid else None
+
+
+def _detect_day_columns(header_row):
+    """
+    Scan a table header row to find which column indices correspond to
+    which day of the week (0=Sun … 6=Sat).
+
+    Returns dict  {day_index: col_index}  or empty dict if not a schedule.
+    """
+    mapping = {}
+    for col_idx, cell in enumerate(header_row):
+        if not cell:
+            continue
+        cell_upper = cell.upper()
+        for day_idx, day_name in enumerate(DAY_NAMES):
+            if day_name.upper() in cell_upper:
+                mapping[day_idx] = col_idx
+                break
+    return mapping
+
+
+def _clean_name(raw):
+    """
+    Clean an employee name cell: collapse newlines, strip tags like
+    'Total', 'Day', 'Training', etc.
+    """
+    # Collapse newlines into a single space
+    name = re.sub(r'\s+', ' ', raw).strip()
+
+    # Remove trailing / leading noise tokens
+    noise = ['Total', 'Day', 'Training', 'Leadership']
+    for n in noise:
+        name = re.sub(rf'\b{n}\b', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s+', ' ', name).strip()
+
+    # If the name is empty or just a number, skip
+    if not name or name.replace(' ', '').isdigit():
+        return None
+    return name
+
+
+def _parse_cell_shifts(cell_text):
+    """
+    Parse one or more 'start - end' time ranges from a table cell.
+    Handles newlines, 'Leadership' prefixes, '[Shift Released]' tags, etc.
+
+    Returns list of (start, end) tuples.
+    """
+    # Flatten and clean
+    text = cell_text.replace('\n', ' ').strip()
+
+    # Remove tags like [Shift Released] or Leadership prefix
+    text = re.sub(r'\[.*?\]', '', text)
+    text = re.sub(r'(?i)\bleadership\b', '', text).strip()
+
+    # Match patterns like  "4:15 PM - 9:00 PM"
+    pattern = r'(\d{1,2}:\d{2}\s*[APap][Mm])\s*-\s*(\d{1,2}:\d{2}\s*[APap][Mm])'
+    return re.findall(pattern, text)
+
+
+# ---------------------------------------------------------------------------
+#  Strategy 2 – LLM-based extraction (free-form PDFs)
+# ---------------------------------------------------------------------------
+
+def _llm_extraction(pdf_text, week_start_date):
+    """
+    Send the raw PDF text to OpenAI gpt-4o-mini and ask it to return
+    a structured week of shifts.
+    """
+    empty_week = {str(i): [] for i in range(7)}
+
     api_key = current_app.config.get('OPENAI_API_KEY')
     if not api_key:
-        print("Warning: OPENAI_API_KEY is not configured. Cannot process flexible schedules.")
-        return {str(i): [] for i in range(7)}
-        
+        print("Warning: OPENAI_API_KEY is not configured.")
+        return empty_week
+
     client = OpenAI(api_key=api_key)
-    
+
     prompt = f"""
 You are an AI assistant designed to extract work schedules from raw text parsed from a PDF.
 
@@ -68,7 +222,7 @@ If a day has no shifts, return an empty array for that day's integer key.
 {pdf_text}
 --- END OF PDF TEXT ---
     """
-    
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -76,19 +230,16 @@ If a day has no shifts, return an empty array for that day's integer key.
                 {"role": "system", "content": "You are a helpful data extraction assistant that outputs strictly structured JSON mapping days 0-6 to arrays of shifts."},
                 {"role": "user", "content": prompt}
             ],
-            response_format={ "type": "json_object" }
+            response_format={"type": "json_object"}
         )
         content = response.choices[0].message.content
         data = json.loads(content)
-        
-        # 3. Clean and deduplicate the extracted data for ALL 7 days
+
         weekly_shifts = {str(i): [] for i in range(7)}
-        
         for day_str in weekly_shifts.keys():
             shifts = data.get(day_str, [])
             if not isinstance(shifts, list):
                 shifts = []
-                
             unique = []
             seen = set()
             for shift in shifts:
@@ -97,11 +248,8 @@ If a day has no shifts, return an empty array for that day's integer key.
                 end = shift.get('end')
                 if not name or not start or not end:
                     continue
-                    
-                # Use fallback regex normalizer just to ensure exact format compliance
                 start_norm = normalize_time(start) or start
                 end_norm = normalize_time(end) or end
-                
                 key = (name, start_norm, end_norm)
                 if key not in seen:
                     seen.add(key)
@@ -111,13 +259,16 @@ If a day has no shifts, return an empty array for that day's integer key.
                         'end': end_norm
                     })
             weekly_shifts[day_str] = unique
-            
         return weekly_shifts
 
     except Exception as e:
         print(f"Error querying OpenAI for schedule extraction: {e}")
-        return {str(i): [] for i in range(7)}
+        return empty_week
 
+
+# ---------------------------------------------------------------------------
+#  Helpers
+# ---------------------------------------------------------------------------
 
 def normalize_time(time_str):
     """
