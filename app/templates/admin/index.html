@@ -89,6 +89,7 @@
                     <td>{{ r.size or '—' }}</td>
                     <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
                     <td class="actions-cell">
+                        <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org" title="Create org from this signup"><i class="fa-solid fa-building"></i> Create org</a>
                         <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Gmail"><i class="fa-solid fa-envelope"></i> Email</a>
                         <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
                     </td>
@@ -112,6 +113,7 @@
                 <div class="card-row">{{ r.business or '—' }}{% if r.location_identifier %} · {{ r.location_identifier }}{% endif %}</div>
                 {% if r.plan %}<div class="card-row"><span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span></div>{% endif %}
                 <div class="card-row card-actions">
+                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org"><i class="fa-solid fa-building"></i> Create org</a>
                     <a href="{{ gmail_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
                     <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"><i class="fa-solid fa-copy"></i> Copy</button>
                     <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
@@ -229,6 +231,8 @@
 .actions-cell { white-space: nowrap; }
 .btn-sm { padding: 6px 12px; font-size: 12px; }
 /* Email/Copy links: force visible text (override table link color) */
+a.btn-create-org { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; background: #0f766e; color: #fff !important; }
+a.btn-create-org:hover { background: #0d9488; color: #fff !important; }
 a.btn-email, a.btn-email:hover { background: var(--primary); color: #fff !important; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 .btn-email { background: var(--primary); color: #fff !important; }
 .btn-copy { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }

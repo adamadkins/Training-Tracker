@@ -4,6 +4,41 @@
     <div class="page-header">
         <a href="{{ url_for('admin.organizations_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Organizations</a>
     </div>
+
+    {% if signup_requests %}
+    <div class="signup-card">
+        <h2 class="signup-section-title"><i class="fa-solid fa-list"></i> From signup request</h2>
+        <p class="signup-section-desc">Copy or use the business name and store/location as subdomain.</p>
+        <div class="signup-list">
+            {% for r in signup_requests %}
+            <div class="signup-row" data-business="{{ (r.business or '')|e }}" data-location="{{ (r.location_identifier or '')|e }}">
+                <div class="signup-row-main">
+                    <div class="signup-field">
+                        <span class="signup-label">Organization name</span>
+                        <span class="signup-value signup-value-name">{{ r.business or '—' }}</span>
+                        <div class="signup-actions">
+                            <button type="button" class="btn-signup-copy" data-copy="{{ (r.business or '')|e }}" title="Copy name"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button type="button" class="btn-signup-use-name" data-name="{{ (r.business or '')|e }}" title="Use as org name">Use</button>
+                        </div>
+                    </div>
+                    <div class="signup-field">
+                        <span class="signup-label">Store / location</span>
+                        <span class="signup-value signup-value-location">{{ r.location_identifier or '—' }}</span>
+                        <div class="signup-actions">
+                            <button type="button" class="btn-signup-copy" data-copy="{{ (r.location_identifier or '')|e }}" title="Copy store/location"><i class="fa-solid fa-copy"></i> Copy</button>
+                            <button type="button" class="btn-signup-use-subdomain" data-location="{{ (r.location_identifier or '')|e }}" data-business="{{ (r.business or '')|e }}" title="Use as subdomain">Use as subdomain</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="signup-row-meta">
+                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn-fill-both" title="Fill form with this signup"><i class="fa-solid fa-arrow-right-to-bracket"></i> Fill form</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="form-card">
         <h1 class="page-title">Create organization</h1>
         <form method="post" class="admin-form">
@@ -23,10 +58,27 @@
     </div>
 </div>
 <style>
-.admin-page { max-width: 480px; }
+.admin-page { max-width: 640px; }
 .page-header { margin-bottom: 20px; }
 .back-link { color: var(--text-muted); font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
 .back-link:hover { color: var(--primary); }
+
+.signup-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
+.signup-section-title { font-size: 18px; font-weight: 800; margin: 0 0 6px 0; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.signup-section-desc { font-size: 13px; color: var(--text-muted); margin: 0 0 16px 0; }
+.signup-list { display: flex; flex-direction: column; gap: 16px; max-height: 320px; overflow-y: auto; }
+.signup-row { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--bg-body); }
+.signup-row-main { display: flex; flex-direction: column; gap: 10px; }
+.signup-field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.signup-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; }
+.signup-value { font-size: 15px; font-weight: 600; color: var(--text-main); }
+.signup-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.btn-signup-copy, .btn-signup-use-name, .btn-signup-use-subdomain { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); cursor: pointer; }
+.btn-signup-copy:hover, .btn-signup-use-name:hover, .btn-signup-use-subdomain:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-fill-both { font-size: 12px; font-weight: 600; color: var(--primary); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-fill-both:hover { text-decoration: underline; }
+.signup-row-meta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+
 .form-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
 .page-title { font-size: 24px; font-weight: 800; margin: 0 0 24px 0; color: var(--text-main); }
 .admin-form { display: flex; flex-direction: column; gap: 16px; }
@@ -41,15 +93,48 @@
 @media (max-width: 768px) {
     .admin-page { max-width: 100%; padding: 0 4px; }
     .back-link { min-height: 44px; align-items: center; display: inline-flex; }
-    .form-card { padding: 20px; }
+    .signup-card, .form-card { padding: 20px; }
+    .signup-value { font-size: 14px; }
     .admin-form input, .admin-form select { min-height: 44px; font-size: 16px; }
     .btn { min-height: 44px; width: 100%; justify-content: center; }
 }
 </style>
 <script>
-document.getElementById('subdomain').addEventListener('input', function() {
-    var v = this.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '') || 'subdomain';
-    document.getElementById('subdomain-preview').textContent = v;
-});
+(function() {
+    function slugify(s) {
+        if (!s || typeof s !== 'string') return '';
+        return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+    function updatePreview() {
+        var v = document.getElementById('subdomain').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '') || 'subdomain';
+        document.getElementById('subdomain-preview').textContent = v;
+    }
+    document.getElementById('subdomain').addEventListener('input', updatePreview);
+    updatePreview();
+
+    document.querySelectorAll('.btn-signup-copy').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var text = this.getAttribute('data-copy') || '';
+            if (text && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() { btn.textContent = 'Copied!'; setTimeout(function() { btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy'; }, 1500); });
+            }
+        });
+    });
+    document.querySelectorAll('.btn-signup-use-name').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var name = this.getAttribute('data-name') || '';
+            document.getElementById('name').value = name;
+        });
+    });
+    document.querySelectorAll('.btn-signup-use-subdomain').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var location = this.getAttribute('data-location') || '';
+            var business = this.getAttribute('data-business') || '';
+            var sub = slugify(location) || slugify(business);
+            if (sub) document.getElementById('subdomain').value = sub;
+            updatePreview();
+        });
+    });
+})();
 </script>
 {% endblock %}

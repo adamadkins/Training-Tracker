@@ -291,24 +291,34 @@ def organization_detail(org_id):
     )
 
 
+def _subdomain_slug(s):
+    """Slugify a string for use as subdomain (e.g. 'Store #4521' -> 'store-4521')."""
+    if not s or not isinstance(s, str):
+        return ""
+    raw = "".join(c if c.isalnum() or c == "-" else "-" for c in s.strip().lower())
+    return "-".join(p for p in raw.split("-") if p).strip("-") or ""
+
+
 @admin_bp.route("/organizations/new", methods=["GET", "POST"])
 def organization_create():
     """Create a new organization (name + subdomain) and default SystemSettings."""
+    signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(25).all()
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         subdomain = (request.form.get("subdomain") or "").strip().lower()
+        trial_plan_param = request.form.get("trial_plan")
         if not name or not subdomain:
             flash("Name and subdomain are required.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
         # Normalize subdomain: alphanumeric + hyphen
         subdomain = "".join(c for c in subdomain if c.isalnum() or c == "-").strip("-") or subdomain
         if not subdomain:
             flash("Subdomain must contain at least one letter or number.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
         existing = Organization.query.filter_by(subdomain=subdomain).first()
         if existing:
             flash(f"Subdomain '{subdomain}' is already in use.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=request.form.get("trial_plan"))
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
         trial_plan = (request.form.get("trial_plan") or "standard").strip().lower()
         if trial_plan not in ("standard", "pro"):
             trial_plan = "standard"
@@ -331,7 +341,22 @@ def organization_create():
         base_domain = host[4:] if host.startswith("www.") else host
         flash(f"Organization '{org.name}' created with 14-day {trial_plan.capitalize()} trial. Users can sign in at {subdomain}.{base_domain}.", "success")
         return redirect(url_for("admin.organization_detail", org_id=org.id))
-    return render_template("admin/organization_form.html")
+    # GET: optionally pre-fill from signup request
+    prefilled_signup = None
+    from_id = request.args.get("from")
+    if from_id:
+        try:
+            prefilled_signup = SignupRequest.query.get(int(from_id))
+        except (TypeError, ValueError):
+            pass
+    return render_template(
+        "admin/organization_form.html",
+        name=prefilled_signup.business.strip() if prefilled_signup else "",
+        subdomain=_subdomain_slug(prefilled_signup.location_identifier or prefilled_signup.business) if prefilled_signup else "",
+        trial_plan=prefilled_signup.plan or "standard" if prefilled_signup else "standard",
+        signup_requests=signup_requests,
+        prefilled_signup=prefilled_signup,
+    )
 
 
 @admin_bp.route("/organizations/<int:org_id>/suspend", methods=["POST"])
