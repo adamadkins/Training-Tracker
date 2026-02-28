@@ -199,6 +199,19 @@
             /* No transition — instant background prevents white flash on iOS page nav */
             /* Bottom padding for tab bar + safe area */
             padding-bottom: calc(var(--tab-bar-height) + var(--sab));
+            /* Native app feel: disable text selection, callout, and tap highlight */
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Allow selection in actual content areas where users need to copy text */
+        input, textarea, [contenteditable],
+        .selectable, td, th, p, li, dd, dt,
+        pre, code, blockquote {
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         /* Dark mode harmonization (only where needed — not blanket !important) */
@@ -603,14 +616,23 @@
         }
 
         #page-transition-overlay {
-            display: none;
             position: fixed;
             inset: 0;
             z-index: 9999;
+            background: var(--bg-body);
+            display: none;
             align-items: center;
             justify-content: center;
             flex-direction: column;
             gap: 16px;
+        }
+        #page-transition-overlay.active {
+            display: flex;
+        }
+
+        /* Disable long-press context menu / link preview on links (native feel) */
+        a {
+            -webkit-touch-callout: none;
         }
 
         #ptr-spinner {
@@ -1226,6 +1248,74 @@
         {% endif %}
     });
     </script>
+
+    <!-- Page transition overlay: covers screen during navigation to prevent flash -->
+    <script>
+    (function() {
+        var overlay = document.getElementById('page-transition-overlay');
+        if (!overlay) return;
+
+        // Show overlay before any same-origin navigation
+        function showOverlay() {
+            overlay.classList.add('active');
+        }
+
+        // Intercept all link clicks
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('a[href]');
+            if (!link) return;
+            var href = link.getAttribute('href');
+            if (!href) return;
+            // Skip anchors, javascript: links, external links, new-tab links, and download links
+            if (href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+            if (link.target === '_blank' || link.hasAttribute('download')) return;
+            // Skip external links
+            try {
+                var url = new URL(href, window.location.origin);
+                if (url.origin !== window.location.origin) return;
+            } catch(err) { return; }
+            // Show overlay immediately; the browser will navigate away naturally
+            showOverlay();
+        }, true);
+
+        // Intercept form submissions (they also navigate)
+        document.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (!form || form.getAttribute('data-ajax') === 'true') return;
+            var action = form.getAttribute('action') || '';
+            // Only for same-origin form posts
+            if (action && action.indexOf('http') === 0) {
+                try {
+                    var url = new URL(action);
+                    if (url.origin !== window.location.origin) return;
+                } catch(err) { return; }
+            }
+            showOverlay();
+        }, true);
+
+        // Also show overlay when swipe/tab navigation triggers window.location changes
+        var origAssign = window.location.assign;
+        if (origAssign) {
+            window.location.assign = function(url) {
+                showOverlay();
+                return origAssign.call(window.location, url);
+            };
+        }
+
+        // Hide overlay if user navigates back (bfcache / page show)
+        window.addEventListener('pageshow', function(e) {
+            overlay.classList.remove('active');
+        });
+
+        // Prevent long-press context menu on links for native app feel
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.closest('a')) {
+                e.preventDefault();
+            }
+        });
+    })();
+    </script>
+
     {% if current_user.is_authenticated and not current_user.has_seen_tutorial and request.endpoint !=
     'manager.setup_wizard' %}
     {% include 'tutorial_overlay.html' %}
@@ -1411,11 +1501,14 @@
                     var activeIndex = tabs.findIndex(function (tab) { return tab.classList.contains('active'); });
                     if (activeIndex === -1) return;
 
+                    var ov = document.getElementById('page-transition-overlay');
                     if (dx < 0 && activeIndex < tabs.length - 1) {
                         // Swipe left -> Next tab
+                        if (ov) ov.classList.add('active');
                         window.location.href = tabs[activeIndex + 1].href;
                     } else if (dx > 0 && activeIndex > 0) {
                         // Swipe right -> Previous tab
+                        if (ov) ov.classList.add('active');
                         window.location.href = tabs[activeIndex - 1].href;
                     }
                 }
