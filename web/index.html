@@ -66,9 +66,31 @@
       border: none;
     }
     .hidden { display: none !important; }
+
+    /* Transition overlay: sits ABOVE the iframe so it persists during page navigation */
+    #nav-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      /* Fade-out only; show is instant via the .active rule below */
+      transition: opacity 0.15s ease-out;
+      background: #f8fafc;
+    }
+    #nav-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+      transition: none; /* instant show — no fade-in delay */
+    }
+    @media (prefers-color-scheme: dark) {
+      #nav-overlay { background: #0b0f1a; }
+    }
   </style>
 </head>
 <body>
+  <!-- Overlay lives OUTSIDE the iframe — survives iframe page navigations -->
+  <div id="nav-overlay"></div>
   <div class="container">
     <!-- Company picker (when no company or user chose "Go back and enter a different company") -->
     <div class="form-wrap" id="form-wrap">
@@ -181,10 +203,39 @@
 
     // When login page (or site) sends "Go back and enter a different company", iframe loads leave_company which posts this
     window.addEventListener('message', function(e) {
-      if (e.data && e.data.type === 'TrainingTrackerShowCompanyPicker') {
+      if (!e.data || !e.data.type) return;
+      if (e.data.type === 'TrainingTrackerShowCompanyPicker') {
         localStorage.removeItem(STORAGE_KEY);
         showForm();
       }
+    });
+
+    // ── Navigation overlay: hides iframe flash during page transitions ──
+    var navOverlay = document.getElementById('nav-overlay');
+    var navOverlayTimer = null;
+
+    window.addEventListener('message', function(e) {
+      if (!e.data || !e.data.type) return;
+
+      if (e.data.type === 'TTNavStart') {
+        // Iframe is about to navigate — show overlay instantly
+        if (navOverlayTimer) { clearTimeout(navOverlayTimer); navOverlayTimer = null; }
+        navOverlay.classList.add('active');
+      }
+
+      if (e.data.type === 'TTNavReady') {
+        // New page in iframe has painted — hide overlay
+        navOverlay.classList.remove('active');
+      }
+    });
+
+    // Safety: if iframe loads but forgets to send TTNavReady (e.g. external page),
+    // auto-hide overlay after 3s
+    appFrame.addEventListener('load', function() {
+      if (navOverlayTimer) clearTimeout(navOverlayTimer);
+      navOverlayTimer = setTimeout(function() {
+        navOverlay.classList.remove('active');
+      }, 3000);
     });
   </script>
 </body>

@@ -1249,15 +1249,19 @@
     });
     </script>
 
-    <!-- Page transition overlay: covers screen during navigation to prevent flash -->
+    <!-- Page transition: tell parent shell to show/hide overlay across iframe navigations -->
     <script>
     (function() {
+        var inIframe = (window !== window.parent);
         var overlay = document.getElementById('page-transition-overlay');
-        if (!overlay) return;
 
-        // Show overlay before any same-origin navigation
-        function showOverlay() {
-            overlay.classList.add('active');
+        // Tell parent shell to show its overlay (survives iframe navigation)
+        function notifyNavStart() {
+            if (inIframe) {
+                try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch(e) {}
+            }
+            // Also show local overlay as a fallback (helps if not in iframe)
+            if (overlay) overlay.classList.add('active');
         }
 
         // Intercept all link clicks
@@ -1266,7 +1270,7 @@
             if (!link) return;
             var href = link.getAttribute('href');
             if (!href) return;
-            // Skip anchors, javascript: links, external links, new-tab links, and download links
+            // Skip anchors, javascript: links, new-tab links, and download links
             if (href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
             if (link.target === '_blank' || link.hasAttribute('download')) return;
             // Skip external links
@@ -1274,8 +1278,7 @@
                 var url = new URL(href, window.location.origin);
                 if (url.origin !== window.location.origin) return;
             } catch(err) { return; }
-            // Show overlay immediately; the browser will navigate away naturally
-            showOverlay();
+            notifyNavStart();
         }, true);
 
         // Intercept form submissions (they also navigate)
@@ -1283,28 +1286,41 @@
             var form = e.target;
             if (!form || form.getAttribute('data-ajax') === 'true') return;
             var action = form.getAttribute('action') || '';
-            // Only for same-origin form posts
             if (action && action.indexOf('http') === 0) {
                 try {
                     var url = new URL(action);
                     if (url.origin !== window.location.origin) return;
                 } catch(err) { return; }
             }
-            showOverlay();
+            notifyNavStart();
         }, true);
 
-        // Also show overlay when swipe/tab navigation triggers window.location changes
-        var origAssign = window.location.assign;
-        if (origAssign) {
-            window.location.assign = function(url) {
-                showOverlay();
-                return origAssign.call(window.location, url);
-            };
+        // Tell parent this page is ready — hide the overlay
+        // Use requestAnimationFrame to wait until browser has actually painted
+        function notifyReady() {
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    if (inIframe) {
+                        try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch(e) {}
+                    }
+                    if (overlay) overlay.classList.remove('active');
+                });
+            });
         }
 
-        // Hide overlay if user navigates back (bfcache / page show)
-        window.addEventListener('pageshow', function(e) {
-            overlay.classList.remove('active');
+        // Fire ready on DOMContentLoaded (page structure is rendered)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', notifyReady);
+        } else {
+            notifyReady();
+        }
+
+        // Also hide on pageshow (back/forward cache)
+        window.addEventListener('pageshow', function() {
+            if (inIframe) {
+                try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch(e) {}
+            }
+            if (overlay) overlay.classList.remove('active');
         });
 
         // Prevent long-press context menu on links for native app feel
@@ -1502,14 +1518,15 @@
                     if (activeIndex === -1) return;
 
                     var ov = document.getElementById('page-transition-overlay');
+                    function swipeNav(href) {
+                        if (ov) ov.classList.add('active');
+                        try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch(e) {}
+                        window.location.href = href;
+                    }
                     if (dx < 0 && activeIndex < tabs.length - 1) {
-                        // Swipe left -> Next tab
-                        if (ov) ov.classList.add('active');
-                        window.location.href = tabs[activeIndex + 1].href;
+                        swipeNav(tabs[activeIndex + 1].href);
                     } else if (dx > 0 && activeIndex > 0) {
-                        // Swipe right -> Previous tab
-                        if (ov) ov.classList.add('active');
-                        window.location.href = tabs[activeIndex - 1].href;
+                        swipeNav(tabs[activeIndex - 1].href);
                     }
                 }
             }
