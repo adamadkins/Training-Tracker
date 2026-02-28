@@ -39,6 +39,7 @@ def create_app():
     from app.routes.guest import guest_bp
     from app.routes.admin import admin_bp
     from app.routes.billing import billing_bp
+    from app.routes.api import api_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(billing_bp)
@@ -48,6 +49,7 @@ def create_app():
     app.register_blueprint(messages_bp)
     app.register_blueprint(legacy_bp)
     app.register_blueprint(guest_bp)
+    app.register_blueprint(api_bp)
 
     # 5. Resolve tenant from subdomain (before any tenant-scoped logic)
     @app.before_request
@@ -212,6 +214,7 @@ def create_app():
         if request.endpoint and (
             request.endpoint.startswith('static') or
             request.endpoint.startswith('guest.') or
+            request.endpoint.startswith('api.') or
             request.endpoint in ('auth.login', 'auth.logout',
                                  'auth.forgot_password', 'auth.reset_token',
                                  'auth.enter_support', 'auth.spectator_entry', 'auth.exit_support')

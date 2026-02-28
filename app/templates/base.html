@@ -106,6 +106,7 @@
             --input-bg: #1f2937;
         }
 
+<<<<<<< HEAD
         @media (prefers-color-scheme: light) {
             :root {
                 color-scheme: dark;
@@ -120,6 +121,11 @@
             }
         }
         {% elif theme_pref == 'light' %}
+=======
+            {
+            % elif theme_pref=='light' %
+        }
+>>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
 
         /* Force light mode — override system dark preference entirely */
         :root {
@@ -132,6 +138,8 @@
             --header-bg: #ffffff;
             --shadow: rgba(0, 0, 0, 0.04);
             --input-bg: #ffffff;
+<<<<<<< HEAD
+=======
         }
 
         @media (prefers-color-scheme: dark) {
@@ -147,10 +155,32 @@
                 --input-bg: #ffffff !important;
             }
         }
+
+            {
+            % elif theme_pref=='system' %
+>>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+<<<<<<< HEAD
+                color-scheme: light;
+                --bg-body: #f8fafc !important;
+                --bg-card: #ffffff !important;
+                --text-main: #1e293b !important;
+                --text-muted: #64748b !important;
+                --border: #e2e8f0 !important;
+                --header-bg: #ffffff !important;
+                --shadow: rgba(0, 0, 0, 0.04) !important;
+                --input-bg: #ffffff !important;
+            }
+        }
         {% elif theme_pref == 'system' %}
 
         @media (prefers-color-scheme: dark) {
             :root {
+=======
+>>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
                 color-scheme: dark;
                 --bg-body: #0b0f1a;
                 --bg-card: #161e2e;
