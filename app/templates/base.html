@@ -180,8 +180,14 @@
         }
         {% endif %}
 
+        /* Hide scrollbar in Capacitor app for native feel */
         html {
             background-color: var(--bg-body);
+            scrollbar-width: none;           /* Firefox */
+            -ms-overflow-style: none;        /* IE/Edge */
+        }
+        html::-webkit-scrollbar {
+            display: none;                   /* Chrome, Safari, WebView */
         }
 
         body {

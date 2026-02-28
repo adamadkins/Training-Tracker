@@ -7,8 +7,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Match dark theme background on the window to prevent white flash
-        window?.backgroundColor = UIColor(red: 0.043, green: 0.059, blue: 0.102, alpha: 1.0)
+        // Theme-aware window background to prevent flash between pages
+        window?.backgroundColor = UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 0.043, green: 0.059, blue: 0.102, alpha: 1.0)   // #0b0f1a
+                : UIColor(red: 0.973, green: 0.980, blue: 0.988, alpha: 1.0)   // #f8fafc
+        }
         return true
     }
 
