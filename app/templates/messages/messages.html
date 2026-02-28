@@ -34,6 +34,7 @@
         background: var(--bg-body);
         z-index: 200;
         /* Push content below Dynamic Island / notch on iPhone */
+        padding-top: constant(safe-area-inset-top);
         padding-top: env(safe-area-inset-top, 0px);
     }
 
@@ -91,6 +92,7 @@
         left: 0;
         right: 0;
         /* Account for iPhone home indicator */
+        padding-bottom: constant(safe-area-inset-bottom);
         padding-bottom: env(safe-area-inset-bottom, 0px);
         background: #1a1d21;
         border-top: 1px solid #2d2d2d;
@@ -168,6 +170,8 @@
 
     .sidebar-brand {
         padding: 12px 14px;
+        padding-top: constant(safe-area-inset-top);
+        padding-top: max(12px, env(safe-area-inset-top, 0px));
         border-bottom: 1px solid #2d2d2d;
         display: flex;
         align-items: center;
@@ -364,8 +368,8 @@
 
     /* Channel header */
     .channel-header {
-        padding: max(10px, env(safe-area-inset-top)) 20px 10px;
-        min-height: calc(52px + env(safe-area-inset-top));
+        padding: 10px 20px;
+        min-height: 52px;
         border-bottom: 1px solid var(--border);
         background: var(--bg-card);
         display: flex;
@@ -1250,6 +1254,8 @@
 
         .channel-header {
             padding: 12px 14px;
+            padding-top: constant(safe-area-inset-top);
+            padding-top: max(12px, env(safe-area-inset-top, 0px));
             min-height: 56px;
         }
 
@@ -1327,7 +1333,10 @@
 
         /* ── Bigger input — clear safe areas ── */
         .msg-footer {
-            padding: 0 12px max(12px, env(safe-area-inset-bottom));
+            padding-left: 12px;
+            padding-right: 12px;
+            padding-bottom: constant(safe-area-inset-bottom);
+            padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
         }
 
         .msg-textarea {

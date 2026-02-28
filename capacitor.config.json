@@ -3,10 +3,10 @@
   "appName": "Training Tracker",
   "webDir": "web",
   "ios": {
-    "contentInset": "always",
+    "contentInset": "never",
     "allowsLinkPreview": false,
     "scrollEnabled": true,
-    "backgroundColor": "#f8fafc",
+    "backgroundColor": "#0b0f1a",
     "allowsBackForwardNavigationGestures": true
   },
   "android": {

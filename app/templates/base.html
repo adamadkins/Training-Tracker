@@ -64,10 +64,14 @@
             --header-bg: #ffffff;
             --shadow: rgba(0, 0, 0, 0.04);
             --input-bg: #ffffff;
-            /* Safe area insets for iPhone notch / home indicator */
+            /* Safe area insets for iPhone notch / Dynamic Island / home indicator */
+            --sat: constant(safe-area-inset-top);
             --sat: env(safe-area-inset-top, 0px);
+            --sab: constant(safe-area-inset-bottom);
             --sab: env(safe-area-inset-bottom, 0px);
+            --sal: constant(safe-area-inset-left);
             --sal: env(safe-area-inset-left, 0px);
+            --sar: constant(safe-area-inset-right);
             --sar: env(safe-area-inset-right, 0px);
             --tab-bar-height: 0px;
         }
