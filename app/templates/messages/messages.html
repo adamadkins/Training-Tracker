@@ -1178,9 +1178,11 @@
             display: none;
         }
 
-        /* ── Bigger sidebar elements ── */
+        /* ── Bigger sidebar elements (keep safe area so "Training Tracker" isn't cut by Dynamic Island) ── */
         .sidebar-brand {
             padding: 16px 18px;
+            padding-top: constant(safe-area-inset-top);
+            padding-top: max(16px, env(safe-area-inset-top, 0px));
         }
 
         .sidebar-brand-name {

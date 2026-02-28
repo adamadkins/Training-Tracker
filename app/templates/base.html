@@ -10,6 +10,9 @@
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
     {% if current_user.is_authenticated and current_user.settings %}
     {% set theme_pref = current_user.settings.theme_pref or 'system' %}
+    {% else %}
+    {% set theme_pref = 'system' %}
+    {% endif %}
     {% if theme_pref == 'light' %}
     <meta name="theme-color" content="#f8fafc">
     {% elif theme_pref == 'dark' %}
@@ -18,9 +21,13 @@
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
     {% endif %}
+    {# Critical: prevent white flash on navigation — first paint matches theme #}
+    {% if theme_pref == 'light' %}
+    <style>html,body{background-color:#f8fafc}</style>
+    {% elif theme_pref == 'dark' %}
+    <style>html,body{background-color:#0b0f1a}</style>
     {% else %}
-    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0b0f1a" media="(prefers-color-scheme: dark)">
+    <style>html,body{background-color:#0b0f1a}@media(prefers-color-scheme:light){html,body{background-color:#f8fafc}}</style>
     {% endif %}
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
