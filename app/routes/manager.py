@@ -2664,7 +2664,8 @@ def settings():
     if request.method == 'POST':
         user_settings.notify_email = 'notify_email' in request.form
         user_settings.notify_in_app = 'notify_in_app' in request.form
-        user_settings.theme_pref = request.form.get('theme_pref')
+        raw_theme = (request.form.get('theme_pref') or '').strip().lower()
+        user_settings.theme_pref = raw_theme if raw_theme in ('light', 'dark', 'system') else 'system'
         user_settings.show_online_status = 'show_online_status' in request.form
         user_settings.allow_read_receipts = 'allow_read_receipts' in request.form
         if current_user.role == 'manager':

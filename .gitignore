@@ -16,6 +16,7 @@ app/static/uploads/
 # Secrets (never commit)
 secrets/
 **/firebase-key.json
+deploy/deploy.config
 
 # Node / Capacitor
 node_modules/

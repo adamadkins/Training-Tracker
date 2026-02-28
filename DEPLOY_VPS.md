@@ -264,6 +264,20 @@ Follow the prompts (email, agree to terms). Certbot will adjust Nginx for HTTPS.
 
 ## Step 12: Deploy updates later (after you change code and push to GitHub)
 
+### Option A: Deploy from Windows in one command (SSH)
+
+From your repo (PowerShell), you can push and run the deploy on the server in one go:
+
+1. **Configure once** – set your server (pick one):
+   - **Env:** `$env:DEPLOY_HOST = "root@YOUR_SERVER_IP"`
+   - **Or** create `deploy/deploy.config` with a single line: `root@YOUR_SERVER_IP` (this file is gitignored)
+2. **Run:**  
+   `.\deploy\deploy-via-ssh.ps1`  
+   This pushes the current branch to GitHub, then SSHs into the server and runs `sudo ./deploy/deploy.sh` in `/opt/training-tracker`.  
+   Use `-NoPush` to skip the push and only run deploy on the server.
+
+### Option B: Manual push then SSH
+
 On your **local machine**, push changes to GitHub as usual. Then on the **server**, run:
 
 ```bash
