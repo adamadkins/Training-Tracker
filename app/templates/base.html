@@ -1338,61 +1338,65 @@
 
         // Swipe gestures between bottom tabs
         (function () {
-            if (window.innerWidth > 768) return; // Mobile only
+            // Re-check width on use, not just at init time (avoids startup race)
             var touchStartX = 0;
             var touchEndX = 0;
             var touchStartY = 0;
             var touchEndY = 0;
             var startTime = 0;
-            var threshold = 60; // Minimum swipe distance
-            var restraint = 100; // Maximum vertical variance allowed
-            var maxTime = 300; // Maximum time allowed for swipe
+            var threshold = 40;   // Lower px threshold for easier triggering
+            var restraint = 120;  // Allow slightly more vertical variance
+            var maxTime = 500;    // 500ms — more generous for slower swipes
+
+            function isScrollableTarget(e) {
+                return e.target.closest('.scroll-x') ||
+                    e.target.closest('.msg-viewport') ||
+                    e.target.closest('.sidebar-scroll') ||
+                    e.target.closest('.messages-scroll') ||
+                    e.target.closest('canvas') ||
+                    e.target.closest('input[type="range"]') ||
+                    e.target.closest('textarea') ||
+                    e.target.closest('input');
+            }
 
             document.body.addEventListener('touchstart', function (e) {
-                // Ignore horizontal swipes inside specific scrolling carousels or chat views
-                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
-                touchStartX = e.changedTouches[0].screenX;
-                touchStartY = e.changedTouches[0].screenY;
-                startTime = new Date().getTime();
+                if (isScrollableTarget(e)) return;
+                touchStartX = e.changedTouches[0].clientX;
+                touchStartY = e.changedTouches[0].clientY;
+                startTime = Date.now();
             }, { passive: true });
 
             document.body.addEventListener('touchmove', function (e) {
-                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
-
-                var currentX = e.changedTouches[0].screenX;
-                var currentY = e.changedTouches[0].screenY;
-
-                var dragDx = Math.abs(currentX - touchStartX);
-                var dragDy = Math.abs(currentY - touchStartY);
-
-                // If the user is dragging horizontally way more than vertically, prevent default iOS spring bounce
-                if (dragDx > dragDy && dragDx > 10) {
+                if (isScrollableTarget(e)) return;
+                var dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+                var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+                // Only prevent default when clearly a horizontal swipe (2:1 ratio)
+                if (dx > dy * 2 && dx > 8) {
                     if (e.cancelable) e.preventDefault();
                 }
             }, { passive: false });
 
             document.body.addEventListener('touchend', function (e) {
-                if (e.target.closest('.scroll-x') || e.target.closest('.msg-viewport') || e.target.closest('canvas') || e.target.closest('input[type="range"]')) return;
-
-                var touchObj = e.changedTouches[0];
-                touchEndX = touchObj.screenX;
-                touchEndY = touchObj.screenY;
-                var elapsedTime = new Date().getTime() - startTime;
-
-                // Only trigger if it was a quick swipe
-                if (elapsedTime <= maxTime) {
+                if (isScrollableTarget(e)) return;
+                touchEndX = e.changedTouches[0].clientX;
+                touchEndY = e.changedTouches[0].clientY;
+                var elapsed = Date.now() - startTime;
+                if (elapsed <= maxTime) {
                     handleSwipe();
                 }
             }, { passive: true });
 
             function handleSwipe() {
+                // Only activate on mobile widths
+                if (window.innerWidth > 900) return;
                 var dx = touchEndX - touchStartX;
                 var dy = touchEndY - touchStartY;
-
-                // Ensure it's mostly a horizontal swipe and fast enough
-                if (Math.abs(dx) >= threshold && Math.abs(dy) <= restraint) {
+                // Must be mostly horizontal and fast enough
+                if (Math.abs(dx) >= threshold && Math.abs(dy) <= restraint && Math.abs(dx) > Math.abs(dy) * 1.5) {
                     var tabsContainer = document.querySelector('.bottom-tab-bar .tab-bar-inner');
-                    if (!tabsContainer || window.getComputedStyle(tabsContainer.parentElement).display === 'none') return;
+                    if (!tabsContainer) return;
+                    var tabBar = tabsContainer.parentElement;
+                    if (!tabBar || window.getComputedStyle(tabBar).display === 'none') return;
 
                     var tabs = Array.from(tabsContainer.querySelectorAll('a.tab-item'));
                     var activeIndex = tabs.findIndex(function (tab) { return tab.classList.contains('active'); });
@@ -1400,11 +1404,9 @@
 
                     if (dx < 0 && activeIndex < tabs.length - 1) {
                         // Swipe left -> Next tab
-                        showLoader();
                         window.location.href = tabs[activeIndex + 1].href;
                     } else if (dx > 0 && activeIndex > 0) {
                         // Swipe right -> Previous tab
-                        showLoader();
                         window.location.href = tabs[activeIndex - 1].href;
                     }
                 }

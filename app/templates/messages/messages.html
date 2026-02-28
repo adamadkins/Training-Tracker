@@ -33,6 +33,8 @@
         display: flex;
         background: var(--bg-body);
         z-index: 200;
+        /* Push content below Dynamic Island / notch on iPhone */
+        padding-top: env(safe-area-inset-top, 0px);
     }
 
     /* ═══════════════════════ FAR LEFT NAV STRIP ═══════════════════════ */
@@ -88,14 +90,18 @@
         bottom: 0;
         left: 0;
         right: 0;
-        height: 56px;
+        /* Account for iPhone home indicator */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         background: #1a1d21;
         border-top: 1px solid #2d2d2d;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 12px;
-        padding: 0 16px;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 10px;
+        min-height: 56px;
         z-index: 260;
     }
 
@@ -135,7 +141,8 @@
     /* When bottom bar is visible, add padding so content isn't hidden */
     @media (max-width: 768px) {
         .slack-wrapper:not(.has-conversation) {
-            padding-bottom: 56px;
+            /* 56px bar + safe area for home indicator */
+            padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         }
 
         .slack-wrapper.has-conversation .msg-bottom-bar {
