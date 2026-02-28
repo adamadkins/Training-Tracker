@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="background-color:#f8fafc">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <style>html,body{background-color:#f8fafc}</style>
     <title>Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.svg') }}">
@@ -86,7 +88,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            /* No transition on background: avoids flash/fade between page loads */
         }
 
         /* Dark mode harmonization (only where needed — not blanket !important) */
@@ -447,7 +449,7 @@
         main { flex: 1; }
     </style>
 </head>
-<body class="{% block body_class %}{% endblock %}{% if ios_app %} ios-app{% endif %}" data-app-version="{{ app_version }}" style="background-color:#f8fafc;">
+<body class="{% block body_class %}{% endblock %}{% if ios_app %} ios-app{% endif %}" data-app-version="{{ app_version }}">
 <div id="toast-container" class="toast-container"></div>
 
 {% if g.system_settings and not g.system_settings.dm_enabled and request.endpoint and 'messages' in request.endpoint %}
