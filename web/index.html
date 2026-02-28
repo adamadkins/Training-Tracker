@@ -6,7 +6,7 @@
   <title>Training Tracker</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, sans-serif; background: #0b0f1a; color: #f9fafb; }
     .container { display: flex; flex-direction: column; height: 100%; }
     .form-wrap {
       flex: 1;
@@ -17,22 +17,24 @@
       padding: 24px;
     }
     .form-card {
-      background: #fff;
+      background: #161e2e;
       padding: 28px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       width: 100%;
       max-width: 360px;
     }
-    .form-card h1 { font-size: 20px; margin-bottom: 8px; color: #0f172a; }
-    .form-card p { font-size: 14px; color: #64748b; margin-bottom: 20px; }
+    .form-card h1 { font-size: 20px; margin-bottom: 8px; color: #f9fafb; }
+    .form-card p { font-size: 14px; color: #9ca3af; margin-bottom: 20px; }
     .form-card input {
       width: 100%;
       padding: 12px 14px;
       font-size: 16px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #2d3748;
       border-radius: 8px;
       margin-bottom: 12px;
+      background: #1f2937;
+      color: #f9fafb;
     }
     .form-card input:focus { outline: none; border-color: #4f46e5; }
     .form-card button {
@@ -68,7 +70,7 @@
           <input type="text" id="subdomain" name="subdomain" placeholder="e.g. acme or mycompany" autocomplete="off" inputmode="text">
           <button type="submit">Go to sign in</button>
         </form>
-        <p style="margin-top:16px; font-size:13px; color:#64748b;">
+        <p style="margin-top:16px; font-size:13px; color:#9ca3af;">
           <a href="#" id="platform-admin-link" style="color:#4f46e5; font-weight:600;">Platform admin?</a> Sign in on the main site.
         </p>
       </div>

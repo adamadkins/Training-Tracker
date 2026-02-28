@@ -190,7 +190,7 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            /* No transition — instant background prevents white flash on iOS page nav */
             /* Bottom padding for tab bar + safe area */
             padding-bottom: calc(var(--tab-bar-height) + var(--sab));
         }

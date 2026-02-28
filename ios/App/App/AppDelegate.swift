@@ -7,7 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Match dark theme background on the window to prevent white flash
+        window?.backgroundColor = UIColor(red: 0.043, green: 0.059, blue: 0.102, alpha: 1.0)
         return true
     }
 
