@@ -14,5 +14,7 @@ set +a
 .venv/bin/flask db upgrade
 .venv/bin/python init_db.py
 systemctl restart training-tracker
+# Restart RQ worker if present (so it picks up new code for email tasks)
+systemctl restart training-tracker-worker 2>/dev/null || true
 chown -R www-data:www-data /opt/training-tracker
 echo "Deploy done. Check: systemctl status training-tracker"
