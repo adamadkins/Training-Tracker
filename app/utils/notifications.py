@@ -110,16 +110,13 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
         try:
             html_content = None
             try:
+                link_text = 'View details' if link_url else None
                 if category in ('password_reset', 'invite'):
-                    html_content = render_template(
-                        'email/simple_message.html',
-                        title=title, body=body, link_url=link_url,
-                    )
-                else:
-                    html_content = render_template(
-                        'email/notification.html',
-                        title=title, body=body, category=category, link_url=link_url,
-                    )
+                    link_text = None  # body contains the link
+                html_content = render_template(
+                    'email/simple_message.html',
+                    title=title, body=body, link_url=link_url, link_text=link_text,
+                )
             except Exception:
                 pass
             from sendgrid import SendGridAPIClient
@@ -155,19 +152,16 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
     use_tls = current_app.config.get('MAIL_USE_TLS', True)
 
     try:
+        link_text = 'View details' if link_url else None
         if category in ('password_reset', 'invite'):
-            html_content = render_template(
-                'email/simple_message.html',
-                title=title, body=body, link_url=link_url,
-            )
-        else:
-            html_content = render_template(
-                'email/notification.html',
-                title=title,
-                body=body,
-                category=category,
-                link_url=link_url,
-            )
+            link_text = None
+        html_content = render_template(
+            'email/simple_message.html',
+            title=title,
+            body=body,
+            link_url=link_url,
+            link_text=link_text,
+        )
     except Exception:
         html_content = None
 

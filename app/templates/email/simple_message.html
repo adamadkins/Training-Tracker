@@ -39,13 +39,13 @@
         </td>
     </tr>
 
-    <!-- CTA Button (if link in body, we don't add a second button; body already contains the URL) -->
+    <!-- CTA Button -->
     {% if link_url %}
     <tr>
         <td style="padding:32px 40px 0;">
             <table role="presentation" cellpadding="0" cellspacing="0">
             <tr><td style="background:#4f46e5; border-radius:10px;">
-                <a href="{{ link_url }}" target="_blank" style="display:inline-block; padding:14px 32px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; letter-spacing:0.02em;">Set your password</a>
+                <a href="{{ link_url }}" target="_blank" style="display:inline-block; padding:14px 32px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; letter-spacing:0.02em;">{{ link_text or 'View details' }}</a>
             </td></tr>
             </table>
         </td>
