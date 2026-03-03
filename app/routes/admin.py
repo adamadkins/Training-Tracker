@@ -342,40 +342,46 @@ def organization_create():
             trial_plan = "standard"
         now = datetime.now(timezone.utc)
         trial_ends_at = now + timedelta(days=14)
-        org = Organization(
-            name=name,
-            subdomain=subdomain,
-            status="active",
-            trial_ends_at=trial_ends_at,
-            trial_plan=trial_plan,
-            billing_plan=trial_plan,
-        )
-        db.session.add(org)
-        db.session.flush()
-        settings = SystemSettings(organization_id=org.id)
-        db.session.add(settings)
-        emp = Employee(
-            organization_id=org.id,
-            first_name=manager_first_name,
-            last_name=manager_last_name,
-            role="manager",
-            status="active",
-        )
-        db.session.add(emp)
-        db.session.flush()
-        user = User(email=manager_email, role="manager", employee_id=emp.id, organization_id=org.id)
-        db.session.add(user)
-        db.session.commit()
-        # Send invite email (set-password link)
         try:
-            from app.routes.manager import send_invite_email
-            send_invite_email(user)
-        except Exception:
-            pass
-        host = request.host.split(":")[0]
-        base_domain = host[4:] if host.startswith("www.") else host
-        flash(f"Organization '{org.name}' created. Invite sent to {manager_email} — they can set their password and sign in at {subdomain}.{base_domain}.", "success")
-        return redirect(url_for("admin.organization_detail", org_id=org.id))
+            org = Organization(
+                name=name,
+                subdomain=subdomain,
+                status="active",
+                trial_ends_at=trial_ends_at,
+                trial_plan=trial_plan,
+                billing_plan=trial_plan,
+            )
+            db.session.add(org)
+            db.session.flush()
+            settings = SystemSettings(organization_id=org.id)
+            db.session.add(settings)
+            emp = Employee(
+                organization_id=org.id,
+                first_name=manager_first_name,
+                last_name=manager_last_name,
+                role="manager",
+                status="active",
+            )
+            db.session.add(emp)
+            db.session.flush()
+            user = User(email=manager_email, role="manager", employee_id=emp.id, organization_id=org.id)
+            db.session.add(user)
+            db.session.commit()
+            # Send invite email (set-password link)
+            try:
+                from app.routes.manager import send_invite_email
+                send_invite_email(user)
+            except Exception as e:
+                current_app.logger.warning("Invite email failed after org create: %s", e)
+            host = request.host.split(":")[0]
+            base_domain = host[4:] if host.startswith("www.") else host
+            flash(f"Organization '{org.name}' created. Invite sent to {manager_email} — they can set their password and sign in at {subdomain}.{base_domain}.", "success")
+            return redirect(url_for("admin.organization_detail", org_id=org.id))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception("Organization create failed: %s", e)
+            flash(f"Could not create organization: {e}", "error")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
     # GET: optionally pre-fill from signup request
     prefilled_signup = None
     from_id = request.args.get("from")
@@ -392,9 +398,9 @@ def organization_create():
         manager_first_name, manager_last_name = _split_name(prefilled_signup.name)
     return render_template(
         "admin/organization_form.html",
-        name=prefilled_signup.business.strip() if prefilled_signup else "",
-        subdomain=_subdomain_slug(prefilled_signup.location_identifier or prefilled_signup.business) if prefilled_signup else "",
-        trial_plan=prefilled_signup.plan or "standard" if prefilled_signup else "standard",
+        name=(prefilled_signup.business or "").strip() if prefilled_signup else "",
+        subdomain=_subdomain_slug((prefilled_signup.location_identifier or prefilled_signup.business or "") if prefilled_signup else "") if prefilled_signup else "",
+        trial_plan=(prefilled_signup.plan or "standard") if prefilled_signup else "standard",
         manager_email=manager_email,
         manager_first_name=manager_first_name,
         manager_last_name=manager_last_name,
