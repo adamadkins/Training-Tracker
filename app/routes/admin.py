@@ -301,26 +301,42 @@ def _subdomain_slug(s):
     return "-".join(p for p in raw.split("-") if p).strip("-") or ""
 
 
+def _split_name(full_name):
+    """Return (first_name, last_name) from full name; last name may be empty."""
+    parts = (full_name or "").strip().split(None, 1)
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], parts[1]
+
+
 @admin_bp.route("/organizations/new", methods=["GET", "POST"])
 def organization_create():
-    """Create a new organization (name + subdomain) and default SystemSettings."""
+    """Create a new organization (name + subdomain), default SystemSettings, first manager user, and send invite email."""
     signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(25).all()
     if request.method == "POST":
         name = (request.form.get("name") or "").strip()
         subdomain = (request.form.get("subdomain") or "").strip().lower()
         trial_plan_param = request.form.get("trial_plan")
+        manager_email = (request.form.get("manager_email") or "").strip().lower()
+        manager_first_name = (request.form.get("manager_first_name") or "").strip()
+        manager_last_name = (request.form.get("manager_last_name") or "").strip()
         if not name or not subdomain:
             flash("Name and subdomain are required.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
+        if not manager_email or not manager_first_name or not manager_last_name:
+            flash("Manager email, first name, and last name are required.", "error")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
         # Normalize subdomain: alphanumeric + hyphen
         subdomain = "".join(c for c in subdomain if c.isalnum() or c == "-").strip("-") or subdomain
         if not subdomain:
             flash("Subdomain must contain at least one letter or number.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
         existing = Organization.query.filter_by(subdomain=subdomain).first()
         if existing:
             flash(f"Subdomain '{subdomain}' is already in use.", "error")
-            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, signup_requests=signup_requests, prefilled_signup=None)
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
         trial_plan = (request.form.get("trial_plan") or "standard").strip().lower()
         if trial_plan not in ("standard", "pro"):
             trial_plan = "standard"
@@ -338,10 +354,27 @@ def organization_create():
         db.session.flush()
         settings = SystemSettings(organization_id=org.id)
         db.session.add(settings)
+        emp = Employee(
+            organization_id=org.id,
+            first_name=manager_first_name,
+            last_name=manager_last_name,
+            role="manager",
+            status="active",
+        )
+        db.session.add(emp)
+        db.session.flush()
+        user = User(email=manager_email, role="manager", employee_id=emp.id, organization_id=org.id)
+        db.session.add(user)
         db.session.commit()
+        # Send invite email (set-password link)
+        try:
+            from app.routes.manager import send_invite_email
+            send_invite_email(user)
+        except Exception:
+            pass
         host = request.host.split(":")[0]
         base_domain = host[4:] if host.startswith("www.") else host
-        flash(f"Organization '{org.name}' created with 14-day {trial_plan.capitalize()} trial. Users can sign in at {subdomain}.{base_domain}.", "success")
+        flash(f"Organization '{org.name}' created. Invite sent to {manager_email} — they can set their password and sign in at {subdomain}.{base_domain}.", "success")
         return redirect(url_for("admin.organization_detail", org_id=org.id))
     # GET: optionally pre-fill from signup request
     prefilled_signup = None
@@ -351,11 +384,20 @@ def organization_create():
             prefilled_signup = SignupRequest.query.get(int(from_id))
         except (TypeError, ValueError):
             pass
+    manager_email = ""
+    manager_first_name = ""
+    manager_last_name = ""
+    if prefilled_signup:
+        manager_email = (prefilled_signup.email or "").strip().lower()
+        manager_first_name, manager_last_name = _split_name(prefilled_signup.name)
     return render_template(
         "admin/organization_form.html",
         name=prefilled_signup.business.strip() if prefilled_signup else "",
         subdomain=_subdomain_slug(prefilled_signup.location_identifier or prefilled_signup.business) if prefilled_signup else "",
         trial_plan=prefilled_signup.plan or "standard" if prefilled_signup else "standard",
+        manager_email=manager_email,
+        manager_first_name=manager_first_name,
+        manager_last_name=manager_last_name,
         signup_requests=signup_requests,
         prefilled_signup=prefilled_signup,
     )
