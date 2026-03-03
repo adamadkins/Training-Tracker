@@ -125,14 +125,11 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
                 pass
             from sendgrid import SendGridAPIClient
             from sendgrid.helpers.mail import Mail, Content
-            sg_mail = Mail(
-                from_email=sender,
-                to_emails=to_email,
-                subject=title,
-                plain_text_content=body,
-            )
+            sg_mail = Mail(from_email=sender, to_emails=to_email, subject=title)
+            # Add HTML first so clients prefer it (multipart/alternative order)
             if html_content:
                 sg_mail.add_content(Content('text/html', html_content))
+            sg_mail.add_content(Content('text/plain', body))
             sg = SendGridAPIClient(sendgrid_key)
             response = sg.send(sg_mail)
             logger.info("SendGrid sent to %s: %s (status %s)", to_email, title, response.status_code)

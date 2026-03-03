@@ -284,8 +284,9 @@ def send_invite_email(user):
     body = (
         "Welcome to the team!\n\n"
         "You've been added to Training Tracker. To access your dashboard and start your training, "
-        "click the button below to set your password.\n\n"
-        "This link will expire in 7 days."
+        "set your password using the link below.\n\n"
+        "This link will expire in 7 days.\n\n"
+        f"Set your password: {link}"
     )
     send_notification_email(user, title, body, category='invite', link_url=link)
 

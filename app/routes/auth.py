@@ -326,8 +326,9 @@ def forgot_password():
             reset_url = url_for('auth.reset_token', token=token, _external=True)
             title = "Password Reset Request"
             body = (
-                "Click the button below to reset your password.\n\n"
-                "If you didn't request this, you can ignore this email."
+                "Use the link below to reset your password.\n\n"
+                "If you didn't request this, you can ignore this email.\n\n"
+                f"Reset your password: {reset_url}"
             )
             try:
                 send_notification_email(user, title, body, category='password_reset', link_url=reset_url)
