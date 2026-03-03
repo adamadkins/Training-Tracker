@@ -556,7 +556,7 @@ def user_send_reset(user_id):
         send_notification_email(
             user,
             "Reset your Training Tracker password",
-            f"Someone requested a password reset. If it was you, click: {reset_url}<br><br>Link expires in 7 days.",
+            f"Someone requested a password reset. If it was you, click: {reset_url}\n\nLink expires in 7 days.",
         )
         flash(f"Password reset email sent to {user.email}.", "success")
     except Exception as e:

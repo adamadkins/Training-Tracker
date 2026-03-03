@@ -178,7 +178,7 @@ def cookies():
     return render_template("cookies.html")
 
 
-SUPPORT_EMAIL = "adkins.adam04@gmail.com"
+SUPPORT_EMAIL = "support@trainingtracker.me"
 
 
 @auth_bp.route("/support", methods=["GET", "POST"])
@@ -199,10 +199,10 @@ def support():
             db.session.commit()
             from app.utils.notifications import _enqueue_or_send_email
             body = (
-                f"<h2>Support / Contact form</h2>"
-                f"<p><strong>From:</strong> {name or '(not provided)'} &lt;{email}&gt;</p>"
-                f"<p><strong>Subject:</strong> {subject}</p>"
-                f"<hr><p>{message.replace(chr(10), '<br>') if message else '(no message)'}</p>"
+                "Support / Contact form\n\n"
+                f"From: {name or '(not provided)'} <{email}>\n"
+                f"Subject: {subject}\n\n"
+                f"{message if message else '(no message)'}"
             )
             _enqueue_or_send_email(SUPPORT_EMAIL, f"[Training Tracker] {subject}", body)
             flash("Thanks! Your message has been sent. We'll get back to you soon.", "success")
@@ -593,26 +593,29 @@ def waitlist():
             db.session.commit()
             try:
                 import os
-                admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
+                admin_email = os.environ.get("ADMIN_EMAIL") or "support@trainingtracker.me"
                 loc_part = f" — {location_identifier}" if location_identifier else ""
                 subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
-                body = (
-                    f"<h2>New signup request (pending approval)</h2>"
-                    f"<p><strong>Name:</strong> {name}</p>"
-                    f"<p><strong>Email:</strong> {email}</p>"
-                    f"<p><strong>Business:</strong> {business}</p>"
-                    f"<p><strong>Subdomain:</strong> {subdomain}</p>"
-                )
+                # Plain text body so it displays correctly (no raw HTML in email client)
+                body_lines = [
+                    "New signup request (pending approval)",
+                    "",
+                    f"Name: {name}",
+                    f"Email: {email}",
+                    f"Business: {business}",
+                    f"Subdomain: {subdomain}",
+                ]
                 if location_identifier:
-                    body += f"<p><strong>Location / store:</strong> {location_identifier}</p>"
+                    body_lines.append(f"Location / store: {location_identifier}")
                 if phone:
-                    body += f"<p><strong>Phone:</strong> {phone}</p>"
+                    body_lines.append(f"Phone: {phone}")
                 addr_parts = [a for a in [address_line1, city, state, postal_code] if a]
                 if addr_parts:
-                    body += f"<p><strong>Address:</strong> {', '.join(addr_parts)}</p>"
-                body += f"<p><strong>Team size:</strong> {size or '—'}</p>"
+                    body_lines.append(f"Address: {', '.join(addr_parts)}")
+                body_lines.append(f"Team size: {size or '—'}")
                 if plan:
-                    body += f"<p><strong>Plan:</strong> {plan.capitalize()}</p>"
+                    body_lines.append(f"Plan: {plan.capitalize()}")
+                body = "\n".join(body_lines)
                 _enqueue_or_send_email(admin_email, subject, body)
             except Exception:
                 pass
