@@ -718,14 +718,11 @@ def organization_invite_first_user(org_id):
             token = user.get_reset_token()
             set_password_url = url_for("auth.reset_token", token=token, _external=True)
             base = _base_domain()
-            main_domain = current_app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
-            open_in_app_url = f"https://{main_domain}/open-in-app?redirect={quote(set_password_url)}"
             title = "Set up your Training Tracker account"
             body = (
                 f"Welcome to {org.name}!\n\n"
-                f"You've been set up as a manager. Click the link below to set your password. "
-                f"If you have the Training Tracker app installed, you'll be prompted to open it and go straight to your company.\n\n"
-                f"{open_in_app_url}\n\n"
+                f"You've been set up as a manager. Click the link below to set your password, then sign in at {org.subdomain}.{base}.\n\n"
+                f"{set_password_url}\n\n"
                 f"This link expires in 7 days."
             )
             send_notification_email(user, title, body, category='invite')

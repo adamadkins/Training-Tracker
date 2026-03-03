@@ -1,17 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }}</title>
 </head>
-<body style="margin:0; padding:24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.6; color: #1e293b; background: #f8fafc;">
-    <div style="max-width: 520px; margin: 0 auto;">
-        <h1 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">{{ title }}</h1>
-        <div style="white-space: pre-wrap; color: #475569;">{{ body }}</div>
-        {% if link_url %}
-        <p style="margin-top: 24px;"><a href="{{ link_url }}" style="display: inline-block; padding: 12px 24px; background: #4f46e5; color: white; text-decoration: none; font-weight: 600; border-radius: 10px;">Open link</a></p>
-        {% endif %}
-    </div>
+<body style="margin:0; padding:0; background-color:#f4f6f9; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased;">
+
+<!-- Wrapper -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f9; padding:40px 16px;">
+<tr><td align="center">
+
+<!-- Container -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+
+    <!-- Header -->
+    <tr>
+        <td style="background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding:32px 40px; text-align:center;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="text-align:center;">
+                <span style="font-size:22px; font-weight:800; color:#ffffff; letter-spacing:-0.02em;">Training<span style="color:#c4b5fd;">Tracker</span></span>
+            </td></tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Title -->
+    <tr>
+        <td style="padding:36px 40px 0;">
+            <h1 style="margin:0; font-size:22px; font-weight:800; color:#1e293b; line-height:1.3;">{{ title }}</h1>
+        </td>
+    </tr>
+
+    <!-- Body -->
+    <tr>
+        <td style="padding:20px 40px 0;">
+            <div style="margin:0; font-size:15px; color:#475569; line-height:1.7; white-space:pre-wrap;">{{ body }}</div>
+        </td>
+    </tr>
+
+    <!-- CTA Button (if link in body, we don't add a second button; body already contains the URL) -->
+    {% if link_url %}
+    <tr>
+        <td style="padding:32px 40px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr><td style="background:#4f46e5; border-radius:10px;">
+                <a href="{{ link_url }}" target="_blank" style="display:inline-block; padding:14px 32px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; letter-spacing:0.02em;">Set your password</a>
+            </td></tr>
+            </table>
+        </td>
+    </tr>
+    {% endif %}
+
+    <!-- Divider -->
+    <tr>
+        <td style="padding:36px 40px 0;">
+            <hr style="border:none; border-top:1px solid #e2e8f0; margin:0;">
+        </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr>
+        <td style="padding:20px 40px 32px;">
+            <p style="margin:0; font-size:12px; color:#94a3b8; line-height:1.6;">
+                This email was sent by Training Tracker. If you didn&rsquo;t expect it, you can ignore it.
+            </p>
+        </td>
+    </tr>
+
+</table>
+<!-- /Container -->
+
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px; width:100%;">
+<tr>
+    <td style="padding:24px 40px; text-align:center;">
+        <p style="margin:0; font-size:11px; color:#94a3b8;">&copy; 2026 Training Tracker. All rights reserved.</p>
+    </td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+<!-- /Wrapper -->
+
 </body>
 </html>

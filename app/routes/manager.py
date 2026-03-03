@@ -280,16 +280,12 @@ def get_visible_employee_ids(location_filter=None):
 def send_invite_email(user):
     token = user.get_reset_token()
     link = url_for('auth.reset_token', token=token, _external=True)
-    main_domain = (current_app.config.get("MAIN_DOMAIN") or "trainingtracker.me").split(":")[0]
-    open_in_app_url = f"https://{main_domain}/open-in-app?redirect={quote(link)}"
     title = "Invitation to Training Tracker"
     body = (
         f"Welcome to the team!\n\n"
-        f"You have been added to the Training Tracker system. To access your dashboard "
-        f"and start your training, please set up your account by clicking the link below.\n\n"
-        f"If you have the Training Tracker app installed, the link will prompt you to open it "
-        f"and take you straight to your company.\n\n"
-        f"{open_in_app_url}\n\n"
+        f"You've been added to Training Tracker. To access your dashboard and start your training, "
+        f"set your password by clicking the link below.\n\n"
+        f"{link}\n\n"
         f"This link will expire in 7 days."
     )
     send_notification_email(user, title, body, category='invite')
