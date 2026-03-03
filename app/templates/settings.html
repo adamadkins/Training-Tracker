@@ -341,7 +341,7 @@
 
             {# ── Billing (managers only) ── #}
             {% if current_user.role == 'manager' and org %}
-            <div class="s-section">
+            <div class="s-section" id="billing">
                 <div class="s-header">
                     <div class="s-header-icon emerald"><i class="fa-solid fa-credit-card"></i></div>
                     <div class="s-header-text">
@@ -350,6 +350,21 @@
                     </div>
                 </div>
                 <div class="s-body">
+                    {% if trial_days_left is not none %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Trial</label>
+                            <span class="s-desc">{{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} left ({{ org.trial_plan|default('standard')|capitalize }})</span>
+                        </div>
+                    </div>
+                    {% elif org.trial_ends_at and not org.free_plan and not org.stripe_subscription_id %}
+                    <div class="s-row">
+                        <div class="s-info">
+                            <label class="s-label">Trial</label>
+                            <span class="s-desc">Ended</span>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% if org.free_plan %}
                     <div class="s-row">
                         <div class="s-info">

@@ -25,6 +25,45 @@
         margin: 0 auto;
     }
 
+    .trial-banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+    }
+    .trial-banner-text {
+        flex: 1;
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .trial-banner-text i { color: var(--primary); margin-right: 6px; }
+    .trial-banner-cta {
+        padding: 8px 14px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .trial-banner-cta:hover { opacity: 0.95; color: #fff; }
+    .trial-banner-dismiss {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        padding: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .trial-banner-dismiss:hover { color: var(--text-main); }
+
     /* ── Hero ── */
     .manager-hero {
         margin-bottom: 28px;
@@ -495,6 +534,14 @@
 
 <div class="manager-wrapper">
     <div class="manager-container">
+
+        {% if trial_days_left is not none %}
+        <div class="trial-banner" id="trialBanner">
+            <span class="trial-banner-text"><i class="fa-solid fa-clock"></i> {{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} left in your free {{ trial_plan }} trial</span>
+            <a href="{{ url_for('manager.settings') }}#billing" class="trial-banner-cta">Subscribe</a>
+            <button type="button" class="trial-banner-dismiss" onclick="document.getElementById('trialBanner').style.display='none'" aria-label="Dismiss"><i class="fa-solid fa-times"></i></button>
+        </div>
+        {% endif %}
 
         {# ── 1. Hero + KPIs ── #}
         <div class="manager-hero">

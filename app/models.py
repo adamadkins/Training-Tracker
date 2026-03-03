@@ -53,6 +53,9 @@ class SignupRequest(db.Model):
     size = db.Column(db.String(40), nullable=True)  # e.g. 11-25
     plan = db.Column(db.String(20), nullable=True)  # standard | pro
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=True, index=True)
+
+    organization = db.relationship("Organization", backref=db.backref("signup_request", uselist=False))
 
 
 class SupportRequest(db.Model):

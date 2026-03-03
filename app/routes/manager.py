@@ -519,6 +519,15 @@ def dashboard():
 
     nudge_cutoff = datetime.utcnow() - timedelta(hours=24)
 
+    org = Organization.query.get(oid)
+    trial_days_left = None
+    if org and org.trial_ends_at and not org.free_plan and not org.stripe_subscription_id:
+        end = org.trial_ends_at
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        delta = (end - datetime.now(timezone.utc)).days
+        trial_days_left = max(0, delta)
+
     return render_template(
         "manager_dashboard.html",
         user=current_user,
@@ -533,6 +542,8 @@ def dashboard():
         flagged_sessions=flagged_sessions,
         manager_locations=manager_locations,
         current_location_filter=current_location_filter,
+        trial_days_left=trial_days_left,
+        trial_plan=(org.trial_plan or 'standard') if org else 'standard',
     )
 
 
@@ -2717,6 +2728,13 @@ def settings():
         return redirect(url_for('manager.settings'))
     share_trainee_data = getattr(system_settings, 'share_trainee_data_with_trainees', True)
     org = Organization.query.get(g._manager_org_id) if getattr(g, '_manager_org_id', None) else None
+    trial_days_left = None
+    if org and org.trial_ends_at and not org.free_plan and not org.stripe_subscription_id:
+        end = org.trial_ends_at
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        delta = (end - datetime.now(timezone.utc)).days
+        trial_days_left = max(0, delta)
     if request.args.get("billing") == "success":
         flash("Billing set up successfully.", "success")
     elif request.args.get("billing") == "canceled":
@@ -2727,4 +2745,5 @@ def settings():
         system_settings=system_settings,
         share_trainee_data_with_trainees=share_trainee_data,
         org=org,
+        trial_days_left=trial_days_left,
     )

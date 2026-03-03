@@ -144,8 +144,9 @@ def index():
     signup_plan = request.args.get("signup_plan", "").strip().lower() or None
 
     orgs = Organization.query.order_by(Organization.created_at.desc()).all()
-    if org_status and org_status in ("active", "suspended"):
+    if org_status and org_status in ("active", "suspended", "pending_approval"):
         orgs = [o for o in orgs if o.status == org_status]
+    pending_orgs_count = Organization.query.filter_by(status="pending_approval").count()
     if q:
         ql = q.lower()
         orgs = [o for o in orgs if ql in (o.name or "").lower() or ql in (o.subdomain or "").lower()]
@@ -180,6 +181,7 @@ def index():
         organizations=orgs_with_stats,
         total_orgs=total_orgs,
         active_orgs=active_orgs,
+        pending_orgs_count=pending_orgs_count,
         total_users=total_users,
         total_employees=total_employees,
         signup_requests_with_mailto=signup_requests_with_mailto,
@@ -253,7 +255,7 @@ def organizations_list():
     q = (request.args.get("q") or "").strip()
     status_filter = (request.args.get("status") or "").strip().lower() or None
     orgs = Organization.query.order_by(Organization.name).all()
-    if status_filter and status_filter in ("active", "suspended"):
+    if status_filter and status_filter in ("active", "suspended", "pending_approval"):
         orgs = [o for o in orgs if o.status == status_filter]
     if q:
         ql = q.lower()
@@ -376,6 +378,57 @@ def organization_activate(org_id):
     org.status = "active"
     db.session.commit()
     flash(f"Organization '{org.name}' is active again.", "success")
+    return redirect(url_for("admin.organization_detail", org_id=org.id))
+
+
+@admin_bp.route("/organizations/<int:org_id>/approve", methods=["POST"])
+def organization_approve(org_id):
+    """Approve a pending_approval org: set active and send invite/welcome email to the manager."""
+    org = Organization.query.get_or_404(org_id)
+    if org.status != "pending_approval":
+        flash("Organization is not pending approval.", "info")
+        return redirect(url_for("admin.organization_detail", org_id=org.id))
+    org.status = "active"
+    manager_user = User.query.filter_by(organization_id=org.id, role="manager").first()
+    if not manager_user:
+        manager_user = User.query.filter_by(organization_id=org.id).first()
+    if manager_user:
+        from app.routes.manager import send_invite_email
+        try:
+            send_invite_email(manager_user)
+        except Exception:
+            pass
+    db.session.commit()
+    flash(f"Organization '{org.name}' approved. Welcome email sent to manager.", "success")
+    return redirect(url_for("admin.organization_detail", org_id=org.id))
+
+
+@admin_bp.route("/organizations/<int:org_id>/extend-trial", methods=["POST"])
+def organization_extend_trial(org_id):
+    """Extend or set trial end date. If trial ended, set to now + days; else add days."""
+    org = Organization.query.get_or_404(org_id)
+    try:
+        days = int(request.form.get("days", 14))
+        days = max(1, min(365, days))
+    except (TypeError, ValueError):
+        days = 14
+    now = datetime.now(timezone.utc)
+    if org.trial_ends_at:
+        end = org.trial_ends_at
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        if end > now:
+            org.trial_ends_at = end + timedelta(days=days)
+        else:
+            org.trial_ends_at = now + timedelta(days=days)
+    else:
+        org.trial_ends_at = now + timedelta(days=days)
+        if not org.trial_plan:
+            org.trial_plan = "standard"
+        if not org.billing_plan:
+            org.billing_plan = org.trial_plan
+    db.session.commit()
+    flash(f"Trial extended by {days} days for '{org.name}'.", "success")
     return redirect(url_for("admin.organization_detail", org_id=org.id))
 
 

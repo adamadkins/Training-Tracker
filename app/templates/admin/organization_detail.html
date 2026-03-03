@@ -16,6 +16,8 @@
                 <span class="status status-{{ org.status }}">{{ org.status }}</span>
                 {% if org.status == 'suspended' %}
                 <span class="status-note">— Users cannot sign in while suspended.</span>
+                {% elif org.status == 'pending_approval' %}
+                <span class="status-note">— Approve to activate and send welcome email.</span>
                 {% endif %}
             </dd>
             <dt>Login URL</dt>
@@ -48,6 +50,10 @@
                 {% else %}
                     — (no trial)
                 {% endif %}
+                <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}" class="extend-trial-form" style="display:inline; margin-left:10px;">
+                    <input type="number" name="days" value="14" min="1" max="365" style="width:50px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);">
+                    <button type="submit" class="btn btn-outline btn-sm">Extend trial</button>
+                </form>
             </dd>
             {% if payment_overdue %}
             <dt>Payment</dt>
@@ -96,6 +102,10 @@
             {% if org.status == 'active' %}
             <form method="post" action="{{ url_for('admin.organization_suspend', org_id=org.id) }}" style="display:inline;">
                 <button type="submit" class="btn btn-warning">Suspend</button>
+            </form>
+            {% elif org.status == 'pending_approval' %}
+            <form method="post" action="{{ url_for('admin.organization_approve', org_id=org.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-primary">Approve</button>
             </form>
             {% else %}
             <form method="post" action="{{ url_for('admin.organization_activate', org_id=org.id) }}" style="display:inline;">

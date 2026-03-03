@@ -332,7 +332,7 @@ def forgot_password():
             try:
                 send_notification_email(user, title, body)
             except Exception as e:
-                print(f"SMTP Error: {e}")
+                current_app.logger.warning("Password reset email failed for %s: %s", email, e)
 
         flash("If an account exists with that email, a reset link has been sent.")
         return redirect(url_for('auth.login'))
@@ -513,12 +513,24 @@ def change_password():
     return redirect(url_for('manager.employee_detail', employee_id=current_user.employee_id))
 
 
+def _subdomain_slug(s):
+    """Slugify for subdomain (alphanumeric + hyphen)."""
+    if not s or not isinstance(s, str):
+        return ""
+    raw = "".join(c if c.isalnum() or c == "-" else "-" for c in s.strip().lower())
+    return "-".join(p for p in raw.split("-") if p).strip("-")[:50] or "org"
+
+
 @auth_bp.route("/waitlist", methods=["POST"])
 def waitlist():
-    """Capture landing page interest form submissions; save to DB and email the admin."""
+    """Capture landing page interest form submissions; auto-create org (pending_approval) and email the admin."""
+    from datetime import datetime, timezone, timedelta
+    from app.models import Organization, SystemSettings, User
+    from app.utils.notifications import _enqueue_or_send_email
+
     data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
-    email = data.get("email", "").strip()
+    email = data.get("email", "").strip().lower()
     business = data.get("business", "").strip()
     location_identifier = data.get("location_identifier", "").strip() or None
     phone = data.get("phone", "").strip() or None
@@ -528,7 +540,10 @@ def waitlist():
     postal_code = data.get("postal_code", "").strip() or None
     size = data.get("size", "").strip()
     plan = (data.get("plan") or "").strip().lower() or None  # 'standard' | 'pro'
+    if plan not in ("standard", "pro"):
+        plan = "standard"
 
+    message = "Thanks! We'll review and activate your account within 24 hours."
     if email:
         try:
             req = SignupRequest(
@@ -545,33 +560,64 @@ def waitlist():
                 plan=plan if plan in ("standard", "pro") else None,
             )
             db.session.add(req)
+            db.session.flush()
+            org_name = business or email.split("@")[0]
+            base_sub = _subdomain_slug(org_name) or _subdomain_slug(email) or "org"
+            subdomain = base_sub
+            for n in range(100):
+                if Organization.query.filter_by(subdomain=subdomain).first() is None:
+                    break
+                subdomain = f"{base_sub}-{req.id}" if n == 0 else f"{base_sub}-{n}"
+            now = datetime.now(timezone.utc)
+            trial_ends_at = now + timedelta(days=14)
+            org = Organization(
+                name=org_name,
+                subdomain=subdomain,
+                status="pending_approval",
+                trial_ends_at=trial_ends_at,
+                trial_plan=plan,
+                billing_plan=plan,
+            )
+            db.session.add(org)
+            db.session.flush()
+            settings = SystemSettings(organization_id=org.id)
+            db.session.add(settings)
+            manager_user = User(
+                organization_id=org.id,
+                email=email,
+                role="manager",
+                employee_id=None,
+            )
+            db.session.add(manager_user)
+            req.organization_id = org.id
             db.session.commit()
+            try:
+                import os
+                admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
+                loc_part = f" — {location_identifier}" if location_identifier else ""
+                subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
+                body = (
+                    f"<h2>New signup request (pending approval)</h2>"
+                    f"<p><strong>Name:</strong> {name}</p>"
+                    f"<p><strong>Email:</strong> {email}</p>"
+                    f"<p><strong>Business:</strong> {business}</p>"
+                    f"<p><strong>Subdomain:</strong> {subdomain}</p>"
+                )
+                if location_identifier:
+                    body += f"<p><strong>Location / store:</strong> {location_identifier}</p>"
+                if phone:
+                    body += f"<p><strong>Phone:</strong> {phone}</p>"
+                addr_parts = [a for a in [address_line1, city, state, postal_code] if a]
+                if addr_parts:
+                    body += f"<p><strong>Address:</strong> {', '.join(addr_parts)}</p>"
+                body += f"<p><strong>Team size:</strong> {size or '—'}</p>"
+                if plan:
+                    body += f"<p><strong>Plan:</strong> {plan.capitalize()}</p>"
+                _enqueue_or_send_email(admin_email, subject, body)
+            except Exception:
+                pass
         except Exception:
             db.session.rollback()
-        try:
-            from app.utils.notifications import send_notification_email
-            import os
-            admin_email = os.environ.get("ADMIN_EMAIL") or "adkins.adam04@gmail.com"
-            loc_part = f" — {location_identifier}" if location_identifier else ""
-            subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
-            body = (
-                f"<h2>New signup request</h2>"
-                f"<p><strong>Name:</strong> {name}</p>"
-                f"<p><strong>Email:</strong> {email}</p>"
-                f"<p><strong>Business:</strong> {business}</p>"
-            )
-            if location_identifier:
-                body += f"<p><strong>Location / store:</strong> {location_identifier}</p>"
-            if phone:
-                body += f"<p><strong>Phone:</strong> {phone}</p>"
-            addr_parts = [a for a in [address_line1, city, state, postal_code] if a]
-            if addr_parts:
-                body += f"<p><strong>Address:</strong> {', '.join(addr_parts)}</p>"
-            body += f"<p><strong>Team size:</strong> {size or '—'}</p>"
-            if plan:
-                body += f"<p><strong>Plan interested in:</strong> {plan.capitalize()}</p>"
-            send_notification_email(admin_email, subject, body)
-        except Exception:
-            pass
+            message = "Thanks for your interest. We'll be in touch soon."
 
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "message": message})

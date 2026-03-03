@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Approval — Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+            }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 460px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .icon { font-size: 56px; margin-bottom: 20px; opacity: 0.85; }
+        .title { font-size: 26px; font-weight: 900; color: var(--text-main); margin-bottom: 12px; line-height: 1.2; }
+        .message { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#x1f4e9;</div>
+        <h1 class="title">Account pending approval</h1>
+        <p class="message">Thanks for signing up. We're reviewing your request and will activate your account within 24 hours. You'll receive an email with a link to set your password and sign in.</p>
+    </div>
+</body>
+</html>

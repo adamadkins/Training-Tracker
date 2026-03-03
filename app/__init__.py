@@ -80,7 +80,11 @@ def create_app():
             return render_template("error.html", code=404, icon="\u26a0\ufe0f",
                 title="Organization Not Found",
                 message="This subdomain is not registered. Check the URL or contact your administrator."), 404
-        if getattr(org, "status", "active") != "active":
+        status = getattr(org, "status", "active")
+        if status == "pending_approval":
+            from flask import render_template
+            return render_template("pending_approval.html"), 200
+        if status != "active":
             from flask import render_template
             return render_template("error.html", code=403, icon="\u1f6ab",
                 title="Service Suspended",
