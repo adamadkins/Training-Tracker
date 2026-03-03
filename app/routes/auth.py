@@ -340,6 +340,62 @@ def forgot_password():
     return render_template("auth/forgot_password.html")
 
 
+@auth_bp.route("/subscribe", methods=["GET"])
+def subscribe():
+    """Public: redirect to Stripe Checkout for an org (by subdomain). Used from trial-ended page. Main domain only."""
+    if getattr(g, "current_organization_id", None) is not None:
+        return redirect(url_for("auth.login"))
+    subdomain = (request.args.get("org") or "").strip().lower()
+    if not subdomain:
+        flash("Missing organization. Use the Subscribe link from your company’s trial page.", "info")
+        return redirect(url_for("auth.login"))
+    org = Organization.query.filter_by(subdomain=subdomain).first()
+    if not org:
+        flash("Organization not found.", "error")
+        return redirect(url_for("auth.login"))
+    plan = (request.args.get("plan") or "standard").strip().lower()
+    if plan not in ("standard", "pro"):
+        plan = "standard"
+    import stripe
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    if plan == "pro":
+        price_id = current_app.config.get("STRIPE_PRICE_ID_PRO")
+    else:
+        price_id = current_app.config.get("STRIPE_PRICE_ID_STANDARD") or current_app.config.get("STRIPE_PRICE_ID")
+    if not secret or not price_id:
+        flash("Billing is not configured. Please contact support.", "error")
+        return redirect(url_for("auth.support"))
+    stripe.api_key = secret
+    main_domain = current_app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
+    scheme = current_app.config.get("PREFERRED_URL_SCHEME", "https")
+    tenant_base = f"{scheme}://{org.subdomain}.{main_domain}"
+    success_url = f"{tenant_base}{url_for('manager.settings')}?billing=success"
+    cancel_url = f"{tenant_base}{url_for('manager.settings')}?billing=canceled"
+    customer_email = None
+    if not org.stripe_customer_id:
+        u = User.query.filter_by(organization_id=org.id).first()
+        if u and getattr(u, "email", None):
+            customer_email = u.email
+    try:
+        session_params = {
+            "mode": "subscription",
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "client_reference_id": str(org.id),
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+        }
+        if org.stripe_customer_id:
+            session_params["customer"] = org.stripe_customer_id
+        elif customer_email:
+            session_params["customer_email"] = customer_email
+        session = stripe.checkout.Session.create(**session_params)
+        return redirect(session.url)
+    except Exception as e:
+        current_app.logger.exception("Subscribe checkout failed: %s", e)
+        flash("Could not start checkout. Please try again or contact support.", "error")
+        return redirect(url_for("auth.support"))
+
+
 # --- Account Setup / Reset via Token ---
 
 @auth_bp.route("/reset_password/<token>", methods=["GET", "POST"])

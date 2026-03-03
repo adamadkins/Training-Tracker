@@ -105,8 +105,8 @@ def create_app():
             from flask import render_template
             main_domain = app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
             support_url = f"https://{main_domain}/support"
-            home_url = f"https://{main_domain}"
-            return render_template("trial_ended.html", support_url=support_url, home_url=home_url, trial_ended=just_trial_ended), 403
+            subscribe_url = f"https://{main_domain}/subscribe?org={subdomain}"
+            return render_template("trial_ended.html", support_url=support_url, subscribe_url=subscribe_url, trial_ended=just_trial_ended), 403
         g.current_organization_id = org.id
         g.current_organization = org
 
