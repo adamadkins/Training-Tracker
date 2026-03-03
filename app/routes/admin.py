@@ -432,6 +432,31 @@ def organization_extend_trial(org_id):
     return redirect(url_for("admin.organization_detail", org_id=org.id))
 
 
+@admin_bp.route("/organizations/<int:org_id>/set-trial-days", methods=["POST"])
+def organization_set_trial_days(org_id):
+    """Set trial to end in exactly X days (for testing). Overwrites current trial end."""
+    org = Organization.query.get_or_404(org_id)
+    try:
+        days = int(request.form.get("days_left", 14))
+        days = max(0, min(365, days))  # 0 = end trial now
+    except (TypeError, ValueError):
+        days = 14
+    now = datetime.now(timezone.utc)
+    if days == 0:
+        org.trial_ends_at = now
+        db.session.commit()
+        flash(f"Trial set to ended now for '{org.name}'.", "success")
+    else:
+        org.trial_ends_at = now + timedelta(days=days)
+        if not org.trial_plan:
+            org.trial_plan = "standard"
+        if not org.billing_plan:
+            org.billing_plan = org.trial_plan
+        db.session.commit()
+        flash(f"Trial set to {days} day(s) left for '{org.name}'.", "success")
+    return redirect(url_for("admin.organization_detail", org_id=org.id))
+
+
 @admin_bp.route("/organizations/<int:org_id>/free-plan/<plan>", methods=["POST"])
 def organization_set_free_plan(org_id, plan):
     """Give organization Standard or Pro plan for free. plan is 'standard' or 'pro'."""
