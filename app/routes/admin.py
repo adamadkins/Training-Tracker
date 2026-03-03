@@ -337,6 +337,9 @@ def organization_create():
         if existing:
             flash(f"Subdomain '{subdomain}' is already in use.", "error")
             return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
+        if User.query.filter_by(email=manager_email).first():
+            flash(f"A user with email '{manager_email}' already exists. Use a different email or add them from their existing organization.", "error")
+            return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
         trial_plan = (request.form.get("trial_plan") or "standard").strip().lower()
         if trial_plan not in ("standard", "pro"):
             trial_plan = "standard"
