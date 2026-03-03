@@ -103,14 +103,6 @@ def _send_email_background(app, to_email, title, body, category='general', link_
 
 
 def _send_html_email_impl(to_email, title, body, category='general', link_url=None):
-    # Guarantee the link appears in plain text for invite/password_reset (some clients show only plain)
-    plain_body = body
-    if link_url and category in ('invite', 'password_reset'):
-        if link_url not in plain_body:
-            plain_body = (plain_body or '').rstrip() + "\n\n" + link_url
-        logger.info("Email to %s category=%s link_url=%s plain_has_link=%s",
-                    to_email, category, bool(link_url), link_url in plain_body)
-
     # Use SendGrid if API key is set (works over HTTPS, no SMTP port needed)
     sendgrid_key = current_app.config.get('SENDGRID_API_KEY', '')
     sender = current_app.config.get('MAIL_DEFAULT_SENDER', '') or current_app.config.get('MAIL_USERNAME', '')
@@ -137,7 +129,7 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
             # Add HTML first so clients prefer it (multipart/alternative order)
             if html_content:
                 sg_mail.add_content(Content('text/html', html_content))
-            sg_mail.add_content(Content('text/plain', plain_body))
+            sg_mail.add_content(Content('text/plain', body))
             sg = SendGridAPIClient(sendgrid_key)
             response = sg.send(sg_mail)
             logger.info("SendGrid sent to %s: %s (status %s)", to_email, title, response.status_code)
@@ -182,7 +174,7 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
     msg['Subject'] = title
     msg['From'] = sender
     msg['To'] = to_email
-    msg.attach(MIMEText(plain_body, 'plain'))
+    msg.attach(MIMEText(body, 'plain'))
     if html_content:
         msg.attach(MIMEText(html_content, 'html'))
 

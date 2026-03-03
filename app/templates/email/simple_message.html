@@ -39,7 +39,7 @@
         </td>
     </tr>
 
-    <!-- CTA Button + fallback link (some clients hide buttons) -->
+    <!-- CTA Button (optional; invite/reset put link in body instead) -->
     {% if link_url %}
     <tr>
         <td style="padding:32px 40px 0;">
@@ -48,9 +48,6 @@
                 <a href="{{ link_url }}" target="_blank" style="display:inline-block; padding:14px 32px; color:#ffffff; font-size:14px; font-weight:700; text-decoration:none; letter-spacing:0.02em;">{{ link_text or 'View details' }}</a>
             </td></tr>
             </table>
-            <p style="margin:16px 0 0; font-size:13px; color:#64748b;">
-                If the button doesn&rsquo;t work, use this link: <a href="{{ link_url }}" style="color:#4f46e5; text-decoration:underline;">{{ link_url }}</a>
-            </p>
         </td>
     </tr>
     {% endif %}
