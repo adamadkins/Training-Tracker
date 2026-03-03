@@ -1,45 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support &mdash; Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.6; }
-        .support-wrap { max-width: 680px; margin: 0 auto; padding: 40px 24px 60px; }
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
-        .back-link:hover { color: #4f46e5; }
-        .support-header { text-align: center; margin-bottom: 40px; }
-        .support-header h1 { font-size: 32px; font-weight: 900; margin: 0 0 12px 0; color: #0f172a; letter-spacing: -0.02em; }
-        .support-header p { color: #64748b; font-size: 17px; margin: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
-        .support-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-        .support-card h2 { font-size: 18px; font-weight: 800; margin: 0 0 16px 0; color: #1e293b; display: flex; align-items: center; gap: 10px; }
-        .support-card h2 i { color: #4f46e5; }
-        .support-card p { margin: 0 0 12px 0; font-size: 15px; color: #334155; }
-        .support-card p:last-child { margin-bottom: 0; }
-        .support-card a { color: #4f46e5; font-weight: 600; text-decoration: none; }
-        .support-card a:hover { text-decoration: underline; }
-        .support-card ul { margin: 0 0 12px 0; padding-left: 22px; font-size: 15px; color: #334155; }
-        .support-card li { margin-bottom: 6px; }
-        .support-form { display: flex; flex-direction: column; gap: 18px; }
-        .support-form label { font-size: 13px; font-weight: 700; color: #475569; display: block; margin-bottom: 6px; }
-        .support-form input, .support-form textarea { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 15px; font-family: inherit; }
-        .support-form input:focus, .support-form textarea:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
-        .support-form textarea { min-height: 140px; resize: vertical; }
-        .support-form .btn-submit { padding: 14px 24px; background: #4f46e5; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
-        .support-form .btn-submit:hover { background: #4338ca; }
-        .flash-msg { padding: 14px 18px; border-radius: 10px; margin-bottom: 24px; font-size: 14px; font-weight: 600; }
-        .flash-msg.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .flash-msg.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        .quick-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
-        .quick-links a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; color: #475569; font-size: 14px; font-weight: 600; text-decoration: none; }
-        .quick-links a:hover { background: #f1f5f9; border-color: #4f46e5; color: #4f46e5; }
+        body {
+            background: #f8fafc;
+        }
+
+        .support-wrap {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 28px;
+            transition: color 0.15s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .support-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .support-header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0 0 12px 0;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .support-header p {
+            color: #64748b;
+            font-size: 17px;
+            margin: 0;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .support-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .support-card h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin: 0 0 16px 0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .support-card h2 i {
+            color: var(--primary);
+        }
+
+        .support-card p {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .support-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        .support-card a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .support-card a:hover {
+            text-decoration: underline;
+        }
+
+        .support-card ul {
+            margin: 0 0 12px 0;
+            padding-left: 22px;
+            font-size: 15px;
+            color: #334155;
+        }
+
+        .support-card li {
+            margin-bottom: 6px;
+        }
+
+        .support-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .support-form label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .support-form input,
+        .support-form textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: #f8fafc;
+            outline: none;
+        }
+
+        .support-form input:focus,
+        .support-form textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            background: #fff;
+        }
+
+        .support-form textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .support-form .btn-submit {
+            padding: 14px 24px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .support-form .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .flash-msg {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .flash-msg.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .flash-msg.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .quick-links a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .quick-links a:hover {
+            background: #f1f5f9;
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 640px) {
+            .support-wrap {
+                padding: 100px 20px 60px;
+            }
+
+            .support-card {
+                padding: 24px 20px;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <!-- ── NAV ── -->
+    <nav class="site-nav">
+        <div class="site-nav-inner">
+            <a href="{{ url_for('auth.home') }}" class="site-nav-logo">
+                <span class="site-nav-logo-text">Training Tracker</span>
+            </a>
+            <div class="site-nav-links" id="navLinks">
+                <a href="{{ url_for('auth.home') }}#features" class="site-nav-link">Features</a>
+                <a href="{{ url_for('auth.home') }}#how-it-works" class="site-nav-link">How It Works</a>
+                <a href="{{ url_for('auth.tour') }}" class="site-nav-link">Tour</a>
+                <a href="{{ url_for('auth.home') }}#pricing" class="site-nav-link">Pricing</a>
+                <a href="{{ url_for('auth.support') }}" class="site-nav-link">Support</a>
+                <a href="{{ url_for('auth.login') }}" class="site-nav-link">Login</a>
+                <a href="{{ url_for('auth.home') }}#" class="site-nav-cta" onclick="openModal(); return false;">Get
+                    Started</a>
+            </div>
+            <button class="site-nav-mobile-toggle" id="mobileToggle" onclick="toggleNav()">
+                <i class="fa-solid fa-bars" id="toggleIcon"></i>
+            </button>
+        </div>
+    </nav>
+
     <div class="support-wrap">
         <a href="{{ url_for('auth.home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to home</a>
 
@@ -51,14 +269,15 @@
         {% endif %}
         {% endwith %}
 
-        <div class="support-header">
+        <div class="support-header reveal-up">
             <h1>Support & Help</h1>
             <p>Find answers, get started, or send us a message. We typically respond within one business day.</p>
         </div>
 
-        <div class="support-card">
+        <div class="support-card reveal-up reveal-delay-100">
             <h2><i class="fa-solid fa-circle-question"></i> Getting started</h2>
-            <p>Training Tracker is built for restaurant and quick-service teams. Each company has its own secure portal (e.g. <strong>yourcompany.trainingtracker.me</strong>).</p>
+            <p>Training Tracker is built for restaurant and quick-service teams. Each company has its own secure portal
+                (e.g. <strong>yourcompany.trainingtracker.me</strong>).</p>
             <ul>
                 <li><strong>Managers</strong> set up employees, positions, roadmaps, and schedules.</li>
                 <li><strong>Trainees</strong> view their schedule, complete sessions, and track progress.</li>
@@ -71,14 +290,15 @@
             </div>
         </div>
 
-        <div class="support-card">
+        <div class="support-card reveal-up reveal-delay-200">
             <h2><i class="fa-solid fa-key"></i> Account & login</h2>
-            <p>Sign in at your company's Training Tracker URL. If you don't know it, ask your manager or check your invite email.</p>
+            <p>Sign in at your company's Training Tracker URL. If you don't know it, ask your manager or check your
+                invite email.</p>
             <p>Forgot your password? Use <strong>Forgot?</strong> on the login page to receive a reset link.</p>
             <p><a href="{{ url_for('auth.login') }}">Go to login</a></p>
         </div>
 
-        <div class="support-card">
+        <div class="support-card reveal-up reveal-delay-300">
             <h2><i class="fa-solid fa-envelope"></i> Contact us</h2>
             <p>Have a question, bug report, or feature idea? Send us a message and we'll get back to you.</p>
             <form method="post" action="{{ url_for('auth.support') }}" class="support-form">
@@ -98,15 +318,94 @@
                     <label for="message">Message</label>
                     <textarea id="message" name="message" placeholder="How can we help?"></textarea>
                 </div>
-                <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane" style="margin-right:8px;"></i> Send message</button>
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane"
+                        style="margin-right:8px;"></i> Send message</button>
             </form>
         </div>
 
-        <div class="support-card">
+        <div class="support-card reveal-up">
             <h2><i class="fa-solid fa-rocket"></i> Want to try Training Tracker?</h2>
-            <p>New to Training Tracker? Head to the homepage to request access for your team. We offer a 14-day free trial.</p>
+            <p>New to Training Tracker? Head to the homepage to request access for your team. We offer a 14-day free
+                trial.</p>
             <p><a href="{{ url_for('auth.home') }}#pricing">View pricing and get started</a></p>
         </div>
     </div>
+    </div>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div class="site-footer-top">
+                <div class="site-footer-brand">
+                    <div style="font-size:18px; font-weight:900; color:#fff; margin-bottom:8px;">Training Tracker</div>
+                    <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful
+                        enough to scale.</p>
+                    <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">
+                        &ldquo;The difference between good and great is the little things.&rdquo;</p>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Product</h4>
+                    <a href="{{ url_for('auth.home') }}#features">Features</a>
+                    <a href="{{ url_for('auth.home') }}#how-it-works">How It Works</a>
+                    <a href="{{ url_for('auth.tour') }}">Feature Tour</a>
+                    <a href="{{ url_for('auth.home') }}#pricing">Pricing</a>
+                    <a href="{{ url_for('legacy.index') }}">Classic Mode</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Account</h4>
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.home') }}#" onclick="openModal(); return false;">Get Started</a>
+                    <a href="{{ url_for('auth.forgot_password') }}">Reset Password</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Company</h4>
+                    <a href="{{ url_for('auth.support') }}">Support</a>
+                    <a href="{{ url_for('legacy.about') }}">About Classic</a>
+                    <a href="mailto:hello@trainingtracker.me">Contact</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Legal</h4>
+                    <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+                    <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+                    <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>
+                </div>
+            </div>
+            <div class="site-footer-bottom">
+                <p>&copy; 2026 Training Tracker. Built with care.</p>
+                <span class="site-footer-version">v{{ app_version }}</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Nav Toggle
+        function toggleNav() {
+            const links = document.getElementById('navLinks');
+            const icon = document.getElementById('toggleIcon');
+            if (links.classList.contains('open')) {
+                links.classList.remove('open');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            } else {
+                links.classList.add('open');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            }
+        }
+
+        // Intersection Observer for Scroll Animations
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up:not(.active)').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
-</html>

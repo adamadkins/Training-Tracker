@@ -1,47 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cookies Policy &mdash; Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.7; }
-        .legal-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
-        .back-link:hover { color: #4f46e5; }
-        .legal-header { margin-bottom: 36px; }
-        .legal-header h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px 0; color: #0f172a; }
-        .legal-header .updated { color: #64748b; font-size: 14px; }
-        .legal-section { margin-bottom: 28px; }
-        .legal-section h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #1e293b; }
-        .legal-section h3 { font-size: 16px; font-weight: 700; margin: 20px 0 8px 0; color: #334155; }
-        .legal-section p, .legal-section li { font-size: 15px; color: #334155; margin: 0 0 10px 0; }
-        .legal-section ul { padding-left: 22px; margin: 0 0 10px 0; }
-        .legal-section a { color: #4f46e5; font-weight: 600; text-decoration: none; }
-        .legal-section a:hover { text-decoration: underline; }
-        .cookie-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
-        .cookie-table th, .cookie-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
-        .cookie-table th { font-weight: 700; color: #1e293b; background: #f8fafc; }
+        .legal-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 28px;
+            transition: color 0.15s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .legal-header {
+            margin-bottom: 36px;
+        }
+
+        .legal-header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0 0 8px 0;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .legal-header .updated {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .legal-section {
+            margin-bottom: 32px;
+        }
+
+        .legal-section h2 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            color: #1e293b;
+        }
+
+        .legal-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 24px 0 12px 0;
+            color: #334155;
+        }
+
+        .legal-section p,
+        .legal-section li {
+            font-size: 16px;
+            color: #334155;
+            margin: 0 0 12px 0;
+            line-height: 1.6;
+        }
+
+        .legal-section ul {
+            padding-left: 22px;
+            margin: 0 0 12px 0;
+        }
+
+        .legal-section a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .legal-section a:hover {
+            text-decoration: underline;
+        }
+
+        .cookie-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+            margin: 16px 0;
+        }
+
+        .cookie-table th,
+        .cookie-table td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .cookie-table th {
+            font-weight: 700;
+            color: #1e293b;
+            background: #f8fafc;
+        }
+
+        @media (max-width: 640px) {
+            .legal-wrap {
+                padding: 100px 20px 60px;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <!-- ── NAV ── -->
+    <nav class="site-nav">
+        <div class="site-nav-inner">
+            <a href="{{ url_for('auth.home') }}" class="site-nav-logo">
+                <span class="site-nav-logo-text">Training Tracker</span>
+            </a>
+            <div class="site-nav-links" id="navLinks">
+                <a href="{{ url_for('auth.home') }}#features" class="site-nav-link">Features</a>
+                <a href="{{ url_for('auth.home') }}#how-it-works" class="site-nav-link">How It Works</a>
+                <a href="{{ url_for('auth.tour') }}" class="site-nav-link">Tour</a>
+                <a href="{{ url_for('auth.home') }}#pricing" class="site-nav-link">Pricing</a>
+                <a href="{{ url_for('auth.support') }}" class="site-nav-link">Support</a>
+                <a href="{{ url_for('auth.login') }}" class="site-nav-link">Login</a>
+                <a href="{{ url_for('auth.home') }}#" class="site-nav-cta" onclick="openModal(); return false;">Get
+                    Started</a>
+            </div>
+            <button class="site-nav-mobile-toggle" id="mobileToggle" onclick="toggleNav()">
+                <i class="fa-solid fa-bars" id="toggleIcon"></i>
+            </button>
+        </div>
+    </nav>
+
     <div class="legal-wrap">
         <a href="{{ url_for('auth.home') }}" class="back-link">← Back to home</a>
-        <div class="legal-header">
+        <div class="legal-header reveal-up">
             <h1>Cookies Policy</h1>
             <p class="updated">Last updated: February 2025</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>1. What are cookies?</h2>
-            <p>Cookies are small text files that websites place on your device (computer, tablet, or phone) when you visit. They are widely used to make sites work properly, remember your preferences, and understand how the site is used. This policy describes how Training Tracker uses cookies and similar technologies.</p>
+            <p>Cookies are small text files that websites place on your device (computer, tablet, or phone) when you
+                visit. They are widely used to make sites work properly, remember your preferences, and understand how
+                the site is used. This policy describes how Training Tracker uses cookies and similar technologies.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>2. Cookies we use</h2>
-            <p>We use cookies that are necessary for the Service to function and to keep you signed in. We do not use advertising or third-party tracking cookies on the core Training Tracker application. Below is a summary of the main types we use.</p>
+            <p>We use cookies that are necessary for the Service to function and to keep you signed in. We do not use
+                advertising or third-party tracking cookies on the core Training Tracker application. Below is a summary
+                of the main types we use.</p>
 
             <h3>Strictly necessary / essential cookies</h3>
             <p>These are required for the website and app to work. They include:</p>
@@ -56,7 +172,8 @@
                 <tbody>
                     <tr>
                         <td>Session</td>
-                        <td>Keeps you logged in and maintains your session as you move between pages (e.g. session cookie).</td>
+                        <td>Keeps you logged in and maintains your session as you move between pages (e.g. session
+                            cookie).</td>
                         <td>Session (deleted when you close the browser) or short-lived (e.g. 24 hours)</td>
                     </tr>
                     <tr>
@@ -71,21 +188,27 @@
                     </tr>
                 </tbody>
             </table>
-            <p>You cannot turn off these cookies without affecting how the Service works (e.g. you may not stay logged in).</p>
+            <p>You cannot turn off these cookies without affecting how the Service works (e.g. you may not stay logged
+                in).</p>
 
             <h3>Functional cookies (if any)</h3>
-            <p>If we add cookies that remember choices or improve experience (e.g. “remember me,” dashboard layout), we will list them here and treat them in line with your consent where required by law.</p>
+            <p>If we add cookies that remember choices or improve experience (e.g. “remember me,” dashboard layout), we
+                will list them here and treat them in line with your consent where required by law.</p>
 
             <h3>Analytics (if any)</h3>
-            <p>If we use first-party or third-party analytics cookies to understand usage (e.g. how many people visit, which pages are used), we will describe them here and, where required, ask for your consent before using non-essential analytics cookies.</p>
+            <p>If we use first-party or third-party analytics cookies to understand usage (e.g. how many people visit,
+                which pages are used), we will describe them here and, where required, ask for your consent before using
+                non-essential analytics cookies.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>3. Third-party cookies</h2>
-            <p>Our payment provider (e.g. Stripe) may set cookies when you use payment or billing pages we host or redirect to. Those cookies are governed by the provider’s privacy policy. We do not control third-party cookies; we recommend reviewing Stripe’s (or other providers’) policies if you use those flows.</p>
+            <p>Our payment provider (e.g. Stripe) may set cookies when you use payment or billing pages we host or
+                redirect to. Those cookies are governed by the provider’s privacy policy. We do not control third-party
+                cookies; we recommend reviewing Stripe’s (or other providers’) policies if you use those flows.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>4. How to manage or disable cookies</h2>
             <p>You can control cookies through your browser settings. Most browsers let you:</p>
             <ul>
@@ -94,23 +217,107 @@
                 <li>Block cookies from specific sites.</li>
                 <li>Block all cookies.</li>
             </ul>
-            <p>If you block or delete essential cookies, parts of Training Tracker may not work (e.g. you may need to log in again on each visit or some features may fail). For more detail, check your browser’s “Help” or “Privacy” section (e.g. Chrome, Firefox, Safari, Edge).</p>
+            <p>If you block or delete essential cookies, parts of Training Tracker may not work (e.g. you may need to
+                log in again on each visit or some features may fail). For more detail, check your browser’s “Help” or
+                “Privacy” section (e.g. Chrome, Firefox, Safari, Edge).</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>5. Other technologies</h2>
-            <p>We may use similar technologies such as local storage (e.g. HTML5 local storage) to store preferences or session-related data. These are used for the same kinds of purposes as essential cookies (e.g. keeping you signed in, security). You can clear local storage via your browser settings.</p>
+            <p>We may use similar technologies such as local storage (e.g. HTML5 local storage) to store preferences or
+                session-related data. These are used for the same kinds of purposes as essential cookies (e.g. keeping
+                you signed in, security). You can clear local storage via your browser settings.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>6. Updates</h2>
-            <p>We may update this Cookies Policy from time to time to reflect changes in our practices or the law. The “Last updated” date at the top will be revised when we do. We encourage you to check this page periodically.</p>
+            <p>We may update this Cookies Policy from time to time to reflect changes in our practices or the law. The
+                “Last updated” date at the top will be revised when we do. We encourage you to check this page
+                periodically.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>7. Contact</h2>
-            <p>Questions about our use of cookies? See our <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a> or contact us at <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or via <a href="{{ url_for('auth.support') }}">Support</a>.</p>
+            <p>Questions about our use of cookies? See our <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a> or
+                contact us at <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or via <a
+                    href="{{ url_for('auth.support') }}">Support</a>.</p>
         </div>
     </div>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div class="site-footer-top">
+                <div class="site-footer-brand">
+                    <div style="font-size:18px; font-weight:900; color:#fff; margin-bottom:8px;">Training Tracker</div>
+                    <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful
+                        enough to scale.</p>
+                    <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">
+                        &ldquo;The difference between good and great is the little things.&rdquo;</p>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Product</h4>
+                    <a href="{{ url_for('auth.home') }}#features">Features</a>
+                    <a href="{{ url_for('auth.home') }}#how-it-works">How It Works</a>
+                    <a href="{{ url_for('auth.tour') }}">Feature Tour</a>
+                    <a href="{{ url_for('auth.home') }}#pricing">Pricing</a>
+                    <a href="{{ url_for('legacy.index') }}">Classic Mode</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Account</h4>
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.home') }}#" onclick="openModal(); return false;">Get Started</a>
+                    <a href="{{ url_for('auth.forgot_password') }}">Reset Password</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Company</h4>
+                    <a href="{{ url_for('auth.support') }}">Support</a>
+                    <a href="{{ url_for('legacy.about') }}">About Classic</a>
+                    <a href="mailto:hello@trainingtracker.me">Contact</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Legal</h4>
+                    <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+                    <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+                    <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>
+                </div>
+            </div>
+            <div class="site-footer-bottom">
+                <p>&copy; 2026 Training Tracker. Built with care.</p>
+                <span class="site-footer-version">v{{ app_version }}</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Nav Toggle
+        function toggleNav() {
+            const links = document.getElementById('navLinks');
+            const icon = document.getElementById('toggleIcon');
+            if (links.classList.contains('open')) {
+                links.classList.remove('open');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            } else {
+                links.classList.add('open');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            }
+        }
+
+        // Intersection Observer for Scroll Animations
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up:not(.active)').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
-</html>

@@ -1,896 +1,1714 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feature Tour | Training Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
     <style>
-        :root {
-            --navy: #0f172a; --slate: #334155; --muted: #64748b;
-            --indigo: #4f46e5; --green: #10b981; --blue: #3b82f6;
-            --bg: #ffffff; --bg-alt: #f8fafc;
-        }
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--slate); }
-
-        /* ── NAV ── */
-        .tour-nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-        }
-        .tour-nav-inner {
-            max-width: 1200px; margin: 0 auto; padding: 0 24px;
-            height: 60px; display: flex; align-items: center; justify-content: space-between;
-        }
-        .tour-nav-brand {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none; color: #fff; font-size: 15px; font-weight: 800;
-        }
-        .tour-nav-brand img { height: 28px; }
-        .tour-nav-links { display: flex; gap: 6px; align-items: center; }
-        .tour-nav-links a {
-            color: rgba(255,255,255,0.65); text-decoration: none; font-size: 12px;
-            font-weight: 600; padding: 6px 12px; border-radius: 8px; transition: all 0.15s;
-        }
-        .tour-nav-links a:hover { color: #fff; background: rgba(255,255,255,0.08); }
-        .tour-nav-cta {
-            background: var(--indigo) !important; color: #fff !important;
-            padding: 8px 18px !important; border-radius: 8px !important; font-weight: 700 !important;
-        }
-
         /* ── HERO ── */
         .tour-hero {
-            padding: 140px 24px 80px; text-align: center;
+            padding: 140px 24px 80px;
+            text-align: center;
             background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 100%);
-            position: relative; overflow: hidden;
+            position: relative;
+            overflow: hidden;
         }
+
         .tour-hero::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(ellipse at 30% 20%, rgba(79,70,229,0.18), transparent 60%),
-                        radial-gradient(ellipse at 70% 80%, rgba(16,185,129,0.12), transparent 50%);
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 30% 20%, rgba(79, 70, 229, 0.18), transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(16, 185, 129, 0.12), transparent 50%);
         }
-        .tour-hero-inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+
+        .tour-hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
         .tour-hero-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px; padding: 5px 14px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.7);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
             margin-bottom: 24px;
         }
+
         .tour-hero h1 {
-            font-size: 48px; font-weight: 900; color: #fff; letter-spacing: -0.03em;
-            line-height: 1.1; margin-bottom: 18px;
+            font-size: 48px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 18px;
         }
+
         .tour-hero p {
-            font-size: 17px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 12px;
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 12px;
         }
+
         .tour-hero-motto {
-            font-size: 14px; font-style: italic; color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.4);
             letter-spacing: 0.02em;
         }
 
         /* ── TABLE OF CONTENTS ── */
         .tour-toc {
-            background: var(--bg-alt); border-bottom: 1px solid #e2e8f0;
-            padding: 24px; position: sticky; top: 60px; z-index: 50;
+            background: var(--bg-alt);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 24px;
+            position: sticky;
+            top: 60px;
+            z-index: 50;
         }
+
         .tour-toc-inner {
-            max-width: 1000px; margin: 0 auto;
-            display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
         }
+
         .toc-link {
-            font-size: 11px; font-weight: 700; color: var(--muted);
-            padding: 6px 14px; border-radius: 8px; text-decoration: none;
-            border: 1px solid #e2e8f0; background: #fff; transition: all 0.15s;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            padding: 6px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            transition: all 0.15s;
             white-space: nowrap;
         }
-        .toc-link:hover { color: var(--indigo); border-color: var(--indigo); background: #eef2ff; }
+
+        .toc-link:hover {
+            color: var(--indigo);
+            border-color: var(--indigo);
+            background: #eef2ff;
+        }
 
         /* ── SECTION ── */
-        .tour-section { padding: 80px 24px; scroll-margin-top: 120px; }
-        .tour-section:nth-child(even) { background: var(--bg-alt); }
-        .tour-section-inner { max-width: 1100px; margin: 0 auto; }
-        .tour-section-header { text-align: center; margin-bottom: 48px; }
+        .tour-section {
+            padding: 80px 24px;
+            scroll-margin-top: 120px;
+        }
+
+        .tour-section:nth-child(even) {
+            background: var(--bg-alt);
+        }
+
+        .tour-section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .tour-section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
         .tour-section-label {
-            display: inline-flex; align-items: center; gap: 6px;
-            font-size: 11px; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 0.08em; padding: 4px 12px; border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 4px 12px;
+            border-radius: 6px;
             margin-bottom: 12px;
         }
+
         .tour-section-header h2 {
-            font-size: 36px; font-weight: 900; color: var(--navy);
-            letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 12px;
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--navy);
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin-bottom: 12px;
         }
+
         .tour-section-header p {
-            font-size: 15px; color: var(--muted); max-width: 600px; margin: 0 auto; line-height: 1.7;
+            font-size: 15px;
+            color: var(--muted);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.7;
         }
 
         /* ── GRID LAYOUTS ── */
         .tour-split {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
         }
-        .tour-split.reverse { direction: rtl; }
-        .tour-split.reverse > * { direction: ltr; }
+
+        .tour-split.reverse {
+            direction: rtl;
+        }
+
+        .tour-split.reverse>* {
+            direction: ltr;
+        }
+
         .tour-text h3 {
-            font-size: 22px; font-weight: 900; color: var(--navy); margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--navy);
+            margin-bottom: 12px;
             letter-spacing: -0.02em;
         }
-        .tour-text p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
-        .tour-bullets { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-        .tour-bullets li {
-            display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--slate); line-height: 1.5;
+
+        .tour-text p {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 16px;
         }
-        .tour-bullets li i { color: var(--green); margin-top: 3px; font-size: 11px; flex-shrink: 0; }
+
+        .tour-bullets {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tour-bullets li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--slate);
+            line-height: 1.5;
+        }
+
+        .tour-bullets li i {
+            color: var(--green);
+            margin-top: 3px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
 
         /* ── MOCKUP CARD ── */
         .tour-mock {
-            background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
-            overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         }
+
         .tour-mock-bar {
-            padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; gap: 6px;
+            padding: 10px 14px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .tour-mock-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .tour-mock-body { padding: 0; }
+
+        .tour-mock-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .tour-mock-body {
+            padding: 0;
+        }
 
         /* ── INTERNAL MOCKUP STYLES ── */
         .tm-header {
-            padding: 14px 18px; border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .tm-title { font-size: 14px; font-weight: 900; color: var(--navy); }
-        .tm-sub { font-size: 11px; color: var(--muted); }
+
+        .tm-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--navy);
+        }
+
+        .tm-sub {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
         .tm-btn {
-            font-size: 10px; font-weight: 800; padding: 6px 12px; border-radius: 8px;
-            border: none; cursor: default; display: inline-flex; align-items: center; gap: 4px;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        .tm-btn-primary { background: var(--indigo); color: #fff; }
-        .tm-btn-smart { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
-        .tm-body { padding: 14px 18px; }
-        .tm-kpi-row { display: flex; gap: 8px; margin-bottom: 14px; }
+
+        .tm-btn-primary {
+            background: var(--indigo);
+            color: #fff;
+        }
+
+        .tm-btn-smart {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: #fff;
+        }
+
+        .tm-body {
+            padding: 14px 18px;
+        }
+
+        .tm-kpi-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
         .tm-kpi {
-            flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
-            padding: 10px 12px; border-left: 3px solid;
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            border-left: 3px solid;
         }
-        .tm-kpi-val { font-size: 22px; font-weight: 900; display: block; line-height: 1; margin-bottom: 2px; }
-        .tm-kpi-lbl { font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
-        .tm-table { width: 100%; border-collapse: collapse; }
-        .tm-table th { font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
-        .tm-table td { font-size: 11px; color: var(--slate); padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
-        .tm-av { width: 22px; height: 22px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; vertical-align: middle; margin-right: 4px; }
-        .tm-pill { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px; }
-        .tm-score { font-size: 11px; font-weight: 800; color: #fff; padding: 3px 8px; border-radius: 6px; }
-        .tm-rating-row { display: flex; gap: 3px; padding: 3px; background: #f1f5f9; border-radius: 8px; }
-        .tm-r { flex: 1; text-align: center; padding: 5px 0; border-radius: 6px; font-size: 11px; font-weight: 800; color: #94a3b8; }
-        .tm-criteria-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
-        .tm-criteria-name { font-size: 11px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
-        .tm-step { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; margin-bottom: 6px; }
-        .tm-step-num { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
-        .tm-step-name { flex: 1; font-size: 11px; font-weight: 700; color: var(--slate); }
-        .tm-step-badge { font-size: 10px; font-weight: 800; }
-        .tm-progress { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 10px; }
-        .tm-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--indigo), var(--green)); }
-        .tm-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-        .tm-hero-card { border-left: 4px solid var(--indigo); background: linear-gradient(to right, rgba(79,70,229,0.03), transparent); padding: 14px 16px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
-        .tm-hero-label { font-size: 9px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
-        .tm-hero-title { font-size: 15px; font-weight: 900; color: var(--navy); margin-bottom: 3px; }
-        .tm-hero-meta { font-size: 10px; color: var(--muted); margin-bottom: 6px; }
-        .tm-hero-pill { font-size: 8px; font-weight: 800; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+
+        .tm-kpi-val {
+            font-size: 22px;
+            font-weight: 900;
+            display: block;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .tm-kpi-lbl {
+            font-size: 8px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .tm-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tm-table th {
+            font-size: 9px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            text-align: left;
+            padding: 6px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tm-table td {
+            font-size: 11px;
+            color: var(--slate);
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tm-av {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 800;
+            color: #fff;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
+        .tm-pill {
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .tm-score {
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .tm-rating-row {
+            display: flex;
+            gap: 3px;
+            padding: 3px;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .tm-r {
+            flex: 1;
+            text-align: center;
+            padding: 5px 0;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+        }
+
+        .tm-criteria-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .tm-criteria-name {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-bottom: 6px;
+        }
+
+        .tm-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            margin-bottom: 6px;
+        }
+
+        .tm-step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .tm-step-name {
+            flex: 1;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--slate);
+        }
+
+        .tm-step-badge {
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .tm-progress {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .tm-progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--indigo), var(--green));
+        }
+
+        .tm-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }
+
+        .tm-hero-card {
+            border-left: 4px solid var(--indigo);
+            background: linear-gradient(to right, rgba(79, 70, 229, 0.03), transparent);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+        }
+
+        .tm-hero-label {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 3px;
+        }
+
+        .tm-hero-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--navy);
+            margin-bottom: 3px;
+        }
+
+        .tm-hero-meta {
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .tm-hero-pill {
+            font-size: 8px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
 
         /* ── MSG MOCKUP ── */
-        .tm-msg { display: flex; height: 320px; }
-        .tm-msg-side { width: 180px; background: #1e293b; padding: 12px; border-right: 1px solid #334155; flex-shrink: 0; }
-        .tm-msg-ch { padding: 5px 8px; border-radius: 6px; font-size: 11px; color: rgba(255,255,255,0.55); cursor: default; margin-bottom: 2px; }
-        .tm-msg-ch.active { background: rgba(255,255,255,0.08); color: #fff; font-weight: 700; }
-        .tm-msg-main { flex: 1; display: flex; flex-direction: column; }
-        .tm-msg-chat { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
-        .tm-bubble { max-width: 70%; padding: 8px 12px; border-radius: 10px; font-size: 11px; line-height: 1.5; }
-        .tm-bubble-other { background: #f1f5f9; color: var(--slate); align-self: flex-start; border-bottom-left-radius: 2px; }
-        .tm-bubble-me { background: var(--indigo); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .tm-bubble-name { font-size: 9px; font-weight: 700; margin-bottom: 2px; }
-        .tm-msg-input { padding: 10px 14px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
-        .tm-msg-input-field { flex: 1; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 11px; color: #94a3b8; outline: none; }
-        .tm-msg-send { width: 30px; height: 30px; border-radius: 8px; background: var(--indigo); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+        .tm-msg {
+            display: flex;
+            height: 320px;
+        }
+
+        .tm-msg-side {
+            width: 180px;
+            background: #1e293b;
+            padding: 12px;
+            border-right: 1px solid #334155;
+            flex-shrink: 0;
+        }
+
+        .tm-msg-ch {
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            cursor: default;
+            margin-bottom: 2px;
+        }
+
+        .tm-msg-ch.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .tm-msg-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tm-msg-chat {
+            flex: 1;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .tm-bubble {
+            max-width: 70%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .tm-bubble-other {
+            background: #f1f5f9;
+            color: var(--slate);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .tm-bubble-me {
+            background: var(--indigo);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .tm-bubble-name {
+            font-size: 9px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .tm-msg-input {
+            padding: 10px 14px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tm-msg-input-field {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 11px;
+            color: #94a3b8;
+            outline: none;
+        }
+
+        .tm-msg-send {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: var(--indigo);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
 
         /* ── QR MOCKUP ── */
-        .tm-qr { text-align: center; padding: 20px; }
-        .tm-qr-box { width: 120px; height: 120px; margin: 0 auto 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-        .tm-qr-pattern { width: 80px; height: 80px; background: repeating-conic-gradient(var(--navy) 0% 25%, #fff 0% 50%) 50% / 8px 8px; border-radius: 3px; }
-        .tm-qr-link { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 9px; color: var(--muted); font-family: monospace; margin-bottom: 12px; word-break: break-all; }
-        .tm-qr-btns { display: flex; gap: 6px; justify-content: center; }
-        .tm-qr-btn { padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: #fff; }
+        .tm-qr {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .tm-qr-box {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tm-qr-pattern {
+            width: 80px;
+            height: 80px;
+            background: repeating-conic-gradient(var(--navy) 0% 25%, #fff 0% 50%) 50% / 8px 8px;
+            border-radius: 3px;
+        }
+
+        .tm-qr-link {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 9px;
+            color: var(--muted);
+            font-family: monospace;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .tm-qr-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .tm-qr-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #fff;
+        }
 
         /* ── PROFILE MOCKUP ── */
-        .tm-profile-header { padding: 16px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
-        .tm-profile-av { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #fff; }
-        .tm-profile-stats { padding: 14px 18px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 20px; }
-        .tm-profile-stat-label { font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
-        .tm-profile-stat-val { font-size: 14px; font-weight: 800; }
-        .tm-transcript-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .tm-transcript-card { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .tm-profile-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tm-profile-av {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .tm-profile-stats {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 20px;
+        }
+
+        .tm-profile-stat-label {
+            font-size: 8px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .tm-profile-stat-val {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .tm-transcript-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .tm-transcript-card {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
 
         /* ── CTA ── */
         .tour-cta {
-            padding: 80px 24px; text-align: center;
+            padding: 80px 24px;
+            text-align: center;
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         }
-        .tour-cta h2 { font-size: 36px; font-weight: 900; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em; }
-        .tour-cta p { font-size: 15px; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
-        .tour-cta-motto { font-size: 14px; font-style: italic; color: rgba(255,255,255,0.45); margin-bottom: 24px; }
-        .tour-cta-btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 14px 32px; background: #fff; color: var(--indigo);
-            border-radius: 12px; font-size: 15px; font-weight: 800;
-            text-decoration: none; transition: all 0.2s;
+
+        .tour-cta h2 {
+            font-size: 36px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
         }
-        .tour-cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+        .tour-cta p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
+        }
+
+        .tour-cta-motto {
+            font-size: 14px;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 24px;
+        }
+
+        .tour-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: #fff;
+            color: var(--indigo);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .tour-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
 
         /* ── FOOTER ── */
-        .tour-footer { padding: 32px 24px; text-align: center; border-top: 1px solid #e2e8f0; }
-        .tour-footer p { font-size: 12px; color: var(--muted); }
+        .tour-footer {
+            padding: 32px 24px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .tour-footer p {
+            font-size: 12px;
+            color: var(--muted);
+        }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 860px) {
-            .tour-split, .tour-split.reverse { grid-template-columns: 1fr; direction: ltr; gap: 32px; }
-            .tour-hero h1 { font-size: 32px; }
-            .tour-section-header h2 { font-size: 28px; }
-            .tm-msg-side { width: 140px; }
+
+            .tour-split,
+            .tour-split.reverse {
+                grid-template-columns: 1fr;
+                direction: ltr;
+                gap: 32px;
+            }
+
+            .tour-hero h1 {
+                font-size: 32px;
+            }
+
+            .tour-section-header h2 {
+                font-size: 28px;
+            }
+
+            .tm-msg-side {
+                width: 140px;
+            }
         }
     </style>
 </head>
+
 <body>
 
-<!-- ── NAV ── -->
-<nav class="tour-nav">
-    <div class="tour-nav-inner">
-        <a href="{{ url_for('auth.home') }}" class="tour-nav-brand">
-            Training Tracker
+    <!-- ── NAV ── -->
+    <nav class="site-nav">
+        <div class="site-nav-inner">
+            <a href="{{ url_for('auth.home') }}" class="site-nav-logo">
+                <span class="site-nav-logo-text">Training Tracker</span>
+            </a>
+            <div class="site-nav-links" id="navLinks">
+                <a href="{{ url_for('auth.home') }}#features" class="site-nav-link">Features</a>
+                <a href="{{ url_for('auth.home') }}#how-it-works" class="site-nav-link">How It Works</a>
+                <a href="{{ url_for('auth.tour') }}" class="site-nav-link">Tour</a>
+                <a href="{{ url_for('auth.home') }}#pricing" class="site-nav-link">Pricing</a>
+                <a href="{{ url_for('auth.support') }}" class="site-nav-link">Support</a>
+                <a href="{{ url_for('auth.login') }}" class="site-nav-link">Login</a>
+                <a href="#" class="site-nav-cta" onclick="openModal(); return false;">Get Started</a>
+            </div>
+            <button class="site-nav-mobile-toggle" id="mobileToggle" onclick="toggleNav()">
+                <i class="fa-solid fa-bars" id="toggleIcon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <section class="tour-hero">
+        <div class="tour-hero-inner">
+            <div class="tour-hero-badge">
+                <i class="fa-solid fa-sparkles" style="color:#a78bfa;"></i> Complete Feature Tour
+            </div>
+            <h1>See Every Feature<br>Up Close</h1>
+            <p>A deep dive into everything Training Tracker can do for your team &mdash; from scheduling to graduation.
+            </p>
+        </div>
+    </section>
+
+    <!-- ── TABLE OF CONTENTS ── -->
+    <div class="tour-toc">
+        <div class="tour-toc-inner">
+            <a href="#tour-dashboard" class="toc-link"><i class="fa-solid fa-gauge" style="font-size:9px;"></i> Manager
+                Dashboard</a>
+            <a href="#tour-scheduling" class="toc-link"><i class="fa-solid fa-calendar-days" style="font-size:9px;"></i>
+                Smart Scheduling</a>
+            <a href="#tour-ratings" class="toc-link"><i class="fa-solid fa-star" style="font-size:9px;"></i> Session
+                Ratings</a>
+            <a href="#tour-roadmaps" class="toc-link"><i class="fa-solid fa-road" style="font-size:9px;"></i>
+                Roadmaps</a>
+            <a href="#tour-employees" class="toc-link"><i class="fa-solid fa-users" style="font-size:9px;"></i> Employee
+                Profiles</a>
+            <a href="#tour-trainer" class="toc-link"><i class="fa-solid fa-chalkboard-user" style="font-size:9px;"></i>
+                Trainer View</a>
+            <a href="#tour-trainee" class="toc-link"><i class="fa-solid fa-user-graduate" style="font-size:9px;"></i>
+                Trainee View</a>
+            <a href="#tour-messaging" class="toc-link"><i class="fa-solid fa-message" style="font-size:9px;"></i>
+                Messaging</a>
+            <a href="#tour-guest" class="toc-link"><i class="fa-solid fa-qrcode" style="font-size:9px;"></i> Guest
+                Trainer</a>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 1: MANAGER DASHBOARD -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-dashboard">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#eef2ff; color:#4f46e5;">
+                    <i class="fa-solid fa-gauge"></i> Manager Dashboard
+                </div>
+                <h2>Your command center for all things training</h2>
+                <p>See what matters at a glance: upcoming sessions, team progress, and recent activity. Everything a
+                    manager needs on one screen.</p>
+            </div>
+            <div class="tour-split">
+                <div class="tour-text">
+                    <h3>KPIs that tell the full story</h3>
+                    <p>Color-coded stat cards surface exactly what needs your attention: how many sessions are
+                        scheduled, how many are completed this month, and how many trainees are currently active.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> At-a-glance stats update in real time</li>
+                        <li><i class="fa-solid fa-check"></i> Quick-action buttons for common tasks</li>
+                        <li><i class="fa-solid fa-check"></i> Recent activity feed shows the latest evaluations</li>
+                        <li><i class="fa-solid fa-check"></i> Launchpad cards for creating schedules, adding employees,
+                            and more</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-body">
+                        <div class="tm-kpi-row">
+                            <div class="tm-kpi" style="border-left-color:#3b82f6;">
+                                <span class="tm-kpi-val" style="color:#3b82f6;">12</span>
+                                <div class="tm-kpi-lbl">Scheduled</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#10b981;">
+                                <span class="tm-kpi-val" style="color:#10b981;">48</span>
+                                <div class="tm-kpi-lbl">Completed</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#f59e0b;">
+                                <span class="tm-kpi-val" style="color:#f59e0b;">6</span>
+                                <div class="tm-kpi-lbl">Active Trainees</div>
+                            </div>
+                        </div>
+                        <div class="tm-hero-card">
+                            <div class="tm-hero-label">Upcoming Session</div>
+                            <div class="tm-hero-title">Front Counter &mdash; Jordan R. with Chris M.</div>
+                            <div class="tm-hero-meta">Saturday, Feb 15 at 8:00 AM</div>
+                            <span class="tm-hero-pill"
+                                style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                        </div>
+                        <div
+                            style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">
+                            Recent Activity</div>
+                        <div class="tm-card" style="padding:8px 12px;">
+                            <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                                <div class="tm-av" style="background:#4f46e5; width:18px; height:18px; font-size:7px;">
+                                    CM</div>
+                                <span style="font-size:11px; font-weight:700; color:#334155;">Chris M.</span>
+                                <span style="font-size:10px; color:#94a3b8;">rated Jordan R. on Front Counter</span>
+                            </div>
+                            <div style="display:flex; gap:3px;">
+                                <span class="tm-score"
+                                    style="background:#10b981; font-size:10px; padding:2px 6px;">4.5</span>
+                                <span style="font-size:9px; color:#64748b; align-self:center;">2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 2: SMART SCHEDULING -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-scheduling">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#ede9fe; color:#7c3aed;">
+                    <i class="fa-solid fa-calendar-days"></i> Smart Scheduling
+                </div>
+                <h2>Build a full training week in one click</h2>
+                <p>Upload your work schedule, and the smart scheduler automatically pairs trainees with qualified
+                    trainers across every shift.</p>
+            </div>
+            <div class="tour-split reverse">
+                <div class="tour-text">
+                    <h3>Eliminate the spreadsheet shuffle</h3>
+                    <p>The Smart Scheduler reads your uploaded work schedule PDF, identifies who is working when, and
+                        auto-generates a training schedule that respects position qualifications and availability.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Upload PDF work schedules for automatic shift detection
+                        </li>
+                        <li><i class="fa-solid fa-check"></i> Auto-pair trainees with qualified trainers</li>
+                        <li><i class="fa-solid fa-check"></i> Blind schedule mode hides assignments until session time
+                        </li>
+                        <li><i class="fa-solid fa-check"></i> Publish, unpublish, or delete entire weeks</li>
+                        <li><i class="fa-solid fa-check"></i> Drag-and-drop manual adjustments</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-header">
+                        <div class="tm-title">Training Schedules</div>
+                        <div style="display:flex; gap:6px;">
+                            <div class="tm-btn tm-btn-smart"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart
+                                Schedule</div>
+                            <div class="tm-btn tm-btn-primary"><i class="fa-solid fa-plus"></i> Manual</div>
+                        </div>
+                    </div>
+                    <div class="tm-body">
+                        <div class="tm-card" style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:12px; font-weight:800; color:#1e293b;">Feb 10 &ndash; Feb 16</div>
+                                <div style="font-size:10px; color:#64748b;">Current week &bull; 8 sessions</div>
+                            </div>
+                            <span class="tm-pill"
+                                style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;"><i
+                                    class="fa-solid fa-circle" style="font-size:5px;"></i> Published</span>
+                        </div>
+                        <div class="tm-card" style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:12px; font-weight:800; color:#1e293b;">Feb 17 &ndash; Feb 23</div>
+                                <div style="font-size:10px; color:#64748b;">Next week &bull; 5 sessions</div>
+                            </div>
+                            <span class="tm-pill"
+                                style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i
+                                    class="fa-solid fa-circle" style="font-size:5px;"></i> Draft</span>
+                        </div>
+                        <div
+                            style="margin-top:10px; font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">
+                            Week Detail &mdash; Feb 10</div>
+                        <table class="tm-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Position</th>
+                                    <th>Trainer</th>
+                                    <th>Trainee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="font-size:10px; font-weight:700;">Tue</td>
+                                    <td style="font-size:10px; font-weight:700;">Front Counter</td>
+                                    <td>
+                                        <div class="tm-av" style="background:#4f46e5;">CM</div>Chris
+                                    </td>
+                                    <td>
+                                        <div class="tm-av" style="background:#7c3aed;">JR</div>Jordan
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size:10px; font-weight:700;">Thu</td>
+                                    <td style="font-size:10px; font-weight:700;">Drive Thru</td>
+                                    <td>
+                                        <div class="tm-av" style="background:#4f46e5;">CM</div>Chris
+                                    </td>
+                                    <td>
+                                        <div class="tm-av" style="background:#059669;">ML</div>Morgan
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size:10px; font-weight:700;">Sat</td>
+                                    <td style="font-size:10px; font-weight:700;">Front Counter</td>
+                                    <td>
+                                        <div class="tm-av" style="background:#4f46e5;">CM</div>Chris
+                                    </td>
+                                    <td>
+                                        <div class="tm-av" style="background:#7c3aed;">JR</div>Jordan
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 3: SESSION RATINGS -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-ratings">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#fef3c7; color:#d97706;">
+                    <i class="fa-solid fa-star"></i> Session Ratings
+                </div>
+                <h2>Detailed feedback on every skill, every session</h2>
+                <p>Custom criteria per position with color-coded 1&ndash;5 scales. Trainers submit evaluations in under
+                    two minutes.</p>
+            </div>
+            <div class="tour-split">
+                <div class="tour-text">
+                    <h3>Built for speed and specificity</h3>
+                    <p>Each position has its own set of rating criteria (speed, accuracy, guest interaction, etc.).
+                        Trainers tap a number, optionally leave a comment, and submit. The system aggregates scores
+                        automatically.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Custom skill descriptors per position</li>
+                        <li><i class="fa-solid fa-check"></i> Color-coded 1&ndash;5 buttons (red to green)</li>
+                        <li><i class="fa-solid fa-check"></i> Optional per-criteria comments</li>
+                        <li><i class="fa-solid fa-check"></i> "Needs Attention" flag for manager follow-up</li>
+                        <li><i class="fa-solid fa-check"></i> Overall notes for session-level context</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-header">
+                        <div>
+                            <div class="tm-title">Rate Session</div>
+                            <div class="tm-sub">Jordan R. &mdash; Front Counter</div>
+                        </div>
+                    </div>
+                    <div class="tm-body">
+                        <div class="tm-criteria-block">
+                            <div class="tm-criteria-name">Knowledge &amp; Accuracy</div>
+                            <div class="tm-rating-row">
+                                <div class="tm-r">1</div>
+                                <div class="tm-r">2</div>
+                                <div class="tm-r">3</div>
+                                <div class="tm-r" style="background:#84cc16; color:#fff;">4</div>
+                                <div class="tm-r">5</div>
+                            </div>
+                        </div>
+                        <div class="tm-criteria-block">
+                            <div class="tm-criteria-name">Speed of Service</div>
+                            <div class="tm-rating-row">
+                                <div class="tm-r">1</div>
+                                <div class="tm-r">2</div>
+                                <div class="tm-r">3</div>
+                                <div class="tm-r">4</div>
+                                <div class="tm-r" style="background:#22c55e; color:#fff;">5</div>
+                            </div>
+                        </div>
+                        <div class="tm-criteria-block">
+                            <div class="tm-criteria-name">Guest Interaction</div>
+                            <div class="tm-rating-row">
+                                <div class="tm-r">1</div>
+                                <div class="tm-r">2</div>
+                                <div class="tm-r" style="background:#eab308; color:#fff;">3</div>
+                                <div class="tm-r">4</div>
+                                <div class="tm-r">5</div>
+                            </div>
+                            <div
+                                style="margin-top:6px; padding:6px 8px; border:1px solid #e2e8f0; border-radius:6px; font-size:10px; color:#334155; background:#fff;">
+                                Needs to greet guests more consistently</div>
+                        </div>
+                        <div
+                            style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+                            <input type="checkbox" disabled style="accent-color:#94a3b8;">
+                            <span style="font-size:11px; color:#64748b; font-weight:600;"><i class="fa-solid fa-flag"
+                                    style="color:#94a3b8; margin-right:3px;"></i> Flag for manager attention</span>
+                        </div>
+                        <div class="tm-btn tm-btn-primary"
+                            style="width:100%; justify-content:center; margin-top:10px; padding:10px;">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Evaluation
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 4: TRAINING ROADMAPS -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-roadmaps">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#d1fae5; color:#059669;">
+                    <i class="fa-solid fa-road"></i> Training Roadmaps
+                </div>
+                <h2>Every position has a clear path forward</h2>
+                <p>Define ordered training steps for each position. Trainees must master each step before unlocking the
+                    next one.</p>
+            </div>
+            <div class="tour-split reverse">
+                <div class="tour-text">
+                    <h3>Structured progression, not random sessions</h3>
+                    <p>Roadmaps ensure every trainee gets the same quality of training. Steps are completed in order,
+                        and the system automatically tracks where each person stands.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Define steps for each position (Register Basics &rarr;
+                            Order Taking &rarr; ...)</li>
+                        <li><i class="fa-solid fa-check"></i> Steps lock/unlock automatically based on completion</li>
+                        <li><i class="fa-solid fa-check"></i> Visual progress bar shows completion percentage</li>
+                        <li><i class="fa-solid fa-check"></i> Minimum score threshold to advance</li>
+                        <li><i class="fa-solid fa-check"></i> Manager can assign any trainee to a roadmap</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-header">
+                        <div class="tm-title">Front Counter Roadmap</div>
+                        <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">40%
+                            Complete</span>
+                    </div>
+                    <div class="tm-body">
+                        <div class="tm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                            <div class="tm-step-num" style="background:#dcfce7; color:#16a34a;"><i
+                                    class="fa-solid fa-check"></i></div>
+                            <span class="tm-step-name" style="color:#166534;">Register Basics</span>
+                            <span class="tm-step-badge" style="color:#16a34a;">4.8 / 5</span>
+                        </div>
+                        <div class="tm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
+                            <div class="tm-step-num" style="background:#dcfce7; color:#16a34a;"><i
+                                    class="fa-solid fa-check"></i></div>
+                            <span class="tm-step-name" style="color:#166534;">Order Taking</span>
+                            <span class="tm-step-badge" style="color:#16a34a;">4.5 / 5</span>
+                        </div>
+                        <div class="tm-step" style="border-color:#c7d2fe; background:#eef2ff;">
+                            <div class="tm-step-num" style="background:#e0e7ff; color:#4f46e5;"><i
+                                    class="fa-solid fa-clock"></i></div>
+                            <span class="tm-step-name" style="color:#4f46e5;">Speed &amp; Accuracy</span>
+                            <span class="tm-step-badge" style="color:#4f46e5;">In Progress</span>
+                        </div>
+                        <div class="tm-step" style="opacity:0.45;">
+                            <div class="tm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i
+                                    class="fa-solid fa-lock"></i></div>
+                            <span class="tm-step-name">Suggestive Selling</span>
+                            <span class="tm-step-badge" style="color:#94a3b8;">Locked</span>
+                        </div>
+                        <div class="tm-step" style="opacity:0.45;">
+                            <div class="tm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i
+                                    class="fa-solid fa-lock"></i></div>
+                            <span class="tm-step-name">Guest Recovery</span>
+                            <span class="tm-step-badge" style="color:#94a3b8;">Locked</span>
+                        </div>
+                        <div class="tm-progress">
+                            <div class="tm-progress-fill" style="width:40%;"></div>
+                        </div>
+                        <div
+                            style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; font-weight:600; margin-top:4px;">
+                            <span>2 of 5 steps complete</span><span>40%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 5: EMPLOYEE PROFILES -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-employees">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#dbeafe; color:#2563eb;">
+                    <i class="fa-solid fa-users"></i> Employee Profiles
+                </div>
+                <h2>Every team member's full training story</h2>
+                <p>Session transcripts, mastery badges, roadmap progress, and internal notes &mdash; all in one place.
+                </p>
+            </div>
+            <div class="tour-split">
+                <div class="tour-text">
+                    <h3>Know who is ready and who needs more time</h3>
+                    <p>Each employee has a profile showing every session they have completed, their average scores per
+                        position, their roadmap progress, and mastery badges for positions they have graduated from.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Per-position training scores and session history</li>
+                        <li><i class="fa-solid fa-check"></i> Green mastery badges when positions are completed</li>
+                        <li><i class="fa-solid fa-check"></i> Internal notes visible only to managers</li>
+                        <li><i class="fa-solid fa-check"></i> Role indicators (Manager, Trainer, Trainee)</li>
+                        <li><i class="fa-solid fa-check"></i> One-click graduation when a trainee is ready</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-profile-header">
+                        <div class="tm-profile-av" style="background:#4f46e5;">JR</div>
+                        <div>
+                            <div class="tm-title">Jordan R.</div>
+                            <div style="display:flex; gap:4px;">
+                                <span class="tm-pill"
+                                    style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">Trainee</span>
+                                <span class="tm-pill"
+                                    style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0;">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tm-profile-stats">
+                        <div>
+                            <div class="tm-profile-stat-label">Sessions</div>
+                            <div class="tm-profile-stat-val" style="color:#1e293b;">8</div>
+                        </div>
+                        <div>
+                            <div class="tm-profile-stat-label">Avg. Score</div>
+                            <div class="tm-profile-stat-val" style="color:#4f46e5;">4.2</div>
+                        </div>
+                        <div>
+                            <div class="tm-profile-stat-label">Roadmap</div>
+                            <div class="tm-profile-stat-val" style="color:#10b981;">40%</div>
+                        </div>
+                    </div>
+                    <div class="tm-body">
+                        <div
+                            style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">
+                            Training Transcript</div>
+                        <div class="tm-transcript-grid">
+                            <div class="tm-transcript-card" style="border-left:3px solid #4f46e5;">
+                                <div style="font-size:11px; font-weight:800; color:#1e293b;">Front Counter</div>
+                                <div style="font-size:18px; font-weight:900; color:#4f46e5;">4.5</div>
+                                <div style="font-size:9px; color:#64748b;">6 sessions</div>
+                            </div>
+                            <div class="tm-transcript-card" style="border-left:3px solid #10b981;">
+                                <div style="font-size:11px; font-weight:800; color:#1e293b;">Drive Thru</div>
+                                <div style="font-size:18px; font-weight:900; color:#10b981;">3.9</div>
+                                <div style="font-size:9px; color:#64748b;">2 sessions</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:3px; flex-wrap:wrap;">
+                            <span class="tm-pill"
+                                style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-size:8px;"><i
+                                    class="fa-solid fa-check" style="font-size:6px;"></i> Register Basics</span>
+                            <span class="tm-pill"
+                                style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-size:8px;"><i
+                                    class="fa-solid fa-check" style="font-size:6px;"></i> Order Taking</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 6: TRAINER VIEW -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-trainer">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#fef3c7; color:#d97706;">
+                    <i class="fa-solid fa-chalkboard-user"></i> Trainer View
+                </div>
+                <h2>What your trainers see when they log in</h2>
+                <p>A focused dashboard built for trainers, showing their assigned sessions, floor coverage gaps, and
+                    one-tap session submission.</p>
+            </div>
+            <div class="tour-split reverse">
+                <div class="tour-text">
+                    <h3>Trainer Dashboard</h3>
+                    <p>Trainers see their own stats, their next scheduled session (with a "Start Session" button), and
+                        any overdue evaluations. Floor coverage shows unclaimed training spots they can volunteer for.
+                    </p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Personal stat cards: Scheduled, Completed, Floor Active
+                        </li>
+                        <li><i class="fa-solid fa-check"></i> Next session hero card with "Start Session" action</li>
+                        <li><i class="fa-solid fa-check"></i> Overdue sessions highlighted in red</li>
+                        <li><i class="fa-solid fa-check"></i> Floor coverage with "Claim" buttons</li>
+                        <li><i class="fa-solid fa-check"></i> Quick Train button for on-the-fly evaluations</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-body">
+                        <div
+                            style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+                            <div>
+                                <div class="tm-title" style="font-size:16px;">Hi, Chris</div>
+                                <div class="tm-sub">Trainer Dashboard</div>
+                            </div>
+                            <div class="tm-btn tm-btn-primary"><i class="fa-solid fa-bolt"></i> Quick Train</div>
+                        </div>
+                        <div class="tm-kpi-row">
+                            <div class="tm-kpi" style="border-left-color:#3b82f6;"><span class="tm-kpi-val"
+                                    style="color:#3b82f6;">3</span>
+                                <div class="tm-kpi-lbl">Scheduled</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#10b981;"><span class="tm-kpi-val"
+                                    style="color:#10b981;">24</span>
+                                <div class="tm-kpi-lbl">Completed</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#f59e0b;"><span class="tm-kpi-val"
+                                    style="color:#f59e0b;">1</span>
+                                <div class="tm-kpi-lbl">Floor Active</div>
+                            </div>
+                        </div>
+                        <div class="tm-hero-card">
+                            <div class="tm-hero-label">Next Session</div>
+                            <div class="tm-hero-title">Front Counter &mdash; Jordan R.</div>
+                            <div class="tm-hero-meta">Training on Front Counter basics</div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span class="tm-hero-pill"
+                                    style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                                <div class="tm-btn tm-btn-primary" style="font-size:9px; padding:4px 10px;">Start
+                                    Session <i class="fa-solid fa-arrow-right" style="font-size:8px;"></i></div>
+                            </div>
+                        </div>
+                        <div class="tm-hero-card"
+                            style="border-left-color:#ef4444; background:linear-gradient(to right, rgba(239,68,68,0.03), transparent);">
+                            <div class="tm-hero-label" style="color:#ef4444;">Overdue &mdash; 2 days ago</div>
+                            <div class="tm-hero-title">Drive Thru &mdash; Morgan L.</div>
+                            <div class="tm-hero-meta">You need to submit this evaluation</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 7: TRAINEE VIEW -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-trainee">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#e0f2fe; color:#0284c7;">
+                    <i class="fa-solid fa-user-graduate"></i> Trainee View
+                </div>
+                <h2>Trainees see their own progress</h2>
+                <p>A personal dashboard showing upcoming assignments, completed sessions, and roadmap progress so
+                    trainees always know where they stand.</p>
+            </div>
+            <div class="tour-split">
+                <div class="tour-text">
+                    <h3>Trainee Dashboard &amp; Roadmap</h3>
+                    <p>Trainees log in and see their upcoming session, recent scores, and a live roadmap showing which
+                        steps they have completed and what is next. No guessing, no asking the manager.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Personal stat cards: Scheduled, Completed, Upcoming</li>
+                        <li><i class="fa-solid fa-check"></i> Next assignment hero card</li>
+                        <li><i class="fa-solid fa-check"></i> Live roadmap progress with step-by-step status</li>
+                        <li><i class="fa-solid fa-check"></i> Full session history with scores and trainer names</li>
+                        <li><i class="fa-solid fa-check"></i> "What is next?" guidance card</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tm-body">
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                            <div
+                                style="width:40px; height:40px; border-radius:10px; background:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff;">
+                                JR</div>
+                            <div>
+                                <div class="tm-title" style="font-size:16px;">Welcome back, Jordan</div>
+                                <div class="tm-sub">Here is where you stand.</div>
+                            </div>
+                        </div>
+                        <div class="tm-kpi-row">
+                            <div class="tm-kpi" style="border-left-color:#3b82f6;"><span class="tm-kpi-val"
+                                    style="color:#3b82f6;">2</span>
+                                <div class="tm-kpi-lbl">Scheduled</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#10b981;"><span class="tm-kpi-val"
+                                    style="color:#10b981;">8</span>
+                                <div class="tm-kpi-lbl">Completed</div>
+                            </div>
+                            <div class="tm-kpi" style="border-left-color:#8b5cf6;"><span class="tm-kpi-val"
+                                    style="color:#8b5cf6;">1</span>
+                                <div class="tm-kpi-lbl">Upcoming</div>
+                            </div>
+                        </div>
+                        <div class="tm-hero-card">
+                            <div class="tm-hero-label">Next Assignment</div>
+                            <div class="tm-hero-title">Front Counter &mdash; Speed &amp; Accuracy</div>
+                            <div class="tm-hero-meta">With trainer Chris M. &bull; Saturday, Feb 15</div>
+                            <span class="tm-hero-pill"
+                                style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
+                        </div>
+                        <div
+                            style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">
+                            Roadmap Progress</div>
+                        <div class="tm-card">
+                            <div style="font-size:11px; font-weight:800; color:#1e293b; margin-bottom:2px;">Front
+                                Counter</div>
+                            <div style="font-size:9px; color:#64748b; margin-bottom:8px;">5 steps &bull; 2 complete
+                            </div>
+                            <div class="tm-progress" style="margin-top:0;">
+                                <div class="tm-progress-fill" style="width:40%;"></div>
+                            </div>
+                            <div
+                                style="text-align:right; font-size:9px; font-weight:700; color:#64748b; margin-top:2px;">
+                                40%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 8: TEAM MESSAGING -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-messaging">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#e0f2fe; color:#0284c7;">
+                    <i class="fa-solid fa-message"></i> Team Messaging
+                </div>
+                <h2>Keep training conversations in one place</h2>
+                <p>Slack-style channels and direct messages built right into Training Tracker. No more switching between
+                    apps.</p>
+            </div>
+            <div class="tour-split reverse">
+                <div class="tour-text">
+                    <h3>Channels, DMs, and more</h3>
+                    <p>Create team channels for announcements, position-specific discussions, or general chat. Send
+                        direct messages to any team member. All within the same tool you use for training.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> Team channels with customizable names</li>
+                        <li><i class="fa-solid fa-check"></i> Direct messages between any two users</li>
+                        <li><i class="fa-solid fa-check"></i> Real-time message delivery</li>
+                        <li><i class="fa-solid fa-check"></i> Unread indicators and notification badges</li>
+                        <li><i class="fa-solid fa-check"></i> Dark sidebar with channel list</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tour-mock-body">
+                        <div class="tm-msg">
+                            <div class="tm-msg-side">
+                                <div
+                                    style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; padding:4px 8px; margin-bottom:4px;">
+                                    Channels</div>
+                                <div class="tm-msg-ch active"><i class="fa-solid fa-hashtag"
+                                        style="font-size:8px; margin-right:4px;"></i> general</div>
+                                <div class="tm-msg-ch"><i class="fa-solid fa-hashtag"
+                                        style="font-size:8px; margin-right:4px;"></i> training-updates</div>
+                                <div class="tm-msg-ch"><i class="fa-solid fa-hashtag"
+                                        style="font-size:8px; margin-right:4px;"></i> front-counter</div>
+                                <div
+                                    style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; padding:4px 8px; margin:8px 0 4px;">
+                                    Direct Messages</div>
+                                <div class="tm-msg-ch">
+                                    <div class="tm-av"
+                                        style="background:#4f46e5; width:16px; height:16px; font-size:6px; display:inline-flex; vertical-align:middle; margin-right:4px;">
+                                        CM</div> Chris M.
+                                </div>
+                                <div class="tm-msg-ch">
+                                    <div class="tm-av"
+                                        style="background:#7c3aed; width:16px; height:16px; font-size:6px; display:inline-flex; vertical-align:middle; margin-right:4px;">
+                                        JR</div> Jordan R.
+                                </div>
+                            </div>
+                            <div class="tm-msg-main">
+                                <div
+                                    style="padding:10px 14px; border-bottom:1px solid #e2e8f0; font-size:13px; font-weight:800; color:#1e293b;">
+                                    # general</div>
+                                <div class="tm-msg-chat">
+                                    <div class="tm-bubble tm-bubble-other">
+                                        <div class="tm-bubble-name" style="color:#4f46e5;">Chris M.</div>
+                                        Jordan did great on front counter today. Really picking up speed!
+                                    </div>
+                                    <div class="tm-bubble tm-bubble-me">
+                                        Nice! That is what I like to hear. Keep pushing accuracy next session.
+                                    </div>
+                                    <div class="tm-bubble tm-bubble-other">
+                                        <div class="tm-bubble-name" style="color:#059669;">Sara R.</div>
+                                        Who has drive thru covered tomorrow AM?
+                                    </div>
+                                </div>
+                                <div class="tm-msg-input">
+                                    <div class="tm-msg-input-field">Type a message...</div>
+                                    <div class="tm-msg-send"><i class="fa-solid fa-paper-plane"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- SECTION 9: GUEST TRAINER -->
+    <!-- ════════════════════════════════════════════════ -->
+    <section class="tour-section reveal-up" id="tour-guest">
+        <div class="tour-section-inner">
+            <div class="tour-section-header">
+                <div class="tour-section-label" style="background:#fce7f3; color:#db2777;">
+                    <i class="fa-solid fa-qrcode"></i> Guest Trainer Mode
+                </div>
+                <h2>Anyone can train, no account needed</h2>
+                <p>When the scheduled trainer calls out or you have a last-minute trainee, generate a one-time link and
+                    share it by text.</p>
+            </div>
+            <div class="tour-split">
+                <div class="tour-text">
+                    <h3>One-time links, zero friction</h3>
+                    <p>Generate a QR code or shareable link for any session. The guest trainer opens it on their phone,
+                        fills out the rating form, and submits. The evaluation appears in the system just like any other
+                        session.</p>
+                    <ul class="tour-bullets">
+                        <li><i class="fa-solid fa-check"></i> QR code and copyable link generated instantly</li>
+                        <li><i class="fa-solid fa-check"></i> One-tap SMS sharing via native text message</li>
+                        <li><i class="fa-solid fa-check"></i> Link expires after 24 hours or first use</li>
+                        <li><i class="fa-solid fa-check"></i> Guest sessions clearly labeled in the trainee's history
+                        </li>
+                        <li><i class="fa-solid fa-check"></i> No login or account creation required</li>
+                    </ul>
+                </div>
+                <div class="tour-mock">
+                    <div class="tour-mock-bar">
+                        <div class="tour-mock-dot" style="background:#ff5f57;"></div>
+                        <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
+                        <div class="tour-mock-dot" style="background:#28c941;"></div>
+                    </div>
+                    <div class="tour-mock-body">
+                        <div class="tm-qr">
+                            <div class="tm-title" style="margin-bottom:2px;">Guest Trainer Link</div>
+                            <div class="tm-sub" style="margin-bottom:16px;">For Jordan R. &mdash; Front Counter</div>
+                            <div class="tm-qr-box"><a href="{{ url_for('legacy.index') }}"><img
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://trainingtracker.me/legacy/"
+                                        alt="Scan to try Training Tracker Classic"
+                                        style="width:80px; height:80px; border-radius:3px;"></a></div>
+                            <div class="tm-qr-link">trainingtracker.me/guest/train/a8f2c...</div>
+                            <div class="tm-qr-btns">
+                                <div class="tm-qr-btn" style="background:#7c3aed;"><i class="fa-solid fa-copy"></i> Copy
+                                    Link</div>
+                                <div class="tm-qr-btn" style="background:#16a34a;"><i class="fa-solid fa-message"></i>
+                                    Send via Text</div>
+                            </div>
+                            <div style="margin-top:10px; font-size:9px; color:#94a3b8;">Scan the QR code to try Training
+                                Tracker Classic</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="tour-cta">
+        <h2>Ready to see it in action?</h2>
+        <p>Join teams that stopped winging it and started training with a real system.</p>
+        <a href="{{ url_for('auth.home') }}#" class="tour-cta-btn" onclick="event.preventDefault();">
+            <i class="fa-solid fa-rocket"></i> Get Started for Free
         </a>
-        <div class="tour-nav-links">
-            <a href="{{ url_for('auth.home') }}">Home</a>
-            <a href="{{ url_for('auth.home') }}#features">Features</a>
-            <a href="{{ url_for('auth.home') }}#pricing">Pricing</a>
-            <a href="{{ url_for('auth.login') }}">Login</a>
-            <a href="{{ url_for('auth.home') }}#" class="tour-nav-cta" onclick="event.preventDefault();">Get Started</a>
-        </div>
-    </div>
-</nav>
+    </section>
 
-<!-- ── HERO ── -->
-<section class="tour-hero">
-    <div class="tour-hero-inner">
-        <div class="tour-hero-badge">
-            <i class="fa-solid fa-sparkles" style="color:#a78bfa;"></i> Complete Feature Tour
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div class="site-footer-top">
+                <div class="site-footer-brand">
+                    <div style="font-size:18px; font-weight:900; color:#fff; margin-bottom:8px;">Training Tracker</div>
+                    <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful
+                        enough to scale.</p>
+                    <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">
+                        &ldquo;The difference between good and great is the little things.&rdquo;</p>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Product</h4>
+                    <a href="{{ url_for('auth.home') }}#features">Features</a>
+                    <a href="{{ url_for('auth.home') }}#how-it-works">How It Works</a>
+                    <a href="{{ url_for('auth.tour') }}">Feature Tour</a>
+                    <a href="{{ url_for('auth.home') }}#pricing">Pricing</a>
+                    <a href="{{ url_for('legacy.index') }}">Classic Mode</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Account</h4>
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="#" onclick="openModal(); return false;">Get Started</a>
+                    <a href="{{ url_for('auth.forgot_password') }}">Reset Password</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Company</h4>
+                    <a href="{{ url_for('auth.support') }}">Support</a>
+                    <a href="{{ url_for('legacy.about') }}">About Classic</a>
+                    <a href="mailto:hello@trainingtracker.me">Contact</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Legal</h4>
+                    <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+                    <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+                    <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>
+                </div>
+            </div>
+            <div class="site-footer-bottom">
+                <p>&copy; 2026 Training Tracker. Built with care.</p>
+                <span class="site-footer-version">v{{ app_version }}</span>
+            </div>
         </div>
-        <h1>See Every Feature<br>Up Close</h1>
-        <p>A deep dive into everything Training Tracker can do for your team &mdash; from scheduling to graduation.</p>
-    </div>
-</section>
+    </footer>
 
-<!-- ── TABLE OF CONTENTS ── -->
-<div class="tour-toc">
-    <div class="tour-toc-inner">
-        <a href="#tour-dashboard" class="toc-link"><i class="fa-solid fa-gauge" style="font-size:9px;"></i> Manager Dashboard</a>
-        <a href="#tour-scheduling" class="toc-link"><i class="fa-solid fa-calendar-days" style="font-size:9px;"></i> Smart Scheduling</a>
-        <a href="#tour-ratings" class="toc-link"><i class="fa-solid fa-star" style="font-size:9px;"></i> Session Ratings</a>
-        <a href="#tour-roadmaps" class="toc-link"><i class="fa-solid fa-road" style="font-size:9px;"></i> Roadmaps</a>
-        <a href="#tour-employees" class="toc-link"><i class="fa-solid fa-users" style="font-size:9px;"></i> Employee Profiles</a>
-        <a href="#tour-trainer" class="toc-link"><i class="fa-solid fa-chalkboard-user" style="font-size:9px;"></i> Trainer View</a>
-        <a href="#tour-trainee" class="toc-link"><i class="fa-solid fa-user-graduate" style="font-size:9px;"></i> Trainee View</a>
-        <a href="#tour-messaging" class="toc-link"><i class="fa-solid fa-message" style="font-size:9px;"></i> Messaging</a>
-        <a href="#tour-guest" class="toc-link"><i class="fa-solid fa-qrcode" style="font-size:9px;"></i> Guest Trainer</a>
-    </div>
-</div>
+    <script>
+        document.querySelectorAll('.toc-link, a[href^="#tour-"]').forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var target = document.querySelector(a.getAttribute('href'));
+                if (!target) return;
+                e.preventDefault();
+                window.scrollTo({ top: target.offsetTop - 120, behavior: 'smooth' });
+            });
+        });
 
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 1: MANAGER DASHBOARD -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-dashboard">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#eef2ff; color:#4f46e5;">
-                <i class="fa-solid fa-gauge"></i> Manager Dashboard
-            </div>
-            <h2>Your command center for all things training</h2>
-            <p>See what matters at a glance: upcoming sessions, team progress, and recent activity. Everything a manager needs on one screen.</p>
-        </div>
-        <div class="tour-split">
-            <div class="tour-text">
-                <h3>KPIs that tell the full story</h3>
-                <p>Color-coded stat cards surface exactly what needs your attention: how many sessions are scheduled, how many are completed this month, and how many trainees are currently active.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> At-a-glance stats update in real time</li>
-                    <li><i class="fa-solid fa-check"></i> Quick-action buttons for common tasks</li>
-                    <li><i class="fa-solid fa-check"></i> Recent activity feed shows the latest evaluations</li>
-                    <li><i class="fa-solid fa-check"></i> Launchpad cards for creating schedules, adding employees, and more</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-body">
-                    <div class="tm-kpi-row">
-                        <div class="tm-kpi" style="border-left-color:#3b82f6;">
-                            <span class="tm-kpi-val" style="color:#3b82f6;">12</span>
-                            <div class="tm-kpi-lbl">Scheduled</div>
-                        </div>
-                        <div class="tm-kpi" style="border-left-color:#10b981;">
-                            <span class="tm-kpi-val" style="color:#10b981;">48</span>
-                            <div class="tm-kpi-lbl">Completed</div>
-                        </div>
-                        <div class="tm-kpi" style="border-left-color:#f59e0b;">
-                            <span class="tm-kpi-val" style="color:#f59e0b;">6</span>
-                            <div class="tm-kpi-lbl">Active Trainees</div>
-                        </div>
-                    </div>
-                    <div class="tm-hero-card">
-                        <div class="tm-hero-label">Upcoming Session</div>
-                        <div class="tm-hero-title">Front Counter &mdash; Jordan R. with Chris M.</div>
-                        <div class="tm-hero-meta">Saturday, Feb 15 at 8:00 AM</div>
-                        <span class="tm-hero-pill" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
-                    </div>
-                    <div style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Recent Activity</div>
-                    <div class="tm-card" style="padding:8px 12px;">
-                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                            <div class="tm-av" style="background:#4f46e5; width:18px; height:18px; font-size:7px;">CM</div>
-                            <span style="font-size:11px; font-weight:700; color:#334155;">Chris M.</span>
-                            <span style="font-size:10px; color:#94a3b8;">rated Jordan R. on Front Counter</span>
-                        </div>
-                        <div style="display:flex; gap:3px;">
-                            <span class="tm-score" style="background:#10b981; font-size:10px; padding:2px 6px;">4.5</span>
-                            <span style="font-size:9px; color:#64748b; align-self:center;">2 hours ago</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+        // Mobile Nav Toggle
+        function toggleNav() {
+            const links = document.getElementById('navLinks');
+            const icon = document.getElementById('toggleIcon');
+            if (links.classList.contains('open')) {
+                links.classList.remove('open');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            } else {
+                links.classList.add('open');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            }
+        }
 
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 2: SMART SCHEDULING -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-scheduling">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#ede9fe; color:#7c3aed;">
-                <i class="fa-solid fa-calendar-days"></i> Smart Scheduling
-            </div>
-            <h2>Build a full training week in one click</h2>
-            <p>Upload your work schedule, and the smart scheduler automatically pairs trainees with qualified trainers across every shift.</p>
-        </div>
-        <div class="tour-split reverse">
-            <div class="tour-text">
-                <h3>Eliminate the spreadsheet shuffle</h3>
-                <p>The Smart Scheduler reads your uploaded work schedule PDF, identifies who is working when, and auto-generates a training schedule that respects position qualifications and availability.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Upload PDF work schedules for automatic shift detection</li>
-                    <li><i class="fa-solid fa-check"></i> Auto-pair trainees with qualified trainers</li>
-                    <li><i class="fa-solid fa-check"></i> Blind schedule mode hides assignments until session time</li>
-                    <li><i class="fa-solid fa-check"></i> Publish, unpublish, or delete entire weeks</li>
-                    <li><i class="fa-solid fa-check"></i> Drag-and-drop manual adjustments</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-header">
-                    <div class="tm-title">Training Schedules</div>
-                    <div style="display:flex; gap:6px;">
-                        <div class="tm-btn tm-btn-smart"><i class="fa-solid fa-wand-magic-sparkles"></i> Smart Schedule</div>
-                        <div class="tm-btn tm-btn-primary"><i class="fa-solid fa-plus"></i> Manual</div>
-                    </div>
-                </div>
-                <div class="tm-body">
-                    <div class="tm-card" style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <div style="font-size:12px; font-weight:800; color:#1e293b;">Feb 10 &ndash; Feb 16</div>
-                            <div style="font-size:10px; color:#64748b;">Current week &bull; 8 sessions</div>
-                        </div>
-                        <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;"><i class="fa-solid fa-circle" style="font-size:5px;"></i> Published</span>
-                    </div>
-                    <div class="tm-card" style="display:flex; align-items:center; justify-content:space-between;">
-                        <div>
-                            <div style="font-size:12px; font-weight:800; color:#1e293b;">Feb 17 &ndash; Feb 23</div>
-                            <div style="font-size:10px; color:#64748b;">Next week &bull; 5 sessions</div>
-                        </div>
-                        <span class="tm-pill" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a;"><i class="fa-solid fa-circle" style="font-size:5px;"></i> Draft</span>
-                    </div>
-                    <div style="margin-top:10px; font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Week Detail &mdash; Feb 10</div>
-                    <table class="tm-table">
-                        <thead><tr><th>Day</th><th>Position</th><th>Trainer</th><th>Trainee</th></tr></thead>
-                        <tbody>
-                            <tr><td style="font-size:10px; font-weight:700;">Tue</td><td style="font-size:10px; font-weight:700;">Front Counter</td><td><div class="tm-av" style="background:#4f46e5;">CM</div>Chris</td><td><div class="tm-av" style="background:#7c3aed;">JR</div>Jordan</td></tr>
-                            <tr><td style="font-size:10px; font-weight:700;">Thu</td><td style="font-size:10px; font-weight:700;">Drive Thru</td><td><div class="tm-av" style="background:#4f46e5;">CM</div>Chris</td><td><div class="tm-av" style="background:#059669;">ML</div>Morgan</td></tr>
-                            <tr><td style="font-size:10px; font-weight:700;">Sat</td><td style="font-size:10px; font-weight:700;">Front Counter</td><td><div class="tm-av" style="background:#4f46e5;">CM</div>Chris</td><td><div class="tm-av" style="background:#7c3aed;">JR</div>Jordan</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+        // Intersection Observer for Scroll Animations
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
 
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 3: SESSION RATINGS -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-ratings">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#fef3c7; color:#d97706;">
-                <i class="fa-solid fa-star"></i> Session Ratings
-            </div>
-            <h2>Detailed feedback on every skill, every session</h2>
-            <p>Custom criteria per position with color-coded 1&ndash;5 scales. Trainers submit evaluations in under two minutes.</p>
-        </div>
-        <div class="tour-split">
-            <div class="tour-text">
-                <h3>Built for speed and specificity</h3>
-                <p>Each position has its own set of rating criteria (speed, accuracy, guest interaction, etc.). Trainers tap a number, optionally leave a comment, and submit. The system aggregates scores automatically.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Custom skill descriptors per position</li>
-                    <li><i class="fa-solid fa-check"></i> Color-coded 1&ndash;5 buttons (red to green)</li>
-                    <li><i class="fa-solid fa-check"></i> Optional per-criteria comments</li>
-                    <li><i class="fa-solid fa-check"></i> "Needs Attention" flag for manager follow-up</li>
-                    <li><i class="fa-solid fa-check"></i> Overall notes for session-level context</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-header">
-                    <div><div class="tm-title">Rate Session</div><div class="tm-sub">Jordan R. &mdash; Front Counter</div></div>
-                </div>
-                <div class="tm-body">
-                    <div class="tm-criteria-block">
-                        <div class="tm-criteria-name">Knowledge &amp; Accuracy</div>
-                        <div class="tm-rating-row">
-                            <div class="tm-r">1</div><div class="tm-r">2</div><div class="tm-r">3</div>
-                            <div class="tm-r" style="background:#84cc16; color:#fff;">4</div><div class="tm-r">5</div>
-                        </div>
-                    </div>
-                    <div class="tm-criteria-block">
-                        <div class="tm-criteria-name">Speed of Service</div>
-                        <div class="tm-rating-row">
-                            <div class="tm-r">1</div><div class="tm-r">2</div><div class="tm-r">3</div>
-                            <div class="tm-r">4</div><div class="tm-r" style="background:#22c55e; color:#fff;">5</div>
-                        </div>
-                    </div>
-                    <div class="tm-criteria-block">
-                        <div class="tm-criteria-name">Guest Interaction</div>
-                        <div class="tm-rating-row">
-                            <div class="tm-r">1</div><div class="tm-r">2</div>
-                            <div class="tm-r" style="background:#eab308; color:#fff;">3</div>
-                            <div class="tm-r">4</div><div class="tm-r">5</div>
-                        </div>
-                        <div style="margin-top:6px; padding:6px 8px; border:1px solid #e2e8f0; border-radius:6px; font-size:10px; color:#334155; background:#fff;">Needs to greet guests more consistently</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px; margin-top:10px; padding:8px 10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
-                        <input type="checkbox" disabled style="accent-color:#94a3b8;">
-                        <span style="font-size:11px; color:#64748b; font-weight:600;"><i class="fa-solid fa-flag" style="color:#94a3b8; margin-right:3px;"></i> Flag for manager attention</span>
-                    </div>
-                    <div class="tm-btn tm-btn-primary" style="width:100%; justify-content:center; margin-top:10px; padding:10px;">
-                        <i class="fa-solid fa-paper-plane"></i> Submit Evaluation
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 4: TRAINING ROADMAPS -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-roadmaps">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#d1fae5; color:#059669;">
-                <i class="fa-solid fa-road"></i> Training Roadmaps
-            </div>
-            <h2>Every position has a clear path forward</h2>
-            <p>Define ordered training steps for each position. Trainees must master each step before unlocking the next one.</p>
-        </div>
-        <div class="tour-split reverse">
-            <div class="tour-text">
-                <h3>Structured progression, not random sessions</h3>
-                <p>Roadmaps ensure every trainee gets the same quality of training. Steps are completed in order, and the system automatically tracks where each person stands.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Define steps for each position (Register Basics &rarr; Order Taking &rarr; ...)</li>
-                    <li><i class="fa-solid fa-check"></i> Steps lock/unlock automatically based on completion</li>
-                    <li><i class="fa-solid fa-check"></i> Visual progress bar shows completion percentage</li>
-                    <li><i class="fa-solid fa-check"></i> Minimum score threshold to advance</li>
-                    <li><i class="fa-solid fa-check"></i> Manager can assign any trainee to a roadmap</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-header">
-                    <div class="tm-title">Front Counter Roadmap</div>
-                    <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">40% Complete</span>
-                </div>
-                <div class="tm-body">
-                    <div class="tm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
-                        <div class="tm-step-num" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
-                        <span class="tm-step-name" style="color:#166534;">Register Basics</span>
-                        <span class="tm-step-badge" style="color:#16a34a;">4.8 / 5</span>
-                    </div>
-                    <div class="tm-step" style="border-color:#bbf7d0; background:#f0fdf4;">
-                        <div class="tm-step-num" style="background:#dcfce7; color:#16a34a;"><i class="fa-solid fa-check"></i></div>
-                        <span class="tm-step-name" style="color:#166534;">Order Taking</span>
-                        <span class="tm-step-badge" style="color:#16a34a;">4.5 / 5</span>
-                    </div>
-                    <div class="tm-step" style="border-color:#c7d2fe; background:#eef2ff;">
-                        <div class="tm-step-num" style="background:#e0e7ff; color:#4f46e5;"><i class="fa-solid fa-clock"></i></div>
-                        <span class="tm-step-name" style="color:#4f46e5;">Speed &amp; Accuracy</span>
-                        <span class="tm-step-badge" style="color:#4f46e5;">In Progress</span>
-                    </div>
-                    <div class="tm-step" style="opacity:0.45;">
-                        <div class="tm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
-                        <span class="tm-step-name">Suggestive Selling</span>
-                        <span class="tm-step-badge" style="color:#94a3b8;">Locked</span>
-                    </div>
-                    <div class="tm-step" style="opacity:0.45;">
-                        <div class="tm-step-num" style="background:#f1f5f9; color:#94a3b8;"><i class="fa-solid fa-lock"></i></div>
-                        <span class="tm-step-name">Guest Recovery</span>
-                        <span class="tm-step-badge" style="color:#94a3b8;">Locked</span>
-                    </div>
-                    <div class="tm-progress"><div class="tm-progress-fill" style="width:40%;"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; font-weight:600; margin-top:4px;">
-                        <span>2 of 5 steps complete</span><span>40%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 5: EMPLOYEE PROFILES -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-employees">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#dbeafe; color:#2563eb;">
-                <i class="fa-solid fa-users"></i> Employee Profiles
-            </div>
-            <h2>Every team member's full training story</h2>
-            <p>Session transcripts, mastery badges, roadmap progress, and internal notes &mdash; all in one place.</p>
-        </div>
-        <div class="tour-split">
-            <div class="tour-text">
-                <h3>Know who is ready and who needs more time</h3>
-                <p>Each employee has a profile showing every session they have completed, their average scores per position, their roadmap progress, and mastery badges for positions they have graduated from.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Per-position training scores and session history</li>
-                    <li><i class="fa-solid fa-check"></i> Green mastery badges when positions are completed</li>
-                    <li><i class="fa-solid fa-check"></i> Internal notes visible only to managers</li>
-                    <li><i class="fa-solid fa-check"></i> Role indicators (Manager, Trainer, Trainee)</li>
-                    <li><i class="fa-solid fa-check"></i> One-click graduation when a trainee is ready</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-profile-header">
-                    <div class="tm-profile-av" style="background:#4f46e5;">JR</div>
-                    <div>
-                        <div class="tm-title">Jordan R.</div>
-                        <div style="display:flex; gap:4px;">
-                            <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0;">Trainee</span>
-                            <span class="tm-pill" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0;">Active</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="tm-profile-stats">
-                    <div><div class="tm-profile-stat-label">Sessions</div><div class="tm-profile-stat-val" style="color:#1e293b;">8</div></div>
-                    <div><div class="tm-profile-stat-label">Avg. Score</div><div class="tm-profile-stat-val" style="color:#4f46e5;">4.2</div></div>
-                    <div><div class="tm-profile-stat-label">Roadmap</div><div class="tm-profile-stat-val" style="color:#10b981;">40%</div></div>
-                </div>
-                <div class="tm-body">
-                    <div style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Training Transcript</div>
-                    <div class="tm-transcript-grid">
-                        <div class="tm-transcript-card" style="border-left:3px solid #4f46e5;">
-                            <div style="font-size:11px; font-weight:800; color:#1e293b;">Front Counter</div>
-                            <div style="font-size:18px; font-weight:900; color:#4f46e5;">4.5</div>
-                            <div style="font-size:9px; color:#64748b;">6 sessions</div>
-                        </div>
-                        <div class="tm-transcript-card" style="border-left:3px solid #10b981;">
-                            <div style="font-size:11px; font-weight:800; color:#1e293b;">Drive Thru</div>
-                            <div style="font-size:18px; font-weight:900; color:#10b981;">3.9</div>
-                            <div style="font-size:9px; color:#64748b;">2 sessions</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:8px; display:flex; gap:3px; flex-wrap:wrap;">
-                        <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-size:8px;"><i class="fa-solid fa-check" style="font-size:6px;"></i> Register Basics</span>
-                        <span class="tm-pill" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-size:8px;"><i class="fa-solid fa-check" style="font-size:6px;"></i> Order Taking</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 6: TRAINER VIEW -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-trainer">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#fef3c7; color:#d97706;">
-                <i class="fa-solid fa-chalkboard-user"></i> Trainer View
-            </div>
-            <h2>What your trainers see when they log in</h2>
-            <p>A focused dashboard built for trainers, showing their assigned sessions, floor coverage gaps, and one-tap session submission.</p>
-        </div>
-        <div class="tour-split reverse">
-            <div class="tour-text">
-                <h3>Trainer Dashboard</h3>
-                <p>Trainers see their own stats, their next scheduled session (with a "Start Session" button), and any overdue evaluations. Floor coverage shows unclaimed training spots they can volunteer for.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Personal stat cards: Scheduled, Completed, Floor Active</li>
-                    <li><i class="fa-solid fa-check"></i> Next session hero card with "Start Session" action</li>
-                    <li><i class="fa-solid fa-check"></i> Overdue sessions highlighted in red</li>
-                    <li><i class="fa-solid fa-check"></i> Floor coverage with "Claim" buttons</li>
-                    <li><i class="fa-solid fa-check"></i> Quick Train button for on-the-fly evaluations</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-body">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-                        <div>
-                            <div class="tm-title" style="font-size:16px;">Hi, Chris</div>
-                            <div class="tm-sub">Trainer Dashboard</div>
-                        </div>
-                        <div class="tm-btn tm-btn-primary"><i class="fa-solid fa-bolt"></i> Quick Train</div>
-                    </div>
-                    <div class="tm-kpi-row">
-                        <div class="tm-kpi" style="border-left-color:#3b82f6;"><span class="tm-kpi-val" style="color:#3b82f6;">3</span><div class="tm-kpi-lbl">Scheduled</div></div>
-                        <div class="tm-kpi" style="border-left-color:#10b981;"><span class="tm-kpi-val" style="color:#10b981;">24</span><div class="tm-kpi-lbl">Completed</div></div>
-                        <div class="tm-kpi" style="border-left-color:#f59e0b;"><span class="tm-kpi-val" style="color:#f59e0b;">1</span><div class="tm-kpi-lbl">Floor Active</div></div>
-                    </div>
-                    <div class="tm-hero-card">
-                        <div class="tm-hero-label">Next Session</div>
-                        <div class="tm-hero-title">Front Counter &mdash; Jordan R.</div>
-                        <div class="tm-hero-meta">Training on Front Counter basics</div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span class="tm-hero-pill" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
-                            <div class="tm-btn tm-btn-primary" style="font-size:9px; padding:4px 10px;">Start Session <i class="fa-solid fa-arrow-right" style="font-size:8px;"></i></div>
-                        </div>
-                    </div>
-                    <div class="tm-hero-card" style="border-left-color:#ef4444; background:linear-gradient(to right, rgba(239,68,68,0.03), transparent);">
-                        <div class="tm-hero-label" style="color:#ef4444;">Overdue &mdash; 2 days ago</div>
-                        <div class="tm-hero-title">Drive Thru &mdash; Morgan L.</div>
-                        <div class="tm-hero-meta">You need to submit this evaluation</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 7: TRAINEE VIEW -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-trainee">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#e0f2fe; color:#0284c7;">
-                <i class="fa-solid fa-user-graduate"></i> Trainee View
-            </div>
-            <h2>Trainees see their own progress</h2>
-            <p>A personal dashboard showing upcoming assignments, completed sessions, and roadmap progress so trainees always know where they stand.</p>
-        </div>
-        <div class="tour-split">
-            <div class="tour-text">
-                <h3>Trainee Dashboard &amp; Roadmap</h3>
-                <p>Trainees log in and see their upcoming session, recent scores, and a live roadmap showing which steps they have completed and what is next. No guessing, no asking the manager.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Personal stat cards: Scheduled, Completed, Upcoming</li>
-                    <li><i class="fa-solid fa-check"></i> Next assignment hero card</li>
-                    <li><i class="fa-solid fa-check"></i> Live roadmap progress with step-by-step status</li>
-                    <li><i class="fa-solid fa-check"></i> Full session history with scores and trainer names</li>
-                    <li><i class="fa-solid fa-check"></i> "What is next?" guidance card</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tm-body">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
-                        <div style="width:40px; height:40px; border-radius:10px; background:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff;">JR</div>
-                        <div><div class="tm-title" style="font-size:16px;">Welcome back, Jordan</div><div class="tm-sub">Here is where you stand.</div></div>
-                    </div>
-                    <div class="tm-kpi-row">
-                        <div class="tm-kpi" style="border-left-color:#3b82f6;"><span class="tm-kpi-val" style="color:#3b82f6;">2</span><div class="tm-kpi-lbl">Scheduled</div></div>
-                        <div class="tm-kpi" style="border-left-color:#10b981;"><span class="tm-kpi-val" style="color:#10b981;">8</span><div class="tm-kpi-lbl">Completed</div></div>
-                        <div class="tm-kpi" style="border-left-color:#8b5cf6;"><span class="tm-kpi-val" style="color:#8b5cf6;">1</span><div class="tm-kpi-lbl">Upcoming</div></div>
-                    </div>
-                    <div class="tm-hero-card">
-                        <div class="tm-hero-label">Next Assignment</div>
-                        <div class="tm-hero-title">Front Counter &mdash; Speed &amp; Accuracy</div>
-                        <div class="tm-hero-meta">With trainer Chris M. &bull; Saturday, Feb 15</div>
-                        <span class="tm-hero-pill" style="background:rgba(16,185,129,0.12); color:#059669;">Today</span>
-                    </div>
-                    <div style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;">Roadmap Progress</div>
-                    <div class="tm-card">
-                        <div style="font-size:11px; font-weight:800; color:#1e293b; margin-bottom:2px;">Front Counter</div>
-                        <div style="font-size:9px; color:#64748b; margin-bottom:8px;">5 steps &bull; 2 complete</div>
-                        <div class="tm-progress" style="margin-top:0;"><div class="tm-progress-fill" style="width:40%;"></div></div>
-                        <div style="text-align:right; font-size:9px; font-weight:700; color:#64748b; margin-top:2px;">40%</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 8: TEAM MESSAGING -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-messaging">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#e0f2fe; color:#0284c7;">
-                <i class="fa-solid fa-message"></i> Team Messaging
-            </div>
-            <h2>Keep training conversations in one place</h2>
-            <p>Slack-style channels and direct messages built right into Training Tracker. No more switching between apps.</p>
-        </div>
-        <div class="tour-split reverse">
-            <div class="tour-text">
-                <h3>Channels, DMs, and more</h3>
-                <p>Create team channels for announcements, position-specific discussions, or general chat. Send direct messages to any team member. All within the same tool you use for training.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> Team channels with customizable names</li>
-                    <li><i class="fa-solid fa-check"></i> Direct messages between any two users</li>
-                    <li><i class="fa-solid fa-check"></i> Real-time message delivery</li>
-                    <li><i class="fa-solid fa-check"></i> Unread indicators and notification badges</li>
-                    <li><i class="fa-solid fa-check"></i> Dark sidebar with channel list</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tour-mock-body">
-                    <div class="tm-msg">
-                        <div class="tm-msg-side">
-                            <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; padding:4px 8px; margin-bottom:4px;">Channels</div>
-                            <div class="tm-msg-ch active"><i class="fa-solid fa-hashtag" style="font-size:8px; margin-right:4px;"></i> general</div>
-                            <div class="tm-msg-ch"><i class="fa-solid fa-hashtag" style="font-size:8px; margin-right:4px;"></i> training-updates</div>
-                            <div class="tm-msg-ch"><i class="fa-solid fa-hashtag" style="font-size:8px; margin-right:4px;"></i> front-counter</div>
-                            <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.06em; padding:4px 8px; margin:8px 0 4px;">Direct Messages</div>
-                            <div class="tm-msg-ch"><div class="tm-av" style="background:#4f46e5; width:16px; height:16px; font-size:6px; display:inline-flex; vertical-align:middle; margin-right:4px;">CM</div> Chris M.</div>
-                            <div class="tm-msg-ch"><div class="tm-av" style="background:#7c3aed; width:16px; height:16px; font-size:6px; display:inline-flex; vertical-align:middle; margin-right:4px;">JR</div> Jordan R.</div>
-                        </div>
-                        <div class="tm-msg-main">
-                            <div style="padding:10px 14px; border-bottom:1px solid #e2e8f0; font-size:13px; font-weight:800; color:#1e293b;"># general</div>
-                            <div class="tm-msg-chat">
-                                <div class="tm-bubble tm-bubble-other">
-                                    <div class="tm-bubble-name" style="color:#4f46e5;">Chris M.</div>
-                                    Jordan did great on front counter today. Really picking up speed!
-                                </div>
-                                <div class="tm-bubble tm-bubble-me">
-                                    Nice! That is what I like to hear. Keep pushing accuracy next session.
-                                </div>
-                                <div class="tm-bubble tm-bubble-other">
-                                    <div class="tm-bubble-name" style="color:#059669;">Sara R.</div>
-                                    Who has drive thru covered tomorrow AM?
-                                </div>
-                            </div>
-                            <div class="tm-msg-input">
-                                <div class="tm-msg-input-field">Type a message...</div>
-                                <div class="tm-msg-send"><i class="fa-solid fa-paper-plane"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ════════════════════════════════════════════════ -->
-<!-- SECTION 9: GUEST TRAINER -->
-<!-- ════════════════════════════════════════════════ -->
-<section class="tour-section" id="tour-guest">
-    <div class="tour-section-inner">
-        <div class="tour-section-header">
-            <div class="tour-section-label" style="background:#fce7f3; color:#db2777;">
-                <i class="fa-solid fa-qrcode"></i> Guest Trainer Mode
-            </div>
-            <h2>Anyone can train, no account needed</h2>
-            <p>When the scheduled trainer calls out or you have a last-minute trainee, generate a one-time link and share it by text.</p>
-        </div>
-        <div class="tour-split">
-            <div class="tour-text">
-                <h3>One-time links, zero friction</h3>
-                <p>Generate a QR code or shareable link for any session. The guest trainer opens it on their phone, fills out the rating form, and submits. The evaluation appears in the system just like any other session.</p>
-                <ul class="tour-bullets">
-                    <li><i class="fa-solid fa-check"></i> QR code and copyable link generated instantly</li>
-                    <li><i class="fa-solid fa-check"></i> One-tap SMS sharing via native text message</li>
-                    <li><i class="fa-solid fa-check"></i> Link expires after 24 hours or first use</li>
-                    <li><i class="fa-solid fa-check"></i> Guest sessions clearly labeled in the trainee's history</li>
-                    <li><i class="fa-solid fa-check"></i> No login or account creation required</li>
-                </ul>
-            </div>
-            <div class="tour-mock">
-                <div class="tour-mock-bar">
-                    <div class="tour-mock-dot" style="background:#ff5f57;"></div>
-                    <div class="tour-mock-dot" style="background:#ffbd2e;"></div>
-                    <div class="tour-mock-dot" style="background:#28c941;"></div>
-                </div>
-                <div class="tour-mock-body">
-                    <div class="tm-qr">
-                        <div class="tm-title" style="margin-bottom:2px;">Guest Trainer Link</div>
-                        <div class="tm-sub" style="margin-bottom:16px;">For Jordan R. &mdash; Front Counter</div>
-                        <div class="tm-qr-box"><a href="{{ url_for('legacy.index') }}"><img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://trainingtracker.me/legacy/" alt="Scan to try Training Tracker Classic" style="width:80px; height:80px; border-radius:3px;"></a></div>
-                        <div class="tm-qr-link">trainingtracker.me/guest/train/a8f2c...</div>
-                        <div class="tm-qr-btns">
-                            <div class="tm-qr-btn" style="background:#7c3aed;"><i class="fa-solid fa-copy"></i> Copy Link</div>
-                            <div class="tm-qr-btn" style="background:#16a34a;"><i class="fa-solid fa-message"></i> Send via Text</div>
-                        </div>
-                        <div style="margin-top:10px; font-size:9px; color:#94a3b8;">Scan the QR code to try Training Tracker Classic</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ── CTA ── -->
-<section class="tour-cta">
-    <h2>Ready to see it in action?</h2>
-    <p>Join teams that stopped winging it and started training with a real system.</p>
-    <a href="{{ url_for('auth.home') }}#" class="tour-cta-btn" onclick="event.preventDefault();">
-        <i class="fa-solid fa-rocket"></i> Get Started for Free
-    </a>
-</section>
-
-<!-- ── FOOTER ── -->
-<footer class="tour-footer">
-    <p>&copy; 2026 Training Tracker. Built with care.</p>
-</footer>
-
-<script>
-document.querySelectorAll('.toc-link, a[href^="#tour-"]').forEach(function(a) {
-    a.addEventListener('click', function(e) {
-        var target = document.querySelector(a.getAttribute('href'));
-        if (!target) return;
-        e.preventDefault();
-        window.scrollTo({ top: target.offsetTop - 120, behavior: 'smooth' });
-    });
-});
-</script>
+        document.querySelectorAll('.reveal-up:not(.active)').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
+
 </html>

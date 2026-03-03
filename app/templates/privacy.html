@@ -1,55 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy &mdash; Training Tracker</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; color: #1e293b; margin: 0; padding: 0; line-height: 1.7; }
-        .legal-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 28px; }
-        .back-link:hover { color: #4f46e5; }
-        .legal-header { margin-bottom: 36px; }
-        .legal-header h1 { font-size: 28px; font-weight: 900; margin: 0 0 8px 0; color: #0f172a; }
-        .legal-header .updated { color: #64748b; font-size: 14px; }
-        .legal-section { margin-bottom: 28px; }
-        .legal-section h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px 0; color: #1e293b; }
-        .legal-section p, .legal-section li { font-size: 15px; color: #334155; margin: 0 0 10px 0; }
-        .legal-section ul { padding-left: 22px; margin: 0 0 10px 0; }
-        .legal-section a { color: #4f46e5; font-weight: 600; text-decoration: none; }
-        .legal-section a:hover { text-decoration: underline; }
+        .legal-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 28px;
+            transition: color 0.15s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .legal-header {
+            margin-bottom: 36px;
+        }
+
+        .legal-header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin: 0 0 8px 0;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .legal-header .updated {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .legal-section {
+            margin-bottom: 32px;
+        }
+
+        .legal-section h2 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            color: #1e293b;
+        }
+
+        .legal-section p,
+        .legal-section li {
+            font-size: 16px;
+            color: #334155;
+            margin: 0 0 12px 0;
+            line-height: 1.6;
+        }
+
+        .legal-section ul {
+            padding-left: 22px;
+            margin: 0 0 12px 0;
+        }
+
+        .legal-section a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .legal-section a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .legal-wrap {
+                padding: 100px 20px 60px;
+            }
+        }
     </style>
 </head>
+
 <body>
+    <!-- ── NAV ── -->
+    <nav class="site-nav">
+        <div class="site-nav-inner">
+            <a href="{{ url_for('auth.home') }}" class="site-nav-logo">
+                <span class="site-nav-logo-text">Training Tracker</span>
+            </a>
+            <div class="site-nav-links" id="navLinks">
+                <a href="{{ url_for('auth.home') }}#features" class="site-nav-link">Features</a>
+                <a href="{{ url_for('auth.home') }}#how-it-works" class="site-nav-link">How It Works</a>
+                <a href="{{ url_for('auth.tour') }}" class="site-nav-link">Tour</a>
+                <a href="{{ url_for('auth.home') }}#pricing" class="site-nav-link">Pricing</a>
+                <a href="{{ url_for('auth.support') }}" class="site-nav-link">Support</a>
+                <a href="{{ url_for('auth.login') }}" class="site-nav-link">Login</a>
+                <a href="{{ url_for('auth.home') }}#" class="site-nav-cta" onclick="openModal(); return false;">Get
+                    Started</a>
+            </div>
+            <button class="site-nav-mobile-toggle" id="mobileToggle" onclick="toggleNav()">
+                <i class="fa-solid fa-bars" id="toggleIcon"></i>
+            </button>
+        </div>
+    </nav>
+
     <div class="legal-wrap">
         <a href="{{ url_for('auth.home') }}" class="back-link">← Back to home</a>
-        <div class="legal-header">
+        <div class="legal-header reveal-up">
             <h1>Privacy Policy</h1>
             <p class="updated">Last updated: February 2025</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>1. Who we are and who controls your data</h2>
-            <p>Training Tracker (“we,” “us,” “our”) operates the Training Tracker service and website. We are the data controller for the personal data we collect through the Service. For questions about this policy or your data, contact us at <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or via our <a href="{{ url_for('auth.support') }}">Support</a> page.</p>
+            <p>Training Tracker (“we,” “us,” “our”) operates the Training Tracker service and website. We are the data
+                controller for the personal data we collect through the Service. For questions about this policy or your
+                data, contact us at <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or via
+                our <a href="{{ url_for('auth.support') }}">Support</a> page.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>2. What data we collect</h2>
             <p>We collect information you give us and information we get from your use of the Service:</p>
             <ul>
-                <li><strong>Account and profile:</strong> name, email address, password (stored in hashed form), role (e.g. manager, trainee), and organization/company you belong to.</li>
-                <li><strong>Organization data:</strong> company name, subdomain (e.g. yourcompany.trainingtracker.me), and any details you add about locations, teams, or settings.</li>
-                <li><strong>Training and operations:</strong> employee names, schedules, training progress, roadmaps, and any messages or notes you create in the Service.</li>
-                <li><strong>Billing:</strong> if you subscribe, we or our payment processor (e.g. Stripe) may collect billing name, address, and payment method details; we do not store full card numbers.</li>
-                <li><strong>Support and contact:</strong> when you use the support form or contact us, we collect the information you submit (e.g. name, email, message).</li>
-                <li><strong>Usage and technical:</strong> IP address, browser type, device information, and logs of how you use the Service (e.g. pages visited, actions taken) to operate and improve the Service.</li>
-                <li><strong>Cookies and similar tech:</strong> we use session and essential cookies as described in our <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>.</li>
+                <li><strong>Account and profile:</strong> name, email address, password (stored in hashed form), role
+                    (e.g. manager, trainee), and organization/company you belong to.</li>
+                <li><strong>Organization data:</strong> company name, subdomain (e.g. yourcompany.trainingtracker.me),
+                    and any details you add about locations, teams, or settings.</li>
+                <li><strong>Training and operations:</strong> employee names, schedules, training progress, roadmaps,
+                    and any messages or notes you create in the Service.</li>
+                <li><strong>Billing:</strong> if you subscribe, we or our payment processor (e.g. Stripe) may collect
+                    billing name, address, and payment method details; we do not store full card numbers.</li>
+                <li><strong>Support and contact:</strong> when you use the support form or contact us, we collect the
+                    information you submit (e.g. name, email, message).</li>
+                <li><strong>Usage and technical:</strong> IP address, browser type, device information, and logs of how
+                    you use the Service (e.g. pages visited, actions taken) to operate and improve the Service.</li>
+                <li><strong>Cookies and similar tech:</strong> we use session and essential cookies as described in our
+                    <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>.</li>
             </ul>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>3. How we use your data</h2>
             <p>We use your data to:</p>
             <ul>
@@ -59,75 +158,175 @@
                 <li>Send service-related messages (e.g. password reset, billing, important product updates).</li>
                 <li>Respond to support requests and contact you about your account.</li>
                 <li>Analyze usage to improve security, performance, and features.</li>
-                <li>Comply with legal obligations and enforce our <a href="{{ url_for('auth.terms') }}">Terms of Service</a>.</li>
+                <li>Comply with legal obligations and enforce our <a href="{{ url_for('auth.terms') }}">Terms of
+                        Service</a>.</li>
             </ul>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>4. Legal basis (GDPR)</h2>
             <p>If you are in the European Economic Area or UK, we process your data on the following bases:</p>
             <ul>
                 <li><strong>Contract:</strong> to perform our contract with you (providing the Service, billing).</li>
-                <li><strong>Legitimate interests:</strong> to operate and improve the Service, prevent fraud, and ensure security.</li>
-                <li><strong>Consent:</strong> where we ask for your consent (e.g. optional marketing), you can withdraw it at any time.</li>
+                <li><strong>Legitimate interests:</strong> to operate and improve the Service, prevent fraud, and ensure
+                    security.</li>
+                <li><strong>Consent:</strong> where we ask for your consent (e.g. optional marketing), you can withdraw
+                    it at any time.</li>
                 <li><strong>Legal obligation:</strong> where we must process data to comply with law.</li>
             </ul>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>5. Sharing and disclosure</h2>
             <p>We do not sell your personal data. We may share data with:</p>
             <ul>
-                <li><strong>Service providers:</strong> hosting, email, payment processing (e.g. Stripe), and analytics, under contracts that protect your data.</li>
-                <li><strong>Your organization:</strong> data you provide in the Service (e.g. as a trainee or manager) is visible to your organization’s admins and authorized users as intended by the product.</li>
-                <li><strong>Legal and safety:</strong> when required by law, or to protect our rights, users, or safety.</li>
+                <li><strong>Service providers:</strong> hosting, email, payment processing (e.g. Stripe), and analytics,
+                    under contracts that protect your data.</li>
+                <li><strong>Your organization:</strong> data you provide in the Service (e.g. as a trainee or manager)
+                    is visible to your organization’s admins and authorized users as intended by the product.</li>
+                <li><strong>Legal and safety:</strong> when required by law, or to protect our rights, users, or safety.
+                </li>
             </ul>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>6. Data retention</h2>
-            <p>We keep your data for as long as your account is active or as needed to provide the Service and comply with legal obligations. After account closure, we may retain data for a limited period for backup, legal, or dispute-resolution purposes, then delete or anonymize it. Billing records may be kept longer where required by law.</p>
+            <p>We keep your data for as long as your account is active or as needed to provide the Service and comply
+                with legal obligations. After account closure, we may retain data for a limited period for backup,
+                legal, or dispute-resolution purposes, then delete or anonymize it. Billing records may be kept longer
+                where required by law.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>7. International transfers</h2>
-            <p>Your data may be stored and processed in the United States or other countries where we or our service providers operate. If you are in the EEA or UK, we ensure appropriate safeguards (e.g. standard contractual clauses or adequacy decisions) where required by law.</p>
+            <p>Your data may be stored and processed in the United States or other countries where we or our service
+                providers operate. If you are in the EEA or UK, we ensure appropriate safeguards (e.g. standard
+                contractual clauses or adequacy decisions) where required by law.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>8. Your rights</h2>
             <p>Depending on where you live, you may have the right to:</p>
             <ul>
                 <li><strong>Access:</strong> request a copy of the personal data we hold about you.</li>
                 <li><strong>Correction:</strong> request correction of inaccurate data.</li>
                 <li><strong>Deletion:</strong> request deletion of your data, subject to legal exceptions.</li>
-                <li><strong>Restriction or object:</strong> in certain cases, restrict processing or object to processing.</li>
+                <li><strong>Restriction or object:</strong> in certain cases, restrict processing or object to
+                    processing.</li>
                 <li><strong>Portability:</strong> receive your data in a structured, machine-readable format.</li>
                 <li><strong>Withdraw consent:</strong> where we rely on consent, withdraw it at any time.</li>
-                <li><strong>Complain:</strong> lodge a complaint with a supervisory authority (e.g. in your EU/EEA country).</li>
+                <li><strong>Complain:</strong> lodge a complaint with a supervisory authority (e.g. in your EU/EEA
+                    country).</li>
             </ul>
-            <p>To exercise these rights, contact us at <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a>. We will respond within the time required by applicable law. For California residents, we do not sell personal information; you may have additional rights under the CCPA as described in our notices.</p>
+            <p>To exercise these rights, contact us at <a
+                    href="mailto:support@trainingtracker.me">support@trainingtracker.me</a>. We will respond within the
+                time required by applicable law. For California residents, we do not sell personal information; you may
+                have additional rights under the CCPA as described in our notices.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>9. Security</h2>
-            <p>We use appropriate technical and organizational measures to protect your data (e.g. encryption, access controls, secure hosting). No system is completely secure; we encourage you to use a strong password and keep it confidential.</p>
+            <p>We use appropriate technical and organizational measures to protect your data (e.g. encryption, access
+                controls, secure hosting). No system is completely secure; we encourage you to use a strong password and
+                keep it confidential.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>10. Children</h2>
-            <p>The Service is not intended for users under 16. We do not knowingly collect personal data from children under 16. If you believe we have collected such data, please contact us so we can delete it.</p>
+            <p>The Service is not intended for users under 16. We do not knowingly collect personal data from children
+                under 16. If you believe we have collected such data, please contact us so we can delete it.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>11. Changes to this policy</h2>
-            <p>We may update this Privacy Policy from time to time. We will post the new version on this page and update the “Last updated” date. For material changes, we may notify you by email or through the Service. We encourage you to review this policy periodically.</p>
+            <p>We may update this Privacy Policy from time to time. We will post the new version on this page and update
+                the “Last updated” date. For material changes, we may notify you by email or through the Service. We
+                encourage you to review this policy periodically.</p>
         </div>
 
-        <div class="legal-section">
+        <div class="legal-section reveal-up">
             <h2>12. Contact</h2>
-            <p>For privacy questions or to exercise your rights: <a href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or <a href="{{ url_for('auth.support') }}">Support</a>. For our Cookies practices, see our <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>.</p>
+            <p>For privacy questions or to exercise your rights: <a
+                    href="mailto:support@trainingtracker.me">support@trainingtracker.me</a> or <a
+                    href="{{ url_for('auth.support') }}">Support</a>. For our Cookies practices, see our <a
+                    href="{{ url_for('auth.cookies') }}">Cookies Policy</a>.</p>
         </div>
     </div>
+
+    <!-- ── FOOTER ── -->
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <div class="site-footer-top">
+                <div class="site-footer-brand">
+                    <div style="font-size:18px; font-weight:900; color:#fff; margin-bottom:8px;">Training Tracker</div>
+                    <p>Training management built for restaurant and quick-service teams. Simple to set up, powerful
+                        enough to scale.</p>
+                    <p style="font-size:12px; font-style:italic; color:var(--muted); margin-top:6px; opacity:0.7;">
+                        &ldquo;The difference between good and great is the little things.&rdquo;</p>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Product</h4>
+                    <a href="{{ url_for('auth.home') }}#features">Features</a>
+                    <a href="{{ url_for('auth.home') }}#how-it-works">How It Works</a>
+                    <a href="{{ url_for('auth.tour') }}">Feature Tour</a>
+                    <a href="{{ url_for('auth.home') }}#pricing">Pricing</a>
+                    <a href="{{ url_for('legacy.index') }}">Classic Mode</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Account</h4>
+                    <a href="{{ url_for('auth.login') }}">Login</a>
+                    <a href="{{ url_for('auth.home') }}#" onclick="openModal(); return false;">Get Started</a>
+                    <a href="{{ url_for('auth.forgot_password') }}">Reset Password</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Company</h4>
+                    <a href="{{ url_for('auth.support') }}">Support</a>
+                    <a href="{{ url_for('legacy.about') }}">About Classic</a>
+                    <a href="mailto:hello@trainingtracker.me">Contact</a>
+                </div>
+                <div class="site-footer-col">
+                    <h4>Legal</h4>
+                    <a href="{{ url_for('auth.terms') }}">Terms of Service</a>
+                    <a href="{{ url_for('auth.privacy') }}">Privacy Policy</a>
+                    <a href="{{ url_for('auth.cookies') }}">Cookies Policy</a>
+                </div>
+            </div>
+            <div class="site-footer-bottom">
+                <p>&copy; 2026 Training Tracker. Built with care.</p>
+                <span class="site-footer-version">v{{ app_version }}</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Nav Toggle
+        function toggleNav() {
+            const links = document.getElementById('navLinks');
+            const icon = document.getElementById('toggleIcon');
+            if (links.classList.contains('open')) {
+                links.classList.remove('open');
+                icon.classList.remove('fa-xmark');
+                icon.classList.add('fa-bars');
+            } else {
+                links.classList.add('open');
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-xmark');
+            }
+        }
+
+        // Intersection Observer for Scroll Animations
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-up:not(.active)').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
 </body>
-</html>
