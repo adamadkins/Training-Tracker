@@ -323,14 +323,14 @@ def forgot_password():
         # We show success regardless of whether the email exists for security
         if user:
             token = user.get_reset_token()
-            # Note: Using 'auth.reset_token' to match your function name below
             reset_url = url_for('auth.reset_token', token=token, _external=True)
-
             title = "Password Reset Request"
-            body = f"Click the link below to reset your password:\n\n{reset_url}\n\nIf you didn't request this, ignore this email."
-
+            body = (
+                "Click the button below to reset your password.\n\n"
+                "If you didn't request this, you can ignore this email."
+            )
             try:
-                send_notification_email(user, title, body, category='password_reset')
+                send_notification_email(user, title, body, category='password_reset', link_url=reset_url)
             except Exception as e:
                 current_app.logger.warning("Password reset email failed for %s: %s", email, e)
 

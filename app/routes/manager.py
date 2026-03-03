@@ -282,13 +282,12 @@ def send_invite_email(user):
     link = url_for('auth.reset_token', token=token, _external=True)
     title = "Invitation to Training Tracker"
     body = (
-        f"Welcome to the team!\n\n"
-        f"You've been added to Training Tracker. To access your dashboard and start your training, "
-        f"set your password by clicking the link below.\n\n"
-        f"{link}\n\n"
-        f"This link will expire in 7 days."
+        "Welcome to the team!\n\n"
+        "You've been added to Training Tracker. To access your dashboard and start your training, "
+        "click the button below to set your password.\n\n"
+        "This link will expire in 7 days."
     )
-    send_notification_email(user, title, body, category='invite')
+    send_notification_email(user, title, body, category='invite', link_url=link)
 
 
 # --- SETUP WIZARD ---

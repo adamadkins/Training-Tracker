@@ -110,9 +110,13 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
         try:
             html_content = None
             try:
-                link_text = 'View details' if link_url else None
-                if category in ('password_reset', 'invite'):
-                    link_text = None  # body contains the link
+                link_text = 'View details'
+                if category == 'invite' and link_url:
+                    link_text = 'Set your password'
+                elif category == 'password_reset' and link_url:
+                    link_text = 'Reset password'
+                elif not link_url:
+                    link_text = None
                 html_content = render_template(
                     'email/simple_message.html',
                     title=title, body=body, link_url=link_url, link_text=link_text,
@@ -152,8 +156,12 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
     use_tls = current_app.config.get('MAIL_USE_TLS', True)
 
     try:
-        link_text = 'View details' if link_url else None
-        if category in ('password_reset', 'invite'):
+        link_text = 'View details'
+        if category == 'invite' and link_url:
+            link_text = 'Set your password'
+        elif category == 'password_reset' and link_url:
+            link_text = 'Reset password'
+        elif not link_url:
             link_text = None
         html_content = render_template(
             'email/simple_message.html',
@@ -354,8 +362,8 @@ def _send_push_background(app, user_id, title, body, link_url=None):
         _send_push_impl(user_id, title, body, link_url)
 
 
-def send_notification_email(user, title, body, category='general'):
-    """Legacy: email only, no in-app record. Uses queue or thread. Use category='password_reset' or 'invite' for minimal plain-looking email."""
+def send_notification_email(user, title, body, category='general', link_url=None):
+    """Legacy: email only, no in-app record. Uses queue or thread. Pass link_url for invite/password_reset so the template shows a button."""
     if not user.email:
         return
-    _enqueue_or_send_email(str(user.email), title, body, category, None)
+    _enqueue_or_send_email(str(user.email), title, body, category, link_url)
