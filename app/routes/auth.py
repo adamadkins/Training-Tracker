@@ -330,7 +330,7 @@ def forgot_password():
             body = f"Click the link below to reset your password:\n\n{reset_url}\n\nIf you didn't request this, ignore this email."
 
             try:
-                send_notification_email(user, title, body)
+                send_notification_email(user, title, body, category='password_reset')
             except Exception as e:
                 current_app.logger.warning("Password reset email failed for %s: %s", email, e)
 

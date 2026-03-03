@@ -110,10 +110,16 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
         try:
             html_content = None
             try:
-                html_content = render_template(
-                    'email/notification.html',
-                    title=title, body=body, category=category, link_url=link_url,
-                )
+                if category in ('password_reset', 'invite'):
+                    html_content = render_template(
+                        'email/simple_message.html',
+                        title=title, body=body, link_url=link_url,
+                    )
+                else:
+                    html_content = render_template(
+                        'email/notification.html',
+                        title=title, body=body, category=category, link_url=link_url,
+                    )
             except Exception:
                 pass
             from sendgrid import SendGridAPIClient
@@ -149,13 +155,19 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
     use_tls = current_app.config.get('MAIL_USE_TLS', True)
 
     try:
-        html_content = render_template(
-            'email/notification.html',
-            title=title,
-            body=body,
-            category=category,
-            link_url=link_url,
-        )
+        if category in ('password_reset', 'invite'):
+            html_content = render_template(
+                'email/simple_message.html',
+                title=title, body=body, link_url=link_url,
+            )
+        else:
+            html_content = render_template(
+                'email/notification.html',
+                title=title,
+                body=body,
+                category=category,
+                link_url=link_url,
+            )
     except Exception:
         html_content = None
 
@@ -348,8 +360,8 @@ def _send_push_background(app, user_id, title, body, link_url=None):
         _send_push_impl(user_id, title, body, link_url)
 
 
-def send_notification_email(user, title, body):
-    """Legacy: email only, no in-app record. Uses queue or thread."""
+def send_notification_email(user, title, body, category='general'):
+    """Legacy: email only, no in-app record. Uses queue or thread. Use category='password_reset' or 'invite' for minimal plain-looking email."""
     if not user.email:
         return
-    _enqueue_or_send_email(str(user.email), title, body, 'general', None)
+    _enqueue_or_send_email(str(user.email), title, body, category, None)

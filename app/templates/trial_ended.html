@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe to continue — Training Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0f172a;
+                --bg-card: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border: #334155;
+            }
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .icon { font-size: 56px; margin-bottom: 20px; opacity: 0.85; }
+        .title { font-size: 26px; font-weight: 900; color: var(--text-main); margin-bottom: 12px; line-height: 1.2; }
+        .message { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 28px; }
+        .actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 700;
+            text-decoration: none; transition: opacity 0.15s; width: 100%; max-width: 260px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#x1f4c8;</div>
+        <h1 class="title">{% if trial_ended %}Your free trial has ended{% else %}Your access is paused{% endif %}</h1>
+        <p class="message">{% if trial_ended %}We hope you enjoyed trying Training Tracker. Subscribe now to keep using your dashboard, schedules, and team tools — we’d love to have you back.{% else %}If your free trial has ended, subscribe to continue. Otherwise we may have paused access for another reason.{% endif %}</p>
+        <p class="message" style="margin-bottom: 24px;">Questions or need help? We’re here for you.</p>
+        <div class="actions">
+            <a href="{{ home_url }}" class="btn btn-primary">
+                <i class="fa-solid fa-credit-card"></i> Subscribe now
+            </a>
+            <a href="{{ support_url }}" class="btn btn-secondary">
+                <i class="fa-solid fa-circle-question"></i> Contact support
+            </a>
+        </div>
+    </div>
+</body>
+</html>

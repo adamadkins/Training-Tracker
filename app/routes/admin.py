@@ -557,6 +557,7 @@ def user_send_reset(user_id):
             user,
             "Reset your Training Tracker password",
             f"Someone requested a password reset. If it was you, click: {reset_url}\n\nLink expires in 7 days.",
+            category='password_reset',
         )
         flash(f"Password reset email sent to {user.email}.", "success")
     except Exception as e:
@@ -651,7 +652,7 @@ def organization_invite_first_user(org_id):
                 f"{open_in_app_url}\n\n"
                 f"This link expires in 7 days."
             )
-            send_notification_email(user, title, body)
+            send_notification_email(user, title, body, category='invite')
             flash(f"Invitation sent to {email}. They can set their password and then log in at {org.subdomain}.{base}.", "success")
             return redirect(url_for("admin.organization_detail", org_id=org_id))
         except Exception as e:

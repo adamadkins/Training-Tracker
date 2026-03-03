@@ -292,7 +292,7 @@ def send_invite_email(user):
         f"{open_in_app_url}\n\n"
         f"This link will expire in 7 days."
     )
-    send_notification_email(user, title, body)
+    send_notification_email(user, title, body, category='invite')
 
 
 # --- SETUP WIZARD ---

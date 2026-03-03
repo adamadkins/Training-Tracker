@@ -80,15 +80,33 @@ def create_app():
             return render_template("error.html", code=404, icon="\u26a0\ufe0f",
                 title="Organization Not Found",
                 message="This subdomain is not registered. Check the URL or contact your administrator."), 404
+        # Auto-suspend when trial has ended and they're not on a paid plan
+        from datetime import datetime, timezone
         status = getattr(org, "status", "active")
+        just_trial_ended = False
+        if status == "active":
+            has_paid_plan = org.free_plan or (org.stripe_subscription_id and (org.stripe_subscription_status or "").lower() == "active")
+            trial_ended = False
+            if org.trial_ends_at and not has_paid_plan:
+                end = org.trial_ends_at
+                if end.tzinfo is None:
+                    end = end.replace(tzinfo=timezone.utc)
+                if end <= datetime.now(timezone.utc):
+                    trial_ended = True
+            if trial_ended:
+                org.status = "suspended"
+                db.session.commit()
+                status = "suspended"
+                just_trial_ended = True
         if status == "pending_approval":
             from flask import render_template
             return render_template("pending_approval.html"), 200
         if status != "active":
             from flask import render_template
-            return render_template("error.html", code=403, icon="\u1f6ab",
-                title="Service Suspended",
-                message="This account has been suspended. Please contact your administrator or billing to restore access."), 403
+            main_domain = app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
+            support_url = f"https://{main_domain}/support"
+            home_url = f"https://{main_domain}"
+            return render_template("trial_ended.html", support_url=support_url, home_url=home_url, trial_ended=just_trial_ended), 403
         g.current_organization_id = org.id
         g.current_organization = org
 
