@@ -390,7 +390,7 @@ class PushToken(db.Model):
 
 
 class Channel(db.Model):
-    """Slack-like channel: either a group channel (name) or a DM (name null, exactly 2 participants)."""
+    """Chat-like channel: either a group channel (name) or a DM (name null, exactly 2 participants)."""
     __tablename__ = "channels"
     id = db.Column(db.Integer, primary_key=True)
     organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=False, index=True)

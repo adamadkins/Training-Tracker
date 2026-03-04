@@ -5,7 +5,7 @@
 {% block content %}
 <style>
     /* ══════════════════════════════════════════════════════════
-   SLACK-LIKE MESSAGING LAYOUT
+   chat-LIKE MESSAGING LAYOUT
    ══════════════════════════════════════════════════════════ */
 
     /* ── Reset base layout ── */
@@ -27,7 +27,7 @@
     }
 
     /* ── Wrapper ── */
-    .slack-wrapper {
+    .chat-wrapper {
         position: fixed;
         inset: 0;
         display: flex;
@@ -142,12 +142,12 @@
 
     /* When bottom bar is visible, add padding so content isn't hidden */
     @media (max-width: 768px) {
-        .slack-wrapper:not(.has-conversation) {
+        .chat-wrapper:not(.has-conversation) {
             /* 56px bar + safe area for home indicator */
             padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
         }
 
-        .slack-wrapper.has-conversation .msg-bottom-bar {
+        .chat-wrapper.has-conversation .msg-bottom-bar {
             display: none;
         }
 
@@ -156,8 +156,8 @@
         }
     }
 
-    /* ═══════════════════════ SIDEBAR (Slack-style) ═══════════════════════ */
-    .slack-sidebar {
+    /* ═══════════════════════ SIDEBAR (chat-style) ═══════════════════════ */
+    .chat-sidebar {
         width: 260px;
         min-width: 260px;
         background: #1a1d21;
@@ -357,8 +357,8 @@
         text-align: center;
     }
 
-    /* ═══════════════════════ MAIN AREA (Slack-style) ═══════════════════════ */
-    .slack-main {
+    /* ═══════════════════════ MAIN AREA (chat-style) ═══════════════════════ */
+    .chat-main {
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -524,7 +524,7 @@
         background: var(--bg-body);
     }
 
-    /* Date separator (Slack-style pill) */
+    /* Date separator (chat-style pill) */
     .date-sep {
         display: flex;
         align-items: center;
@@ -550,7 +550,7 @@
         border: 1px solid var(--border);
     }
 
-    /* Message row (Slack-style flat) */
+    /* Message row (chat-style flat) */
     .msg-row {
         display: flex;
         gap: 10px;
@@ -758,7 +758,7 @@
         background: var(--bg-body);
     }
 
-    /* ═══════════════════════ INPUT FOOTER (Slack-style) ═══════════════════════ */
+    /* ═══════════════════════ INPUT FOOTER (chat-style) ═══════════════════════ */
     .msg-footer {
         padding: 0 20px 16px;
         flex-shrink: 0;
@@ -1151,12 +1151,12 @@
 
     /* ═══════════════════════ MOBILE ═══════════════════════ */
     @media (max-width: 768px) {
-        .slack-wrapper {
+        .chat-wrapper {
             flex-direction: column;
         }
 
         /* Sidebar = full-screen view on mobile */
-        .slack-sidebar {
+        .chat-sidebar {
             width: 100%;
             min-width: 100%;
             position: fixed;
@@ -1165,12 +1165,12 @@
             transition: transform 0.25s ease;
         }
 
-        .slack-wrapper.has-conversation .slack-sidebar {
+        .chat-wrapper.has-conversation .chat-sidebar {
             transform: translateX(-100%);
             pointer-events: none;
         }
 
-        .slack-wrapper:not(.has-conversation) .slack-main {
+        .chat-wrapper:not(.has-conversation) .chat-main {
             display: none;
         }
 
@@ -1248,7 +1248,7 @@
         }
 
         /* ── Chat area = full screen ── */
-        .slack-main {
+        .chat-main {
             position: fixed;
             inset: 0;
             z-index: 260;
@@ -1439,7 +1439,7 @@
     }
 </style>
 
-<div class="slack-wrapper {{ 'has-conversation' if active_channel or active_partner else '' }}">
+<div class="chat-wrapper {{ 'has-conversation' if active_channel or active_partner else '' }}">
 
     {# ═══════════════════════ FAR LEFT NAV STRIP ═══════════════════════ #}
     <nav class="msg-left-strip" aria-label="Messages navigation">
@@ -1454,7 +1454,7 @@
     </nav>
 
     {# ═══════════════════════ SIDEBAR ═══════════════════════ #}
-    <aside class="slack-sidebar" id="slackSidebar">
+    <aside class="chat-sidebar" id="slackSidebar">
         <div class="sidebar-brand">
             <a href="{{ url_for('manager.dashboard') if current_user.role == 'manager' else url_for('employee.dashboard') }}"
                 class="sidebar-brand-name">Training<b>Tracker</b></a>
@@ -1532,7 +1532,7 @@
     </aside>
 
     {# ═══════════════════════ MAIN AREA ═══════════════════════ #}
-    <div class="slack-main">
+    <div class="chat-main">
 
         {% if active_channel or active_partner %}
         {# ── Channel / DM header ── #}
