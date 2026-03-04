@@ -14,7 +14,7 @@
         /* ── HERO ── */
         .hero {
             background: linear-gradient(160deg, var(--navy) 0%, #1a1040 55%, #0f2b1e 100%);
-            padding: 140px 24px 80px;
+            padding: 140px 24px 220px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -96,16 +96,16 @@
 
         .demo-section {
             background: #f1f5f9 !important;
-            border-top: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 48px 24px 56px;
+            padding: 0 24px 80px;
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         .demo-inner {
             max-width: 980px;
-            margin: 0 auto;
+            margin: -140px auto 0;
+            position: relative;
+            z-index: 20;
         }
 
         .demo-label-row {
@@ -2758,7 +2758,8 @@
             <i class="fa-solid fa-bolt"></i> Built for restaurant teams
         </div>
         <h1 class="reveal-up active reveal-delay-100" style="position: relative; z-index: 10;">Training that actually
-            <span>sticks.</span></h1>
+            <span>sticks.</span>
+        </h1>
         <p class="hero-sub reveal-up active reveal-delay-200" style="position: relative; z-index: 10;">Stop using
             spreadsheets and group chats to manage training. Training Tracker gives your team a real system for
             scheduling, tracking progress, and holding trainers accountable.</p>
@@ -4287,10 +4288,12 @@
                     <div style="display:flex; gap:8px; justify-content:center;">
                         <div
                             style="padding:8px 16px; background:#7c3aed; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
-                            <i class="fa-solid fa-copy"></i> Copy Link</div>
+                            <i class="fa-solid fa-copy"></i> Copy Link
+                        </div>
                         <div
                             style="padding:8px 16px; background:#16a34a; color:#fff; border-radius:8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;">
-                            <i class="fa-solid fa-message"></i> Send via Text</div>
+                            <i class="fa-solid fa-message"></i> Send via Text
+                        </div>
                     </div>
                     <div style="margin-top:12px; font-size:9px; color:#94a3b8;">Scan the QR code to try Training Tracker
                         Classic</div>
