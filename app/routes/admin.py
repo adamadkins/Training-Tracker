@@ -121,17 +121,17 @@ def _signup_request_mailto(signup_request):
     )
 
 
-def _signup_request_gmail_url(signup_request):
-    """Build Gmail compose URL so the Email button opens Gmail in the browser."""
+def _signup_request_outlook_url(signup_request):
+    """Build Outlook Web compose URL so the Email button opens Outlook in the browser."""
     r = signup_request
     email = (r.email or "").strip()
     subject, body = _signup_request_email_content(r)
-    body = body.replace("\r\n", "\n")  # Gmail uses \n in body
-    base = "https://mail.google.com/mail/?view=cm&fs=1"
+    body = body.replace("\r\n", "\n")
+    base = "https://outlook.office.com/mail/deeplink/compose"
     return (
         base
-        + "&to=" + quote(email, safe="")
-        + "&su=" + quote(subject, safe="")
+        + "?to=" + quote(email, safe="")
+        + "&subject=" + quote(subject, safe="")
         + "&body=" + quote(body, safe="")
     )
 
@@ -174,7 +174,7 @@ def index():
         )
     signup_requests = signup_query.limit(50).all()
     signup_requests_with_mailto = [
-        (r, _signup_request_mailto(r), _signup_request_gmail_url(r)) for r in signup_requests
+        (r, _signup_request_mailto(r), _signup_request_outlook_url(r)) for r in signup_requests
     ]
     return render_template(
         "admin/index.html",
@@ -190,6 +190,23 @@ def index():
         filter_signup_plan=signup_plan,
         filter_signup_q=signup_search,
     )
+
+
+@admin_bp.route("/signup-requests/<int:req_id>/update", methods=["POST"])
+def signup_request_update(req_id):
+    """Update follow-up status and notes for a signup request."""
+    req = SignupRequest.query.get_or_404(req_id)
+    new_status = request.form.get("status")
+    notes = request.form.get("notes")
+    
+    if new_status and new_status in ("new", "contacted", "resolved"):
+        req.status = new_status
+    if notes is not None:
+        req.notes = notes.strip()
+        
+    db.session.commit()
+    flash(f"Updated follow-up tracking for {req.business or req.email}.", "success")
+    return redirect(url_for("admin.index"))
 
 
 @admin_bp.route("/signup-requests/clear", methods=["POST"])

@@ -616,36 +616,6 @@ def waitlist():
                 plan=plan if plan in ("standard", "pro") else None,
             )
             db.session.add(req)
-            db.session.flush()
-            org_name = business or email.split("@")[0]
-            base_sub = _subdomain_slug(org_name) or _subdomain_slug(email) or "org"
-            subdomain = base_sub
-            for n in range(100):
-                if Organization.query.filter_by(subdomain=subdomain).first() is None:
-                    break
-                subdomain = f"{base_sub}-{req.id}" if n == 0 else f"{base_sub}-{n}"
-            now = datetime.now(timezone.utc)
-            trial_ends_at = now + timedelta(days=14)
-            org = Organization(
-                name=org_name,
-                subdomain=subdomain,
-                status="pending_approval",
-                trial_ends_at=trial_ends_at,
-                trial_plan=plan,
-                billing_plan=plan,
-            )
-            db.session.add(org)
-            db.session.flush()
-            settings = SystemSettings(organization_id=org.id)
-            db.session.add(settings)
-            manager_user = User(
-                organization_id=org.id,
-                email=email,
-                role="manager",
-                employee_id=None,
-            )
-            db.session.add(manager_user)
-            req.organization_id = org.id
             db.session.commit()
             try:
                 import os
@@ -654,12 +624,11 @@ def waitlist():
                 subject = f"Training Tracker signup: {business or email}{loc_part}" + (f" ({plan})" if plan else "")
                 # Plain text body so it displays correctly (no raw HTML in email client)
                 body_lines = [
-                    "New signup request (pending approval)",
+                    "New signup request",
                     "",
                     f"Name: {name}",
                     f"Email: {email}",
                     f"Business: {business}",
-                    f"Subdomain: {subdomain}",
                 ]
                 if location_identifier:
                     body_lines.append(f"Location / store: {location_identifier}")

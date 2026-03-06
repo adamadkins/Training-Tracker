@@ -54,6 +54,8 @@ class SignupRequest(db.Model):
     plan = db.Column(db.String(20), nullable=True)  # standard | pro
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     organization_id = db.Column(db.Integer, db.ForeignKey("organizations.id"), nullable=True, index=True)
+    status = db.Column(db.String(20), default="new", nullable=False)  # new, contacted, resolved
+    notes = db.Column(db.Text, nullable=True)
 
     organization = db.relationship("Organization", backref=db.backref("signup_request", uselist=False))
 
