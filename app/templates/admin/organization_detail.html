@@ -2,7 +2,8 @@
 {% block content %}
 <div class="admin-page">
     <div class="page-header">
-        <a href="{{ url_for('admin.organizations_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Organizations</a>
+        <a href="{{ url_for('admin.organizations_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i>
+            Organizations</a>
     </div>
     <div class="detail-card">
         <h1 class="page-title">{{ org.name }}</h1>
@@ -10,7 +11,8 @@
         {% set base_domain = h[4:] if h[:4] == 'www.' else h %}
         {% set login_host = org.subdomain ~ '.' ~ base_domain %}
         <dl class="detail-list">
-            <dt>Subdomain</dt><dd><code>{{ org.subdomain }}</code></dd>
+            <dt>Subdomain</dt>
+            <dd><code>{{ org.subdomain }}</code></dd>
             <dt>Status</dt>
             <dd>
                 <span class="status status-{{ org.status }}">{{ org.status }}</span>
@@ -23,7 +25,8 @@
             <dt>Login URL</dt>
             <dd class="login-url-row">
                 <code id="login-url">{{ login_host }}</code>
-                <button type="button" class="btn-copy" id="copy-btn" onclick="var u='https://'+document.getElementById('login-url').textContent; var b=document.getElementById('copy-btn'); navigator.clipboard.writeText(u); b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; }, 1500);">Copy</button>
+                <button type="button" class="btn-copy" id="copy-btn"
+                    onclick="var u='https://'+document.getElementById('login-url').textContent; var b=document.getElementById('copy-btn'); navigator.clipboard.writeText(u); b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; }, 1500);">Copy</button>
             </dd>
             <dt>Users</dt>
             <dd>
@@ -37,27 +40,60 @@
                 {{ user_count }} (none yet)
                 {% endif %}
             </dd>
-            <dt>Employees</dt><dd>{{ employee_count }}</dd>
-            <dt>Created</dt><dd>{{ org.created_at | est('%m-%d-%Y %I:%M %p ET') }}</dd>
+            <dt>Employees</dt>
+            <dd>{{ employee_count }}</dd>
+            {% if org.signup_request %}
+            <dt>Contact Info</dt>
+            <dd>
+                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Email:</strong> {{ org.signup_request.email or
+                    '—' }}</div>
+                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Phone:</strong> {{ org.signup_request.phone or
+                    '—' }}</div>
+                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Location:</strong> {{
+                    org.signup_request.location_identifier or '—' }}</div>
+                {% if org.signup_request.address_line1 or org.signup_request.city or org.signup_request.state %}
+                <div style="font-size: 14px; margin-bottom: 8px;"><strong>Address:</strong> {{
+                    org.signup_request.address_line1 or '' }}{% if org.signup_request.city %}, {{
+                    org.signup_request.city }}{% endif %} {{ org.signup_request.state or '' }} {{
+                    org.signup_request.postal_code or '' }}</div>
+                {% endif %}
+                <div style="margin-top: 8px;">
+                    <a href="mailto:{{ org.signup_request.email }}?subject={{ org.name|urlencode }} - Organization Follow-up"
+                        class="btn btn-sm btn-outline" style="border-color: var(--primary); color: var(--primary);"><i
+                            class="fa-solid fa-envelope"></i> Reach Out Via Email</a>
+                </div>
+            </dd>
+            {% endif %}
+            <dt>Created</dt>
+            <dd>{{ org.created_at | est('%m-%d-%Y %I:%M %p ET') }}</dd>
             <dt>Trial</dt>
             <dd>
                 {% if trial_days_left is not none %}
-                    {% if trial_days_left > 0 %}
-                        <span class="status status-active">{{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} left</span> ({{ org.trial_plan|default('standard')|capitalize }})
-                    {% else %}
-                        <span class="status status-suspended">Ended</span>
-                    {% endif %}
+                {% if trial_days_left > 0 %}
+                <span class="status status-active">{{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }}
+                    left</span> ({{ org.trial_plan|default('standard')|capitalize }})
                 {% else %}
-                    — (no trial)
+                <span class="status status-suspended">Ended</span>
+                {% endif %}
+                {% else %}
+                — (no trial)
                 {% endif %}
                 <div class="trial-actions" style="margin-top:8px;">
-                    <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}" class="extend-trial-form" style="display:inline; margin-right:12px;">
-                        <input type="number" name="days" value="14" min="1" max="365" style="width:50px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);">
+                    <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}"
+                        class="extend-trial-form" style="display:inline; margin-right:12px;">
+                        <input type="number" name="days" value="14" min="1" max="365"
+                            style="width:50px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);">
                         <button type="submit" class="btn btn-outline btn-sm">Extend trial</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_set_trial_days', org_id=org.id) }}" style="display:inline;">
-                        <label for="days_left" style="font-size:12px; color:var(--text-muted); margin-right:4px;">Set to</label>
-                        <input type="number" id="days_left" name="days_left" value="{{ trial_days_left if trial_days_left is not none and trial_days_left > 0 else 7 }}" min="0" max="365" style="width:44px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);" title="Days left (0 = end now)">
+                    <form method="post" action="{{ url_for('admin.organization_set_trial_days', org_id=org.id) }}"
+                        style="display:inline;">
+                        <label for="days_left" style="font-size:12px; color:var(--text-muted); margin-right:4px;">Set
+                            to</label>
+                        <input type="number" id="days_left" name="days_left"
+                            value="{{ trial_days_left if trial_days_left is not none and trial_days_left > 0 else 7 }}"
+                            min="0" max="365"
+                            style="width:44px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);"
+                            title="Days left (0 = end now)">
                         <label style="font-size:12px; color:var(--text-muted); margin-left:2px;">days left</label>
                         <button type="submit" class="btn btn-outline btn-sm" style="margin-left:6px;">Set</button>
                     </form>
@@ -71,7 +107,8 @@
             <dd>
                 {% if org.free_plan %}
                 <span class="status status-active">{{ org.free_plan|capitalize }} (free)</span>
-                <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}" style="display:inline; margin-left:8px;">
+                <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}"
+                    style="display:inline; margin-left:8px;">
                     <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
                 </form>
                 {% elif org.stripe_subscription_id %}
@@ -83,22 +120,29 @@
                 {% endif %}
                 <div class="billing-actions">
                     {% if not org.free_plan %}
-                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}" style="display:inline;">
+                    <form method="post"
+                        action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}"
+                        style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Give Standard free</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='pro') }}" style="display:inline;">
+                    <form method="post"
+                        action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='pro') }}"
+                        style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Give Pro free</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}"
+                        style="display:inline;">
                         <input type="hidden" name="plan" value="standard">
                         <button type="submit" class="btn btn-primary btn-sm">Standard $40/mo</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}"
+                        style="display:inline;">
                         <input type="hidden" name="plan" value="pro">
                         <button type="submit" class="btn btn-outline btn-sm">Pro $50/mo</button>
                     </form>
                     {% if org.stripe_customer_id %}
-                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}" style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}"
+                        style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Manage billing</button>
                     </form>
                     {% endif %}
@@ -108,95 +152,366 @@
         </dl>
         <div class="detail-actions">
             {% if org.status == 'active' %}
-            <form method="post" action="{{ url_for('admin.organization_suspend', org_id=org.id) }}" style="display:inline;">
+            <form method="post" action="{{ url_for('admin.organization_suspend', org_id=org.id) }}"
+                style="display:inline;">
                 <button type="submit" class="btn btn-warning">Suspend</button>
             </form>
             {% elif org.status == 'pending_approval' %}
-            <form method="post" action="{{ url_for('admin.organization_approve', org_id=org.id) }}" style="display:inline;">
+            <form method="post" action="{{ url_for('admin.organization_approve', org_id=org.id) }}"
+                style="display:inline;">
                 <button type="submit" class="btn btn-primary">Approve</button>
             </form>
             {% else %}
-            <form method="post" action="{{ url_for('admin.organization_activate', org_id=org.id) }}" style="display:inline;">
+            <form method="post" action="{{ url_for('admin.organization_activate', org_id=org.id) }}"
+                style="display:inline;">
                 <button type="submit" class="btn btn-primary">Activate</button>
             </form>
             {% endif %}
         </div>
         {% if not has_users and org.status == 'active' %}
         <div class="invite-first-section">
-            <p class="invite-first-text">No users yet. Invite the first manager so they can log in to their dashboard.</p>
-            <a href="{{ url_for('admin.organization_invite_first_user', org_id=org.id) }}" class="btn btn-primary">Invite first user</a>
+            <p class="invite-first-text">No users yet. Invite the first manager so they can log in to their dashboard.
+            </p>
+            <a href="{{ url_for('admin.organization_invite_first_user', org_id=org.id) }}"
+                class="btn btn-primary">Invite first user</a>
         </div>
         {% endif %}
     </div>
 
     <div class="danger-zone">
         <h2 class="danger-title">Danger zone</h2>
-        <p class="danger-text">Permanently delete this organization and all its data (users, employees, schedules, messages, etc.). This cannot be undone.</p>
-        <form method="post" action="{{ url_for('admin.organization_delete', org_id=org.id) }}" class="delete-form" onsubmit="return document.getElementById('confirm-delete').value.toLowerCase() === 'delete';">
+        <p class="danger-text">Permanently delete this organization and all its data (users, employees, schedules,
+            messages, etc.). This cannot be undone.</p>
+        <form method="post" action="{{ url_for('admin.organization_delete', org_id=org.id) }}" class="delete-form"
+            onsubmit="return document.getElementById('confirm-delete').value.toLowerCase() === 'delete';">
             <label for="confirm-delete">Type <strong>delete</strong> to confirm</label>
-            <input type="text" id="confirm-delete" name="confirm" placeholder="delete" autocomplete="off" class="confirm-input">
+            <input type="text" id="confirm-delete" name="confirm" placeholder="delete" autocomplete="off"
+                class="confirm-input">
             <button type="submit" class="btn btn-danger">Delete organization</button>
         </form>
     </div>
 </div>
 <style>
-.admin-page { max-width: 640px; }
-.page-header { margin-bottom: 20px; }
-.back-link { color: var(--text-muted); font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-.back-link:hover { color: var(--primary); }
-.detail-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
-.page-title { font-size: 24px; font-weight: 800; margin: 0 0 20px 0; color: var(--text-main); }
-.detail-list { margin: 0; display: grid; gap: 12px 20px; grid-template-columns: auto 1fr; }
-.detail-list dt { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
-.detail-list dd { margin: 0; font-size: 15px; color: var(--text-main); }
-.detail-list code { font-size: 13px; background: var(--bg-body); padding: 4px 10px; border-radius: 8px; }
-.login-url-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.btn-copy { padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-body); color: var(--text-main); cursor: pointer; }
-.btn-copy:hover { border-color: var(--primary); color: var(--primary); }
-.detail-actions { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-.invite-first-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
-.invite-first-text { margin: 0 0 12px 0; color: var(--text-muted); font-size: 14px; }
-.danger-zone { margin-top: 32px; padding: 24px; border: 1px solid #fecaca; border-radius: 16px; background: #fef2f2; }
-.danger-title { font-size: 16px; font-weight: 800; color: #991b1b; margin: 0 0 8px 0; }
-.danger-text { font-size: 14px; color: #b91c1c; margin: 0 0 16px 0; line-height: 1.5; }
-.delete-form { display: flex; flex-direction: column; gap: 10px; max-width: 320px; }
-.delete-form label { font-size: 13px; font-weight: 600; color: var(--text-main); }
-.confirm-input { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 100%; max-width: 200px; }
-.btn-danger { background: #dc2626; color: white; }
-.status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-.status-note { font-size: 13px; color: var(--text-muted); margin-left: 6px; }
-.status-active { background: #dcfce7; color: #166534; }
-.status-suspended { background: #fee2e2; color: #991b1b; }
-.status-past-due { background: #fef3c7; color: #92400e; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-warning { background: #f59e0b; color: white; }
-.btn-sm { padding: 6px 12px; font-size: 13px; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-.billing-note { font-size: 13px; color: var(--text-muted); }
-.billing-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
-.btn:hover { opacity: 0.9; }
-.org-user-emails { margin: 0; padding-left: 20px; list-style: disc; }
-.org-user-emails li { margin-bottom: 4px; }
-.org-user-emails a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.org-user-emails a:hover { text-decoration: underline; }
+    .admin-page {
+        max-width: 640px;
+    }
 
-@media (max-width: 768px) {
-    .admin-page { max-width: 100%; padding: 0 4px; }
-    .back-link { min-height: 44px; align-items: center; display: inline-flex; }
-    .detail-card { padding: 20px; }
-    .detail-list { grid-template-columns: 1fr; gap: 8px 0; }
-    .detail-list dt { margin-bottom: 2px; }
-    .billing-actions { flex-direction: column; }
-    .billing-actions form { width: 100%; }
-    .billing-actions .btn { min-height: 44px; justify-content: center; width: 100%; }
-    .detail-actions .btn { min-height: 44px; }
-    .invite-first-section .btn { min-height: 44px; display: inline-flex; }
-    .btn-copy { min-height: 44px; padding: 10px 16px; }
-    .danger-zone .btn { min-height: 44px; }
-    .danger-zone { padding: 16px; }
-    .delete-form .confirm-input { max-width: 100%; min-height: 44px; }
-}
+    .page-header {
+        margin-bottom: 20px;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        font-size: 14px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .detail-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 28px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 20px 0;
+        color: var(--text-main);
+    }
+
+    .detail-list {
+        margin: 0;
+        display: grid;
+        gap: 12px 20px;
+        grid-template-columns: auto 1fr;
+    }
+
+    .detail-list dt {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .detail-list dd {
+        margin: 0;
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .detail-list code {
+        font-size: 13px;
+        background: var(--bg-body);
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+
+    .login-url-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn-copy {
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        cursor: pointer;
+    }
+
+    .btn-copy:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .detail-actions {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+    }
+
+    .invite-first-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+    }
+
+    .invite-first-text {
+        margin: 0 0 12px 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    .danger-zone {
+        margin-top: 32px;
+        padding: 24px;
+        border: 1px solid #fecaca;
+        border-radius: 16px;
+        background: #fef2f2;
+    }
+
+    .danger-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #991b1b;
+        margin: 0 0 8px 0;
+    }
+
+    .danger-text {
+        font-size: 14px;
+        color: #b91c1c;
+        margin: 0 0 16px 0;
+        line-height: 1.5;
+    }
+
+    .delete-form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 320px;
+    }
+
+    .delete-form label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .confirm-input {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .btn-danger {
+        background: #dc2626;
+        color: white;
+    }
+
+    .status {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    .status-note {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-left: 6px;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-suspended {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-past-due {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .billing-note {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .billing-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .org-user-emails {
+        margin: 0;
+        padding-left: 20px;
+        list-style: disc;
+    }
+
+    .org-user-emails li {
+        margin-bottom: 4px;
+    }
+
+    .org-user-emails a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .org-user-emails a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+        .admin-page {
+            max-width: 100%;
+            padding: 0 4px;
+        }
+
+        .back-link {
+            min-height: 44px;
+            align-items: center;
+            display: inline-flex;
+        }
+
+        .detail-card {
+            padding: 20px;
+        }
+
+        .detail-list {
+            grid-template-columns: 1fr;
+            gap: 8px 0;
+        }
+
+        .detail-list dt {
+            margin-bottom: 2px;
+        }
+
+        .billing-actions {
+            flex-direction: column;
+        }
+
+        .billing-actions form {
+            width: 100%;
+        }
+
+        .billing-actions .btn {
+            min-height: 44px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .detail-actions .btn {
+            min-height: 44px;
+        }
+
+        .invite-first-section .btn {
+            min-height: 44px;
+            display: inline-flex;
+        }
+
+        .btn-copy {
+            min-height: 44px;
+            padding: 10px 16px;
+        }
+
+        .danger-zone .btn {
+            min-height: 44px;
+        }
+
+        .danger-zone {
+            padding: 16px;
+        }
+
+        .delete-form .confirm-input {
+            max-width: 100%;
+            min-height: 44px;
+        }
+    }
 </style>
 {% endblock %}

@@ -339,6 +339,8 @@ def organization_create():
         manager_email = (request.form.get("manager_email") or "").strip().lower()
         manager_first_name = (request.form.get("manager_first_name") or "").strip()
         manager_last_name = (request.form.get("manager_last_name") or "").strip()
+        from_id = request.args.get("from")
+        
         if not name or not subdomain:
             flash("Name and subdomain are required.", "error")
             return render_template("admin/organization_form.html", name=name, subdomain=subdomain, trial_plan=trial_plan_param, manager_email=manager_email, manager_first_name=manager_first_name, manager_last_name=manager_last_name, signup_requests=signup_requests, prefilled_signup=None)
@@ -386,6 +388,15 @@ def organization_create():
             db.session.flush()
             user = User(email=manager_email, role="manager", employee_id=emp.id, organization_id=org.id)
             db.session.add(user)
+            
+            if from_id:
+                try:
+                    req = SignupRequest.query.get(int(from_id))
+                    if req:
+                        req.organization_id = org.id
+                except (TypeError, ValueError):
+                    pass
+            
             db.session.commit()
             # Send invite email (set-password link)
             try:
