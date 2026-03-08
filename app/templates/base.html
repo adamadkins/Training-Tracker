@@ -60,32 +60,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /*  Theme variables  */
-        {% set primary_hex = {
-            \'indigo\': \'#4f46e5\',
-            \'blue\': \'#2563eb\',
-            \'violet\': \'#7c3aed\',
-            \'green\': \'#059669\',
-            \'amber\': \'#d97706\',
-            \'rose\': \'#e11d48\',
-            \'sky\': \'#0284c7\'
-        } %}
-        {% set primary_hover = {
-            \'indigo\': \'#4338ca\',
-            \'blue\': \'#1d4ed8\',
-            \'violet\': \'#6d28d9\',
-            \'green\': \'#047857\',
-            \'amber\': \'#b45309\',
-            \'rose\': \'#be123c\',
-            \'sky\': \'#0369a1\'
-        } %}
-        {% set _primary = (g.system_settings.primary_color or \'indigo\') if g.system_settings else \'indigo\' %}
-        {% set _hex = _primary if (_primary or \'\')|length and (_primary or \'\')[:1] == \'#\' else primary_hex.get(_primary, primary_hex[\'indigo\']) %}
-        {% set _hover = _hex if (_primary or \'\')[:1] == \'#\' else primary_hover.get(_primary, primary_hover[\'indigo\']) %}
+        /* ── Theme variables ── */
+            {
+            % set primary_hex= {
+                'indigo': '#4f46e5',
+                    'blue': '#2563eb',
+                    'violet': '#7c3aed',
+                    'green': '#059669',
+                    'amber': '#d97706',
+                    'rose': '#e11d48',
+                    'sky': '#0284c7'
+            }
+
+            %
+        }
+
+            {
+            % set primary_hover= {
+                'indigo': '#4338ca',
+                    'blue': '#1d4ed8',
+                    'violet': '#6d28d9',
+                    'green': '#047857',
+                    'amber': '#b45309',
+                    'rose': '#be123c',
+                    'sky': '#0369a1'
+            }
+
+            %
+        }
+
+            {
+            % set _primary=(g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %
+        }
+
+            {
+            % set _hex=_primary if (_primary or '')|length and (_primary or '')[: 1]=='#' else primary_hex.get(_primary, primary_hex['indigo']) %
+        }
+
+            {
+            % set _hover=_hex if (_primary or '')[: 1]=='#' else primary_hover.get(_primary, primary_hover['indigo']) %
+        }
 
         :root {
-            --primary: {{ _hex }};
-            --primary-hover: {{ _hover }};
+            --primary: {
+                    {
+                    _hex
+                }
+            }
+
+            ;
+
+            --primary-hover: {
+                    {
+                    _hover
+                }
+            }
+
+            ;
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
             --text-main: #1e293b;
@@ -112,9 +143,17 @@
             }
         }
 
-        {% if current_user.is_authenticated and current_user.settings %}
-        {% set theme_pref = current_user.settings.theme_pref or \'system\' %}
-        {% if theme_pref == \'dark\' %}
+            {
+            % if current_user.is_authenticated and current_user.settings %
+        }
+
+            {
+            % set theme_pref=current_user.settings.theme_pref or 'system' %
+        }
+
+            {
+            % if theme_pref=='dark' %
+        }
 
         /* Force dark mode */
         :root {
@@ -142,7 +181,10 @@
                 --input-bg: #1f2937 !important;
             }
         }
-        {% elif theme_pref == \'light\' %}
+
+            {
+            % elif theme_pref==\'light\' %
+        }
 
         /* Force light mode */
         :root {
@@ -170,7 +212,10 @@
                 --input-bg: #ffffff !important;
             }
         }
-        {% elif theme_pref == \'system\' %}
+
+            {
+            % elif theme_pref==\'system\' %
+        }
 
         @media (prefers-color-scheme: dark) {
             :root {
@@ -185,8 +230,14 @@
                 --input-bg: #1f2937;
             }
         }
-        {% endif %}
-        {% else %}
+
+            {
+            % endif %
+        }
+
+            {
+            % else %
+        }
 
         /* Default to system if not logged in */
         @media (prefers-color-scheme: dark) {
@@ -201,7 +252,10 @@
                 --input-bg: #1f2937;
             }
         }
-        {% endif %}
+
+            {
+            % endif %
+        }
 
 
         /* Hide scrollbar in Capacitor app for native feel */
