@@ -2393,7 +2393,7 @@ def _schedule_detail_cache_key():
 
 @manager_bp.route("/schedules/<int:schedule_id>")
 @manager_required
-@cache.cached(timeout=90, key_prefix=_schedule_detail_cache_key)
+@cache.memoize(timeout=90)
 def schedule_detail(schedule_id):
     sch = Schedule.query.filter_by(organization_id=g._manager_org_id, id=schedule_id).first_or_404()
     visible_ids = get_visible_employee_ids()
@@ -2593,6 +2593,19 @@ def session_create(schedule_id):
             trainee_employee_id=request.form.get("trainee_employee_id"),
             overall_notes=request.form.get("notes")
         )
+
+        # Duplicate check — prevent same trainee+trainer+position+date in the same schedule
+        existing = TrainingSession.query.filter_by(
+            schedule_id=schedule_id,
+            trainee_employee_id=new_session.trainee_employee_id,
+            trainer_employee_id=new_session.trainer_employee_id,
+            position_id=new_session.position_id,
+            session_date=new_session.session_date,
+        ).first()
+        if existing:
+            flash("This session already exists in the schedule.")
+            return redirect(url_for('manager.schedule_detail', schedule_id=schedule_id))
+
         db.session.add(new_session)
         db.session.commit()
 
