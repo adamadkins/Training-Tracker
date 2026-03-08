@@ -76,7 +76,12 @@
         text-decoration: none;
         box-shadow: 0 4px 6px -1px var(--shadow);
     }
-    .btn-action-header:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+    .btn-action-header:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
 
     /* --- KPI ROW --- */
     .kpi-row {
@@ -121,8 +126,18 @@
         border-radius: 20px;
         text-transform: uppercase;
     }
-    .status-active { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-    .status-inactive { background: var(--bg-body); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .status-inactive {
+        background: var(--bg-body);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+    }
 
     /* --- CONTENT GRID --- */
     .content-grid {
@@ -172,10 +187,18 @@
         transition: background 0.2s;
         background: var(--bg-card);
     }
-    .descriptor-row:last-child { border-bottom: none; }
-    .descriptor-row:hover { background-color: var(--bg-body); }
 
-    .descriptor-cell { padding: 24px 32px; }
+    .descriptor-row:last-child {
+        border-bottom: none;
+    }
+
+    .descriptor-row:hover {
+        background-color: var(--bg-body);
+    }
+
+    .descriptor-cell {
+        padding: 24px 32px;
+    }
 
     .btn-trash {
         border: none;
@@ -190,7 +213,11 @@
         align-items: center;
         justify-content: center;
     }
-    .btn-trash:hover { color: #ef4444; background: #fee2e2; }
+
+    .btn-trash:hover {
+        color: #ef4444;
+        background: #fee2e2;
+    }
 
     /* --- FORM STYLES --- */
     .form-body {
@@ -220,7 +247,11 @@
         display: block;
         margin-bottom: 24px;
     }
-    .input-style:focus { border-color: var(--primary); background: var(--bg-card); }
+
+    .input-style:focus {
+        border-color: var(--primary);
+        background: var(--bg-card);
+    }
 
     .btn-submit {
         width: 100%;
@@ -235,16 +266,33 @@
         transition: all 0.2s;
         box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4); }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4);
+    }
 
     @media (max-width: 1200px) {
-        .content-grid { grid-template-columns: 1fr; }
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 900px) {
-        .detail-wrapper { padding: 32px 16px; }
-        .header-title { font-size: 28px; }
-        .card-header, .descriptor-cell, .form-body { padding-left: 20px; padding-right: 20px; }
+        .detail-wrapper {
+            padding: 32px 16px;
+        }
+
+        .header-title {
+            font-size: 28px;
+        }
+
+        .card-header,
+        .descriptor-cell,
+        .form-body {
+            padding-left: 20px;
+            padding-right: 20px;
+        }
     }
 </style>
 
@@ -254,8 +302,8 @@
         {# --- SMART BACK BUTTON --- #}
         <div style="margin-bottom: 32px;">
             <a href="javascript:history.back()"
-               style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
-               onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                style="text-decoration: none; color: var(--text-muted); font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; transition: color 0.2s;"
+                onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
                 <i class="fa-solid fa-arrow-left"></i> BACK
             </a>
         </div>
@@ -277,9 +325,9 @@
                 <div>
                     <span class="kpi-label">Status</span>
                     {% if position.active %}
-                        <span class="status-pill status-active">Active</span>
+                    <span class="status-pill status-active">Active</span>
                     {% else %}
-                        <span class="status-pill status-inactive">Inactive</span>
+                    <span class="status-pill status-inactive">Inactive</span>
                     {% endif %}
                 </div>
                 <i class="fa-solid fa-toggle-on" style="font-size: 24px; opacity: 0.1;"></i>
@@ -294,7 +342,8 @@
             <div class="kpi-card">
                 <div>
                     <span class="kpi-label">Created</span>
-                    <span class="kpi-value" style="font-size: 16px; font-weight: 700;">{{ position.created_at.strftime('%b %d, %Y') if position.created_at else 'Today' }}</span>
+                    <span class="kpi-value" style="font-size: 16px; font-weight: 700;">{{
+                        position.created_at.strftime('%b %d, %Y') if position.created_at else 'Today' }}</span>
                 </div>
                 <i class="fa-solid fa-clock-rotate-left" style="font-size: 24px; opacity: 0.1;"></i>
             </div>
@@ -307,7 +356,9 @@
                 <div class="detail-card">
                     <div class="card-header">
                         <h2 class="card-title">Performance Rubric</h2>
-                        <span style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Live Checklist</span>
+                        <span
+                            style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Live
+                            Checklist</span>
                     </div>
 
                     <div style="overflow-x: auto;">
@@ -322,12 +373,16 @@
                                 {% for d in descriptors %}
                                 <tr class="descriptor-row">
                                     <td class="descriptor-cell">
-                                        <div style="font-weight: 700; font-size: 16px; color: var(--text-main); line-height: 1.5;">
+                                        <div
+                                            style="font-weight: 700; font-size: 16px; color: var(--text-main); line-height: 1.5;">
                                             {{ d.text }}
                                         </div>
                                     </td>
                                     <td class="descriptor-cell" style="text-align: right;">
-                                        <form method="post" action="{{ url_for('manager.descriptor_delete', descriptor_id=d.id) }}" style="display:inline;" onsubmit="return confirm('Remove this skill from the active checklist? Historical session data will be preserved.');">
+                                        <form method="post"
+                                            action="{{ url_for('manager.descriptor_delete', descriptor_id=d.id) }}"
+                                            style="display:inline;"
+                                            onsubmit="return confirm('Remove this skill from the active checklist? Historical session data will be preserved.');">
                                             <button type="submit" class="btn-trash" title="Remove Requirement">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
@@ -336,10 +391,15 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="2" style="padding: 80px 24px; text-align: center; color: var(--text-muted);">
+                                    <td colspan="2"
+                                        style="padding: 80px 24px; text-align: center; color: var(--text-muted);">
                                         <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;">📋</div>
-                                        <h3 style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">Checklist is Empty</h3>
-                                        <p style="font-size: 15px; margin: 0; max-width: 320px; margin-left: auto; margin-right: auto; line-height: 1.5;">No evaluation metrics have been defined for this position yet.</p>
+                                        <h3
+                                            style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">
+                                            Checklist is Empty</h3>
+                                        <p
+                                            style="font-size: 15px; margin: 0; max-width: 320px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                                            No evaluation metrics have been defined for this position yet.</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -354,34 +414,102 @@
                 <div class="detail-card">
                     <div class="card-header">
                         <h2 class="card-title">Update Rubric</h2>
-                        <span style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Add Metric</span>
+                        <span
+                            style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase;">Add
+                            Metric</span>
                     </div>
                     <div class="form-body">
-                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px;">Add a new performance requirement or skill check to the training evaluation form.</p>
+                        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px;">Add
+                            a new performance requirement or skill check to the training evaluation form.</p>
 
-                        <form method="post" id="descriptorForm" action="{{ url_for('manager.descriptor_create', position_id=position.id) }}">
+                        <form method="post" id="descriptorForm"
+                            action="{{ url_for('manager.descriptor_create', position_id=position.id) }}">
                             <label class="form-label">Metric Description</label>
-                            <input type="text" name="text" required placeholder="e.g. speed, smiling while taking an order, etc." class="input-style">
+                            <input type="text" name="text" required
+                                placeholder="e.g. speed, smiling while taking an order, etc." class="input-style">
 
                             <button type="submit" id="saveBtn" class="btn-submit">
                                 Add to Checklist
                             </button>
                         </form>
 
-                        <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; color: var(--text-muted); font-size: 12px; line-height: 1.5;">
+                        <div
+                            style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; color: var(--text-muted); font-size: 12px; line-height: 1.5;">
                             <i class="fa-solid fa-circle-info" style="color: var(--primary); margin-top: 2px;"></i>
-                            <span>Newly added items appear on instructor evaluation forms immediately. Historical sessions for this position will not be retroactively affected.</span>
+                            <span>Newly added items appear on instructor evaluation forms immediately. Historical
+                                sessions for this position will not be retroactively affected.</span>
                         </div>
                     </div>
                 </div>
             </div>
 
         </div>
+
+        {# --- TRAINING CHECKLIST SECTION (full-width below the grid) --- #}
+        <div style="margin-top: 40px;">
+            <div class="detail-card">
+                <div class="card-header">
+                    <h2 class="card-title">Training Checklist</h2>
+                    <span
+                        style="font-size: 11px; color: var(--primary); font-weight: 800; text-transform: uppercase;">{{
+                        checklist_items|length }} Step{{ 's' if checklist_items|length != 1 else '' }}</span>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="descriptor-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;">#</th>
+                                <th>Step / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in checklist_items %}
+                            <tr class="descriptor-row">
+                                <td class="descriptor-cell"
+                                    style="text-align: center; font-weight: 800; color: var(--primary); font-size: 18px;">
+                                    {{ loop.index }}</td>
+                                <td class="descriptor-cell">
+                                    <div
+                                        style="font-weight: 700; font-size: 16px; color: var(--text-main); line-height: 1.5;">
+                                        {{ item.text }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2"
+                                    style="padding: 60px 24px; text-align: center; color: var(--text-muted);">
+                                    <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;">📝</div>
+                                    <h3
+                                        style="font-size: 20px; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">
+                                        No Training Checklist</h3>
+                                    <p
+                                        style="font-size: 15px; margin: 0; max-width: 360px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                                        Add step-by-step items that trainers should walk through with trainees on their
+                                        first time at this position.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div
+                    style="padding: 20px 32px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; color: var(--text-muted); font-size: 12px; line-height: 1.5;">
+                    <i class="fa-solid fa-circle-info" style="color: var(--primary); margin-top: 2px;"></i>
+                    <span>These items appear as a toggleable checklist during training sessions. Trainers check off each
+                        step as they walk the trainee through it. Edit the checklist from the <a
+                            href="{{ url_for('manager.position_edit', position_id=position.id) }}"
+                            style="color: var(--primary); font-weight: 700;">position settings</a>.</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('descriptorForm').addEventListener('submit', function(e) {
+    document.getElementById('descriptorForm').addEventListener('submit', function (e) {
         if (this.checkValidity()) {
             const btn = document.getElementById('saveBtn');
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 8px;"></i> Adding...';

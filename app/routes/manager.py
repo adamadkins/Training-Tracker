@@ -19,7 +19,7 @@ from app.models import (
     TrainingSession, SessionRating, Notification, Daypart, EmployeeNote,
     UserSettings, SystemSettings, TrainingRoadmap, RoadmapStep, Location,
     Channel, ChannelParticipant, Message, MessageReaction, GuestTrainerToken,
-    Organization, employee_locations,
+    Organization, employee_locations, PositionChecklistItem, TraineeChecklistCompletion,
 )
 from app import db, cache
 from app.utils.notifications import send_notification_email, notify, _enqueue_or_send_push
@@ -1911,6 +1911,7 @@ def position_create():
     if request.method == 'POST':
         name = request.form.get("name")
         descriptor_texts = request.form.getlist("descriptors[]")
+        checklist_texts = request.form.getlist("checklist_items[]")
         loc_id = request.form.get("location_id") or None
         if loc_id:
             loc_id = int(loc_id)
@@ -1922,6 +1923,9 @@ def position_create():
         db.session.flush()
         for text in descriptor_texts:
             if text.strip(): db.session.add(PositionDescriptor(position_id=new_pos.id, text=text.strip(), active=True))
+        for idx, text in enumerate(checklist_texts):
+            if text.strip():
+                db.session.add(PositionChecklistItem(position_id=new_pos.id, text=text.strip(), order_index=idx, active=True))
         db.session.commit()
         flash(f"Position '{name}' created.")
         return redirect(url_for('manager.positions_list'))
@@ -1967,6 +1971,36 @@ def position_edit(position_id):
             if d.text in submitted_texts and not d.active:
                 d.active = True
 
+        # --- Training Checklist Items ---
+        submitted_checklist = [t.strip() for t in request.form.getlist("checklist_items[]") if t.strip()]
+        existing_cl = PositionChecklistItem.query.filter_by(position_id=pos.id).order_by(PositionChecklistItem.order_index).all()
+        existing_cl_texts = {c.text for c in existing_cl}
+
+        # Remove checklist items no longer in the submitted list
+        for c in existing_cl:
+            if c.text not in submitted_checklist:
+                # Check if any completions reference this item
+                has_completions = db.session.query(
+                    db.exists().where(TraineeChecklistCompletion.checklist_item_id == c.id)
+                ).scalar()
+                if has_completions:
+                    c.active = False
+                else:
+                    db.session.delete(c)
+
+        # Add brand-new checklist items
+        for idx, text in enumerate(submitted_checklist):
+            if text not in existing_cl_texts:
+                db.session.add(PositionChecklistItem(position_id=pos.id, text=text, order_index=idx, active=True))
+            else:
+                # Update order_index for existing items
+                for c in existing_cl:
+                    if c.text == text:
+                        c.order_index = idx
+                        if not c.active:
+                            c.active = True
+                        break
+
         db.session.commit()
 
         if was_active and not pos.active:
@@ -2001,7 +2035,41 @@ def position_edit(position_id):
 def position_detail(position_id):
     pos = Position.query.filter_by(organization_id=g._manager_org_id, id=position_id).first_or_404()
     descriptors = PositionDescriptor.query.filter_by(position_id=pos.id).all()
-    return render_template("position_detail.html", position=pos, descriptors=descriptors)
+    checklist_items = PositionChecklistItem.query.filter_by(position_id=pos.id, active=True).order_by(PositionChecklistItem.order_index).all()
+    return render_template("position_detail.html", position=pos, descriptors=descriptors, checklist_items=checklist_items)
+
+
+@manager_bp.route("/sessions/<int:session_id>/checklist", methods=["POST"])
+@staff_required
+def session_checklist_toggle(session_id):
+    """Toggle a training checklist item completion for a session."""
+    sess = TrainingSession.query.get_or_404(session_id)
+    item_id = request.form.get("checklist_item_id", type=int)
+    if not item_id:
+        return jsonify({"error": "Missing checklist_item_id"}), 400
+    item = PositionChecklistItem.query.get_or_404(item_id)
+    # Ensure the checklist item belongs to this session's position
+    if item.position_id != sess.position_id:
+        return jsonify({"error": "Item does not belong to this position"}), 400
+    completion = TraineeChecklistCompletion.query.filter_by(
+        training_session_id=sess.id,
+        checklist_item_id=item_id,
+    ).first()
+    if completion:
+        completion.completed = not completion.completed
+        completion.completed_at = datetime.now(timezone.utc) if completion.completed else None
+        completion.completed_by_user_id = current_user.id if completion.completed else None
+    else:
+        completion = TraineeChecklistCompletion(
+            training_session_id=sess.id,
+            checklist_item_id=item_id,
+            completed=True,
+            completed_at=datetime.now(timezone.utc),
+            completed_by_user_id=current_user.id,
+        )
+        db.session.add(completion)
+    db.session.commit()
+    return jsonify({"completed": completion.completed, "item_id": item_id})
 
 
 @manager_bp.route("/positions/<int:position_id>/delete", methods=['POST'])

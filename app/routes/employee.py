@@ -8,7 +8,8 @@ from sqlalchemy.orm import joinedload
 from app import db
 from app.models import (
     Employee, TrainingSession, SessionRating, Schedule,
-    Position, Daypart, PositionDescriptor, Notification, SystemSettings, User, PushToken
+    Position, Daypart, PositionDescriptor, Notification, SystemSettings, User, PushToken,
+    PositionChecklistItem, TraineeChecklistCompletion,
 )
 from app.utils.notifications import notify
 
@@ -492,11 +493,19 @@ def session_rating(session_id):
 
     require_notes = getattr(system_settings, 'require_completion_notes', False) if system_settings else False
 
+    # Training checklist items for this position
+    checklist_items = PositionChecklistItem.query.filter_by(position_id=session.position_id, active=True).order_by(PositionChecklistItem.order_index).all()
+    checklist_completions = {}
+    if checklist_items:
+        completions = TraineeChecklistCompletion.query.filter_by(training_session_id=session.id).all()
+        checklist_completions = {c.checklist_item_id: c.completed for c in completions}
+
     return render_template(
         "session_rating.html",
         session=session, descriptors=descriptors, history=history,
         scale_max=current_scale_max, rating_style=rating_style,
-        require_notes=require_notes
+        require_notes=require_notes,
+        checklist_items=checklist_items, checklist_completions=checklist_completions,
     )
 
 

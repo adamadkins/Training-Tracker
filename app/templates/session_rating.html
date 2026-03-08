@@ -9,6 +9,7 @@
         padding: 0 !important;
         margin: 0 !important;
     }
+
     body:has(.rating-wrapper) main {
         max-width: none !important;
         padding-top: 0 !important;
@@ -49,7 +50,9 @@
         border: 1px solid var(--border);
     }
 
-    .rating-radio { display: none; }
+    .rating-radio {
+        display: none;
+    }
 
     .rating-label {
         flex: 1;
@@ -64,50 +67,119 @@
     }
 
     /* Active States for Rating Buttons (1-5 and 1-10) */
-    .rating-radio[value="1"]:checked + .rating-label { background: #ef4444; color: white; }
-    .rating-radio[value="2"]:checked + .rating-label { background: #f97316; color: white; }
-    .rating-radio[value="3"]:checked + .rating-label { background: #eab308; color: white; }
-    .rating-radio[value="4"]:checked + .rating-label { background: #84cc16; color: white; }
-    .rating-radio[value="5"]:checked + .rating-label { background: #22c55e; color: white; }
-    .rating-radio[value="6"]:checked + .rating-label { background: #22c55e; color: white; }
-    .rating-radio[value="7"]:checked + .rating-label { background: #10b981; color: white; }
-    .rating-radio[value="8"]:checked + .rating-label { background: #059669; color: white; }
-    .rating-radio[value="9"]:checked + .rating-label { background: #0d9488; color: white; }
-    .rating-radio[value="10"]:checked + .rating-label { background: #14b8a6; color: white; }
+    .rating-radio[value="1"]:checked+.rating-label {
+        background: #ef4444;
+        color: white;
+    }
+
+    .rating-radio[value="2"]:checked+.rating-label {
+        background: #f97316;
+        color: white;
+    }
+
+    .rating-radio[value="3"]:checked+.rating-label {
+        background: #eab308;
+        color: white;
+    }
+
+    .rating-radio[value="4"]:checked+.rating-label {
+        background: #84cc16;
+        color: white;
+    }
+
+    .rating-radio[value="5"]:checked+.rating-label {
+        background: #22c55e;
+        color: white;
+    }
+
+    .rating-radio[value="6"]:checked+.rating-label {
+        background: #22c55e;
+        color: white;
+    }
+
+    .rating-radio[value="7"]:checked+.rating-label {
+        background: #10b981;
+        color: white;
+    }
+
+    .rating-radio[value="8"]:checked+.rating-label {
+        background: #059669;
+        color: white;
+    }
+
+    .rating-radio[value="9"]:checked+.rating-label {
+        background: #0d9488;
+        color: white;
+    }
+
+    .rating-radio[value="10"]:checked+.rating-label {
+        background: #14b8a6;
+        color: white;
+    }
 
     /* Legacy mode: slider + colored label (matching v1 style) */
     .rating-legacy-row {
-        display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
     }
+
     .rating-legacy-value {
-        min-width: 110px; font-size: 13px; font-weight: 800;
-        text-align: right; flex-shrink: 0;
+        min-width: 110px;
+        font-size: 13px;
+        font-weight: 800;
+        text-align: right;
+        flex-shrink: 0;
     }
+
     .rating-legacy-num {
         display: inline-block;
-        font-size: 15px; font-weight: 900;
+        font-size: 15px;
+        font-weight: 900;
         margin-right: 4px;
     }
+
     .rating-legacy-slider {
-        flex: 1; min-width: 160px;
-        -webkit-appearance: none; appearance: none;
-        height: 6px; border-radius: 4px; outline: none;
-        cursor: pointer; border: none;
+        flex: 1;
+        min-width: 160px;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+        border: none;
         /* background set dynamically via JS */
         background: linear-gradient(to right, #D60206 0%, #ddd 0%);
     }
+
     .rating-legacy-slider::-webkit-slider-thumb {
-        -webkit-appearance: none; appearance: none;
-        width: 20px; height: 20px; border-radius: 50%;
-        background: #004f72; border: 2px solid #fff;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #004f72;
+        border: 2px solid #fff;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
     }
+
     .rating-legacy-slider::-moz-range-thumb {
-        width: 20px; height: 20px; border-radius: 50%;
-        background: #004f72; border: none;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #004f72;
+        border: none;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
     }
-    .rating-legacy-slider::-moz-range-track { background: transparent; border: none; }
+
+    .rating-legacy-slider::-moz-range-track {
+        background: transparent;
+        border: none;
+    }
 
     .comment-input {
         width: 100%;
@@ -139,31 +211,58 @@
         max-width: 1400px;
         margin: 0 auto 32px auto;
     }
+
     .history-strip-header {
-        display: flex; justify-content: space-between; align-items: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 16px;
     }
+
     .history-strip-header h3 {
-        font-size: 13px; text-transform: uppercase; color: var(--text-muted);
-        letter-spacing: 0.05em; margin: 0; font-weight: 800;
+        font-size: 13px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin: 0;
+        font-weight: 800;
     }
+
     .history-strip-header span {
-        background: var(--bg-card); border: 1px solid var(--border);
-        padding: 4px 12px; border-radius: 20px;
-        font-size: 12px; font-weight: 800; color: var(--text-muted);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-muted);
     }
+
     .history-scroll {
-        display: flex; gap: 16px;
-        overflow-x: auto; padding-bottom: 8px;
+        display: flex;
+        gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 8px;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
     }
-    .history-scroll::-webkit-scrollbar { height: 6px; }
-    .history-scroll::-webkit-scrollbar-track { background: transparent; }
-    .history-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .history-scroll::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .history-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .history-scroll::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 3px;
+    }
 
     .hist-card {
-        min-width: 220px; max-width: 260px;
+        min-width: 220px;
+        max-width: 260px;
         padding: 16px;
         background: var(--bg-card);
         border: 1px solid var(--border);
@@ -176,6 +275,7 @@
         scroll-snap-align: start;
         box-shadow: 0 2px 4px var(--shadow);
     }
+
     .hist-card:hover {
         border-color: var(--primary);
         transform: translateY(-3px);
@@ -189,9 +289,18 @@
         font-weight: 800;
         color: white;
     }
-    .score-high { background: #10b981; }
-    .score-med { background: #f59e0b; }
-    .score-low { background: #ef4444; }
+
+    .score-high {
+        background: #10b981;
+    }
+
+    .score-med {
+        background: #f59e0b;
+    }
+
+    .score-low {
+        background: #ef4444;
+    }
 
     .hist-notes {
         font-size: 12px;
@@ -204,67 +313,146 @@
     }
 
     .history-empty {
-        background: var(--bg-card); border: 1px solid var(--border);
-        border-radius: 16px; padding: 32px; text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
     }
 
     /* --- RESPONSIVE OVERRIDES --- */
     @media (max-width: 1024px) {
-        .rating-wrapper { padding: 24px 16px; }
-        .btn-submit-main { width: 100%; justify-content: center; }
-        .hist-card { min-width: 180px; }
+        .rating-wrapper {
+            padding: 24px 16px;
+        }
+
+        .btn-submit-main {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .hist-card {
+            min-width: 180px;
+        }
     }
 
     @media (max-width: 768px) {
-        .rating-wrapper { padding: 20px 14px; }
+        .rating-wrapper {
+            padding: 20px 14px;
+        }
 
         /* Header */
-        .header-section { margin-bottom: 24px !important; }
-        .header-section h1 { font-size: 24px !important; margin-top: 10px !important; }
-        .header-section p  { font-size: 15px !important; margin: 4px 0 0; }
+        .header-section {
+            margin-bottom: 24px !important;
+        }
+
+        .header-section h1 {
+            font-size: 24px !important;
+            margin-top: 10px !important;
+        }
+
+        .header-section p {
+            font-size: 15px !important;
+            margin: 4px 0 0;
+        }
 
         /* History strip */
-        .history-strip { margin-bottom: 20px; }
-        .hist-card { min-width: 160px; padding: 12px; }
+        .history-strip {
+            margin-bottom: 20px;
+        }
+
+        .hist-card {
+            min-width: 160px;
+            padding: 12px;
+        }
 
         /* Criteria cards */
-        .criteria-card { padding: 16px; border-radius: 14px; margin-bottom: 14px; }
-        .criteria-card h3 { font-size: 15px !important; margin-bottom: 14px !important; }
+        .criteria-card {
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 14px;
+        }
+
+        .criteria-card h3 {
+            font-size: 15px !important;
+            margin-bottom: 14px !important;
+        }
 
         /* Button-style ratings: tighter on mobile */
-        .rating-options { gap: 3px; padding: 4px; }
-        .rating-label   { padding: 10px 0; font-size: 13px; border-radius: 8px; }
+        .rating-options {
+            gap: 3px;
+            padding: 4px;
+        }
+
+        .rating-label {
+            padding: 10px 0;
+            font-size: 13px;
+            border-radius: 8px;
+        }
 
         /* Legacy slider: stack vertically so slider gets full width */
-        .rating-legacy-row { flex-direction: column; align-items: stretch; gap: 10px; }
-        .rating-legacy-slider { width: 100%; min-width: 0; }
-        .rating-legacy-value  { text-align: left; min-width: 0; }
+        .rating-legacy-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+        }
+
+        .rating-legacy-slider {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .rating-legacy-value {
+            text-align: left;
+            min-width: 0;
+        }
 
         /* Comment box */
-        .comment-input { padding: 12px 14px; font-size: 14px; }
+        .comment-input {
+            padding: 12px 14px;
+            font-size: 14px;
+        }
 
         /* Submit button */
-        .btn-submit-main { padding: 16px 24px; font-size: 15px; }
+        .btn-submit-main {
+            padding: 16px 24px;
+            font-size: 15px;
+        }
 
         /* Flag section */
-        #flagSection label { padding: 14px 16px; }
+        #flagSection label {
+            padding: 14px 16px;
+        }
     }
 
     @media (max-width: 400px) {
+
         /* For very small screens, shrink rating buttons further */
-        .rating-label { font-size: 12px; padding: 9px 0; }
-        .rating-options { gap: 2px; padding: 3px; border-radius: 10px; }
+        .rating-label {
+            font-size: 12px;
+            padding: 9px 0;
+        }
+
+        .rating-options {
+            gap: 2px;
+            padding: 3px;
+            border-radius: 10px;
+        }
     }
 </style>
 
 <div class="rating-wrapper">
     {# Header Section #}
     <div class="header-section" style="margin-bottom: 40px; max-width: 1400px; margin-left: auto; margin-right: auto;">
-        <a href="javascript:history.back()" style="color: var(--text-muted); text-decoration: none; font-weight: 700; font-size: 13px;">
+        <a href="javascript:history.back()"
+            style="color: var(--text-muted); text-decoration: none; font-weight: 700; font-size: 13px;">
             <i class="fa-solid fa-arrow-left"></i> BACK
         </a>
-        <h1 style="font-size: 36px; font-weight: 900; margin-top: 15px; color: var(--text-main); letter-spacing: -0.02em;">{{ session.position.name }}</h1>
-        <p style="color: var(--text-muted); font-size: 18px;">Evaluating: <b>{{ session.trainee.first_name }} {{ session.trainee.last_name }}</b></p>
+        <h1
+            style="font-size: 36px; font-weight: 900; margin-top: 15px; color: var(--text-main); letter-spacing: -0.02em;">
+            {{ session.position.name }}</h1>
+        <p style="color: var(--text-muted); font-size: 18px;">Evaluating: <b>{{ session.trainee.first_name }} {{
+                session.trainee.last_name }}</b></p>
     </div>
 
     {# POSITION HISTORY — shown first so trainers review past performance before grading #}
@@ -279,16 +467,22 @@
             {% for h in history %}
             <a href="{{ url_for('employee.session_rating', session_id=h.id) }}" class="hist-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">{{ h.session_date.strftime('%b %d') }}</span>
+                    <span style="font-size: 13px; font-weight: 800; color: var(--text-main);">{{
+                        h.session_date.strftime('%b %d') }}</span>
                     {% set scores = h.ratings|map(attribute='rating_value')|list %}
                     {% set avg = (scores|sum / scores|length)|round(1) if scores else 0 %}
-                    <span class="hist-score {{ 'score-high' if avg >= 4 else 'score-med' if avg >= 3 else 'score-low' }}">
+                    <span
+                        class="hist-score {{ 'score-high' if avg >= 4 else 'score-med' if avg >= 3 else 'score-low' }}">
                         {{ avg }}
                     </span>
                 </div>
-                <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
-                    <span>Trainer: {% if h.guest_trainer_name %}{{ h.guest_trainer_name }} <span style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px;">GUEST</span>{% else %}{{ h.trainer.first_name }}{% endif %}</span>
-                    <span style="color: var(--primary); font-size: 10px; font-weight: 800;">VIEW <i class="fa-solid fa-chevron-right" style="font-size: 8px;"></i></span>
+                <div
+                    style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Trainer: {% if h.guest_trainer_name %}{{ h.guest_trainer_name }} <span
+                            style="font-size:9px; font-weight:800; background:#ede9fe; color:#7c3aed; padding:1px 5px; border-radius:8px;">GUEST</span>{%
+                        else %}{{ h.trainer.first_name }}{% endif %}</span>
+                    <span style="color: var(--primary); font-size: 10px; font-weight: 800;">VIEW <i
+                            class="fa-solid fa-chevron-right" style="font-size: 8px;"></i></span>
                 </div>
                 {% if h.overall_notes %}
                 <div class="hist-notes">"{{ h.overall_notes | truncate(80, True, '...') }}"</div>
@@ -298,11 +492,56 @@
         </div>
         {% else %}
         <div class="history-empty">
-            <i class="fa-solid fa-ghost" style="font-size: 28px; opacity: 0.15; margin-bottom: 10px; display: block;"></i>
-            <p style="font-size: 13px; color: var(--text-muted); font-style: italic; margin: 0;">No previous ratings for this position.</p>
+            <i class="fa-solid fa-ghost"
+                style="font-size: 28px; opacity: 0.15; margin-bottom: 10px; display: block;"></i>
+            <p style="font-size: 13px; color: var(--text-muted); font-style: italic; margin: 0;">No previous ratings for
+                this position.</p>
         </div>
         {% endif %}
     </div>
+
+    {# --- TRAINING CHECKLIST (between history and rating form) --- #}
+    {% if checklist_items %}
+    <div style="max-width: 900px; margin: 0 auto 32px auto;">
+        <div
+            style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; border-left: 6px solid #10b981; box-shadow: 0 2px 4px var(--shadow); overflow: hidden;">
+            <div
+                style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-clipboard-check" style="color: #10b981; font-size: 18px;"></i>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--text-main);">Training
+                        Checklist</h3>
+                </div>
+                <span id="checklistProgress"
+                    style="font-size: 12px; font-weight: 800; color: var(--text-muted); background: var(--bg-body); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border);"></span>
+            </div>
+            <div style="padding: 8px 0;">
+                {% for item in checklist_items %}
+                <label class="checklist-toggle-row" data-item-id="{{ item.id }}"
+                    style="display: flex; align-items: center; gap: 14px; padding: 14px 24px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid var(--border);"
+                    onmouseover="this.style.background='var(--bg-body)'"
+                    onmouseout="this.style.background='transparent'">
+                    <div class="cl-checkbox {% if checklist_completions.get(item.id) %}cl-checked{% endif %}"
+                        style="width: 24px; height: 24px; border-radius: 8px; border: 2px solid {% if checklist_completions.get(item.id) %}#10b981{% else %}var(--border){% endif %}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; background: {% if checklist_completions.get(item.id) %}#10b981{% else %}transparent{% endif %};">
+                        <i class="fa-solid fa-check"
+                            style="color: white; font-size: 12px; {% if not checklist_completions.get(item.id) %}opacity: 0;{% endif %} transition: opacity 0.2s;"></i>
+                    </div>
+                    <span
+                        style="font-size: 15px; font-weight: 600; color: var(--text-main); flex: 1; {% if checklist_completions.get(item.id) %}text-decoration: line-through; opacity: 0.5;{% endif %} transition: all 0.2s;">{{
+                        item.text }}</span>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 700; flex-shrink: 0;">{{
+                        loop.index }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <div
+                style="padding: 12px 24px; background: var(--bg-body); font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-circle-info" style="color: #10b981;"></i>
+                <span>Walk through each step with the trainee. Progress saves automatically.</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <form method="POST" action="{{ url_for('employee.session_submit_rating', session_id=session.id) }}">
         <div class="rating-grid">
@@ -315,7 +554,8 @@
                     {% if rating_style == 'legacy' %}
                     <div class="rating-legacy-row">
                         <input type="hidden" name="rating_{{ d.id }}" id="rating_val_{{ d.id }}" value="5" required>
-                        <input type="range" class="rating-legacy-slider" min="1" max="10" value="5" id="slider_{{ d.id }}" data-descriptor="{{ d.id }}">
+                        <input type="range" class="rating-legacy-slider" min="1" max="10" value="5"
+                            id="slider_{{ d.id }}" data-descriptor="{{ d.id }}">
                         <span class="rating-legacy-value" id="legacy_display_{{ d.id }}">
                             <span class="rating-legacy-num">5</span><span class="rating-legacy-quality">Average</span>
                         </span>
@@ -323,33 +563,46 @@
                     {% else %}
                     <div class="rating-options">
                         {% for i in range(1, scale_max + 1) %}
-                        <input type="radio" name="rating_{{ d.id }}" id="r_{{ d.id }}_{{ i }}" value="{{ i }}" class="rating-radio" required>
+                        <input type="radio" name="rating_{{ d.id }}" id="r_{{ d.id }}_{{ i }}" value="{{ i }}"
+                            class="rating-radio" required>
                         <label for="r_{{ d.id }}_{{ i }}" class="rating-label">{{ i }}</label>
                         {% endfor %}
                     </div>
                     {% endif %}
-                    <input type="text" name="comment_{{ d.id }}" class="comment-input" placeholder="Add a specific note about this criteria...">
+                    <input type="text" name="comment_{{ d.id }}" class="comment-input"
+                        placeholder="Add a specific note about this criteria...">
                 </div>
                 {% endfor %}
 
                 <div class="criteria-card" style="border-left: 6px solid var(--primary);">
-                    <h3 style="margin-bottom: 12px; color: var(--text-main);">Final Summary{% if require_notes %} <span style="color: #ef4444; font-size: 12px; font-weight: 600;">(Required)</span>{% endif %}</h3>
-                    <textarea name="overall_notes" class="comment-input" rows="5" {% if require_notes %}required{% endif %} placeholder="General feedback for the trainee..."></textarea>
+                    <h3 style="margin-bottom: 12px; color: var(--text-main);">Final Summary{% if require_notes %} <span
+                            style="color: #ef4444; font-size: 12px; font-weight: 600;">(Required)</span>{% endif %}</h3>
+                    <textarea name="overall_notes" class="comment-input" rows="5" {% if require_notes %}required{% endif
+                        %} placeholder="General feedback for the trainee..."></textarea>
                 </div>
 
                 {# --- Discreet Flag Section --- #}
-                <div id="flagSection" style="margin-top: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
-                    <label style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none;">
-                        <input type="checkbox" id="flagToggle" name="flagged" value="1" style="width: 18px; height: 18px; accent-color: #64748b; flex-shrink: 0;">
+                <div id="flagSection"
+                    style="margin-top: 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;">
+                    <label
+                        style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="flagToggle" name="flagged" value="1"
+                            style="width: 18px; height: 18px; accent-color: #64748b; flex-shrink: 0;">
                         <div style="flex: 1; min-width: 0;">
-                            <span style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block;">Flag for Manager Review</span>
-                            <span style="font-size: 11px; color: var(--text-muted); opacity: 0.7;">Discreetly notify leadership about a concern with this session.</span>
+                            <span
+                                style="font-size: 13px; font-weight: 700; color: var(--text-muted); display: block;">Flag
+                                for Manager Review</span>
+                            <span style="font-size: 11px; color: var(--text-muted); opacity: 0.7;">Discreetly notify
+                                leadership about a concern with this session.</span>
                         </div>
-                        <i class="fa-solid fa-flag" style="color: var(--text-muted); opacity: 0.3; font-size: 14px;"></i>
+                        <i class="fa-solid fa-flag"
+                            style="color: var(--text-muted); opacity: 0.3; font-size: 14px;"></i>
                     </label>
-                    <div id="flagDetails" style="display: none; padding: 0 20px 20px 20px; border-top: 1px solid var(--border);">
+                    <div id="flagDetails"
+                        style="display: none; padding: 0 20px 20px 20px; border-top: 1px solid var(--border);">
                         <div style="margin-top: 16px; margin-bottom: 12px;">
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Reason</label>
+                            <label
+                                style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Reason</label>
                             <select name="flag_reason" class="comment-input" style="height: 48px; padding: 12px 16px;">
                                 <option value="">Select a category...</option>
                                 <option value="Attitude">Attitude</option>
@@ -360,14 +613,18 @@
                             </select>
                         </div>
                         <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Notes (optional)</label>
-                            <textarea name="flag_notes" class="comment-input" rows="2" placeholder="Add context for the manager..."></textarea>
+                            <label
+                                style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px;">Notes
+                                (optional)</label>
+                            <textarea name="flag_notes" class="comment-input" rows="2"
+                                placeholder="Add context for the manager..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div style="text-align: right; margin-top: 30px;">
-                    <button type="submit" id="submitBtn" class="btn-submit-main">Complete Session <i class="fa-solid fa-paper-plane"></i></button>
+                    <button type="submit" id="submitBtn" class="btn-submit-main">Complete Session <i
+                            class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
 
@@ -376,70 +633,124 @@
 </div>
 {% if rating_style == 'legacy' %}
 <script>
-(function() {
-    var COLOR_MAP = {
-        1: '#D60206', 2: '#D60206',
-        3: '#f97316', 4: '#f97316',
-        5: '#afa500', 6: '#afa500',
-        7: '#84cc16', 8: '#84cc16',
-        9: '#16a34a', 10: '#16a34a'
-    };
-    var QUALITY_MAP = {
-        1: 'Poor',        2: 'Poor',
-        3: 'Below Avg',   4: 'Below Avg',
-        5: 'Average',     6: 'Average',
-        7: 'Good',        8: 'Good',
-        9: 'Excellent',   10: 'Excellent'
-    };
+    (function () {
+        var COLOR_MAP = {
+            1: '#D60206', 2: '#D60206',
+            3: '#f97316', 4: '#f97316',
+            5: '#afa500', 6: '#afa500',
+            7: '#84cc16', 8: '#84cc16',
+            9: '#16a34a', 10: '#16a34a'
+        };
+        var QUALITY_MAP = {
+            1: 'Poor', 2: 'Poor',
+            3: 'Below Avg', 4: 'Below Avg',
+            5: 'Average', 6: 'Average',
+            7: 'Good', 8: 'Good',
+            9: 'Excellent', 10: 'Excellent'
+        };
 
-    var sliders = document.querySelectorAll('.rating-legacy-slider');
-    sliders.forEach(function(slider) {
-        var did = slider.getAttribute('data-descriptor');
-        var hidden  = document.getElementById('rating_val_' + did);
-        var display = document.getElementById('legacy_display_' + did);
-        var numEl   = display.querySelector('.rating-legacy-num');
-        var qualEl  = display.querySelector('.rating-legacy-quality');
+        var sliders = document.querySelectorAll('.rating-legacy-slider');
+        sliders.forEach(function (slider) {
+            var did = slider.getAttribute('data-descriptor');
+            var hidden = document.getElementById('rating_val_' + did);
+            var display = document.getElementById('legacy_display_' + did);
+            var numEl = display.querySelector('.rating-legacy-num');
+            var qualEl = display.querySelector('.rating-legacy-quality');
 
-        function update() {
-            var v   = parseInt(slider.value, 10);
-            var pct = ((v - 1) / 9) * 100;
-            var col = COLOR_MAP[v];
+            function update() {
+                var v = parseInt(slider.value, 10);
+                var pct = ((v - 1) / 9) * 100;
+                var col = COLOR_MAP[v];
 
-            hidden.value = v;
-            numEl.textContent  = v + '/10 ';
-            qualEl.textContent = QUALITY_MAP[v];
-            numEl.style.color  = col;
-            qualEl.style.color = col;
+                hidden.value = v;
+                numEl.textContent = v + '/10 ';
+                qualEl.textContent = QUALITY_MAP[v];
+                numEl.style.color = col;
+                qualEl.style.color = col;
 
-            slider.style.background =
-                'linear-gradient(to right, ' + col + ' ' + pct + '%, #ddd ' + pct + '%)';
-        }
-        slider.addEventListener('input', update);
-        update();
-    });
-})();
+                slider.style.background =
+                    'linear-gradient(to right, ' + col + ' ' + pct + '%, #ddd ' + pct + '%)';
+            }
+            slider.addEventListener('input', update);
+            update();
+        });
+    })();
 </script>
 {% endif %}
 <script>
-(function() {
-    var toggle = document.getElementById('flagToggle');
-    var details = document.getElementById('flagDetails');
-    if (toggle && details) {
-        toggle.addEventListener('change', function() {
-            details.style.display = this.checked ? 'block' : 'none';
-        });
-    }
+    (function () {
+        var toggle = document.getElementById('flagToggle');
+        var details = document.getElementById('flagDetails');
+        if (toggle && details) {
+            toggle.addEventListener('change', function () {
+                details.style.display = this.checked ? 'block' : 'none';
+            });
+        }
 
-    var form = document.querySelector('form');
-    var submitBtn = document.getElementById('submitBtn');
-    if (form && submitBtn) {
-        form.addEventListener('submit', function() {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
-            submitBtn.style.opacity = '0.7';
-            submitBtn.style.cursor = 'not-allowed';
+        var form = document.querySelector('form');
+        var submitBtn = document.getElementById('submitBtn');
+        if (form && submitBtn) {
+            form.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+                submitBtn.style.opacity = '0.7';
+                submitBtn.style.cursor = 'not-allowed';
+            });
+        }
+    })();
+</script>
+<script>
+    (function () {
+        // Training checklist AJAX toggling
+        var rows = document.querySelectorAll('.checklist-toggle-row');
+        if (!rows.length) return;
+
+        function updateProgress() {
+            var total = rows.length;
+            var done = document.querySelectorAll('.cl-checkbox.cl-checked').length;
+            var el = document.getElementById('checklistProgress');
+            if (el) el.textContent = done + ' / ' + total + ' done';
+        }
+        updateProgress();
+
+        rows.forEach(function (row) {
+            row.addEventListener('click', function (e) {
+                e.preventDefault();
+                var itemId = row.getAttribute('data-item-id');
+                var checkbox = row.querySelector('.cl-checkbox');
+                var textEl = row.querySelector('span');
+                var checkIcon = checkbox.querySelector('i');
+                var isChecked = checkbox.classList.contains('cl-checked');
+
+                // Optimistic UI update
+                if (isChecked) {
+                    checkbox.classList.remove('cl-checked');
+                    checkbox.style.borderColor = 'var(--border)';
+                    checkbox.style.background = 'transparent';
+                    checkIcon.style.opacity = '0';
+                    textEl.style.textDecoration = 'none';
+                    textEl.style.opacity = '1';
+                } else {
+                    checkbox.classList.add('cl-checked');
+                    checkbox.style.borderColor = '#10b981';
+                    checkbox.style.background = '#10b981';
+                    checkIcon.style.opacity = '1';
+                    textEl.style.textDecoration = 'line-through';
+                    textEl.style.opacity = '0.5';
+                }
+                updateProgress();
+
+                // Send AJAX request
+                var formData = new FormData();
+                formData.append('checklist_item_id', itemId);
+                fetch('{{ url_for("manager.session_checklist_toggle", session_id=session.id) }}', {
+                    method: 'POST',
+                    body: formData,
+                }).catch(function (err) {
+                    console.error('Checklist toggle failed:', err);
+                });
+            });
         });
-    }
-})();
+    })();
 </script>
 {% endblock %}

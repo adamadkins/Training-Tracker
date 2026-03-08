@@ -251,6 +251,34 @@ class PositionDescriptor(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
+class PositionChecklistItem(db.Model):
+    """Training checklist item attached to a position — walkthrough steps for first-time trainees."""
+    __tablename__ = "position_checklist_items"
+    id = db.Column(db.Integer, primary_key=True)
+    position_id = db.Column(db.Integer, db.ForeignKey("positions.id"), nullable=False, index=True)
+    text = db.Column(db.String(255), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    position = db.relationship("Position", backref=db.backref("checklist_items", lazy="dynamic",
+                               order_by="PositionChecklistItem.order_index"))
+
+
+class TraineeChecklistCompletion(db.Model):
+    """Tracks which training checklist items have been checked off per training session."""
+    __tablename__ = "trainee_checklist_completions"
+    __table_args__ = (db.UniqueConstraint("training_session_id", "checklist_item_id", name="uq_session_checklist_item"),)
+    id = db.Column(db.Integer, primary_key=True)
+    training_session_id = db.Column(db.Integer, db.ForeignKey("training_sessions.id"), nullable=False, index=True)
+    checklist_item_id = db.Column(db.Integer, db.ForeignKey("position_checklist_items.id"), nullable=False)
+    completed = db.Column(db.Boolean, default=False, nullable=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    completed_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    session = db.relationship("TrainingSession", backref=db.backref("checklist_completions", lazy="dynamic"))
+    checklist_item = db.relationship("PositionChecklistItem")
+    completed_by = db.relationship("User", foreign_keys=[completed_by_user_id])
+
+
 class Daypart(db.Model):
     __tablename__ = "dayparts"
     __table_args__ = (UniqueConstraint("organization_id", "name", name="uq_daypart_org_name"),)
