@@ -23,11 +23,34 @@
     {% endif %}
     {# Critical: prevent white flash on navigation — first paint matches theme #}
     {% if theme_pref == 'light' %}
-    <style>html,body{background-color:#f8fafc}</style>
+    <style>
+        html,
+        body {
+            background-color: #f8fafc
+        }
+    </style>
     {% elif theme_pref == 'dark' %}
-    <style>html,body{background-color:#0b0f1a}</style>
+    <style>
+        html,
+        body {
+            background-color: #0b0f1a
+        }
+    </style>
     {% else %}
-    <style>html,body{background-color:#0b0f1a}@media(prefers-color-scheme:light){html,body{background-color:#f8fafc}}</style>
+    <style>
+        html,
+        body {
+            background-color: #0b0f1a
+        }
+
+        @media(prefers-color-scheme:light) {
+
+            html,
+            body {
+                background-color: #f8fafc
+            }
+        }
+    </style>
     {% endif %}
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -38,31 +61,62 @@
 
     <style>
         /* ── Theme variables ── */
-        {% set primary_hex = {
-            'indigo': '#4f46e5',
-            'blue': '#2563eb',
-            'violet': '#7c3aed',
-            'green': '#059669',
-            'amber': '#d97706',
-            'rose': '#e11d48',
-            'sky': '#0284c7'
-        } %}
-        {% set primary_hover = {
-            'indigo': '#4338ca',
-            'blue': '#1d4ed8',
-            'violet': '#6d28d9',
-            'green': '#047857',
-            'amber': '#b45309',
-            'rose': '#be123c',
-            'sky': '#0369a1'
-        } %}
-        {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
-        {% set _hex = _primary if (_primary or '')|length and (_primary or '')[:1] == '#' else primary_hex.get(_primary, primary_hex['indigo']) %}
-        {% set _hover = _hex if (_primary or '')[:1] == '#' else primary_hover.get(_primary, primary_hover['indigo']) %}
+            {
+            % set primary_hex= {
+                'indigo': '#4f46e5',
+                    'blue': '#2563eb',
+                    'violet': '#7c3aed',
+                    'green': '#059669',
+                    'amber': '#d97706',
+                    'rose': '#e11d48',
+                    'sky': '#0284c7'
+            }
+
+            %
+        }
+
+            {
+            % set primary_hover= {
+                'indigo': '#4338ca',
+                    'blue': '#1d4ed8',
+                    'violet': '#6d28d9',
+                    'green': '#047857',
+                    'amber': '#b45309',
+                    'rose': '#be123c',
+                    'sky': '#0369a1'
+            }
+
+            %
+        }
+
+            {
+            % set _primary=(g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %
+        }
+
+            {
+            % set _hex=_primary if (_primary or '')|length and (_primary or '')[: 1]=='#' else primary_hex.get(_primary, primary_hex['indigo']) %
+        }
+
+            {
+            % set _hover=_hex if (_primary or '')[: 1]=='#' else primary_hover.get(_primary, primary_hover['indigo']) %
+        }
 
         :root {
-            --primary: {{ _hex }};
-            --primary-hover: {{ _hover }};
+            --primary: {
+                    {
+                    _hex
+                }
+            }
+
+            ;
+
+            --primary-hover: {
+                    {
+                    _hover
+                }
+            }
+
+            ;
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
             --text-main: #1e293b;
@@ -89,9 +143,17 @@
             }
         }
 
-        {% if current_user.is_authenticated and current_user.settings %}
-        {% set theme_pref = current_user.settings.theme_pref or 'system' %}
-        {% if theme_pref == 'dark' %}
+            {
+            % if current_user.is_authenticated and current_user.settings %
+        }
+
+            {
+            % set theme_pref=current_user.settings.theme_pref or 'system' %
+        }
+
+            {
+            % if theme_pref=='dark' %
+        }
 
         /* Force dark mode — override system light preference entirely */
         :root {
@@ -106,8 +168,7 @@
             --input-bg: #1f2937;
         }
 
-<<<<<<< HEAD
-        @media (prefers-color-scheme: light) {
+        <<<<<<< HEAD @media (prefers-color-scheme: light) {
             :root {
                 color-scheme: dark;
                 --bg-body: #0b0f1a !important;
@@ -120,12 +181,16 @@
                 --input-bg: #1f2937 !important;
             }
         }
-        {% elif theme_pref == 'light' %}
-=======
+
             {
             % elif theme_pref=='light' %
         }
->>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
+
+        ======= {
+            % elif theme_pref=='light' %
+        }
+
+        >>>>>>>3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
 
         /* Force light mode — override system dark preference entirely */
         :root {
@@ -138,13 +203,30 @@
             --header-bg: #ffffff;
             --shadow: rgba(0, 0, 0, 0.04);
             --input-bg: #ffffff;
-<<<<<<< HEAD
-=======
+            <<<<<<< HEAD=======
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 color-scheme: light;
+                --bg-body: #f8fafc !important;
+                --bg-card: #ffffff !important;
+                --text-main: #1e293b !important;
+                --text-muted: #64748b !important;
+                --border: #e2e8f0 !important;
+                --header-bg: #ffffff !important;
+                --shadow: rgba(0, 0, 0, 0.04) !important;
+                --input-bg: #ffffff !important;
+            }
+        }
+
+            {
+            % elif theme_pref=='system' %>>>>>>>3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                <<<<<<< HEAD color-scheme: light;
                 --bg-body: #f8fafc !important;
                 --bg-card: #ffffff !important;
                 --text-main: #1e293b !important;
@@ -158,30 +240,11 @@
 
             {
             % elif theme_pref=='system' %
->>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-<<<<<<< HEAD
-                color-scheme: light;
-                --bg-body: #f8fafc !important;
-                --bg-card: #ffffff !important;
-                --text-main: #1e293b !important;
-                --text-muted: #64748b !important;
-                --border: #e2e8f0 !important;
-                --header-bg: #ffffff !important;
-                --shadow: rgba(0, 0, 0, 0.04) !important;
-                --input-bg: #ffffff !important;
-            }
-        }
-        {% elif theme_pref == 'system' %}
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-=======
->>>>>>> 3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override))
-                color-scheme: dark;
+                =======>>>>>>>3ff2c02 (Fix light mode not applying when system is in dark mode (add explicit color-scheme: light override)) color-scheme: dark;
                 --bg-body: #0b0f1a;
                 --bg-card: #161e2e;
                 --text-main: #f9fafb;
@@ -192,8 +255,14 @@
                 --input-bg: #1f2937;
             }
         }
-        {% endif %}
-        {% else %}
+
+            {
+            % endif %
+        }
+
+            {
+            % else %
+        }
 
         /* Default to system if not logged in */
         @media (prefers-color-scheme: dark) {
@@ -208,16 +277,23 @@
                 --input-bg: #1f2937;
             }
         }
-        {% endif %}
+
+            {
+            % endif %
+        }
 
         /* Hide scrollbar in Capacitor app for native feel */
         html {
             background-color: var(--bg-body);
-            scrollbar-width: none;           /* Firefox */
-            -ms-overflow-style: none;        /* IE/Edge */
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
         }
+
         html::-webkit-scrollbar {
-            display: none;                   /* Chrome, Safari, WebView */
+            display: none;
+            /* Chrome, Safari, WebView */
         }
 
         body {
@@ -237,9 +313,19 @@
         }
 
         /* Allow selection in actual content areas where users need to copy text */
-        input, textarea, [contenteditable],
-        .selectable, td, th, p, li, dd, dt,
-        pre, code, blockquote {
+        input,
+        textarea,
+        [contenteditable],
+        .selectable,
+        td,
+        th,
+        p,
+        li,
+        dd,
+        dt,
+        pre,
+        code,
+        blockquote {
             -webkit-user-select: text;
             user-select: text;
         }
@@ -398,13 +484,27 @@
 
         .nav-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 7px;
-            height: 7px;
-            background: #ef4444;
+            top: 2px;
+            right: 0px;
+            min-width: 8px;
+            height: 8px;
+            background: var(--primary);
             border-radius: 50%;
             border: 2px solid var(--header-bg);
+            box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 40%, transparent);
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 40%, transparent);
+            }
+
+            50% {
+                box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 0%, transparent);
+            }
         }
 
         .profile-pill-link {
@@ -536,11 +636,13 @@
             position: absolute;
             top: 4px;
             right: calc(50% - 16px);
-            width: 8px;
+            min-width: 8px;
             height: 8px;
-            background: #ef4444;
+            background: var(--primary);
             border-radius: 50%;
             border: 2px solid var(--header-bg);
+            box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 40%, transparent);
+            animation: badgePulse 2s ease-in-out infinite;
         }
 
         @media (max-width: 900px) {
@@ -656,6 +758,7 @@
             flex-direction: column;
             gap: 16px;
         }
+
         #page-transition-overlay.active {
             display: flex;
         }
@@ -1281,85 +1384,85 @@
 
     <!-- Page transition: tell parent shell to show/hide overlay across iframe navigations -->
     <script>
-    (function() {
-        var inIframe = (window !== window.parent);
-        var overlay = document.getElementById('page-transition-overlay');
+        (function () {
+            var inIframe = (window !== window.parent);
+            var overlay = document.getElementById('page-transition-overlay');
 
-        // Tell parent shell to show its overlay (survives iframe navigation)
-        function notifyNavStart() {
-            if (inIframe) {
-                try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch(e) {}
+            // Tell parent shell to show its overlay (survives iframe navigation)
+            function notifyNavStart() {
+                if (inIframe) {
+                    try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch (e) { }
+                }
+                // Also show local overlay as a fallback (helps if not in iframe)
+                if (overlay) overlay.classList.add('active');
             }
-            // Also show local overlay as a fallback (helps if not in iframe)
-            if (overlay) overlay.classList.add('active');
-        }
 
-        // Intercept all link clicks
-        document.addEventListener('click', function(e) {
-            var link = e.target.closest('a[href]');
-            if (!link) return;
-            var href = link.getAttribute('href');
-            if (!href) return;
-            // Skip anchors, javascript: links, new-tab links, and download links
-            if (href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
-            if (link.target === '_blank' || link.hasAttribute('download')) return;
-            // Skip external links
-            try {
-                var url = new URL(href, window.location.origin);
-                if (url.origin !== window.location.origin) return;
-            } catch(err) { return; }
-            notifyNavStart();
-        }, true);
-
-        // Intercept form submissions (they also navigate)
-        document.addEventListener('submit', function(e) {
-            var form = e.target;
-            if (!form || form.getAttribute('data-ajax') === 'true') return;
-            var action = form.getAttribute('action') || '';
-            if (action && action.indexOf('http') === 0) {
+            // Intercept all link clicks
+            document.addEventListener('click', function (e) {
+                var link = e.target.closest('a[href]');
+                if (!link) return;
+                var href = link.getAttribute('href');
+                if (!href) return;
+                // Skip anchors, javascript: links, new-tab links, and download links
+                if (href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
+                if (link.target === '_blank' || link.hasAttribute('download')) return;
+                // Skip external links
                 try {
-                    var url = new URL(action);
+                    var url = new URL(href, window.location.origin);
                     if (url.origin !== window.location.origin) return;
-                } catch(err) { return; }
-            }
-            notifyNavStart();
-        }, true);
+                } catch (err) { return; }
+                notifyNavStart();
+            }, true);
 
-        // Tell parent this page is ready — hide the overlay
-        // Use requestAnimationFrame to wait until browser has actually painted
-        function notifyReady() {
-            requestAnimationFrame(function() {
-                requestAnimationFrame(function() {
-                    if (inIframe) {
-                        try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch(e) {}
-                    }
-                    if (overlay) overlay.classList.remove('active');
+            // Intercept form submissions (they also navigate)
+            document.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (!form || form.getAttribute('data-ajax') === 'true') return;
+                var action = form.getAttribute('action') || '';
+                if (action && action.indexOf('http') === 0) {
+                    try {
+                        var url = new URL(action);
+                        if (url.origin !== window.location.origin) return;
+                    } catch (err) { return; }
+                }
+                notifyNavStart();
+            }, true);
+
+            // Tell parent this page is ready — hide the overlay
+            // Use requestAnimationFrame to wait until browser has actually painted
+            function notifyReady() {
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        if (inIframe) {
+                            try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch (e) { }
+                        }
+                        if (overlay) overlay.classList.remove('active');
+                    });
                 });
+            }
+
+            // Fire ready on DOMContentLoaded (page structure is rendered)
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', notifyReady);
+            } else {
+                notifyReady();
+            }
+
+            // Also hide on pageshow (back/forward cache)
+            window.addEventListener('pageshow', function () {
+                if (inIframe) {
+                    try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch (e) { }
+                }
+                if (overlay) overlay.classList.remove('active');
             });
-        }
 
-        // Fire ready on DOMContentLoaded (page structure is rendered)
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', notifyReady);
-        } else {
-            notifyReady();
-        }
-
-        // Also hide on pageshow (back/forward cache)
-        window.addEventListener('pageshow', function() {
-            if (inIframe) {
-                try { window.parent.postMessage({ type: 'TTNavReady' }, '*'); } catch(e) {}
-            }
-            if (overlay) overlay.classList.remove('active');
-        });
-
-        // Prevent long-press context menu on links for native app feel
-        document.addEventListener('contextmenu', function(e) {
-            if (e.target.closest('a')) {
-                e.preventDefault();
-            }
-        });
-    })();
+            // Prevent long-press context menu on links for native app feel
+            document.addEventListener('contextmenu', function (e) {
+                if (e.target.closest('a')) {
+                    e.preventDefault();
+                }
+            });
+        })();
     </script>
 
     {% if current_user.is_authenticated and not current_user.has_seen_tutorial and request.endpoint !=
@@ -1550,7 +1653,7 @@
                     var ov = document.getElementById('page-transition-overlay');
                     function swipeNav(href) {
                         if (ov) ov.classList.add('active');
-                        try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch(e) {}
+                        try { window.parent.postMessage({ type: 'TTNavStart' }, '*'); } catch (e) { }
                         window.location.href = href;
                     }
                     if (dx < 0 && activeIndex < tabs.length - 1) {
