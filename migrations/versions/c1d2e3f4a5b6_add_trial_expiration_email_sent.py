@@ -16,11 +16,9 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('organizations', sa.Column('trial_expiration_email_sent', sa.Boolean(), nullable=True, server_default='0'))
-    # Backfill existing rows to False, then make NOT NULL
-    op.execute("UPDATE organizations SET trial_expiration_email_sent = 0 WHERE trial_expiration_email_sent IS NULL")
-    with op.batch_alter_table('organizations') as batch_op:
-        batch_op.alter_column('trial_expiration_email_sent', nullable=False)
+    op.add_column('organizations', sa.Column('trial_expiration_email_sent', sa.Boolean(), nullable=True))
+    op.execute("UPDATE organizations SET trial_expiration_email_sent = false WHERE trial_expiration_email_sent IS NULL")
+    op.alter_column('organizations', 'trial_expiration_email_sent', nullable=False, server_default=sa.text('false'))
 
 
 def downgrade():
