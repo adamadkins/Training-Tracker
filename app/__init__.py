@@ -100,6 +100,39 @@ def create_app():
                 db.session.commit()
                 status = "suspended"
                 just_trial_ended = True
+                # Send one-time "trial ended" email to the org's manager(s)
+                if not org.trial_expiration_email_sent:
+                    try:
+                        from app.models import User
+                        from app.utils.notifications import _enqueue_or_send_email
+                        managers = User.query.filter_by(
+                            organization_id=org.id, role='manager'
+                        ).all()
+                        main_domain = app.config.get("MAIN_DOMAIN", "trainingtracker.me").split(":")[0]
+                        subscribe_url = f"https://{main_domain}/subscribe?org={org.subdomain}"
+                        title = "Your free trial has ended — what's next?"
+                        body = (
+                            f"Hi there,\n\n"
+                            f"Your 14-day free trial for {org.name} on Training Tracker has come to an end.\n\n"
+                            f"During your trial you had full access to everything Training Tracker offers — "
+                            f"from building training programs to tracking employee progress and schedules.\n\n"
+                            f"To keep using Training Tracker and retain all the data you've built, "
+                            f"choose a plan that works for you. Your team's progress is saved and "
+                            f"waiting for you.\n\n"
+                            f"If you have any questions, reply to this email or visit our support page — "
+                            f"we're happy to help!"
+                        )
+                        for mgr in managers:
+                            if mgr.email:
+                                _enqueue_or_send_email(
+                                    str(mgr.email), title, body,
+                                    category='trial_ended',
+                                    link_url=subscribe_url,
+                                )
+                        org.trial_expiration_email_sent = True
+                        db.session.commit()
+                    except Exception as e:
+                        app.logger.warning("Failed to send trial expiration email for org %s: %s", org.id, e)
         if status == "pending_approval":
             from flask import render_template
             return render_template("pending_approval.html"), 200

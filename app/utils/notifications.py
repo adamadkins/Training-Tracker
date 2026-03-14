@@ -115,6 +115,8 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
                     link_text = 'Set your password'
                 elif category == 'password_reset' and link_url:
                     link_text = 'Reset password'
+                elif category == 'trial_ended' and link_url:
+                    link_text = 'Choose a Plan'
                 elif not link_url:
                     link_text = None
                 html_content = render_template(
@@ -158,6 +160,8 @@ def _send_html_email_impl(to_email, title, body, category='general', link_url=No
             link_text = 'Set your password'
         elif category == 'password_reset' and link_url:
             link_text = 'Reset password'
+        elif category == 'trial_ended' and link_url:
+            link_text = 'Choose a Plan'
         elif not link_url:
             link_text = None
         html_content = render_template(

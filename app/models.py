@@ -25,6 +25,7 @@ class Organization(db.Model):
     billing_plan = db.Column(db.String(20), nullable=True)  # 'standard' | 'pro' effective plan (from free_plan or Stripe)
     trial_ends_at = db.Column(db.DateTime, nullable=True)  # 14-day trial; after this, billing_plan is the plan they chose
     trial_plan = db.Column(db.String(20), nullable=True)  # 'standard' | 'pro' plan to use during and after trial
+    trial_expiration_email_sent = db.Column(db.Boolean, default=False, nullable=False)  # prevent duplicate "trial ended" emails
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     # HotSchedules (Fourth) API integration
     hs_api_url = db.Column(db.String(500), nullable=True)      # e.g. https://api.hotschedules.io/NAMESPACE/
