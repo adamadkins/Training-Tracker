@@ -299,11 +299,28 @@ def users_list():
     )
 
 
+def _support_request_outlook_url(r):
+    """Build Outlook Web compose URL for replying to a support request."""
+    email = (r.email or "").strip()
+    subject = f"Re: {r.subject or 'Support request'}"
+    body = f"Hi {r.name or 'there'},\n\n\n\n---\nOriginal message:\n{r.message or ''}"
+    base = "https://outlook.office.com/mail/deeplink/compose"
+    return (
+        base
+        + "?to=" + quote(email, safe="")
+        + "&subject=" + quote(subject, safe="")
+        + "&body=" + quote(body, safe="")
+    )
+
+
 @admin_bp.route("/support-requests")
 def support_requests_list():
     """List support/contact form submissions from the public support page (newest first)."""
     requests = SupportRequest.query.order_by(SupportRequest.created_at.desc()).all()
-    return render_template("admin/support_requests.html", support_requests=requests)
+    requests_with_urls = [
+        (r, _support_request_outlook_url(r)) for r in requests
+    ]
+    return render_template("admin/support_requests.html", support_requests=requests_with_urls)
 
 
 @admin_bp.route("/organizations")

@@ -2,102 +2,392 @@
 {% block content %}
 <div class="admin-page">
     <div class="page-header">
-        <h1 class="page-title hide-on-mobile-title">Support requests</h1>
-        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
-    </div>
-    <p class="page-subtitle">Contact form submissions from the public <a href="{{ url_for('auth.support') }}">Support</a> page. Use <strong>Email</strong> to reply or <strong>Copy</strong> to copy their email.</p>
-    <div class="table-card">
-        <div class="admin-table-wrap desktop-only">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Subject</th>
-                        <th>Message</th>
-                        <th>Reach out</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in support_requests %}
-                    <tr>
-                        <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
-                        <td>{{ r.name or '—' }}</td>
-                        <td>{{ r.email }}</td>
-                        <td>{{ r.subject }}</td>
-                        <td class="message-cell">{{ (r.message or '')[:120] }}{% if r.message and r.message|length > 120 %}…{% endif %}</td>
-                        <td class="support-actions">
-                            <a href="mailto:{{ r.email }}?subject=Re: {{ r.subject | urlencode }}" class="btn btn-sm btn-email" title="Reply">Email</a>
-                            <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email">Copy</button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="6">No support requests yet.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div>
+            <a href="{{ url_for('admin.index') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <h1 class="page-title">Support Requests</h1>
+            <p class="page-subtitle">Contact form submissions from the public <a href="{{ url_for('auth.support') }}">Support</a> page.</p>
         </div>
-        <div class="support-cards mobile-only">
-            {% for r in support_requests %}
-            <div class="support-card">
-                <div class="support-card-meta">
-                    <span class="support-card-date">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</span>
-                    <span class="support-card-subject">{{ r.subject }}</span>
-                </div>
-                <div class="support-card-row"><strong>Name</strong> {{ r.name or '—' }}</div>
-                <div class="support-card-row"><strong>Email</strong> <a href="mailto:{{ r.email }}">{{ r.email }}</a></div>
-                <div class="support-card-message">{{ (r.message or '—') | e }}</div>
-                <div class="support-card-actions">
-                    <a href="mailto:{{ r.email }}?subject=Re: {{ r.subject | urlencode }}" class="btn btn-sm btn-email">Email</a>
-                    <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}">Copy email</button>
+        <div class="header-stat">
+            <span class="header-stat-value">{{ support_requests|length }}</span>
+            <span class="header-stat-label">total</span>
+        </div>
+    </div>
+
+    <div class="support-table-wrap desktop-only">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Subject</th>
+                    <th>Message</th>
+                    <th class="th-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r, outlook_url in support_requests %}
+                <tr>
+                    <td class="td-muted td-nowrap">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
+                    <td>{{ r.name or '—' }}</td>
+                    <td class="td-email">{{ r.email }}</td>
+                    <td>{{ r.subject }}</td>
+                    <td class="td-message">{{ (r.message or '')[:120] }}{% if r.message and r.message|length > 120 %}...{% endif %}</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{{ outlook_url }}" target="_blank" rel="noopener" class="action-btn action-email" title="Reply via Outlook">
+                                <i class="fa-solid fa-envelope"></i> Email
+                            </a>
+                            <button type="button" class="action-btn btn-copy" data-email="{{ r.email }}" title="Copy email address">
+                                <i class="fa-solid fa-copy"></i> Copy
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="td-empty">No support requests yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="support-cards mobile-only">
+        {% for r, outlook_url in support_requests %}
+        <div class="support-card">
+            <div class="support-card-top">
+                <span class="support-card-subject">{{ r.subject }}</span>
+                <span class="support-card-date">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</span>
+            </div>
+            <div class="support-card-info">
+                <div class="support-card-field">
+                    <span class="support-card-label">From</span>
+                    <span class="support-card-value">{{ r.name or '—' }} &lt;{{ r.email }}&gt;</span>
                 </div>
             </div>
-            {% else %}
-            <p class="support-empty">No support requests yet.</p>
-            {% endfor %}
+            {% if r.message %}
+            <div class="support-card-message">{{ r.message }}</div>
+            {% endif %}
+            <div class="support-card-actions">
+                <a href="{{ outlook_url }}" target="_blank" rel="noopener" class="action-btn action-email">
+                    <i class="fa-solid fa-envelope"></i> Email
+                </a>
+                <button type="button" class="action-btn btn-copy" data-email="{{ r.email }}">
+                    <i class="fa-solid fa-copy"></i> Copy
+                </button>
+            </div>
         </div>
+        {% else %}
+        <p class="empty-text">No support requests yet.</p>
+        {% endfor %}
     </div>
 </div>
 <style>
-.admin-page { max-width: 100%; }
-.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
-.page-title { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
-.page-subtitle { color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; }
-.page-subtitle a { color: var(--primary); font-weight: 600; }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; padding: 16px; }
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); }
-.admin-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.admin-table td { font-size: 14px; color: var(--text-main); }
-.admin-table a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.message-cell { max-width: 280px; }
-.support-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
-.btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.btn-sm { padding: 6px 12px; font-size: 13px; }
-.btn-email { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-.btn-copy { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.desktop-only { display: block; }
-.mobile-only { display: none; }
-.support-cards { display: flex; flex-direction: column; gap: 16px; }
-.support-card { background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-.support-card-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
-.support-card-date { font-size: 12px; color: var(--text-muted); }
-.support-card-subject { font-weight: 700; color: var(--text-main); }
-.support-card-row { font-size: 14px; margin-bottom: 6px; }
-.support-card-message { font-size: 14px; color: var(--text-main); white-space: pre-wrap; margin: 12px 0; padding: 10px; background: var(--bg-card); border-radius: 8px; }
-.support-card-actions { display: flex; gap: 10px; margin-top: 12px; }
-.support-empty { color: var(--text-muted); padding: 24px; margin: 0; }
-@media (max-width: 768px) {
-    .admin-page { padding: 0 4px; }
-    .page-header { flex-direction: column; align-items: stretch; }
-    .page-title { font-size: 22px; }
-    .page-header .btn { justify-content: center; min-height: 44px; }
-    .desktop-only { display: none !important; }
-    .mobile-only { display: flex !important; }
-    .support-card-actions .btn { min-height: 44px; }
-}
+    .admin-page {
+        max-width: 1100px;
+    }
+
+    /* --- Header --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        font-size: 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        transition: color 0.15s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .page-title {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        color: var(--text-main);
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .page-subtitle a {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .header-stat {
+        text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 24px;
+        flex-shrink: 0;
+    }
+
+    .header-stat-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1.2;
+    }
+
+    .header-stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+    }
+
+    /* --- Table --- */
+    .support-table-wrap {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 14px 20px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .admin-table th {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        background: var(--bg-body);
+    }
+
+    .th-right {
+        text-align: right;
+    }
+
+    .admin-table td {
+        font-size: 14px;
+        color: var(--text-main);
+        vertical-align: top;
+    }
+
+    .td-muted {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .td-nowrap {
+        white-space: nowrap;
+    }
+
+    .td-email {
+        font-weight: 600;
+    }
+
+    .td-message {
+        max-width: 280px;
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .td-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    /* --- Action Buttons --- */
+    .action-btns {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .action-btn i {
+        font-size: 11px;
+        opacity: 0.7;
+    }
+
+    .action-email {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+    }
+
+    .action-email:hover {
+        background: #dbeafe;
+        border-color: #3b82f6;
+        color: #1e3a8a;
+    }
+
+    /* --- Mobile Cards --- */
+    .support-cards {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .support-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .support-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .support-card-subject {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .support-card-date {
+        font-size: 12px;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .support-card-info {
+        margin-bottom: 8px;
+    }
+
+    .support-card-field {
+        display: flex;
+        gap: 8px;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .support-card-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        min-width: 40px;
+        padding-top: 2px;
+    }
+
+    .support-card-value {
+        color: var(--text-main);
+    }
+
+    .support-card-message {
+        font-size: 14px;
+        color: var(--text-main);
+        white-space: pre-wrap;
+        padding: 12px;
+        background: var(--bg-body);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        line-height: 1.5;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .support-card-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .support-card-actions .action-btn {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .empty-text {
+        text-align: center;
+        padding: 32px;
+        color: var(--text-muted);
+    }
+
+    .desktop-only {
+        display: block;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .admin-page {
+            padding: 0 4px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .header-stat {
+            align-self: flex-start;
+        }
+
+        .page-title {
+            font-size: 22px;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .support-cards {
+            display: flex !important;
+        }
+    }
 </style>
 <script>
 (function() {
@@ -105,13 +395,15 @@
         btn.addEventListener('click', function() {
             var email = this.getAttribute('data-email');
             if (!email) return;
+            var self = this;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(email).then(function() {
-                    var t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = t; }, 1500);
+                    self.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    setTimeout(function() { self.innerHTML = '<i class="fa-solid fa-copy"></i> Copy'; }, 1500);
                 });
             } else {
                 var ta = document.createElement('textarea'); ta.value = email; document.body.appendChild(ta); ta.select();
-                try { document.execCommand('copy'); var t = btn.textContent; btn.textContent = 'Copied!'; setTimeout(function() { btn.textContent = t; }, 1500); } catch (e) {}
+                try { document.execCommand('copy'); self.innerHTML = '<i class="fa-solid fa-check"></i> Copied!'; setTimeout(function() { self.innerHTML = '<i class="fa-solid fa-copy"></i> Copy'; }, 1500); } catch (e) {}
                 document.body.removeChild(ta);
             }
         });
