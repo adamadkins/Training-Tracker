@@ -463,7 +463,10 @@ def organization_activate(org_id):
     org.status = "active"
     # If billing is not linked yet, extend access so manual activation does not immediately re-suspend.
     if not has_paid_plan:
-        if not org.trial_ends_at or org.trial_ends_at <= now:
+        trial_end = org.trial_ends_at
+        if trial_end and trial_end.tzinfo is None:
+            trial_end = trial_end.replace(tzinfo=timezone.utc)
+        if not trial_end or trial_end <= now:
             org.trial_ends_at = now + timedelta(days=30)
         # reset so the trial-ended email can be sent again at the next real expiration, if needed
         org.trial_expiration_email_sent = False
