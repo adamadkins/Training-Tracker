@@ -17,6 +17,7 @@
         <table class="admin-table">
             <thead>
                 <tr>
+                    <th>Status</th>
                     <th>Date</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -27,7 +28,22 @@
             </thead>
             <tbody>
                 {% for r, outlook_url in support_requests %}
-                <tr>
+                <tr class="{% if r.status == 'resolved' %}row-resolved{% endif %}">
+                    <td>
+                        <form method="post" action="{{ url_for('admin.support_request_status', req_id=r.id) }}" style="display:inline;">
+                            {% if r.status == 'resolved' %}
+                            <input type="hidden" name="status" value="new">
+                            <button type="submit" class="status-pill status-pill-resolved" title="Click to reopen">
+                                <i class="fa-solid fa-check"></i> Resolved
+                            </button>
+                            {% else %}
+                            <input type="hidden" name="status" value="resolved">
+                            <button type="submit" class="status-pill status-pill-new" title="Click to resolve">
+                                <i class="fa-solid fa-circle"></i> New
+                            </button>
+                            {% endif %}
+                        </form>
+                    </td>
                     <td class="td-muted td-nowrap">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
                     <td>{{ r.name or '—' }}</td>
                     <td class="td-email">{{ r.email }}</td>
@@ -45,7 +61,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="6" class="td-empty">No support requests yet.</td></tr>
+                <tr><td colspan="7" class="td-empty">No support requests yet.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -53,16 +69,26 @@
 
     <div class="support-cards mobile-only">
         {% for r, outlook_url in support_requests %}
-        <div class="support-card">
+        <div class="support-card {% if r.status == 'resolved' %}card-resolved{% endif %}">
             <div class="support-card-top">
                 <span class="support-card-subject">{{ r.subject }}</span>
-                <span class="support-card-date">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</span>
+                <form method="post" action="{{ url_for('admin.support_request_status', req_id=r.id) }}" style="display:inline;">
+                    {% if r.status == 'resolved' %}
+                    <input type="hidden" name="status" value="new">
+                    <button type="submit" class="status-pill status-pill-resolved">
+                        <i class="fa-solid fa-check"></i> Resolved
+                    </button>
+                    {% else %}
+                    <input type="hidden" name="status" value="resolved">
+                    <button type="submit" class="status-pill status-pill-new">
+                        <i class="fa-solid fa-circle"></i> New
+                    </button>
+                    {% endif %}
+                </form>
             </div>
+            <div class="support-card-date">{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</div>
             <div class="support-card-info">
-                <div class="support-card-field">
-                    <span class="support-card-label">From</span>
-                    <span class="support-card-value">{{ r.name or '—' }} &lt;{{ r.email }}&gt;</span>
-                </div>
+                <span class="support-card-from">{{ r.name or '—' }} &lt;{{ r.email }}&gt;</span>
             </div>
             {% if r.message %}
             <div class="support-card-message">{{ r.message }}</div>
@@ -86,7 +112,6 @@
         max-width: 1100px;
     }
 
-    /* --- Header --- */
     .page-header {
         display: flex;
         justify-content: space-between;
@@ -106,9 +131,7 @@
         transition: color 0.15s;
     }
 
-    .back-link:hover {
-        color: var(--primary);
-    }
+    .back-link:hover { color: var(--primary); }
 
     .page-title {
         font-size: 26px;
@@ -123,10 +146,7 @@
         margin: 0;
     }
 
-    .page-subtitle a {
-        color: var(--primary);
-        font-weight: 600;
-    }
+    .page-subtitle a { color: var(--primary); font-weight: 600; }
 
     .header-stat {
         text-align: center;
@@ -153,6 +173,42 @@
         color: var(--text-muted);
     }
 
+    /* --- Status Pills --- */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 20px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        letter-spacing: 0.02em;
+    }
+
+    .status-pill i { font-size: 8px; }
+
+    .status-pill-new {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-pill-new:hover {
+        background: #bfdbfe;
+    }
+
+    .status-pill-resolved {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-pill-resolved:hover {
+        background: #bbf7d0;
+    }
+
     /* --- Table --- */
     .support-table-wrap {
         background: var(--bg-card);
@@ -173,9 +229,7 @@
         border-bottom: 1px solid var(--border);
     }
 
-    .admin-table tr:last-child td {
-        border-bottom: none;
-    }
+    .admin-table tr:last-child td { border-bottom: none; }
 
     .admin-table th {
         font-size: 11px;
@@ -186,9 +240,7 @@
         background: var(--bg-body);
     }
 
-    .th-right {
-        text-align: right;
-    }
+    .th-right { text-align: right; }
 
     .admin-table td {
         font-size: 14px;
@@ -196,18 +248,17 @@
         vertical-align: top;
     }
 
-    .td-muted {
-        color: var(--text-muted);
-        font-size: 13px;
+    .row-resolved td {
+        opacity: 0.5;
     }
 
-    .td-nowrap {
-        white-space: nowrap;
+    .row-resolved td:first-child {
+        opacity: 1;
     }
 
-    .td-email {
-        font-weight: 600;
-    }
+    .td-muted { color: var(--text-muted); font-size: 13px; }
+    .td-nowrap { white-space: nowrap; }
+    .td-email { font-weight: 600; }
 
     .td-message {
         max-width: 280px;
@@ -252,10 +303,7 @@
         color: var(--primary);
     }
 
-    .action-btn i {
-        font-size: 11px;
-        opacity: 0.7;
-    }
+    .action-btn i { font-size: 11px; opacity: 0.7; }
 
     .action-email {
         border-color: #93c5fd;
@@ -283,12 +331,16 @@
         padding: 16px;
     }
 
+    .card-resolved {
+        opacity: 0.6;
+    }
+
     .support-card-top {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 8px;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
     }
 
     .support-card-subject {
@@ -300,30 +352,15 @@
     .support-card-date {
         font-size: 12px;
         color: var(--text-muted);
-        white-space: nowrap;
+        margin-bottom: 6px;
     }
 
     .support-card-info {
         margin-bottom: 8px;
     }
 
-    .support-card-field {
-        display: flex;
-        gap: 8px;
+    .support-card-from {
         font-size: 14px;
-        margin-bottom: 4px;
-    }
-
-    .support-card-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        min-width: 40px;
-        padding-top: 2px;
-    }
-
-    .support-card-value {
         color: var(--text-main);
     }
 
@@ -357,36 +394,15 @@
         color: var(--text-muted);
     }
 
-    .desktop-only {
-        display: block;
-    }
+    .desktop-only { display: block; }
 
-    /* --- Responsive --- */
     @media (max-width: 768px) {
-        .admin-page {
-            padding: 0 4px;
-        }
-
-        .page-header {
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .header-stat {
-            align-self: flex-start;
-        }
-
-        .page-title {
-            font-size: 22px;
-        }
-
-        .desktop-only {
-            display: none !important;
-        }
-
-        .support-cards {
-            display: flex !important;
-        }
+        .admin-page { padding: 0 4px; }
+        .page-header { flex-direction: column; gap: 12px; }
+        .header-stat { align-self: flex-start; }
+        .page-title { font-size: 22px; }
+        .desktop-only { display: none !important; }
+        .support-cards { display: flex !important; }
     }
 </style>
 <script>

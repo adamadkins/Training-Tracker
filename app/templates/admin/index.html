@@ -1,80 +1,99 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="admin-page">
-    <h1 class="page-title hide-on-mobile-title">Platform Admin</h1>
-    <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{% set h =
-            request.host.split(':')[0] %}{% set base_domain = h[4:] if h[:4] == 'www.' else h %}{{ base_domain
-            }}</strong></p>
+    <div class="dash-header">
+        <div>
+            <h1 class="page-title hide-on-mobile-title">Platform Admin</h1>
+            <p class="page-subtitle">Manage organizations. Users sign in at <strong>subdomain.{% set h = request.host.split(':')[0] %}{% set base_domain = h[4:] if h[:4] == 'www.' else h %}{{ base_domain }}</strong></p>
+        </div>
+        <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-plus"></i> New organization</a>
+    </div>
 
     {% if pending_orgs_count and pending_orgs_count > 0 %}
-    <div class="admin-pending-banner">
-        <strong>{{ pending_orgs_count }}</strong> organization{{ 's' if pending_orgs_count != 1 else '' }} pending
-        approval.
+    <div class="pending-banner">
+        <i class="fa-solid fa-bell"></i>
+        <span><strong>{{ pending_orgs_count }}</strong> organization{{ 's' if pending_orgs_count != 1 else '' }} pending approval.</span>
         <a href="{{ url_for('admin.index', org_status='pending_approval') }}">Review &amp; approve</a>
     </div>
     {% endif %}
-    <div class="admin-stats">
+
+    <div class="stats-grid">
         <div class="stat-card">
-            <span class="stat-value">{{ total_orgs }}</span>
-            <span class="stat-label">Organizations</span>
+            <div class="stat-icon"><i class="fa-solid fa-building"></i></div>
+            <div class="stat-content">
+                <span class="stat-value">{{ total_orgs }}</span>
+                <span class="stat-label">Organizations</span>
+            </div>
         </div>
         <div class="stat-card">
-            <span class="stat-value">{{ active_orgs }}</span>
-            <span class="stat-label">Active</span>
+            <div class="stat-icon stat-icon-green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="stat-content">
+                <span class="stat-value">{{ active_orgs }}</span>
+                <span class="stat-label">Active</span>
+            </div>
         </div>
         <div class="stat-card">
-            <span class="stat-value">{{ total_users }}</span>
-            <span class="stat-label">Total users</span>
+            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-content">
+                <span class="stat-value">{{ total_users }}</span>
+                <span class="stat-label">Users</span>
+            </div>
         </div>
         <div class="stat-card">
-            <span class="stat-value">{{ total_employees }}</span>
-            <span class="stat-label">Total employees</span>
+            <div class="stat-icon"><i class="fa-solid fa-id-badge"></i></div>
+            <div class="stat-content">
+                <span class="stat-value">{{ total_employees }}</span>
+                <span class="stat-label">Employees</span>
+            </div>
         </div>
     </div>
 
-    <div class="admin-stats" style="margin-top: 8px;">
-        <div class="stat-card stat-revenue">
-            <span class="stat-value">${{ mrr }}/mo</span>
-            <span class="stat-label">MRR</span>
+    <div class="revenue-grid">
+        <div class="revenue-card">
+            <span class="revenue-value">${{ mrr }}<small>/mo</small></span>
+            <span class="revenue-label">MRR</span>
         </div>
-        <div class="stat-card stat-revenue">
-            <span class="stat-value">${{ '{:,.0f}'.format(arr) }}/yr</span>
-            <span class="stat-label">ARR</span>
+        <div class="revenue-card">
+            <span class="revenue-value">${{ '{:,.0f}'.format(arr) }}<small>/yr</small></span>
+            <span class="revenue-label">ARR</span>
         </div>
-        <div class="stat-card">
-            <span class="stat-value">{{ paid_orgs_count }}</span>
-            <span class="stat-label">Paid</span>
+        <div class="revenue-card revenue-card-alt">
+            <span class="revenue-value">{{ paid_orgs_count }}</span>
+            <span class="revenue-label">Paid</span>
         </div>
-        <div class="stat-card">
-            <span class="stat-value">{{ free_orgs_count }}</span>
-            <span class="stat-label">Free</span>
+        <div class="revenue-card revenue-card-alt">
+            <span class="revenue-value">{{ free_orgs_count }}</span>
+            <span class="revenue-label">Free</span>
         </div>
     </div>
 
-    <div class="page-actions">
-        <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i>
-            New organization</a>
-    </div>
-
-    <div class="admin-filters">
-        <form method="get" class="filter-form">
-            <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search orgs (name/subdomain)">
-            <select name="org_status">
-                <option value="">All statuses</option>
-                <option value="active" {{ 'selected' if filter_org_status=='active' else '' }}>Active</option>
-                <option value="pending_approval" {{ 'selected' if filter_org_status=='pending_approval' else '' }}>
-                    Pending approval</option>
-                <option value="suspended" {{ 'selected' if filter_org_status=='suspended' else '' }}>Suspended</option>
-            </select>
-            <button type="submit" class="btn btn-sm btn-secondary">Filter orgs</button>
-        </form>
-    </div>
-
-    <div class="table-card">
-        <h2 class="section-title">Recent organizations</h2>
-        {% if filter_q or filter_org_status %}<p class="section-desc">Filtered by {% if filter_q %}q={{ filter_q }}{%
-            endif %}{% if filter_org_status %} status={{ filter_org_status }}{% endif %}.</p>{% endif %}
-        <div class="admin-table-wrap desktop-only">
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-heading"><i class="fa-solid fa-building"></i> Recent Organizations</h2>
+            <div class="section-header-actions">
+                <form method="get" class="inline-filter">
+                    <div class="filter-input-wrap">
+                        <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+                        <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search...">
+                    </div>
+                    <select name="org_status">
+                        <option value="">All statuses</option>
+                        <option value="active" {{ 'selected' if filter_org_status=='active' else '' }}>Active</option>
+                        <option value="pending_approval" {{ 'selected' if filter_org_status=='pending_approval' else '' }}>Pending</option>
+                        <option value="suspended" {{ 'selected' if filter_org_status=='suspended' else '' }}>Suspended</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                    {% if filter_q or filter_org_status %}
+                    <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% if filter_q or filter_org_status %}
+        <p class="filter-note">Filtered by {% if filter_q %}"{{ filter_q }}"{% endif %}{% if filter_org_status %} status={{ filter_org_status }}{% endif %}</p>
+        {% endif %}
+        <div class="org-table-wrap desktop-only">
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -92,721 +111,457 @@
                 <tbody>
                     {% for org, stats, trial_pay, org_users in organizations %}
                     <tr>
-                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a></td>
+                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="org-link">{{ org.name }}</a></td>
                         <td><code>{{ org.subdomain }}</code></td>
                         <td><span class="status status-{{ org.status }}">{{ org.status }}</span></td>
-                        <td>{% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{
-                            trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}{% else %}—{% endif %}</td>
-                        <td>{% if trial_pay.payment_status == 'active' %}<span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %}<span class="status status-active">Free {{ trial_pay.billing_plan|default('')|capitalize }}</span>{% elif trial_pay.payment_status == 'trialing' %}<span class="status status-active">Trialing</span>{% elif trial_pay.payment_status == 'overdue' %}<span class="status status-past-due">Overdue</span>{% elif trial_pay.payment_status == 'canceled' %}<span class="status status-suspended">Canceled</span>{% else %}—{% endif %}</td>
+                        <td class="td-muted">{% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}{% else %}—{% endif %}</td>
+                        <td>{% if trial_pay.payment_status == 'active' %}<span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %}<span class="status status-active">Free</span>{% elif trial_pay.payment_status == 'trialing' %}<span class="status status-active">Trialing</span>{% elif trial_pay.payment_status == 'overdue' %}<span class="status status-past-due">Overdue</span>{% elif trial_pay.payment_status == 'canceled' %}<span class="status status-suspended">Canceled</span>{% else %}<span class="td-muted">—</span>{% endif %}</td>
                         <td>{{ stats.user_count }}</td>
                         <td>{{ stats.employee_count }}</td>
-                        <td>{{ org.created_at | est('%m-%d-%Y') }}</td>
-                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}"
-                                class="link-view">View</a></td>
+                        <td class="td-muted">{{ org.created_at | est('%m-%d-%Y') }}</td>
+                        <td><a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="view-link">View <i class="fa-solid fa-chevron-right"></i></a></td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="9">No organizations yet. <a
-                                href="{{ url_for('admin.organization_create') }}">Create one</a>.</td>
-                    </tr>
+                    <tr><td colspan="9" class="td-empty">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create one</a>.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="admin-mobile-org-cards mobile-only">
+        <div class="org-cards mobile-only">
             {% for org, stats, trial_pay, org_users in organizations %}
-            <div class="admin-mobile-card org-card">
-                <div class="card-row card-title">
-                    <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a>
-                    <code>{{ org.subdomain }}</code>
+            <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="org-card-link">
+                <div class="org-card">
+                    <div class="org-card-top">
+                        <span class="org-card-name">{{ org.name }}</span>
+                        <span class="status status-{{ org.status }}">{{ org.status }}</span>
+                    </div>
+                    <div class="org-card-meta">
+                        <code>{{ org.subdomain }}</code>
+                        · {{ stats.user_count }} users · {{ stats.employee_count }} employees
+                    </div>
+                    <div class="org-card-bottom">
+                        {% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d trial{% else %}Trial ended{% endif %}{% endif %}
+                        {% if trial_pay.payment_status == 'active' %}<span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %}<span class="status status-active">Free</span>{% elif trial_pay.payment_status == 'overdue' %}<span class="status status-past-due">Overdue</span>{% endif %}
+                    </div>
                 </div>
-                <div class="card-row">
-                    <span class="status status-{{ org.status }}">{{ org.status }}</span>
-                    {% if trial_pay.trial_days_left is not none %}{% if trial_pay.trial_days_left > 0 %}{{
-                    trial_pay.trial_days_left }}d trial{% else %}Trial ended{% endif %}{% endif %}
-                    {% if trial_pay.payment_status == 'active' %}<span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %}<span class="status status-active">Free {{ trial_pay.billing_plan|default('')|capitalize }}</span>{% elif trial_pay.payment_status == 'overdue' %}<span class="status status-past-due">Overdue</span>{% elif trial_pay.payment_status == 'canceled' %}<span class="status status-suspended">Canceled</span>{% endif %}
-                </div>
-                <div class="card-row card-label">Users ({{ stats.user_count }})</div>
-                {% if org_users %}
-                <ul class="org-card-user-list">
-                    {% for u in org_users %}
-                    <li><a href="{{ url_for('admin.users_list', org_id=org.id) }}">{{ u.email }}</a></li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <div class="card-row card-muted">No users yet</div>
-                {% endif %}
-                <div class="card-row card-actions">
-                    <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}"
-                        class="btn btn-sm btn-primary">View</a>
-                </div>
-            </div>
+            </a>
             {% else %}
-            <p class="section-desc">No organizations yet. <a href="{{ url_for('admin.organization_create') }}">Create
-                    one</a>.</p>
+            <p class="empty-text">No organizations yet.</p>
             {% endfor %}
         </div>
     </div>
 
-    <div class="table-card">
-        <h2 class="section-title">Signup requests</h2>
-        <form method="get" class="signup-filter-form">
-            <input type="hidden" name="q" value="{{ filter_q or '' }}">
-            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
-            <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}"
-                placeholder="Search email, business, name">
-            <select name="signup_plan">
-                <option value="">All plans</option>
-                <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
-                <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
-            </select>
-            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
-        </form>
-        <p class="section-desc">Landing-page submissions. <strong>Email</strong> opens Outlook Web; <strong>Copy</strong> copies their email.</p>
-        <div class="signup-requests-actions">
-            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form"
-                onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
-                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i> Clear all</button>
-            </form>
+    <div class="section-card">
+        <div class="section-header">
+            <h2 class="section-heading"><i class="fa-solid fa-clipboard-list"></i> Signup Requests</h2>
+            <div class="section-header-actions">
+                <form method="get" class="inline-filter">
+                    <input type="hidden" name="q" value="{{ filter_q or '' }}">
+                    <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
+                    <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}" placeholder="Search..." class="filter-input-plain">
+                    <select name="signup_plan">
+                        <option value="">All plans</option>
+                        <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
+                        <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                </form>
+                <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" style="display:inline;" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
+                    <button type="submit" class="btn btn-sm btn-danger-outline"><i class="fa-solid fa-trash"></i></button>
+                </form>
+            </div>
         </div>
-        <div class="admin-table-wrap desktop-only">
+        <p class="section-desc"><strong>Email</strong> opens Outlook Web; <strong>Copy</strong> copies their email.</p>
+        <div class="signup-table-wrap desktop-only">
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>Name</th><th>Email</th><th>Business</th><th>Location</th><th>Address</th><th>Phone</th><th>Plan</th><th>Size</th><th>Date</th><th>Follow-up</th><th>Actions</th><th></th>
+                        <th>Name</th><th>Email</th><th>Business</th><th>Plan</th><th>Date</th><th>Follow-up</th><th class="th-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
                     <tr>
                         <td>{{ r.name or '—' }}</td>
-                        <td><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></td>
-                        <td>{{ r.business or '—' }}</td>
-                        <td>{{ r.location_identifier or '—' }}</td>
-                        <td>{% if r.address_line1 or r.city or r.state or r.postal_code %}{{ r.address_line1 or '' }}{% if r.city %}{% if r.address_line1 %}, {% endif %}{{ r.city }}{% endif %}{% if r.state %} {{ r.state }}{% endif %}{% if r.postal_code %} {{ r.postal_code }}{% endif %}{% else %}—{% endif %}</td>
-                        <td>{{ r.phone or '—' }}</td>
+                        <td class="td-email">{{ r.email }}</td>
+                        <td>{{ r.business or '—' }}{% if r.location_identifier %} <span class="td-muted">· {{ r.location_identifier }}</span>{% endif %}</td>
                         <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
-                        <td>{{ r.size or '—' }}</td>
-                        <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
+                        <td class="td-muted td-nowrap">{{ r.created_at | est('%m-%d-%Y') }}</td>
                         <td>
-                            <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" style="display: flex; gap: 4px; flex-direction: column;">
-                                <select name="status" onchange="this.form.submit()" class="status-select" style="padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border);">
+                            <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" class="followup-form">
+                                <select name="status" onchange="this.form.submit()" class="followup-select">
                                     <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
                                     <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>Contacted</option>
                                     <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved</option>
                                 </select>
-                                <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" style="font-size: 11px; padding: 4px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
+                                <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" class="followup-notes">{{ r.notes or '' }}</textarea>
                             </form>
-                        </td>
-                        <td class="actions-cell">
-                            <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org" title="Create org from this signup"><i class="fa-solid fa-building"></i> Create org</a>
-                            <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Outlook"><i class="fa-solid fa-envelope"></i> Email</a>
-                            <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
                         </td>
                         <td>
-                            <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
-                                <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i class="fa-solid fa-xmark"></i></button>
-                            </form>
+                            <div class="action-btns">
+                                <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="action-btn action-create" title="Create org"><i class="fa-solid fa-building"></i></a>
+                                <a href="{{ outlook_url }}" class="action-btn action-email" target="_blank" rel="noopener" title="Email"><i class="fa-solid fa-envelope"></i></a>
+                                <button type="button" class="action-btn btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i></button>
+                                <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                                    <button type="submit" class="action-btn action-delete" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="12">No signup requests yet.</td></tr>
+                    <tr><td colspan="7" class="td-empty">No signup requests yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="admin-mobile-signup-cards mobile-only">
+        <div class="signup-cards mobile-only">
             {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
-            <div class="admin-mobile-card signup-card">
-                <div class="card-row"><strong>{{ r.name or '—' }}</strong></div>
-                <div class="card-row"><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></div>
-                <div class="card-row">{{ r.business or '—' }}{% if r.location_identifier %} · {{ r.location_identifier }}{% endif %}</div>
-                {% if r.plan %}<div class="card-row"><span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span></div>{% endif %}
-                <div class="card-row">
-                    <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" style="display: flex; gap: 4px; flex-direction: column;">
-                        <select name="status" onchange="this.form.submit()" class="status-select" style="padding: 6px; font-size: 14px; border-radius: 4px; border: 1px solid var(--border);">
+            <div class="signup-card">
+                <div class="signup-card-top">
+                    <strong>{{ r.name or '—' }}</strong>
+                    {% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% endif %}
+                </div>
+                <div class="signup-card-email">{{ r.email }}</div>
+                <div class="signup-card-meta">{{ r.business or '' }}{% if r.location_identifier %} · {{ r.location_identifier }}{% endif %}</div>
+                <div class="signup-card-followup">
+                    <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" class="followup-form">
+                        <select name="status" onchange="this.form.submit()" class="followup-select">
                             <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
                             <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>Contacted</option>
                             <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved</option>
                         </select>
-                        <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" style="font-size: 14px; padding: 6px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
+                        <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" class="followup-notes">{{ r.notes or '' }}</textarea>
                     </form>
                 </div>
-                <div class="card-row card-actions">
-                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org"><i class="fa-solid fa-building"></i> Create org</a>
-                    <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
-                    <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"><i class="fa-solid fa-copy"></i> Copy</button>
-                    <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
-                        <button type="submit" class="btn btn-sm btn-remove"><i class="fa-solid fa-xmark"></i></button>
-                    </form>
+                <div class="signup-card-actions">
+                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="action-btn action-create"><i class="fa-solid fa-building"></i> Create org</a>
+                    <a href="{{ outlook_url }}" class="action-btn action-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
+                    <button type="button" class="action-btn btn-copy" data-email="{{ r.email }}"><i class="fa-solid fa-copy"></i> Copy</button>
                 </div>
             </div>
             {% else %}
-            <p class="section-desc">No signup requests yet.</p>
+            <p class="empty-text">No signup requests yet.</p>
             {% endfor %}
         </div>
     </div>
-
 </div>
 <style>
-    .admin-page {
-        max-width: 1100px;
-    }
+    .admin-page { max-width: 1100px; }
 
-    .page-title {
-        font-size: 28px;
-        font-weight: 800;
-        color: var(--text-main);
-        margin: 0 0 4px 0;
-    }
-
-    .page-subtitle {
-        color: var(--text-muted);
-        font-size: 14px;
-        margin: 0 0 24px 0;
-    }
-
-    .admin-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    /* --- Dashboard Header --- */
+    .dash-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
         gap: 16px;
-        margin-bottom: 28px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
     }
+    .page-title { font-size: 26px; font-weight: 800; color: var(--text-main); margin: 0 0 4px 0; }
+    .page-subtitle { color: var(--text-muted); font-size: 14px; margin: 0; }
 
+    /* --- Pending Banner --- */
+    .pending-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 12px;
+        padding: 14px 20px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #92400e;
+    }
+    .pending-banner i { font-size: 16px; }
+    .pending-banner a { color: #b45309; font-weight: 700; text-decoration: none; margin-left: auto; white-space: nowrap; }
+    .pending-banner a:hover { text-decoration: underline; }
+
+    /* --- Stats Grid --- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 12px;
+    }
     .stat-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 20px;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--bg-body);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+    .stat-icon-green { color: #16a34a; }
+    .stat-content { display: flex; flex-direction: column; }
+    .stat-value { font-size: 22px; font-weight: 800; color: var(--text-main); line-height: 1.2; }
+    .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+
+    /* --- Revenue Grid --- */
+    .revenue-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .revenue-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        padding: 16px 18px;
         text-align: center;
     }
-
-    .stat-value {
+    .revenue-card-alt {
+        background: var(--bg-card);
+        border-color: var(--border);
+    }
+    .revenue-value {
         display: block;
-        font-size: 28px;
+        font-size: 22px;
         font-weight: 800;
-        color: var(--primary);
+        color: #15803d;
         line-height: 1.2;
     }
+    .revenue-card-alt .revenue-value { color: var(--text-main); }
+    .revenue-value small { font-size: 14px; font-weight: 600; opacity: 0.7; }
+    .revenue-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
 
-    .stat-label {
-        font-size: 12px;
-        font-weight: 600;
+    /* --- Section Cards --- */
+    .section-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+    .section-heading {
+        font-size: 14px;
+        font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text-muted);
-    }
-
-    .stat-revenue .stat-value {
-        color: #16a34a;
-    }
-
-    .page-actions {
+        margin: 0;
         display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 24px;
-        align-items: center;
-    }
-
-    .section-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin: 0 0 16px 0;
-        color: var(--text-main);
-    }
-
-    .table-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 24px;
-        overflow-x: auto;
-    }
-
-    .admin-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 560px;
-    }
-
-    .admin-table th,
-    .admin-table td {
-        padding: 12px 16px;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .admin-table th {
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--text-muted);
-    }
-
-    .admin-table td {
-        font-size: 14px;
-        color: var(--text-main);
-    }
-
-    .admin-table a {
-        color: var(--primary);
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-    .admin-table a:hover {
-        text-decoration: underline;
-    }
-
-    .admin-table code {
-        font-size: 12px;
-        background: var(--bg-body);
-        padding: 2px 8px;
-        border-radius: 6px;
-    }
-
-    .status {
-        font-size: 11px;
-        text-transform: uppercase;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-    }
-
-    .status-active {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .status-suspended {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .status-pending_approval {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .admin-pending-banner {
-        background: #fef3c7;
-        border: 1px solid #f59e0b;
-        border-radius: 12px;
-        padding: 14px 20px;
-        margin-bottom: 20px;
-        font-size: 15px;
-        color: #92400e;
-    }
-
-    .admin-pending-banner a {
-        color: #b45309;
-        font-weight: 700;
-        text-decoration: none;
-    }
-
-    .admin-pending-banner a:hover {
-        text-decoration: underline;
-    }
-
-    .btn {
-        display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 18px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 14px;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
     }
+    .section-heading i { font-size: 14px; opacity: 0.5; }
+    .section-desc { color: var(--text-muted); font-size: 13px; margin: -6px 0 14px 0; }
+    .filter-note { color: var(--text-muted); font-size: 12px; margin: -8px 0 12px 0; font-style: italic; }
 
-    .btn-primary {
-        background: var(--primary);
-        color: white;
-    }
-
-    .btn-secondary {
-        background: var(--bg-body);
-        color: var(--text-main);
-        border: 1px solid var(--border);
-    }
-
-    .btn:hover {
-        opacity: 0.9;
-    }
-
-    .link-view {
-        font-size: 13px;
-    }
-
-    .section-desc {
-        color: var(--text-muted);
-        font-size: 13px;
-        margin: -8px 0 16px 0;
-    }
-
-    .plan-badge {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        padding: 2px 8px;
-        border-radius: 6px;
-    }
-
-    .plan-standard {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    .plan-pro {
-        background: #fae8ff;
-        color: #86198f;
-    }
-
-    .status-past-due {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .actions-cell {
-        white-space: nowrap;
-    }
-
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    /* Email/Copy links: force visible text (override table link color) */
-    a.btn-create-org {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none;
-        background: #0f766e;
-        color: #fff !important;
-    }
-
-    a.btn-create-org:hover {
-        background: #0d9488;
-        color: #fff !important;
-    }
-
-    a.btn-email,
-    a.btn-email:hover {
-        background: var(--primary);
-        color: #fff !important;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none;
-    }
-
-    .btn-email {
-        background: var(--primary);
-        color: #fff !important;
-    }
-
-    .btn-copy {
-        background: var(--bg-body);
-        color: var(--text-main);
-        border: 1px solid var(--border);
-    }
-
-    .btn-copy.copied {
-        background: #dcfce7;
-        color: #166534;
-        border-color: #166534;
-    }
-
-    .signup-requests-actions {
-        margin-bottom: 12px;
-    }
-
-    .admin-filters {
-        margin-bottom: 16px;
-    }
-
-    .admin-filters .filter-form,
-    .signup-filter-form {
+    /* --- Inline Filters --- */
+    .inline-filter {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
+        flex-wrap: wrap;
     }
-
-    .admin-filters input[type="text"],
-    .admin-filters select,
-    .signup-filter-form input[type="text"],
-    .signup-filter-form select {
-        padding: 8px 12px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 14px;
+    .filter-input-wrap {
+        position: relative;
     }
-
-    .signup-filter-form {
-        margin-bottom: 12px;
-    }
-
-    .signup-requests-actions .clear-form {
-        display: inline-block;
-    }
-
-    .btn-outline-danger {
-        background: transparent;
-        border: 1px solid #dc2626;
-        color: #dc2626;
-    }
-
-    .btn-outline-danger:hover {
-        background: #fef2f2;
-    }
-
-    .btn-remove {
-        background: transparent;
-        border: none;
+    .filter-icon {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
         color: var(--text-muted);
-        padding: 4px 8px;
+        pointer-events: none;
+    }
+    .filter-input-wrap input {
+        padding: 7px 10px 7px 30px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: 13px;
+        width: 140px;
+        background: var(--bg-body);
+    }
+    .filter-input-plain {
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: 13px;
+        width: 120px;
+        background: var(--bg-body);
+    }
+    .inline-filter select {
+        padding: 7px 10px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: 13px;
+        background: var(--bg-body);
+    }
+    .section-header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
     }
 
-    .btn-remove:hover {
-        color: #dc2626;
+    /* --- Tables --- */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th, .admin-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table th {
+        font-size: 11px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-body);
     }
+    .th-right { text-align: right; }
+    .admin-table td { font-size: 14px; color: var(--text-main); vertical-align: middle; }
+    .admin-table code { font-size: 11px; background: var(--bg-body); padding: 2px 7px; border-radius: 5px; color: var(--text-muted); }
+    .org-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .org-link:hover { text-decoration: underline; }
+    .td-muted { color: var(--text-muted); font-size: 13px; }
+    .td-nowrap { white-space: nowrap; }
+    .td-email { font-weight: 600; }
+    .td-empty { text-align: center; padding: 32px 16px; color: var(--text-muted); }
+    .td-empty a { color: var(--primary); font-weight: 600; }
+    .view-link {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.15s;
+    }
+    .view-link:hover { color: var(--primary); }
+    .view-link i { font-size: 10px; }
 
-    /* Mobile: card layout (no wide tables) */
-    .mobile-only {
-        display: none;
+    /* --- Status & Plan Badges --- */
+    .status { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-suspended { background: #fee2e2; color: #991b1b; }
+    .status-pending_approval { background: #fef3c7; color: #92400e; }
+    .status-past-due { background: #fef3c7; color: #92400e; }
+    .plan-badge { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 10px; border-radius: 6px; }
+    .plan-standard { background: #dbeafe; color: #1e40af; }
+    .plan-pro { background: #fae8ff; color: #86198f; }
+
+    /* --- Follow-up Forms --- */
+    .followup-form { display: flex; flex-direction: column; gap: 4px; }
+    .followup-select { padding: 4px 6px; font-size: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-body); }
+    .followup-notes { font-size: 11px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); resize: vertical; min-height: 36px; background: var(--bg-body); font-family: inherit; }
+
+    /* --- Action Buttons --- */
+    .action-btns { display: flex; gap: 4px; justify-content: flex-end; flex-wrap: wrap; }
+    .action-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 5px; padding: 6px 10px; font-size: 12px; font-weight: 600;
+        border-radius: 7px; border: 1px solid var(--border);
+        background: var(--bg-body); color: var(--text-main);
+        text-decoration: none; cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .action-btn i { font-size: 11px; }
+    .action-create { border-color: #6ee7b7; background: #ecfdf5; color: #065f46; }
+    .action-create:hover { background: #d1fae5; border-color: #34d399; }
+    .action-email { border-color: #93c5fd; background: #eff6ff; color: #1e40af; }
+    .action-email:hover { background: #dbeafe; border-color: #3b82f6; }
+    .action-delete { border: none; background: none; color: var(--text-muted); padding: 6px 8px; }
+    .action-delete:hover { color: #dc2626; }
+
+    /* --- Buttons --- */
+    .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 18px; border-radius: 10px; font-weight: 700;
+        font-size: 14px; text-decoration: none; border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger-outline { background: transparent; border: 1px solid #fca5a5; color: #dc2626; padding: 7px 10px; }
+    .btn-danger-outline:hover { background: #fef2f2; }
+
+    /* --- Mobile Org Cards --- */
+    .org-cards { display: none; flex-direction: column; gap: 10px; }
+    .org-card-link { text-decoration: none; color: inherit; }
+    .org-card {
+        background: var(--bg-body); border: 1px solid var(--border);
+        border-radius: 10px; padding: 14px; transition: border-color 0.15s;
+    }
+    .org-card:hover { border-color: var(--primary); }
+    .org-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .org-card-name { font-weight: 700; font-size: 15px; color: var(--text-main); }
+    .org-card-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+    .org-card-meta code { font-size: 11px; background: var(--bg-card); padding: 2px 6px; border-radius: 4px; }
+    .org-card-bottom { font-size: 13px; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+
+    /* --- Mobile Signup Cards --- */
+    .signup-cards { display: none; flex-direction: column; gap: 10px; }
+    .signup-card { background: var(--bg-body); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .signup-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .signup-card-email { font-size: 14px; color: var(--primary); font-weight: 600; margin-bottom: 2px; }
+    .signup-card-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+    .signup-card-followup { margin-bottom: 10px; }
+    .signup-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .signup-card-actions .action-btn { min-height: 44px; padding: 10px 14px; font-size: 13px; }
+
+    .empty-text { text-align: center; padding: 24px; color: var(--text-muted); margin: 0; }
+
+    .desktop-only { display: block; }
+    .mobile-only { display: none; }
 
     @media (max-width: 768px) {
-        .desktop-only {
-            display: none !important;
-        }
-
-        .mobile-only {
-            display: block;
-        }
-
-        .admin-page {
-            padding: 0 12px;
-            max-width: 100%;
-        }
-
-        .page-title {
-            font-size: 22px;
-        }
-
-        .page-subtitle {
-            font-size: 13px;
-            word-break: break-word;
-            margin-bottom: 20px;
-        }
-
-        .admin-stats {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            padding: 16px 12px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-        }
-
-        .page-actions {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 10px;
-        }
-
-        .page-actions .btn {
-            justify-content: center;
-            min-height: 48px;
-            width: 100%;
-        }
-
-        .admin-filters .filter-form,
-        .signup-filter-form {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 10px;
-        }
-
-        .admin-filters input,
-        .admin-filters select,
-        .signup-filter-form input,
-        .signup-filter-form select {
-            width: 100%;
-            min-height: 44px;
-            font-size: 16px;
-        }
-
-        .admin-filters .btn,
-        .signup-filter-form .btn {
-            width: 100%;
-            min-height: 48px;
-            justify-content: center;
-        }
-
-        .table-card {
-            padding: 20px 12px;
-            margin-left: -12px;
-            margin-right: -12px;
-            border-radius: 12px;
-            overflow: visible;
-        }
-
-        .section-title {
-            font-size: 18px;
-            margin-bottom: 14px;
-        }
-
-        .section-desc {
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-
-        .admin-mobile-signup-cards,
-        .admin-mobile-org-cards {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .admin-mobile-card {
-            background: var(--bg-body);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .admin-mobile-card .card-row {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .admin-mobile-card .card-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .admin-mobile-card .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .admin-mobile-card .card-title a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .admin-mobile-card .card-title code {
-            font-size: 12px;
-        }
-
-        .admin-mobile-card .card-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-top: 8px;
-        }
-
-        .admin-mobile-card .card-muted {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .admin-mobile-card .card-actions {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .admin-mobile-card .card-actions .btn {
-            min-height: 44px;
-        }
-
-        .org-card-user-list {
-            margin: 0 0 8px 0;
-            padding-left: 18px;
-            list-style: none;
-        }
-
-        .org-card-user-list li {
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-
-        .org-card-user-list a {
-            color: var(--primary);
-            font-weight: 600;
-            text-decoration: none;
-            word-break: break-all;
-        }
-
-        .org-card-user-list a:hover {
-            text-decoration: underline;
-        }
-
-        .signup-card .card-actions a.btn-email {
-            color: #fff !important;
-        }
-
-        .hide-on-mobile-title {
-            display: block;
-        }
+        .admin-page { padding: 0 8px; }
+        .dash-header { flex-direction: column; gap: 12px; }
+        .page-title { font-size: 22px; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .revenue-grid { grid-template-columns: repeat(2, 1fr); }
+        .section-header { flex-direction: column; align-items: stretch; gap: 10px; }
+        .inline-filter { flex-direction: column; align-items: stretch; }
+        .filter-input-wrap { width: 100%; }
+        .filter-input-wrap input, .filter-input-plain { width: 100%; min-height: 44px; font-size: 16px; }
+        .inline-filter select { min-height: 44px; font-size: 16px; }
+        .inline-filter .btn { min-height: 44px; justify-content: center; }
+        .section-card { padding: 16px; }
+        .desktop-only { display: none !important; }
+        .mobile-only, .org-cards, .signup-cards { display: flex !important; }
+        .pending-banner { flex-wrap: wrap; }
+        .signup-card-actions .action-btn { min-height: 44px; }
+        .followup-select, .followup-notes { min-height: 44px; font-size: 16px; }
     }
 
     @media (max-width: 480px) {
-        .admin-page {
-            padding: 0 8px;
-        }
-
-        .admin-stats {
-            grid-template-columns: 1fr;
-        }
-
-        .table-card {
-            margin-left: -8px;
-            margin-right: -8px;
-            padding: 16px 10px;
-        }
-
-        .signup-requests-actions .btn-sm {
-            width: 100%;
-            justify-content: center;
-            min-height: 44px;
-        }
+        .stats-grid, .revenue-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-card { padding: 14px; gap: 10px; }
+        .stat-icon { width: 34px; height: 34px; font-size: 14px; }
+        .stat-value { font-size: 18px; }
     }
 </style>
 <script>
-    document.querySelectorAll('.btn-copy').forEach(function (btn) {
-        btn.addEventListener('click', function () {
+    document.querySelectorAll('.btn-copy').forEach(function(btn) {
+        btn.addEventListener('click', function() {
             var email = this.getAttribute('data-email');
             if (!email) return;
-            navigator.clipboard.writeText(email).then(function () {
-                var t = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied'; btn.classList.add('copied');
-                setTimeout(function () { btn.innerHTML = t; btn.classList.remove('copied'); }, 2000);
+            var self = this;
+            navigator.clipboard.writeText(email).then(function() {
+                self.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+                setTimeout(function() { self.innerHTML = '<i class="fa-solid fa-copy"></i> Copy'; }, 1500);
             });
         });
     });

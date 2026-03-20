@@ -69,6 +69,7 @@ class SupportRequest(db.Model):
     email = db.Column(db.String(255), nullable=False, index=True)
     subject = db.Column(db.String(200), nullable=False, default="Support request")
     message = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), nullable=False, default="new")
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 

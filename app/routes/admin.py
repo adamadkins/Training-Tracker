@@ -323,6 +323,17 @@ def support_requests_list():
     return render_template("admin/support_requests.html", support_requests=requests_with_urls)
 
 
+@admin_bp.route("/support-requests/<int:req_id>/status", methods=["POST"])
+def support_request_status(req_id):
+    """Toggle support request status (new/resolved)."""
+    sr = SupportRequest.query.get_or_404(req_id)
+    new_status = request.form.get("status", "").strip().lower()
+    if new_status in ("new", "resolved"):
+        sr.status = new_status
+        db.session.commit()
+    return redirect(url_for("admin.support_requests_list"))
+
+
 @admin_bp.route("/organizations")
 def organizations_list():
     """List all organizations with stats. Optional q (search), status filter."""
