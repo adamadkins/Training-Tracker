@@ -454,9 +454,27 @@ def organization_suspend(org_id):
 def organization_activate(org_id):
     """Set organization status to active."""
     org = Organization.query.get_or_404(org_id)
+    now = datetime.now(timezone.utc)
+    sub_status = (org.stripe_subscription_status or "").lower()
+    has_paid_plan = bool(org.free_plan) or (
+        bool(org.stripe_subscription_id)
+        and sub_status not in ("past_due", "canceled", "unpaid", "incomplete_expired")
+    )
     org.status = "active"
+    # If billing is not linked yet, extend access so manual activation does not immediately re-suspend.
+    if not has_paid_plan:
+        if not org.trial_ends_at or org.trial_ends_at <= now:
+            org.trial_ends_at = now + timedelta(days=30)
+        # reset so the trial-ended email can be sent again at the next real expiration, if needed
+        org.trial_expiration_email_sent = False
     db.session.commit()
-    flash(f"Organization '{org.name}' is active again.", "success")
+    if has_paid_plan:
+        flash(f"Organization '{org.name}' is active again.", "success")
+    else:
+        flash(
+            f"Organization '{org.name}' is active again. Trial access was extended 30 days because billing is not linked yet.",
+            "warning",
+        )
     return redirect(url_for("admin.organization_detail", org_id=org.id))
 
 
