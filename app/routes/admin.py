@@ -972,7 +972,21 @@ def taxes():
     for q in range(1, 5):
         start_m = (q - 1) * 3 + 1
         quarterly_revenue[q] = sum(monthly_revenue[m] for m in range(start_m, start_m + 3))
-    gross_annual = sum(monthly_revenue.values())
+    gross_ytd = sum(monthly_revenue.values())
+
+    # Current MRR from active subscriptions (same logic as dashboard)
+    plan_prices = {"standard": 40, "pro": 50}
+    all_orgs = Organization.query.all()
+    mrr = 0
+    for o in all_orgs:
+        sub_st = (o.stripe_subscription_status or "").lower()
+        if not o.free_plan and o.stripe_subscription_id and sub_st in ("active", "trialing"):
+            mrr += plan_prices.get((o.billing_plan or "").lower(), 0)
+
+    now_utc = datetime.now(timezone.utc)
+    current_month = now_utc.month if year == now_utc.year else 12
+    remaining_months = max(0, 12 - current_month)
+    projected_annual = gross_ytd + (mrr * remaining_months)
 
     expenses = PlatformExpense.query.order_by(PlatformExpense.created_at).all()
     if not expenses:
@@ -986,7 +1000,8 @@ def taxes():
     yearly_expense_total = sum(e.cost for e in expenses if e.frequency == "yearly")
     annual_expenses = monthly_expense_total * 12 + yearly_expense_total
 
-    tax = _compute_tax_estimates(gross_annual, annual_expenses)
+    tax_ytd = _compute_tax_estimates(gross_ytd, annual_expenses)
+    tax_projected = _compute_tax_estimates(projected_annual, annual_expenses)
 
     quarterly_taxes = {}
     for q in range(1, 5):
@@ -1005,12 +1020,16 @@ def taxes():
         monthly_revenue=monthly_revenue,
         month_names=month_names,
         quarterly_revenue=quarterly_revenue,
-        gross_annual=gross_annual,
+        gross_ytd=gross_ytd,
+        mrr=mrr,
+        projected_annual=projected_annual,
+        remaining_months=remaining_months,
         expenses=expenses,
         monthly_expense_total=monthly_expense_total,
         yearly_expense_total=yearly_expense_total,
         annual_expenses=annual_expenses,
-        tax=tax,
+        tax_ytd=tax_ytd,
+        tax=tax_projected,
         quarterly_taxes=quarterly_taxes,
         stripe_ok=stripe_ok,
         stripe_error=stripe_error,

@@ -19,10 +19,32 @@
     <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> Stripe is not configured. Revenue data is unavailable.</div>
     {% endif %}
 
+    <div class="projection-banner">
+        <div class="proj-item">
+            <span class="proj-label">Current MRR</span>
+            <span class="proj-value">${{ '{:,.0f}'.format(mrr) }}/mo</span>
+        </div>
+        <div class="proj-sep"><i class="fa-solid fa-arrow-right"></i></div>
+        <div class="proj-item">
+            <span class="proj-label">Collected YTD</span>
+            <span class="proj-value">${{ '{:,.2f}'.format(gross_ytd) }}</span>
+        </div>
+        <div class="proj-sep">+</div>
+        <div class="proj-item">
+            <span class="proj-label">{{ remaining_months }} mo remaining</span>
+            <span class="proj-value">${{ '{:,.2f}'.format(mrr * remaining_months) }}</span>
+        </div>
+        <div class="proj-sep">=</div>
+        <div class="proj-item proj-highlight">
+            <span class="proj-label">Projected Annual</span>
+            <span class="proj-value">${{ '{:,.2f}'.format(projected_annual) }}</span>
+        </div>
+    </div>
+
     <div class="summary-grid">
         <div class="summary-card card-green">
-            <span class="summary-value">${{ '{:,.2f}'.format(gross_annual) }}</span>
-            <span class="summary-label">Gross Revenue</span>
+            <span class="summary-value">${{ '{:,.2f}'.format(projected_annual) }}</span>
+            <span class="summary-label">Projected Revenue</span>
         </div>
         <div class="summary-card card-red">
             <span class="summary-value">${{ '{:,.2f}'.format(annual_expenses) }}</span>
@@ -30,7 +52,7 @@
         </div>
         <div class="summary-card card-blue">
             <span class="summary-value">${{ '{:,.2f}'.format(tax.net) }}</span>
-            <span class="summary-label">Net Profit</span>
+            <span class="summary-label">Projected Net Profit</span>
         </div>
         <div class="summary-card card-purple">
             <span class="summary-value">${{ '{:,.2f}'.format(tax.total_tax) }}</span>
@@ -59,8 +81,12 @@
                     {% endif %}
                     {% endfor %}
                     <tr class="annual-row">
-                        <td><strong>Annual Total</strong></td>
-                        <td class="th-right"><strong>${{ '{:,.2f}'.format(gross_annual) }}</strong></td>
+                        <td><strong>Collected YTD</strong></td>
+                        <td class="th-right"><strong>${{ '{:,.2f}'.format(gross_ytd) }}</strong></td>
+                    </tr>
+                    <tr class="projected-row">
+                        <td>Projected Annual <span class="proj-note">(${{ '{:,.0f}'.format(mrr) }}/mo × {{ remaining_months }} mo remaining)</span></td>
+                        <td class="th-right"><strong>${{ '{:,.2f}'.format(projected_annual) }}</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -88,7 +114,7 @@
                 <h2 class="section-heading"><i class="fa-solid fa-calculator"></i> Tax Breakdown</h2>
                 <table class="breakdown-table">
                     <tbody>
-                        <tr><td>Gross Revenue</td><td class="th-right">${{ '{:,.2f}'.format(tax.gross) }}</td></tr>
+                        <tr><td>Projected Revenue</td><td class="th-right">${{ '{:,.2f}'.format(tax.gross) }}</td></tr>
                         <tr><td>- Annual Expenses</td><td class="th-right text-red">${{ '{:,.2f}'.format(tax.expenses) }}</td></tr>
                         <tr class="row-highlight"><td><strong>Net Profit</strong></td><td class="th-right"><strong>${{ '{:,.2f}'.format(tax.net) }}</strong></td></tr>
                         <tr class="row-spacer"><td colspan="2"></td></tr>
@@ -184,6 +210,19 @@
     .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
     .alert-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
 
+    /* --- Projection Banner --- */
+    .projection-banner {
+        display: flex; align-items: center; justify-content: center; gap: 16px;
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+        padding: 16px 24px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .proj-item { text-align: center; }
+    .proj-label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+    .proj-value { display: block; font-size: 18px; font-weight: 800; color: var(--text-main); line-height: 1.3; }
+    .proj-sep { color: var(--text-muted); font-size: 14px; font-weight: 600; }
+    .proj-highlight .proj-value { color: var(--primary); }
+    .proj-highlight { background: var(--bg-body); border-radius: 8px; padding: 6px 16px; }
+
     /* --- Summary Cards --- */
     .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
     .summary-card {
@@ -240,6 +279,8 @@
     .quarter-end td { border-bottom: none; }
     .quarter-row td { background: var(--bg-body); font-size: 13px; color: var(--primary); }
     .annual-row td { background: var(--bg-body); font-size: 14px; border-top: 2px solid var(--border); }
+    .projected-row td { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); font-size: 14px; color: var(--primary); }
+    .proj-note { font-size: 11px; font-weight: 400; color: var(--text-muted); }
 
     /* --- Breakdown Table --- */
     .breakdown-table { width: 100%; border-collapse: collapse; }
@@ -325,6 +366,9 @@
         .page-header { flex-direction: column; gap: 12px; }
         .page-title { font-size: 22px; }
         .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        .projection-banner { gap: 10px; padding: 14px 16px; }
+        .proj-value { font-size: 15px; }
+        .proj-sep { font-size: 12px; }
         .two-col { grid-template-columns: 1fr; }
         .q-grid { grid-template-columns: repeat(2, 1fr); }
         .section-card { padding: 16px; }
