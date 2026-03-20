@@ -61,6 +61,16 @@ class SignupRequest(db.Model):
     organization = db.relationship("Organization", backref=db.backref("signup_request", uselist=False))
 
 
+class PlatformExpense(db.Model):
+    """Recurring platform cost tracked for tax/profit reporting on the admin dashboard."""
+    __tablename__ = "platform_expenses"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    cost = db.Column(db.Float, nullable=False, default=0)
+    frequency = db.Column(db.String(10), nullable=False, default="monthly")  # monthly | yearly
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
 class SupportRequest(db.Model):
     """Support/contact form submissions from the public support page; viewable in admin."""
     __tablename__ = "support_requests"

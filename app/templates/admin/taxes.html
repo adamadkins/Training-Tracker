@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-page">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('admin.index') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <h1 class="page-title">Taxes &amp; Revenue</h1>
+        </div>
+        <form method="get" class="year-picker">
+            <button type="submit" name="year" value="{{ year - 1 }}" class="yr-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <span class="yr-label">{{ year }}</span>
+            <button type="submit" name="year" value="{{ year + 1 }}" class="yr-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </form>
+    </div>
+
+    {% if stripe_error %}
+    <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> Could not fetch Stripe data: {{ stripe_error }}</div>
+    {% elif not stripe_ok %}
+    <div class="alert alert-warn"><i class="fa-solid fa-triangle-exclamation"></i> Stripe is not configured. Revenue data is unavailable.</div>
+    {% endif %}
+
+    <div class="summary-grid">
+        <div class="summary-card card-green">
+            <span class="summary-value">${{ '{:,.2f}'.format(gross_annual) }}</span>
+            <span class="summary-label">Gross Revenue</span>
+        </div>
+        <div class="summary-card card-red">
+            <span class="summary-value">${{ '{:,.2f}'.format(annual_expenses) }}</span>
+            <span class="summary-label">Annual Expenses</span>
+        </div>
+        <div class="summary-card card-blue">
+            <span class="summary-value">${{ '{:,.2f}'.format(tax.net) }}</span>
+            <span class="summary-label">Net Profit</span>
+        </div>
+        <div class="summary-card card-purple">
+            <span class="summary-value">${{ '{:,.2f}'.format(tax.total_tax) }}</span>
+            <span class="summary-label">Est. Tax Owed</span>
+        </div>
+    </div>
+
+    <div class="two-col">
+        <div class="section-card">
+            <h2 class="section-heading"><i class="fa-solid fa-chart-bar"></i> Monthly Revenue</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Month</th><th class="th-right">Revenue</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in range(1, 13) %}
+                    <tr class="{% if m in (3,6,9,12) %}quarter-end{% endif %}">
+                        <td>{{ month_names[m] }}</td>
+                        <td class="th-right {% if monthly_revenue[m] > 0 %}td-money{% endif %}">${{ '{:,.2f}'.format(monthly_revenue[m]) }}</td>
+                    </tr>
+                    {% if m in (3,6,9,12) %}
+                    <tr class="quarter-row">
+                        <td><strong>Q{{ m // 3 }} Total</strong></td>
+                        <td class="th-right"><strong>${{ '{:,.2f}'.format(quarterly_revenue[m // 3]) }}</strong></td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                    <tr class="annual-row">
+                        <td><strong>Annual Total</strong></td>
+                        <td class="th-right"><strong>${{ '{:,.2f}'.format(gross_annual) }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="right-col">
+            <div class="section-card">
+                <h2 class="section-heading"><i class="fa-solid fa-calendar-check"></i> Quarterly Estimates</h2>
+                <div class="q-grid">
+                    {% for q in range(1, 5) %}
+                    <div class="q-card">
+                        <div class="q-label">Q{{ q }}</div>
+                        <div class="q-revenue">${{ '{:,.2f}'.format(quarterly_taxes[q].revenue) }}</div>
+                        <div class="q-tax">Est. tax: <strong>${{ '{:,.2f}'.format(quarterly_taxes[q].est_tax) }}</strong></div>
+                        <div class="q-due">Due {{ quarterly_taxes[q].due_date }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="q-total">
+                    Quarterly payment: <strong>${{ '{:,.2f}'.format(tax.quarterly_payment) }}</strong>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <h2 class="section-heading"><i class="fa-solid fa-calculator"></i> Tax Breakdown</h2>
+                <table class="breakdown-table">
+                    <tbody>
+                        <tr><td>Gross Revenue</td><td class="th-right">${{ '{:,.2f}'.format(tax.gross) }}</td></tr>
+                        <tr><td>- Annual Expenses</td><td class="th-right text-red">${{ '{:,.2f}'.format(tax.expenses) }}</td></tr>
+                        <tr class="row-highlight"><td><strong>Net Profit</strong></td><td class="th-right"><strong>${{ '{:,.2f}'.format(tax.net) }}</strong></td></tr>
+                        <tr class="row-spacer"><td colspan="2"></td></tr>
+                        <tr><td>SE Taxable (net × 92.35%)</td><td class="th-right">${{ '{:,.2f}'.format(tax.se_income) }}</td></tr>
+                        <tr><td>Self-Employment Tax (15.3%)</td><td class="th-right">${{ '{:,.2f}'.format(tax.se_tax) }}</td></tr>
+                        <tr><td>½ SE Deduction</td><td class="th-right">${{ '{:,.2f}'.format(tax.half_se) }}</td></tr>
+                        <tr class="row-spacer"><td colspan="2"></td></tr>
+                        <tr><td>Federal Taxable Income</td><td class="th-right">${{ '{:,.2f}'.format(tax.taxable_federal) }}</td></tr>
+                        <tr><td>Federal Income Tax</td><td class="th-right">${{ '{:,.2f}'.format(tax.federal_tax) }}</td></tr>
+                        <tr class="row-spacer"><td colspan="2"></td></tr>
+                        <tr><td>KY State Taxable Income</td><td class="th-right">${{ '{:,.2f}'.format(tax.taxable_state) }}</td></tr>
+                        <tr><td>Kentucky State Tax ({{ '{:.1f}'.format(tax.state_rate * 100) }}%)</td><td class="th-right">${{ '{:,.2f}'.format(tax.state_tax) }}</td></tr>
+                        <tr class="row-spacer"><td colspan="2"></td></tr>
+                        <tr class="row-total"><td><strong>Total Estimated Tax</strong></td><td class="th-right"><strong>${{ '{:,.2f}'.format(tax.total_tax) }}</strong></td></tr>
+                        <tr><td>Standard Deduction used</td><td class="th-right text-muted">${{ '{:,}'.format(15000) }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card">
+        <div class="section-title-row">
+            <h2 class="section-heading"><i class="fa-solid fa-receipt"></i> Platform Expenses</h2>
+            <div class="expense-totals">
+                <span class="expense-total-pill">${{ '{:,.2f}'.format(monthly_expense_total) }}/mo</span>
+                <span class="expense-total-pill">${{ '{:,.2f}'.format(annual_expenses) }}/yr</span>
+            </div>
+        </div>
+        <div class="expense-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Name</th><th>Cost</th><th>Frequency</th><th>Annualized</th><th class="th-right">Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td class="td-name">{{ e.name }}</td>
+                        <td>${{ '{:,.2f}'.format(e.cost) }}</td>
+                        <td><span class="freq-badge freq-{{ e.frequency }}">{{ e.frequency }}</span></td>
+                        <td class="td-muted">${{ '{:,.2f}'.format(e.cost * 12 if e.frequency == 'monthly' else e.cost) }}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button type="button" class="action-btn" onclick="editExpense({{ e.id }}, '{{ e.name }}', {{ e.cost }}, '{{ e.frequency }}')"><i class="fa-solid fa-pen"></i></button>
+                                <form method="post" action="{{ url_for('admin.taxes_expense_delete', exp_id=e.id) }}" style="display:inline;" onsubmit="return confirm('Delete this expense?');">
+                                    <button type="submit" class="action-btn action-delete"><i class="fa-solid fa-xmark"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <form method="post" action="{{ url_for('admin.taxes_expense_save') }}" class="expense-form" id="expenseForm">
+            <input type="hidden" name="expense_id" id="expenseId" value="">
+            <div class="expense-form-row">
+                <input type="text" name="name" id="expenseName" placeholder="Expense name..." required>
+                <input type="number" name="cost" id="expenseCost" placeholder="0.00" step="0.01" min="0" required>
+                <select name="frequency" id="expenseFreq">
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary" id="expenseBtn"><i class="fa-solid fa-plus"></i> Add</button>
+                <button type="button" class="btn btn-sm btn-outline" id="expenseCancel" style="display:none;" onclick="cancelEdit()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+    .admin-page { max-width: 1100px; }
+
+    .page-header {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        gap: 16px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .back-link {
+        color: var(--text-muted); font-size: 13px; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; transition: color 0.15s;
+    }
+    .back-link:hover { color: var(--primary); }
+    .page-title { font-size: 26px; font-weight: 800; margin: 0; color: var(--text-main); }
+
+    .year-picker { display: flex; align-items: center; gap: 8px; }
+    .yr-btn {
+        width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+        background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 13px;
+        display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .yr-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .yr-label { font-size: 20px; font-weight: 800; color: var(--text-main); min-width: 60px; text-align: center; }
+
+    .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .alert-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+
+    /* --- Summary Cards --- */
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .summary-card {
+        border-radius: 12px; padding: 20px; text-align: center;
+        border: 1px solid var(--border); background: var(--bg-card);
+    }
+    .summary-value { display: block; font-size: 24px; font-weight: 800; line-height: 1.2; }
+    .summary-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+    .card-green { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
+    .card-green .summary-value { color: #15803d; }
+    .card-red { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #fecaca; }
+    .card-red .summary-value { color: #b91c1c; }
+    .card-blue { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #93c5fd; }
+    .card-blue .summary-value { color: #1d4ed8; }
+    .card-purple { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-color: #d8b4fe; }
+    .card-purple .summary-value { color: #7c3aed; }
+
+    /* --- Two-Column Layout --- */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+    /* --- Section Cards --- */
+    .section-card {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 14px; padding: 20px 24px; margin-bottom: 16px;
+    }
+    .two-col .section-card { margin-bottom: 0; }
+    .section-heading {
+        font-size: 14px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.04em; color: var(--text-muted); margin: 0 0 14px 0;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .section-heading i { font-size: 14px; opacity: 0.5; }
+    .section-title-row {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .section-title-row .section-heading { margin-bottom: 0; }
+
+    /* --- Tables --- */
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th, .admin-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table th {
+        font-size: 11px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.05em; color: var(--text-muted); background: var(--bg-body);
+    }
+    .admin-table td { font-size: 14px; color: var(--text-main); vertical-align: middle; }
+    .th-right { text-align: right; }
+    .td-muted { color: var(--text-muted); font-size: 13px; }
+    .td-money { color: #15803d; font-weight: 600; }
+    .td-name { font-weight: 600; }
+
+    .quarter-end td { border-bottom: none; }
+    .quarter-row td { background: var(--bg-body); font-size: 13px; color: var(--primary); }
+    .annual-row td { background: var(--bg-body); font-size: 14px; border-top: 2px solid var(--border); }
+
+    /* --- Breakdown Table --- */
+    .breakdown-table { width: 100%; border-collapse: collapse; }
+    .breakdown-table td { padding: 8px 0; font-size: 14px; color: var(--text-main); }
+    .breakdown-table .th-right { text-align: right; }
+    .text-red { color: #b91c1c; }
+    .text-muted { color: var(--text-muted); }
+    .row-highlight td { border-top: 2px solid var(--border); border-bottom: 2px solid var(--border); padding: 10px 0; }
+    .row-spacer td { padding: 4px 0; border: none; }
+    .row-total td { border-top: 2px solid var(--primary); padding-top: 10px; color: var(--primary); }
+
+    /* --- Quarterly Cards --- */
+    .q-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+    .q-card {
+        background: var(--bg-body); border: 1px solid var(--border);
+        border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .q-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+    .q-revenue { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .q-tax { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .q-tax strong { color: var(--primary); }
+    .q-due { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .q-total { text-align: center; font-size: 14px; color: var(--text-muted); padding-top: 4px; }
+    .q-total strong { color: var(--primary); font-size: 16px; }
+
+    /* --- Expense Section --- */
+    .expense-totals { display: flex; gap: 8px; }
+    .expense-total-pill {
+        background: var(--bg-body); border: 1px solid var(--border); border-radius: 8px;
+        padding: 6px 14px; font-size: 13px; font-weight: 700; color: var(--text-main);
+    }
+    .expense-table-wrap { margin-bottom: 16px; }
+    .freq-badge {
+        font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 10px;
+        border-radius: 6px; white-space: nowrap;
+    }
+    .freq-monthly { background: #dbeafe; color: #1e40af; }
+    .freq-yearly { background: #fae8ff; color: #86198f; }
+
+    .expense-form { border-top: 1px solid var(--border); padding-top: 14px; }
+    .expense-form-row { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; }
+    .expense-form-row input[type="text"] {
+        flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+        font-size: 13px; background: var(--bg-body);
+    }
+    .expense-form-row input[type="number"] {
+        width: 100px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+        font-size: 13px; background: var(--bg-body);
+    }
+    .expense-form-row select {
+        padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+        font-size: 13px; background: var(--bg-body);
+    }
+
+    /* --- Action Buttons --- */
+    .action-btns { display: flex; gap: 4px; justify-content: flex-end; }
+    .action-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        padding: 6px 10px; font-size: 12px; font-weight: 600;
+        border-radius: 7px; border: 1px solid var(--border);
+        background: var(--bg-body); color: var(--text-main);
+        cursor: pointer; transition: all 0.15s;
+    }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .action-delete { border: none; background: none; color: var(--text-muted); }
+    .action-delete:hover { color: #dc2626; }
+
+    /* --- Buttons --- */
+    .btn {
+        display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+        border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none;
+        border: none; cursor: pointer; transition: all 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .admin-page { padding: 0 8px; }
+        .page-header { flex-direction: column; gap: 12px; }
+        .page-title { font-size: 22px; }
+        .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        .two-col { grid-template-columns: 1fr; }
+        .q-grid { grid-template-columns: repeat(2, 1fr); }
+        .section-card { padding: 16px; }
+        .expense-form-row { flex-wrap: wrap; }
+        .expense-form-row input[type="text"] { flex-basis: 100%; }
+        .expense-form-row input[type="number"] { flex: 1; min-height: 44px; font-size: 16px; }
+        .expense-form-row select { flex: 1; min-height: 44px; font-size: 16px; }
+        .expense-form-row input[type="text"] { min-height: 44px; font-size: 16px; }
+        .expense-form-row .btn { min-height: 44px; }
+        .section-title-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+        .breakdown-table td { font-size: 13px; }
+    }
+
+    @media (max-width: 480px) {
+        .summary-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .summary-card { padding: 14px; }
+        .summary-value { font-size: 20px; }
+    }
+</style>
+<script>
+function editExpense(id, name, cost, freq) {
+    document.getElementById('expenseId').value = id;
+    document.getElementById('expenseName').value = name;
+    document.getElementById('expenseCost').value = cost;
+    document.getElementById('expenseFreq').value = freq;
+    document.getElementById('expenseBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save';
+    document.getElementById('expenseCancel').style.display = '';
+    document.getElementById('expenseName').focus();
+}
+function cancelEdit() {
+    document.getElementById('expenseId').value = '';
+    document.getElementById('expenseName').value = '';
+    document.getElementById('expenseCost').value = '';
+    document.getElementById('expenseFreq').value = 'monthly';
+    document.getElementById('expenseBtn').innerHTML = '<i class="fa-solid fa-plus"></i> Add';
+    document.getElementById('expenseCancel').style.display = 'none';
+}
+</script>
+{% endblock %}

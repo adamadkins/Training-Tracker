@@ -59,150 +59,150 @@
     {% endif %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        /* ── Theme variables ── */
-        {% set primary_hex = {
-            'indigo': '#4f46e5',
-            'blue': '#2563eb',
-            'violet': '#7c3aed',
-            'green': '#059669',
-            'amber': '#d97706',
-            'rose': '#e11d48',
-            'sky': '#0284c7'
-        } %}
-        {% set primary_hover = {
-            'indigo': '#4338ca',
-            'blue': '#1d4ed8',
-            'violet': '#6d28d9',
-            'green': '#047857',
-            'amber': '#b45309',
-            'rose': '#be123c',
-            'sky': '#0369a1'
-        } %}
-        {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
-        {% set _hex = _primary if (_primary or '')|length and (_primary or '')[:1] == '#' else primary_hex.get(_primary, primary_hex['indigo']) %}
-        {% set _hover = _hex if (_primary or '')[:1] == '#' else primary_hover.get(_primary, primary_hover['indigo']) %}
-
-        :root {
-            --primary: {{ _hex }};
-            --primary-hover: {{ _hover }};
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --header-bg: #ffffff;
-            --shadow: rgba(0, 0, 0, 0.04);
-            --input-bg: #ffffff;
-            /* Safe area insets for iPhone notch / Dynamic Island / home indicator */
-            --sat: constant(safe-area-inset-top);
-            --sat: env(safe-area-inset-top, 0px);
-            --sab: constant(safe-area-inset-bottom);
-            --sab: env(safe-area-inset-bottom, 0px);
-            --sal: constant(safe-area-inset-left);
-            --sal: env(safe-area-inset-left, 0px);
-            --sar: constant(safe-area-inset-right);
-            --sar: env(safe-area-inset-right, 0px);
-            --tab-bar-height: 0px;
-        }
-
-        @media (max-width: 900px) {
-            :root {
-                --tab-bar-height: 60px;
-            }
-        }
-
-        {% if current_user.is_authenticated and current_user.settings %}
-        {% set theme_pref = current_user.settings.theme_pref or 'system' %}
-        {% if theme_pref == 'dark' %}
-
-        /* Force dark mode */
-        :root {
-            color-scheme: dark;
-            --bg-body: #0b0f1a;
-            --bg-card: #161e2e;
-            --text-main: #f9fafb;
-            --text-muted: #9ca3af;
-            --border: #2d3748;
-            --header-bg: #161e2e;
-            --shadow: rgba(0, 0, 0, 0.4);
-            --input-bg: #1f2937;
-        }
-
-        @media (prefers-color-scheme: light) {
-            :root {
-                color-scheme: dark;
-                --bg-body: #0b0f1a !important;
-                --bg-card: #161e2e !important;
-                --text-main: #f9fafb !important;
-                --text-muted: #9ca3af !important;
-                --border: #2d3748 !important;
-                --header-bg: #161e2e !important;
-                --shadow: rgba(0, 0, 0, 0.4) !important;
-                --input-bg: #1f2937 !important;
-            }
-        }
-        {% elif theme_pref == 'light' %}
-
-        /* Force light mode */
-        :root {
-            color-scheme: light;
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --header-bg: #ffffff;
-            --shadow: rgba(0, 0, 0, 0.04);
-            --input-bg: #ffffff;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                color-scheme: light;
-                --bg-body: #f8fafc !important;
-                --bg-card: #ffffff !important;
-                --text-main: #1e293b !important;
-                --text-muted: #64748b !important;
-                --border: #e2e8f0 !important;
-                --header-bg: #ffffff !important;
-                --shadow: rgba(0, 0, 0, 0.04) !important;
-                --input-bg: #ffffff !important;
-            }
-        }
-        {% elif theme_pref == 'system' %}
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                color-scheme: dark;
-                --bg-body: #0b0f1a;
-                --bg-card: #161e2e;
-                --text-main: #f9fafb;
-                --text-muted: #9ca3af;
-                --border: #2d3748;
-                --header-bg: #161e2e;
-                --shadow: rgba(0, 0, 0, 0.4);
-                --input-bg: #1f2937;
-            }
-        }
-        {% endif %}
-        {% else %}
-
-        /* Default to system if not logged in */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-body: #0b0f1a;
-                --bg-card: #161e2e;
-                --text-main: #f9fafb;
-                --text-muted: #9ca3af;
-                --border: #2d3748;
-                --header-bg: #161e2e;
-                --shadow: rgba(0, 0, 0, 0.4);
-                --input-bg: #1f2937;
-            }
-        }
-        {% endif %}
-
+    <style>
+        /* ── Theme variables ── */
+        {% set primary_hex = {
+            'indigo': '#4f46e5',
+            'blue': '#2563eb',
+            'violet': '#7c3aed',
+            'green': '#059669',
+            'amber': '#d97706',
+            'rose': '#e11d48',
+            'sky': '#0284c7'
+        } %}
+        {% set primary_hover = {
+            'indigo': '#4338ca',
+            'blue': '#1d4ed8',
+            'violet': '#6d28d9',
+            'green': '#047857',
+            'amber': '#b45309',
+            'rose': '#be123c',
+            'sky': '#0369a1'
+        } %}
+        {% set _primary = (g.system_settings.primary_color or 'indigo') if g.system_settings else 'indigo' %}
+        {% set _hex = _primary if (_primary or '')|length and (_primary or '')[:1] == '#' else primary_hex.get(_primary, primary_hex['indigo']) %}
+        {% set _hover = _hex if (_primary or '')[:1] == '#' else primary_hover.get(_primary, primary_hover['indigo']) %}
+
+        :root {
+            --primary: {{ _hex }};
+            --primary-hover: {{ _hover }};
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --header-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.04);
+            --input-bg: #ffffff;
+            /* Safe area insets for iPhone notch / Dynamic Island / home indicator */
+            --sat: constant(safe-area-inset-top);
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: constant(safe-area-inset-bottom);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: constant(safe-area-inset-left);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: constant(safe-area-inset-right);
+            --sar: env(safe-area-inset-right, 0px);
+            --tab-bar-height: 0px;
+        }
+
+        @media (max-width: 900px) {
+            :root {
+                --tab-bar-height: 60px;
+            }
+        }
+
+        {% if current_user.is_authenticated and current_user.settings %}
+        {% set theme_pref = current_user.settings.theme_pref or 'system' %}
+        {% if theme_pref == 'dark' %}
+
+        /* Force dark mode */
+        :root {
+            color-scheme: dark;
+            --bg-body: #0b0f1a;
+            --bg-card: #161e2e;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: #2d3748;
+            --header-bg: #161e2e;
+            --shadow: rgba(0, 0, 0, 0.4);
+            --input-bg: #1f2937;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                color-scheme: dark;
+                --bg-body: #0b0f1a !important;
+                --bg-card: #161e2e !important;
+                --text-main: #f9fafb !important;
+                --text-muted: #9ca3af !important;
+                --border: #2d3748 !important;
+                --header-bg: #161e2e !important;
+                --shadow: rgba(0, 0, 0, 0.4) !important;
+                --input-bg: #1f2937 !important;
+            }
+        }
+        {% elif theme_pref == 'light' %}
+
+        /* Force light mode */
+        :root {
+            color-scheme: light;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --header-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.04);
+            --input-bg: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: light;
+                --bg-body: #f8fafc !important;
+                --bg-card: #ffffff !important;
+                --text-main: #1e293b !important;
+                --text-muted: #64748b !important;
+                --border: #e2e8f0 !important;
+                --header-bg: #ffffff !important;
+                --shadow: rgba(0, 0, 0, 0.04) !important;
+                --input-bg: #ffffff !important;
+            }
+        }
+        {% elif theme_pref == 'system' %}
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                color-scheme: dark;
+                --bg-body: #0b0f1a;
+                --bg-card: #161e2e;
+                --text-main: #f9fafb;
+                --text-muted: #9ca3af;
+                --border: #2d3748;
+                --header-bg: #161e2e;
+                --shadow: rgba(0, 0, 0, 0.4);
+                --input-bg: #1f2937;
+            }
+        }
+        {% endif %}
+        {% else %}
+
+        /* Default to system if not logged in */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #0b0f1a;
+                --bg-card: #161e2e;
+                --text-main: #f9fafb;
+                --text-muted: #9ca3af;
+                --border: #2d3748;
+                --header-bg: #161e2e;
+                --shadow: rgba(0, 0, 0, 0.4);
+                --input-bg: #1f2937;
+            }
+        }
+        {% endif %}
+
         /* Hide scrollbar in Capacitor app for native feel */
         html {
             background-color: var(--bg-body);
@@ -1040,7 +1040,7 @@
     {% set _ep = request.endpoint or '' %}
     {% if _ep.startswith('admin.') %}
     {% if _ep == 'admin.index' %}{% set _nav_page_title = 'Dashboard' %}{% elif 'organization' in _ep %}{% set
-    _nav_page_title = 'Organizations' %}{% elif _ep == 'admin.users_list' %}{% set _nav_page_title = 'Users' %}{% else
+    _nav_page_title = 'Organizations' %}{% elif _ep == 'admin.users_list' %}{% set _nav_page_title = 'Users' %}{% elif _ep == 'admin.taxes' %}{% set _nav_page_title = 'Taxes' %}{% else
     %}{% set _nav_page_title = 'Admin' %}{% endif %}
     {% set _nav_location_sub = '' %}
     {% elif current_user.is_authenticated and current_user.role == 'manager' %}
@@ -1105,6 +1105,8 @@
                             class="{{ 'active' if request.endpoint == 'admin.users_list' else '' }}">Users</a>
                         <a href="{{ url_for('admin.support_requests_list') }}"
                             class="{{ 'active' if request.endpoint == 'admin.support_requests_list' else '' }}">Support</a>
+                        <a href="{{ url_for('admin.taxes') }}"
+                            class="{{ 'active' if request.endpoint == 'admin.taxes' else '' }}">Taxes</a>
                         {% elif current_user.role == 'manager' %}
                         <a href="{{ url_for('manager.dashboard') }}"
                             class="nav-link-mobile-only {{ 'active' if request.endpoint == 'manager.dashboard' else '' }}">Dashboard</a>
@@ -1435,6 +1437,9 @@
             <a href="{{ url_for('admin.support_requests_list') }}"
                 class="tab-item {{ 'active' if _ep == 'admin.support_requests_list' }}">
                 <i class="fa-solid fa-headset"></i><span>Support</span>
+            </a>
+            <a href="{{ url_for('admin.taxes') }}" class="tab-item {{ 'active' if _ep == 'admin.taxes' }}">
+                <i class="fa-solid fa-file-invoice-dollar"></i><span>Taxes</span>
             </a>
             {% elif current_user.role == 'manager' %}
             {# Manager tabs #}

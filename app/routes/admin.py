@@ -10,7 +10,7 @@ from app.models import (
     Organization, SystemSettings, User, Employee, Location, Position, PositionDescriptor,
     Daypart, Schedule, TrainingSession, Channel, Message, Notification, TrainingRoadmap,
     RoadmapStep, ChannelParticipant, MessageReaction, SessionRating, GuestTrainerToken,
-    EmployeeNote, UserSettings, SignupRequest, SupportRequest,
+    EmployeeNote, UserSettings, SignupRequest, SupportRequest, PlatformExpense,
 )
 from app.utils.notifications import send_notification_email
 
@@ -855,6 +855,203 @@ def organization_invite_first_user(org_id):
 
     signup_requests = SignupRequest.query.order_by(SignupRequest.created_at.desc()).limit(30).all()
     return render_template("admin/invite_first_user.html", org=org, signup_requests=signup_requests)
+
+
+# ---------------------------------------------------------------------------
+# Taxes & Revenue
+# ---------------------------------------------------------------------------
+
+_DEFAULT_EXPENSES = [
+    ("DigitalOcean Droplet", 4.07, "monthly"),
+    ("Domain (trainingtracker.me)", 29.99, "yearly"),
+    ("Email Service", 8.99, "monthly"),
+    ("SendGrid", 0.00, "monthly"),
+]
+
+_FEDERAL_BRACKETS_2026 = [
+    (11600, 0.10),
+    (47150 - 11600, 0.12),
+    (100525 - 47150, 0.22),
+    (191950 - 100525, 0.24),
+    (243725 - 191950, 0.32),
+    (609350 - 243725, 0.35),
+    (float("inf"), 0.37),
+]
+
+_STANDARD_DEDUCTION_2026 = 15000
+_KY_STATE_RATE = 0.04
+_SE_TAX_RATE = 0.153
+_SE_TAXABLE_FACTOR = 0.9235
+_QUARTER_DUE_DATES = {1: "Apr 15", 2: "Jun 15", 3: "Sep 15", 4: "Jan 15 (next yr)"}
+
+
+def _federal_income_tax(taxable_income):
+    """Apply 2026 marginal brackets to taxable_income (after deductions)."""
+    if taxable_income <= 0:
+        return 0
+    tax = 0
+    remaining = taxable_income
+    for bracket_size, rate in _FEDERAL_BRACKETS_2026:
+        chunk = min(remaining, bracket_size)
+        tax += chunk * rate
+        remaining -= chunk
+        if remaining <= 0:
+            break
+    return tax
+
+
+def _compute_tax_estimates(gross_annual, annual_expenses):
+    """Return dict with full tax breakdown for a sole-prop in Kentucky."""
+    net = max(0, gross_annual - annual_expenses)
+    se_income = net * _SE_TAXABLE_FACTOR
+    se_tax = se_income * _SE_TAX_RATE
+    half_se = se_tax / 2
+    taxable_federal = max(0, net - half_se - _STANDARD_DEDUCTION_2026)
+    federal_tax = _federal_income_tax(taxable_federal)
+    taxable_state = max(0, net - half_se - _STANDARD_DEDUCTION_2026)
+    state_tax = taxable_state * _KY_STATE_RATE
+    total = se_tax + federal_tax + state_tax
+    return {
+        "gross": gross_annual,
+        "expenses": annual_expenses,
+        "net": net,
+        "se_income": se_income,
+        "se_tax": se_tax,
+        "half_se": half_se,
+        "taxable_federal": taxable_federal,
+        "federal_tax": federal_tax,
+        "taxable_state": taxable_state,
+        "state_tax": state_tax,
+        "state_rate": _KY_STATE_RATE,
+        "total_tax": total,
+        "quarterly_payment": total / 4,
+    }
+
+
+@admin_bp.route("/taxes")
+def taxes():
+    """Tax dashboard: Stripe revenue, expenses, and estimated taxes."""
+    import calendar
+
+    year = request.args.get("year", type=int) or datetime.now(timezone.utc).year
+    jan1 = int(datetime(year, 1, 1, tzinfo=timezone.utc).timestamp())
+    jan1_next = int(datetime(year + 1, 1, 1, tzinfo=timezone.utc).timestamp())
+
+    monthly_revenue = {m: 0 for m in range(1, 13)}
+    stripe_ok = False
+    stripe_error = None
+    secret = current_app.config.get("STRIPE_SECRET_KEY")
+    if secret:
+        stripe.api_key = secret
+        try:
+            invoices = []
+            has_more = True
+            starting_after = None
+            while has_more:
+                params = {
+                    "status": "paid",
+                    "created": {"gte": jan1, "lt": jan1_next},
+                    "limit": 100,
+                }
+                if starting_after:
+                    params["starting_after"] = starting_after
+                batch = stripe.Invoice.list(**params)
+                invoices.extend(batch.data)
+                has_more = batch.has_more
+                if batch.data:
+                    starting_after = batch.data[-1].id
+            for inv in invoices:
+                paid_ts = inv.status_transitions.paid_at or inv.created
+                month = datetime.fromtimestamp(paid_ts, tz=timezone.utc).month
+                monthly_revenue[month] += (inv.amount_paid or 0) / 100.0
+            stripe_ok = True
+        except Exception as e:
+            stripe_error = str(e)
+
+    quarterly_revenue = {}
+    for q in range(1, 5):
+        start_m = (q - 1) * 3 + 1
+        quarterly_revenue[q] = sum(monthly_revenue[m] for m in range(start_m, start_m + 3))
+    gross_annual = sum(monthly_revenue.values())
+
+    expenses = PlatformExpense.query.order_by(PlatformExpense.created_at).all()
+    if not expenses:
+        for name, cost, freq in _DEFAULT_EXPENSES:
+            exp = PlatformExpense(name=name, cost=cost, frequency=freq)
+            db.session.add(exp)
+        db.session.commit()
+        expenses = PlatformExpense.query.order_by(PlatformExpense.created_at).all()
+
+    monthly_expense_total = sum(e.cost for e in expenses if e.frequency == "monthly")
+    yearly_expense_total = sum(e.cost for e in expenses if e.frequency == "yearly")
+    annual_expenses = monthly_expense_total * 12 + yearly_expense_total
+
+    tax = _compute_tax_estimates(gross_annual, annual_expenses)
+
+    quarterly_taxes = {}
+    for q in range(1, 5):
+        q_tax = _compute_tax_estimates(quarterly_revenue[q] * 4, annual_expenses)
+        quarterly_taxes[q] = {
+            "revenue": quarterly_revenue[q],
+            "est_tax": q_tax["total_tax"] / 4,
+            "due_date": _QUARTER_DUE_DATES[q],
+        }
+
+    month_names = {m: calendar.month_abbr[m] for m in range(1, 13)}
+
+    return render_template(
+        "admin/taxes.html",
+        year=year,
+        monthly_revenue=monthly_revenue,
+        month_names=month_names,
+        quarterly_revenue=quarterly_revenue,
+        gross_annual=gross_annual,
+        expenses=expenses,
+        monthly_expense_total=monthly_expense_total,
+        yearly_expense_total=yearly_expense_total,
+        annual_expenses=annual_expenses,
+        tax=tax,
+        quarterly_taxes=quarterly_taxes,
+        stripe_ok=stripe_ok,
+        stripe_error=stripe_error,
+    )
+
+
+@admin_bp.route("/taxes/expenses", methods=["POST"])
+def taxes_expense_save():
+    """Add or update a platform expense."""
+    exp_id = request.form.get("expense_id", type=int)
+    name = (request.form.get("name") or "").strip()
+    cost = request.form.get("cost", type=float) or 0
+    frequency = (request.form.get("frequency") or "monthly").strip().lower()
+    if frequency not in ("monthly", "yearly"):
+        frequency = "monthly"
+    if not name:
+        flash("Expense name is required.", "error")
+        return redirect(url_for("admin.taxes"))
+    if exp_id:
+        exp = PlatformExpense.query.get(exp_id)
+        if exp:
+            exp.name = name
+            exp.cost = cost
+            exp.frequency = frequency
+    else:
+        exp = PlatformExpense(name=name, cost=cost, frequency=frequency)
+        db.session.add(exp)
+    db.session.commit()
+    flash(f"Expense '{name}' saved.", "success")
+    return redirect(url_for("admin.taxes"))
+
+
+@admin_bp.route("/taxes/expenses/<int:exp_id>/delete", methods=["POST"])
+def taxes_expense_delete(exp_id):
+    """Delete a platform expense."""
+    exp = PlatformExpense.query.get_or_404(exp_id)
+    name = exp.name
+    db.session.delete(exp)
+    db.session.commit()
+    flash(f"Expense '{name}' deleted.", "success")
+    return redirect(url_for("admin.taxes"))
 
 
 @admin_bp.route("/organizations/<int:org_id>/delete", methods=["POST"])
