@@ -174,9 +174,25 @@ def index():
     active_orgs = Organization.query.filter_by(status="active").count()
     total_users = User.query.filter(User.organization_id.isnot(None)).count()
     total_employees = Employee.query.filter(Employee.organization_id.isnot(None)).count()
+
+    # Revenue stats
+    plan_prices = {"standard": 40, "pro": 50}
+    all_orgs_for_revenue = Organization.query.all()
+    mrr = 0
+    paid_orgs_count = 0
+    free_orgs_count = 0
+    for o in all_orgs_for_revenue:
+        sub_st = (o.stripe_subscription_status or "").lower()
+        if o.free_plan:
+            free_orgs_count += 1
+        elif o.stripe_subscription_id and sub_st in ("active", "trialing"):
+            paid_orgs_count += 1
+            mrr += plan_prices.get((o.billing_plan or "").lower(), 0)
+    arr = mrr * 12
+
     orgs_with_stats = [
         (org, _org_stats(org.id), _org_trial_and_payment(org), _org_users(org.id))
-        for org in orgs[:20]
+        for org in orgs[:10]
     ]
 
     signup_query = SignupRequest.query.order_by(SignupRequest.created_at.desc())
@@ -204,6 +220,10 @@ def index():
         pending_orgs_count=pending_orgs_count,
         total_users=total_users,
         total_employees=total_employees,
+        mrr=mrr,
+        arr=arr,
+        paid_orgs_count=paid_orgs_count,
+        free_orgs_count=free_orgs_count,
         signup_requests_with_mailto=signup_requests_with_mailto,
         filter_q=q,
         filter_org_status=org_status,
@@ -327,6 +347,8 @@ def organization_detail(org_id):
         org_users=org_users,
         trial_days_left=trial_payment["trial_days_left"],
         payment_overdue=trial_payment["payment_overdue"],
+        payment_status=trial_payment.get("payment_status"),
+        billing_plan=trial_payment.get("billing_plan"),
     )
 
 

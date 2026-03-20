@@ -99,27 +99,29 @@
                     </form>
                 </div>
             </dd>
-            {% if payment_overdue %}
-            <dt>Payment</dt>
-            <dd><span class="status status-past-due">Overdue</span></dd>
-            {% endif %}
             <dt>Billing</dt>
             <dd>
-                {% if org.free_plan %}
-                <span class="status status-active">{{ org.free_plan|capitalize }} (free)</span>
+                {% if payment_status == 'active' %}
+                <span class="status status-active">{{ billing_plan|default('Paid')|capitalize }} (Active)</span>
+                {% elif payment_status == 'free' %}
+                <span class="status status-active">{{ billing_plan|default('')|capitalize }} (Free)</span>
                 <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}"
                     style="display:inline; margin-left:8px;">
                     <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
                 </form>
-                {% elif org.stripe_subscription_id %}
-                <span class="status status-active">Subscription active</span>
+                {% elif payment_status == 'trialing' %}
+                <span class="status status-active">Trialing</span>
+                {% elif payment_status == 'overdue' %}
+                <span class="status status-past-due">Overdue</span>
+                {% elif payment_status == 'canceled' %}
+                <span class="status status-suspended">Canceled</span>
                 {% elif org.stripe_customer_id %}
                 <span class="billing-note">Customer linked, no active subscription</span>
                 {% else %}
                 <span class="billing-note">Not set up</span>
                 {% endif %}
                 <div class="billing-actions">
-                    {% if not org.free_plan %}
+                    {% if payment_status != 'free' %}
                     <form method="post"
                         action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}"
                         style="display:inline;">

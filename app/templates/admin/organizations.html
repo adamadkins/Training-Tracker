@@ -41,7 +41,7 @@
                                 {% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d left{% else %}Ended{% endif %}
                             {% else %}—{% endif %}
                         </td>
-                        <td>{% if trial_pay.payment_overdue %}<span class="status status-past-due">Overdue</span>{% else %}—{% endif %}</td>
+                        <td>{% if trial_pay.payment_status == 'active' %}<span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %}<span class="status status-active">Free {{ trial_pay.billing_plan|default('')|capitalize }}</span>{% elif trial_pay.payment_status == 'trialing' %}<span class="status status-active">Trialing</span>{% elif trial_pay.payment_status == 'overdue' %}<span class="status status-past-due">Overdue</span>{% elif trial_pay.payment_status == 'canceled' %}<span class="status status-suspended">Canceled</span>{% else %}—{% endif %}</td>
                         <td>{{ stats.user_count }}</td>
                         <td>{{ stats.employee_count }}</td>
                         <td>{{ org.created_at | est('%m-%d-%Y') }}</td>
@@ -65,7 +65,7 @@
                     {% if trial_pay.trial_days_left is not none %}
                         {% if trial_pay.trial_days_left > 0 %}{{ trial_pay.trial_days_left }}d trial left{% else %}Trial ended{% endif %}
                     {% else %}—{% endif %}
-                    {% if trial_pay.payment_overdue %} · <span class="status status-past-due">Overdue</span>{% endif %}
+                    {% if trial_pay.payment_status == 'active' %} · <span class="status status-active">{{ trial_pay.billing_plan|default('Paid')|capitalize }}</span>{% elif trial_pay.payment_status == 'free' %} · <span class="status status-active">Free</span>{% elif trial_pay.payment_status == 'trialing' %} · <span class="status status-active">Trialing</span>{% elif trial_pay.payment_status == 'overdue' %} · <span class="status status-past-due">Overdue</span>{% elif trial_pay.payment_status == 'canceled' %} · <span class="status status-suspended">Canceled</span>{% endif %}
                 </div>
                 <div class="org-card-date">{{ org.created_at | est('%m-%d-%Y') }}</div>
             </a>

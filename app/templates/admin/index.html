@@ -32,8 +32,26 @@
         </div>
     </div>
 
+    <div class="admin-stats" style="margin-top: 8px;">
+        <div class="stat-card stat-revenue">
+            <span class="stat-value">${{ mrr }}/mo</span>
+            <span class="stat-label">MRR</span>
+        </div>
+        <div class="stat-card stat-revenue">
+            <span class="stat-value">${{ '{:,.0f}'.format(arr) }}/yr</span>
+            <span class="stat-label">ARR</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ paid_orgs_count }}</span>
+            <span class="stat-label">Paid</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">{{ free_orgs_count }}</span>
+            <span class="stat-label">Free</span>
+        </div>
+    </div>
+
     <div class="page-actions">
-        <a href="{{ url_for('admin.organizations_list') }}" class="btn btn-secondary">View all organizations</a>
         <a href="{{ url_for('admin.organization_create') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i>
             New organization</a>
     </div>
@@ -50,147 +68,6 @@
             </select>
             <button type="submit" class="btn btn-sm btn-secondary">Filter orgs</button>
         </form>
-    </div>
-
-    <div class="table-card">
-        <h2 class="section-title">Signup requests</h2>
-        <form method="get" class="signup-filter-form">
-            <input type="hidden" name="q" value="{{ filter_q or '' }}">
-            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
-            <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}"
-                placeholder="Search email, business, name">
-            <select name="signup_plan">
-                <option value="">All plans</option>
-                <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
-                <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
-            </select>
-            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
-        </form>
-        <p class="section-desc">Landing-page submissions. For multiple locations with the same business name (e.g.
-            Chick-fil-A), use a unique subdomain when creating the org (e.g. <code>chickfila-store4521</code>,
-            <code>chickfila-downtown</code>). <strong>Email</strong> opens Outlook Web; <strong>Copy</strong> copies
-            their email.</p>
-        <div class="signup-requests-actions">
-            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form"
-                onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
-                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i> Clear
-                    all</button>
-            </form>
-        </div>
-        <div class="admin-table-wrap desktop-only">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Business</th>
-                        <th>Location</th>
-                        <th>Address</th>
-                        <th>Phone</th>
-                        <th>Plan</th>
-                        <th>Size</th>
-                        <th>Date</th>
-                        <th>Follow-up</th>
-                        <th>Actions</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
-                    <tr>
-                        <td>{{ r.name or '—' }}</td>
-                        <td><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></td>
-                        <td>{{ r.business or '—' }}</td>
-                        <td>{{ r.location_identifier or '—' }}</td>
-                        <td>{% if r.address_line1 or r.city or r.state or r.postal_code %}{{ r.address_line1 or '' }}{%
-                            if r.city %}{% if r.address_line1 %}, {% endif %}{{ r.city }}{% endif %}{% if r.state %} {{
-                            r.state }}{% endif %}{% if r.postal_code %} {{ r.postal_code }}{% endif %}{% else %}—{%
-                            endif %}</td>
-                        <td>{{ r.phone or '—' }}</td>
-                        <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{%
-                            else %}—{% endif %}</td>
-                        <td>{{ r.size or '—' }}</td>
-                        <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
-                        <td>
-                            <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}"
-                                style="display: flex; gap: 4px; flex-direction: column;">
-                                <select name="status" onchange="this.form.submit()" class="status-select"
-                                    style="padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border);">
-                                    <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
-                                    <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>
-                                        Contacted</option>
-                                    <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved
-                                    </option>
-                                </select>
-                                <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()"
-                                    style="font-size: 11px; padding: 4px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
-                            </form>
-                        </td>
-                        <td class="actions-cell">
-                            <a href="{{ url_for('admin.organization_create', from=r.id) }}"
-                                class="btn btn-sm btn-create-org" title="Create org from this signup"><i
-                                    class="fa-solid fa-building"></i> Create org</a>
-                            <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"
-                                title="Open in Outlook"><i class="fa-solid fa-envelope"></i> Email</a>
-                            <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"
-                                title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
-                        </td>
-                        <td>
-                            <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}"
-                                style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
-                                <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i
-                                        class="fa-solid fa-xmark"></i></button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="12">No signup requests yet.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="admin-mobile-signup-cards mobile-only">
-            {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
-            <div class="admin-mobile-card signup-card">
-                <div class="card-row"><strong>{{ r.name or '—' }}</strong></div>
-                <div class="card-row"><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></div>
-                <div class="card-row">{{ r.business or '—' }}{% if r.location_identifier %} · {{ r.location_identifier
-                    }}{% endif %}</div>
-                {% if r.plan %}<div class="card-row"><span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize
-                        }}</span></div>{% endif %}
-                <div class="card-row">
-                    <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}"
-                        style="display: flex; gap: 4px; flex-direction: column;">
-                        <select name="status" onchange="this.form.submit()" class="status-select"
-                            style="padding: 6px; font-size: 14px; border-radius: 4px; border: 1px solid var(--border);">
-                            <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
-                            <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>Contacted
-                            </option>
-                            <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved</option>
-                        </select>
-                        <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()"
-                            style="font-size: 14px; padding: 6px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
-                    </form>
-                </div>
-                <div class="card-row card-actions">
-                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org"><i
-                            class="fa-solid fa-building"></i> Create org</a>
-                    <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"><i
-                            class="fa-solid fa-envelope"></i> Email</a>
-                    <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"><i
-                            class="fa-solid fa-copy"></i> Copy</button>
-                    <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}"
-                        style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
-                        <button type="submit" class="btn btn-sm btn-remove"><i class="fa-solid fa-xmark"></i></button>
-                    </form>
-                </div>
-            </div>
-            {% else %}
-            <p class="section-desc">No signup requests yet.</p>
-            {% endfor %}
-        </div>
     </div>
 
     <div class="table-card">
@@ -271,6 +148,105 @@
         </div>
     </div>
 
+    <div class="table-card">
+        <h2 class="section-title">Signup requests</h2>
+        <form method="get" class="signup-filter-form">
+            <input type="hidden" name="q" value="{{ filter_q or '' }}">
+            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
+            <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}"
+                placeholder="Search email, business, name">
+            <select name="signup_plan">
+                <option value="">All plans</option>
+                <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
+                <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-secondary">Filter</button>
+        </form>
+        <p class="section-desc">Landing-page submissions. <strong>Email</strong> opens Outlook Web; <strong>Copy</strong> copies their email.</p>
+        <div class="signup-requests-actions">
+            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" class="clear-form"
+                onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash"></i> Clear all</button>
+            </form>
+        </div>
+        <div class="admin-table-wrap desktop-only">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th><th>Email</th><th>Business</th><th>Location</th><th>Address</th><th>Phone</th><th>Plan</th><th>Size</th><th>Date</th><th>Follow-up</th><th>Actions</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
+                    <tr>
+                        <td>{{ r.name or '—' }}</td>
+                        <td><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></td>
+                        <td>{{ r.business or '—' }}</td>
+                        <td>{{ r.location_identifier or '—' }}</td>
+                        <td>{% if r.address_line1 or r.city or r.state or r.postal_code %}{{ r.address_line1 or '' }}{% if r.city %}{% if r.address_line1 %}, {% endif %}{{ r.city }}{% endif %}{% if r.state %} {{ r.state }}{% endif %}{% if r.postal_code %} {{ r.postal_code }}{% endif %}{% else %}—{% endif %}</td>
+                        <td>{{ r.phone or '—' }}</td>
+                        <td>{% if r.plan %}<span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span>{% else %}—{% endif %}</td>
+                        <td>{{ r.size or '—' }}</td>
+                        <td>{{ r.created_at | est('%m-%d-%Y %I:%M %p') }}</td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" style="display: flex; gap: 4px; flex-direction: column;">
+                                <select name="status" onchange="this.form.submit()" class="status-select" style="padding: 4px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border);">
+                                    <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
+                                    <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>Contacted</option>
+                                    <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved</option>
+                                </select>
+                                <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" style="font-size: 11px; padding: 4px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
+                            </form>
+                        </td>
+                        <td class="actions-cell">
+                            <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org" title="Create org from this signup"><i class="fa-solid fa-building"></i> Create org</a>
+                            <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener" title="Open in Outlook"><i class="fa-solid fa-envelope"></i> Email</a>
+                            <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}" title="Copy email"><i class="fa-solid fa-copy"></i> Copy</button>
+                        </td>
+                        <td>
+                            <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                                <button type="submit" class="btn btn-sm btn-remove" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="12">No signup requests yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-mobile-signup-cards mobile-only">
+            {% for r, mailto_href, outlook_url in signup_requests_with_mailto %}
+            <div class="admin-mobile-card signup-card">
+                <div class="card-row"><strong>{{ r.name or '—' }}</strong></div>
+                <div class="card-row"><a href="{{ outlook_url }}" target="_blank" rel="noopener">{{ r.email }}</a></div>
+                <div class="card-row">{{ r.business or '—' }}{% if r.location_identifier %} · {{ r.location_identifier }}{% endif %}</div>
+                {% if r.plan %}<div class="card-row"><span class="plan-badge plan-{{ r.plan }}">{{ r.plan|capitalize }}</span></div>{% endif %}
+                <div class="card-row">
+                    <form method="post" action="{{ url_for('admin.signup_request_update', req_id=r.id) }}" style="display: flex; gap: 4px; flex-direction: column;">
+                        <select name="status" onchange="this.form.submit()" class="status-select" style="padding: 6px; font-size: 14px; border-radius: 4px; border: 1px solid var(--border);">
+                            <option value="new" {% if r.status=='new' %}selected{% endif %}>New</option>
+                            <option value="contacted" {% if r.status=='contacted' %}selected{% endif %}>Contacted</option>
+                            <option value="resolved" {% if r.status=='resolved' %}selected{% endif %}>Resolved</option>
+                        </select>
+                        <textarea name="notes" placeholder="Notes..." onblur="this.form.submit()" style="font-size: 14px; padding: 6px; border-radius: 4px; border: 1px solid var(--border); resize: vertical; min-height: 40px;">{{ r.notes or '' }}</textarea>
+                    </form>
+                </div>
+                <div class="card-row card-actions">
+                    <a href="{{ url_for('admin.organization_create', from=r.id) }}" class="btn btn-sm btn-create-org"><i class="fa-solid fa-building"></i> Create org</a>
+                    <a href="{{ outlook_url }}" class="btn btn-sm btn-email" target="_blank" rel="noopener"><i class="fa-solid fa-envelope"></i> Email</a>
+                    <button type="button" class="btn btn-sm btn-copy" data-email="{{ r.email }}"><i class="fa-solid fa-copy"></i> Copy</button>
+                    <form method="post" action="{{ url_for('admin.signup_request_delete', req_id=r.id) }}" style="display:inline;" onsubmit="return confirm('Remove this signup request?');">
+                        <button type="submit" class="btn btn-sm btn-remove"><i class="fa-solid fa-xmark"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <p class="section-desc">No signup requests yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
 <style>
     .admin-page {
@@ -319,6 +295,10 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text-muted);
+    }
+
+    .stat-revenue .stat-value {
+        color: #16a34a;
     }
 
     .page-actions {
