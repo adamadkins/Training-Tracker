@@ -52,7 +52,7 @@ def _org_users(org_id):
 
 
 def _org_trial_and_payment(org):
-    """Return dict with trial_days_left (None if no trial, int days else) and payment_overdue (bool)."""
+    """Return dict with trial_days_left, payment_overdue, payment_status, and billing_plan."""
     trial_days_left = None
     if org.trial_ends_at:
         end = org.trial_ends_at
@@ -60,8 +60,28 @@ def _org_trial_and_payment(org):
             end = end.replace(tzinfo=timezone.utc)
         delta = (end - datetime.now(timezone.utc)).days
         trial_days_left = max(0, delta)
-    payment_overdue = org.stripe_subscription_status in ("past_due", "unpaid")
-    return {"trial_days_left": trial_days_left, "payment_overdue": payment_overdue}
+    sub_status = (org.stripe_subscription_status or "").lower()
+    payment_overdue = sub_status in ("past_due", "unpaid")
+    if org.free_plan:
+        payment_status = "free"
+    elif sub_status == "active":
+        payment_status = "active"
+    elif sub_status == "trialing":
+        payment_status = "trialing"
+    elif payment_overdue:
+        payment_status = "overdue"
+    elif sub_status == "canceled":
+        payment_status = "canceled"
+    elif org.stripe_subscription_id:
+        payment_status = sub_status or "unknown"
+    else:
+        payment_status = None
+    return {
+        "trial_days_left": trial_days_left,
+        "payment_overdue": payment_overdue,
+        "payment_status": payment_status,
+        "billing_plan": org.billing_plan,
+    }
 
 
 def _signup_request_email_content(signup_request):
