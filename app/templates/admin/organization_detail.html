@@ -78,6 +78,7 @@
                 {% else %}
                 — (no trial)
                 {% endif %}
+                {% if payment_status not in ('active', 'free') %}
                 <div class="trial-actions" style="margin-top:8px;">
                     <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}"
                         class="extend-trial-form" style="display:inline; margin-right:12px;">
@@ -98,6 +99,7 @@
                         <button type="submit" class="btn btn-outline btn-sm" style="margin-left:6px;">Set</button>
                     </form>
                 </div>
+                {% endif %}
             </dd>
             <dt>Billing</dt>
             <dd>
@@ -105,10 +107,6 @@
                 <span class="status status-active">{{ billing_plan|default('Paid')|capitalize }} (Active)</span>
                 {% elif payment_status == 'free' %}
                 <span class="status status-active">{{ billing_plan|default('')|capitalize }} (Free)</span>
-                <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}"
-                    style="display:inline; margin-left:8px;">
-                    <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
-                </form>
                 {% elif payment_status == 'trialing' %}
                 <span class="status status-active">Trialing</span>
                 {% elif payment_status == 'overdue' %}
@@ -121,7 +119,19 @@
                 <span class="billing-note">Not set up</span>
                 {% endif %}
                 <div class="billing-actions">
-                    {% if payment_status != 'free' %}
+                    {% if payment_status == 'active' %}
+                    {% if org.stripe_customer_id %}
+                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Manage billing</button>
+                    </form>
+                    {% endif %}
+                    {% elif payment_status == 'free' %}
+                    <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}"
+                        style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
+                    </form>
+                    {% else %}
                     <form method="post"
                         action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}"
                         style="display:inline;">
