@@ -5,104 +5,150 @@
         <a href="{{ url_for('admin.organizations_list') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i>
             Organizations</a>
     </div>
-    <div class="detail-card">
-        <h1 class="page-title">{{ org.name }}</h1>
-        {% set h = request.host.split(':')[0] %}
-        {% set base_domain = h[4:] if h[:4] == 'www.' else h %}
-        {% set login_host = org.subdomain ~ '.' ~ base_domain %}
-        <dl class="detail-list">
-            <dt>Subdomain</dt>
-            <dd><code>{{ org.subdomain }}</code></dd>
-            <dt>Status</dt>
-            <dd>
+
+    <div class="org-header-card">
+        <div class="org-header-top">
+            <div>
+                <h1 class="page-title">{{ org.name }}</h1>
+                <div class="org-subdomain"><code>{{ org.subdomain }}</code></div>
+            </div>
+            <div class="org-header-badges">
                 <span class="status status-{{ org.status }}">{{ org.status }}</span>
-                {% if org.status == 'suspended' %}
-                <span class="status-note">— Users cannot sign in while suspended.</span>
-                {% elif org.status == 'pending_approval' %}
-                <span class="status-note">— Approve to activate and send welcome email.</span>
+                {% if payment_status == 'active' %}
+                <span class="status status-active">{{ billing_plan|default('Paid')|capitalize }}</span>
+                {% elif payment_status == 'free' %}
+                <span class="status status-active">Free</span>
+                {% elif payment_status == 'overdue' %}
+                <span class="status status-past-due">Overdue</span>
+                {% elif payment_status == 'canceled' %}
+                <span class="status status-suspended">Canceled</span>
                 {% endif %}
-            </dd>
-            <dt>Login URL</dt>
-            <dd class="login-url-row">
-                <code id="login-url">{{ login_host }}</code>
-                <button type="button" class="btn-copy" id="copy-btn"
-                    onclick="var u='https://'+document.getElementById('login-url').textContent; var b=document.getElementById('copy-btn'); navigator.clipboard.writeText(u); b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy'; }, 1500);">Copy</button>
-            </dd>
-            <dt>Users</dt>
-            <dd>
-                {% if org_users %}
-                <ul class="org-user-emails">
-                    {% for u in org_users %}
-                    <li><a href="{{ url_for('admin.users_list', org_id=org.id) }}">{{ u.email }}</a></li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                {{ user_count }} (none yet)
-                {% endif %}
-            </dd>
-            <dt>Employees</dt>
-            <dd>{{ employee_count }}</dd>
-            {% if org.signup_request %}
-            <dt>Contact Info</dt>
-            <dd>
-                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Email:</strong> {{ org.signup_request.email or
-                    '—' }}</div>
-                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Phone:</strong> {{ org.signup_request.phone or
-                    '—' }}</div>
-                <div style="font-size: 14px; margin-bottom: 4px;"><strong>Location:</strong> {{
-                    org.signup_request.location_identifier or '—' }}</div>
-                {% if org.signup_request.address_line1 or org.signup_request.city or org.signup_request.state %}
-                <div style="font-size: 14px; margin-bottom: 8px;"><strong>Address:</strong> {{
-                    org.signup_request.address_line1 or '' }}{% if org.signup_request.city %}, {{
-                    org.signup_request.city }}{% endif %} {{ org.signup_request.state or '' }} {{
-                    org.signup_request.postal_code or '' }}</div>
-                {% endif %}
-                <div style="margin-top: 8px;">
-                    <a href="mailto:{{ org.signup_request.email }}?subject={{ org.name|urlencode }} - Organization Follow-up"
-                        class="btn btn-sm btn-outline" style="border-color: var(--primary); color: var(--primary);"><i
-                            class="fa-solid fa-envelope"></i> Reach Out Via Email</a>
-                </div>
-            </dd>
+            </div>
+        </div>
+        {% if org.status == 'suspended' %}
+        <div class="org-header-note org-header-note-warn">
+            <i class="fa-solid fa-triangle-exclamation"></i> Users cannot sign in while suspended.
+        </div>
+        {% elif org.status == 'pending_approval' %}
+        <div class="org-header-note">
+            <i class="fa-solid fa-clock"></i> Approve to activate and send welcome email.
+        </div>
+        {% endif %}
+        <div class="org-header-actions">
+            {% if org.status == 'active' %}
+            <form method="post" action="{{ url_for('admin.organization_suspend', org_id=org.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-warning btn-sm">Suspend</button>
+            </form>
+            {% elif org.status == 'pending_approval' %}
+            <form method="post" action="{{ url_for('admin.organization_approve', org_id=org.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('admin.organization_activate', org_id=org.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-primary btn-sm">Activate</button>
+            </form>
             {% endif %}
-            <dt>Created</dt>
-            <dd>{{ org.created_at | est('%m-%d-%Y %I:%M %p ET') }}</dd>
-            <dt>Trial</dt>
-            <dd>
+        </div>
+    </div>
+
+    {% set h = request.host.split(':')[0] %}
+    {% set base_domain = h[4:] if h[:4] == 'www.' else h %}
+    {% set login_host = org.subdomain ~ '.' ~ base_domain %}
+
+    <div class="mini-stats">
+        <div class="mini-stat">
+            <i class="fa-solid fa-users"></i>
+            <div class="mini-stat-content">
+                <span class="mini-stat-value">{{ user_count }}</span>
+                <span class="mini-stat-label">Users</span>
+            </div>
+        </div>
+        <div class="mini-stat">
+            <i class="fa-solid fa-id-badge"></i>
+            <div class="mini-stat-content">
+                <span class="mini-stat-value">{{ employee_count }}</span>
+                <span class="mini-stat-label">Employees</span>
+            </div>
+        </div>
+        <div class="mini-stat">
+            <i class="fa-solid fa-calendar"></i>
+            <div class="mini-stat-content">
+                <span class="mini-stat-value">{{ org.created_at | est('%m-%d-%Y') }}</span>
+                <span class="mini-stat-label">Created</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-url-card">
+        <div class="login-url-label"><i class="fa-solid fa-link"></i> Login URL</div>
+        <div class="login-url-row">
+            <code id="login-url">{{ login_host }}</code>
+            <button type="button" class="btn-copy-url" id="copy-btn"
+                onclick="var u='https://'+document.getElementById('login-url').textContent; var b=document.getElementById('copy-btn'); navigator.clipboard.writeText(u); b.innerHTML='<i class=\'fa-solid fa-check\'></i> Copied'; setTimeout(function(){ b.innerHTML='<i class=\'fa-solid fa-copy\'></i> Copy'; }, 1500);">
+                <i class="fa-solid fa-copy"></i> Copy</button>
+        </div>
+    </div>
+
+    {% if org_users %}
+    <div class="section-card">
+        <h2 class="section-heading"><i class="fa-solid fa-user"></i> Users</h2>
+        <div class="user-chips">
+            {% for u in org_users %}
+            <a href="{{ url_for('admin.users_list', org_id=org.id) }}" class="user-chip">
+                <i class="fa-solid fa-envelope"></i> {{ u.email }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif not has_users and org.status == 'active' %}
+    <div class="section-card invite-card">
+        <div class="invite-content">
+            <i class="fa-solid fa-user-plus invite-icon"></i>
+            <div>
+                <h2 class="section-heading" style="margin-bottom: 4px;">Invite the first user</h2>
+                <p class="invite-desc">No users yet. Invite a manager so they can log in to their dashboard.</p>
+            </div>
+        </div>
+        <a href="{{ url_for('admin.organization_invite_first_user', org_id=org.id) }}" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-paper-plane"></i> Send invite</a>
+    </div>
+    {% endif %}
+
+    <div class="two-col">
+        <div class="section-card">
+            <h2 class="section-heading"><i class="fa-solid fa-clock-rotate-left"></i> Trial</h2>
+            <div class="section-body">
                 {% if trial_days_left is not none %}
                 {% if trial_days_left > 0 %}
-                <span class="status status-active">{{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }}
-                    left</span> ({{ org.trial_plan|default('standard')|capitalize }})
+                <span class="status status-active">{{ trial_days_left }} day{{ 's' if trial_days_left != 1 else '' }} left</span>
+                <span class="trial-plan-note">{{ org.trial_plan|default('standard')|capitalize }} plan</span>
                 {% else %}
                 <span class="status status-suspended">Ended</span>
                 {% endif %}
                 {% else %}
-                — (no trial)
+                <span class="muted-text">No trial</span>
                 {% endif %}
                 {% if payment_status not in ('active', 'free') %}
-                <div class="trial-actions" style="margin-top:8px;">
-                    <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}"
-                        class="extend-trial-form" style="display:inline; margin-right:12px;">
-                        <input type="number" name="days" value="14" min="1" max="365"
-                            style="width:50px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);">
-                        <button type="submit" class="btn btn-outline btn-sm">Extend trial</button>
+                <div class="trial-controls">
+                    <form method="post" action="{{ url_for('admin.organization_extend_trial', org_id=org.id) }}" class="trial-form">
+                        <input type="number" name="days" value="14" min="1" max="365" class="input-sm">
+                        <button type="submit" class="btn btn-outline btn-sm">Extend</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_set_trial_days', org_id=org.id) }}"
-                        style="display:inline;">
-                        <label for="days_left" style="font-size:12px; color:var(--text-muted); margin-right:4px;">Set
-                            to</label>
+                    <form method="post" action="{{ url_for('admin.organization_set_trial_days', org_id=org.id) }}" class="trial-form">
+                        <span class="muted-text">Set to</span>
                         <input type="number" id="days_left" name="days_left"
                             value="{{ trial_days_left if trial_days_left is not none and trial_days_left > 0 else 7 }}"
-                            min="0" max="365"
-                            style="width:44px; padding:4px 6px; border-radius:6px; border:1px solid var(--border);"
-                            title="Days left (0 = end now)">
-                        <label style="font-size:12px; color:var(--text-muted); margin-left:2px;">days left</label>
-                        <button type="submit" class="btn btn-outline btn-sm" style="margin-left:6px;">Set</button>
+                            min="0" max="365" class="input-sm" title="Days left (0 = end now)">
+                        <span class="muted-text">days</span>
+                        <button type="submit" class="btn btn-outline btn-sm">Set</button>
                     </form>
                 </div>
                 {% endif %}
-            </dd>
-            <dt>Billing</dt>
-            <dd>
+            </div>
+        </div>
+        <div class="section-card">
+            <h2 class="section-heading"><i class="fa-solid fa-credit-card"></i> Billing</h2>
+            <div class="section-body">
                 {% if payment_status == 'active' %}
                 <span class="status status-active">{{ billing_plan|default('Paid')|capitalize }} (Active)</span>
                 {% elif payment_status == 'free' %}
@@ -114,84 +160,86 @@
                 {% elif payment_status == 'canceled' %}
                 <span class="status status-suspended">Canceled</span>
                 {% elif org.stripe_customer_id %}
-                <span class="billing-note">Customer linked, no active subscription</span>
+                <span class="muted-text">Customer linked, no active subscription</span>
                 {% else %}
-                <span class="billing-note">Not set up</span>
+                <span class="muted-text">Not set up</span>
                 {% endif %}
                 <div class="billing-actions">
                     {% if payment_status == 'active' %}
                     {% if org.stripe_customer_id %}
-                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}"
-                        style="display:inline;">
-                        <button type="submit" class="btn btn-outline btn-sm">Manage billing</button>
+                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-outline btn-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> Manage billing</button>
                     </form>
                     {% endif %}
                     {% elif payment_status == 'free' %}
-                    <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_remove_free_plan', org_id=org.id) }}" style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Remove free plan</button>
                     </form>
                     {% else %}
-                    <form method="post"
-                        action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='standard') }}" style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Give Standard free</button>
                     </form>
-                    <form method="post"
-                        action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='pro') }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_set_free_plan', org_id=org.id, plan='pro') }}" style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Give Pro free</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
                         <input type="hidden" name="plan" value="standard">
                         <button type="submit" class="btn btn-primary btn-sm">Standard $40/mo</button>
                     </form>
-                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_create_checkout', org_id=org.id) }}" style="display:inline;">
                         <input type="hidden" name="plan" value="pro">
                         <button type="submit" class="btn btn-outline btn-sm">Pro $50/mo</button>
                     </form>
                     {% if org.stripe_customer_id %}
-                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}"
-                        style="display:inline;">
+                    <form method="post" action="{{ url_for('admin.organization_customer_portal', org_id=org.id) }}" style="display:inline;">
                         <button type="submit" class="btn btn-outline btn-sm">Manage billing</button>
                     </form>
                     {% endif %}
                     {% endif %}
                 </div>
-            </dd>
-        </dl>
-        <div class="detail-actions">
-            {% if org.status == 'active' %}
-            <form method="post" action="{{ url_for('admin.organization_suspend', org_id=org.id) }}"
-                style="display:inline;">
-                <button type="submit" class="btn btn-warning">Suspend</button>
-            </form>
-            {% elif org.status == 'pending_approval' %}
-            <form method="post" action="{{ url_for('admin.organization_approve', org_id=org.id) }}"
-                style="display:inline;">
-                <button type="submit" class="btn btn-primary">Approve</button>
-            </form>
-            {% else %}
-            <form method="post" action="{{ url_for('admin.organization_activate', org_id=org.id) }}"
-                style="display:inline;">
-                <button type="submit" class="btn btn-primary">Activate</button>
-            </form>
-            {% endif %}
+            </div>
         </div>
-        {% if not has_users and org.status == 'active' %}
-        <div class="invite-first-section">
-            <p class="invite-first-text">No users yet. Invite the first manager so they can log in to their dashboard.
-            </p>
-            <a href="{{ url_for('admin.organization_invite_first_user', org_id=org.id) }}"
-                class="btn btn-primary">Invite first user</a>
-        </div>
-        {% endif %}
     </div>
 
+    {% if org.signup_request %}
+    <div class="section-card">
+        <h2 class="section-heading"><i class="fa-solid fa-address-book"></i> Contact Info</h2>
+        <div class="contact-grid">
+            {% if org.signup_request.email %}
+            <div class="contact-item">
+                <span class="contact-label">Email</span>
+                <span class="contact-value">{{ org.signup_request.email }}</span>
+            </div>
+            {% endif %}
+            {% if org.signup_request.phone %}
+            <div class="contact-item">
+                <span class="contact-label">Phone</span>
+                <span class="contact-value">{{ org.signup_request.phone }}</span>
+            </div>
+            {% endif %}
+            {% if org.signup_request.location_identifier %}
+            <div class="contact-item">
+                <span class="contact-label">Location</span>
+                <span class="contact-value">{{ org.signup_request.location_identifier }}</span>
+            </div>
+            {% endif %}
+            {% if org.signup_request.address_line1 or org.signup_request.city or org.signup_request.state %}
+            <div class="contact-item contact-item-full">
+                <span class="contact-label">Address</span>
+                <span class="contact-value">{{ org.signup_request.address_line1 or '' }}{% if org.signup_request.city %}{% if org.signup_request.address_line1 %}, {% endif %}{{ org.signup_request.city }}{% endif %} {{ org.signup_request.state or '' }} {{ org.signup_request.postal_code or '' }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div style="margin-top: 12px;">
+            <a href="mailto:{{ org.signup_request.email }}?subject={{ org.name|urlencode }} - Organization Follow-up"
+                class="btn btn-outline btn-sm" style="border-color: var(--primary); color: var(--primary);">
+                <i class="fa-solid fa-envelope"></i> Reach out via email</a>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="danger-zone">
-        <h2 class="danger-title">Danger zone</h2>
+        <h2 class="danger-title"><i class="fa-solid fa-triangle-exclamation"></i> Danger zone</h2>
         <p class="danger-text">Permanently delete this organization and all its data (users, employees, schedules,
             messages, etc.). This cannot be undone.</p>
         <form method="post" action="{{ url_for('admin.organization_delete', org_id=org.id) }}" class="delete-form"
@@ -199,13 +247,13 @@
             <label for="confirm-delete">Type <strong>delete</strong> to confirm</label>
             <input type="text" id="confirm-delete" name="confirm" placeholder="delete" autocomplete="off"
                 class="confirm-input">
-            <button type="submit" class="btn btn-danger">Delete organization</button>
+            <button type="submit" class="btn btn-danger btn-sm">Delete organization</button>
         </form>
     </div>
 </div>
 <style>
     .admin-page {
-        max-width: 640px;
+        max-width: 700px;
     }
 
     .page-header {
@@ -219,96 +267,431 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        transition: color 0.15s;
     }
 
     .back-link:hover {
         color: var(--primary);
     }
 
-    .detail-card {
+    /* --- Org Header Card --- */
+    .org-header-card {
         background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 16px;
-        padding: 28px;
+        padding: 24px 28px;
+        margin-bottom: 16px;
+    }
+
+    .org-header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
     }
 
     .page-title {
         font-size: 24px;
         font-weight: 800;
-        margin: 0 0 20px 0;
+        margin: 0 0 4px 0;
         color: var(--text-main);
     }
 
-    .detail-list {
-        margin: 0;
-        display: grid;
-        gap: 12px 20px;
-        grid-template-columns: auto 1fr;
-    }
-
-    .detail-list dt {
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
+    .org-subdomain code {
+        font-size: 13px;
+        background: var(--bg-body);
+        padding: 3px 10px;
+        border-radius: 6px;
         color: var(--text-muted);
     }
 
-    .detail-list dd {
-        margin: 0;
-        font-size: 15px;
-        color: var(--text-main);
+    .org-header-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding-top: 4px;
     }
 
-    .detail-list code {
-        font-size: 13px;
+    .org-header-note {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
         background: var(--bg-body);
-        padding: 4px 10px;
-        border-radius: 8px;
+        font-size: 13px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .org-header-note-warn {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .org-header-actions {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+
+    /* --- Mini Stats --- */
+    .mini-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .mini-stat {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mini-stat > i {
+        font-size: 18px;
+        color: var(--primary);
+        opacity: 0.7;
+    }
+
+    .mini-stat-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mini-stat-value {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .mini-stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+    }
+
+    /* --- Login URL --- */
+    .login-url-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+
+    .login-url-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .login-url-row {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
     }
 
-    .btn-copy {
-        padding: 6px 12px;
-        font-size: 12px;
+    .login-url-row code {
+        font-size: 14px;
+        font-weight: 600;
+        background: var(--bg-body);
+        padding: 8px 14px;
+        border-radius: 8px;
+        color: var(--text-main);
+        flex: 1;
+        min-width: 0;
+    }
+
+    .btn-copy-url {
+        padding: 8px 16px;
+        font-size: 13px;
         font-weight: 600;
         border-radius: 8px;
         border: 1px solid var(--border);
         background: var(--bg-body);
         color: var(--text-main);
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+        white-space: nowrap;
     }
 
-    .btn-copy:hover {
+    .btn-copy-url:hover {
         border-color: var(--primary);
         color: var(--primary);
     }
 
-    .detail-actions {
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
+    /* --- Section Cards --- */
+    .section-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
     }
 
-    .invite-first-section {
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-    }
-
-    .invite-first-text {
-        margin: 0 0 12px 0;
+    .section-heading {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
         color: var(--text-muted);
-        font-size: 14px;
+        margin: 0 0 14px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
+    .section-heading i {
+        font-size: 14px;
+        opacity: 0.6;
+    }
+
+    .section-body {
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .muted-text {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .trial-plan-note {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-left: 8px;
+    }
+
+    /* --- Two Column Layout --- */
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 0;
+    }
+
+    .two-col .section-card {
+        margin-bottom: 16px;
+    }
+
+    /* --- Trial Controls --- */
+    .trial-controls {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .trial-form {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .input-sm {
+        width: 50px;
+        padding: 5px 8px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        font-size: 13px;
+        text-align: center;
+    }
+
+    /* --- User Chips --- */
+    .user-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .user-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+
+    .user-chip:hover {
+        border-color: var(--primary);
+        background: var(--bg-card);
+    }
+
+    .user-chip i {
+        font-size: 11px;
+        opacity: 0.6;
+    }
+
+    /* --- Invite Card --- */
+    .invite-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .invite-content {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .invite-icon {
+        font-size: 22px;
+        color: var(--primary);
+        opacity: 0.5;
+    }
+
+    .invite-desc {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* --- Contact Grid --- */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .contact-item {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .contact-item-full {
+        grid-column: 1 / -1;
+    }
+
+    .contact-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+    }
+
+    .contact-value {
+        font-size: 14px;
+        color: var(--text-main);
+    }
+
+    /* --- Billing Actions --- */
+    .billing-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    /* --- Status Badges --- */
+    .status {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-suspended {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-pending_approval {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-past-due {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+
+    .btn:hover {
+        opacity: 0.88;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    /* --- Danger Zone --- */
     .danger-zone {
-        margin-top: 32px;
+        margin-top: 16px;
         padding: 24px;
         border: 1px solid #fecaca;
         border-radius: 16px;
@@ -316,14 +699,17 @@
     }
 
     .danger-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 800;
         color: #991b1b;
         margin: 0 0 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
     .danger-text {
-        font-size: 14px;
+        font-size: 13px;
         color: #b91c1c;
         margin: 0 0 16px 0;
         line-height: 1.5;
@@ -356,109 +742,7 @@
         color: white;
     }
 
-    .status {
-        font-size: 11px;
-        text-transform: uppercase;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-    }
-
-    .status-note {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin-left: 6px;
-    }
-
-    .status-active {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .status-suspended {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .status-past-due {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 14px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-primary {
-        background: var(--primary);
-        color: white;
-    }
-
-    .btn-warning {
-        background: #f59e0b;
-        color: white;
-    }
-
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-
-    .btn-outline {
-        background: transparent;
-        border: 1px solid var(--border);
-        color: var(--text-main);
-    }
-
-    .btn-outline:hover {
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-
-    .billing-note {
-        font-size: 13px;
-        color: var(--text-muted);
-    }
-
-    .billing-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 8px;
-    }
-
-    .btn:hover {
-        opacity: 0.9;
-    }
-
-    .org-user-emails {
-        margin: 0;
-        padding-left: 20px;
-        list-style: disc;
-    }
-
-    .org-user-emails li {
-        margin-bottom: 4px;
-    }
-
-    .org-user-emails a {
-        color: var(--primary);
-        font-weight: 600;
-        text-decoration: none;
-    }
-
-    .org-user-emails a:hover {
-        text-decoration: underline;
-    }
-
+    /* --- Mobile --- */
     @media (max-width: 768px) {
         .admin-page {
             max-width: 100%;
@@ -467,21 +751,27 @@
 
         .back-link {
             min-height: 44px;
-            align-items: center;
-            display: inline-flex;
         }
 
-        .detail-card {
+        .org-header-card {
             padding: 20px;
         }
 
-        .detail-list {
-            grid-template-columns: 1fr;
-            gap: 8px 0;
+        .org-header-top {
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .detail-list dt {
-            margin-bottom: 2px;
+        .mini-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .two-col {
+            grid-template-columns: 1fr;
+        }
+
+        .contact-grid {
+            grid-template-columns: 1fr;
         }
 
         .billing-actions {
@@ -498,26 +788,35 @@
             width: 100%;
         }
 
-        .detail-actions .btn {
+        .org-header-actions .btn {
             min-height: 44px;
         }
 
-        .invite-first-section .btn {
-            min-height: 44px;
-            display: inline-flex;
+        .invite-card {
+            flex-direction: column;
+            align-items: stretch;
         }
 
-        .btn-copy {
+        .invite-card .btn {
+            min-height: 44px;
+            justify-content: center;
+        }
+
+        .btn-copy-url {
             min-height: 44px;
             padding: 10px 16px;
         }
 
-        .danger-zone .btn {
-            min-height: 44px;
+        .trial-form {
+            flex-wrap: wrap;
         }
 
         .danger-zone {
             padding: 16px;
+        }
+
+        .danger-zone .btn {
+            min-height: 44px;
         }
 
         .delete-form .confirm-input {
