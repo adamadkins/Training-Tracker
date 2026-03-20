@@ -13,31 +13,27 @@
         </div>
     </div>
 
-    <div class="filters-card">
-        <form method="get" class="filter-form">
-            <div class="filter-row">
-                <div class="filter-input-wrap">
-                    <i class="fa-solid fa-magnifying-glass filter-icon"></i>
-                    <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search by email...">
-                </div>
-                <select name="org_id">
-                    <option value="">All organizations</option>
-                    {% for o in all_orgs %}
-                    <option value="{{ o.id }}" {{ 'selected' if filter_org_id == o.id else '' }}>{{ o.name }}</option>
-                    {% endfor %}
-                </select>
-                <select name="role">
-                    <option value="">All roles</option>
-                    <option value="manager" {{ 'selected' if filter_role == 'manager' else '' }}>Manager</option>
-                    <option value="trainee" {{ 'selected' if filter_role == 'trainee' else '' }}>Trainee</option>
-                </select>
-                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
-                {% if filter_q or filter_org_id or filter_role %}
-                <a href="{{ url_for('admin.users_list') }}" class="btn btn-sm btn-outline">Clear</a>
-                {% endif %}
-            </div>
-        </form>
-    </div>
+    <form method="get" class="filter-bar">
+        <div class="filter-input-wrap">
+            <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+            <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search by email...">
+        </div>
+        <select name="org_id">
+            <option value="">All organizations</option>
+            {% for o in all_orgs %}
+            <option value="{{ o.id }}" {{ 'selected' if filter_org_id == o.id else '' }}>{{ o.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="role">
+            <option value="">All roles</option>
+            <option value="manager" {{ 'selected' if filter_role == 'manager' else '' }}>Manager</option>
+            <option value="trainee" {{ 'selected' if filter_role == 'trainee' else '' }}>Trainee</option>
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+        {% if filter_q or filter_org_id or filter_role %}
+        <a href="{{ url_for('admin.users_list') }}" class="btn btn-sm btn-outline">Clear</a>
+        {% endif %}
+    </form>
 
     <div class="users-table-wrap desktop-only">
         <table class="admin-table">
@@ -176,57 +172,46 @@
         color: var(--text-muted);
     }
 
-    /* --- Filters --- */
-    .filters-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 16px;
-    }
-
-    .filter-form {
-        margin: 0;
-    }
-
-    .filter-row {
+    /* --- Filter Bar --- */
+    .filter-bar {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
-        flex-wrap: wrap;
+        margin-bottom: 16px;
+        flex-wrap: nowrap;
     }
 
     .filter-input-wrap {
         position: relative;
         flex: 1;
-        min-width: 180px;
+        max-width: 260px;
     }
 
     .filter-icon {
         position: absolute;
-        left: 12px;
+        left: 10px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 13px;
+        font-size: 12px;
         color: var(--text-muted);
         pointer-events: none;
     }
 
     .filter-input-wrap input {
         width: 100%;
-        padding: 9px 12px 9px 34px;
+        padding: 8px 12px 8px 32px;
         border: 1px solid var(--border);
         border-radius: 8px;
-        font-size: 14px;
-        background: var(--bg-body);
+        font-size: 13px;
+        background: var(--bg-card);
     }
 
-    .filter-row select {
-        padding: 9px 12px;
+    .filter-bar select {
+        padding: 8px 12px;
         border: 1px solid var(--border);
         border-radius: 8px;
-        font-size: 14px;
-        background: var(--bg-body);
+        font-size: 13px;
+        background: var(--bg-card);
     }
 
     /* --- Table --- */
@@ -508,50 +493,17 @@
 
     /* --- Responsive --- */
     @media (max-width: 768px) {
-        .admin-page {
-            padding: 0 4px;
-        }
-
-        .page-header {
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .header-stat {
-            align-self: flex-start;
-        }
-
-        .page-title {
-            font-size: 22px;
-        }
-
-        .filter-row {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .filter-input-wrap {
-            min-width: 100%;
-        }
-
-        .filter-input-wrap input,
-        .filter-row select {
-            min-height: 44px;
-            font-size: 16px;
-        }
-
-        .filter-row .btn {
-            min-height: 44px;
-            justify-content: center;
-        }
-
-        .desktop-only {
-            display: none !important;
-        }
-
-        .users-cards {
-            display: flex !important;
-        }
+        .admin-page { padding: 0 8px; }
+        .page-header { flex-direction: column; gap: 12px; }
+        .header-stat { align-self: flex-start; }
+        .page-title { font-size: 22px; }
+        .filter-bar { flex-wrap: wrap; }
+        .filter-input-wrap { max-width: 100%; flex-basis: 100%; }
+        .filter-input-wrap input { min-height: 44px; font-size: 16px; }
+        .filter-bar select { min-height: 44px; font-size: 16px; flex: 1; }
+        .filter-bar .btn { min-height: 44px; }
+        .desktop-only { display: none !important; }
+        .users-cards { display: flex !important; }
     }
 </style>
 {% endblock %}

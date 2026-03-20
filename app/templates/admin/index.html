@@ -69,30 +69,23 @@
     </div>
 
     <div class="section-card">
-        <div class="section-header">
-            <h2 class="section-heading"><i class="fa-solid fa-building"></i> Recent Organizations</h2>
-            <div class="section-header-actions">
-                <form method="get" class="inline-filter">
-                    <div class="filter-input-wrap">
-                        <i class="fa-solid fa-magnifying-glass filter-icon"></i>
-                        <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search...">
-                    </div>
-                    <select name="org_status">
-                        <option value="">All statuses</option>
-                        <option value="active" {{ 'selected' if filter_org_status=='active' else '' }}>Active</option>
-                        <option value="pending_approval" {{ 'selected' if filter_org_status=='pending_approval' else '' }}>Pending</option>
-                        <option value="suspended" {{ 'selected' if filter_org_status=='suspended' else '' }}>Suspended</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
-                    {% if filter_q or filter_org_status %}
-                    <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline">Clear</a>
-                    {% endif %}
-                </form>
+        <h2 class="section-heading"><i class="fa-solid fa-building"></i> Recent Organizations</h2>
+        <form method="get" class="filter-bar">
+            <div class="filter-input-wrap">
+                <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+                <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search orgs...">
             </div>
-        </div>
-        {% if filter_q or filter_org_status %}
-        <p class="filter-note">Filtered by {% if filter_q %}"{{ filter_q }}"{% endif %}{% if filter_org_status %} status={{ filter_org_status }}{% endif %}</p>
-        {% endif %}
+            <select name="org_status">
+                <option value="">All statuses</option>
+                <option value="active" {{ 'selected' if filter_org_status=='active' else '' }}>Active</option>
+                <option value="pending_approval" {{ 'selected' if filter_org_status=='pending_approval' else '' }}>Pending</option>
+                <option value="suspended" {{ 'selected' if filter_org_status=='suspended' else '' }}>Suspended</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+            {% if filter_q or filter_org_status %}
+            <a href="{{ url_for('admin.index') }}" class="btn btn-sm btn-outline">Clear</a>
+            {% endif %}
+        </form>
         <div class="org-table-wrap desktop-only">
             <table class="admin-table">
                 <thead>
@@ -152,26 +145,26 @@
     </div>
 
     <div class="section-card">
-        <div class="section-header">
+        <div class="section-title-row">
             <h2 class="section-heading"><i class="fa-solid fa-clipboard-list"></i> Signup Requests</h2>
-            <div class="section-header-actions">
-                <form method="get" class="inline-filter">
-                    <input type="hidden" name="q" value="{{ filter_q or '' }}">
-                    <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
-                    <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}" placeholder="Search..." class="filter-input-plain">
-                    <select name="signup_plan">
-                        <option value="">All plans</option>
-                        <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
-                        <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
-                    </select>
-                    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
-                </form>
-                <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" style="display:inline;" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
-                    <button type="submit" class="btn btn-sm btn-danger-outline"><i class="fa-solid fa-trash"></i></button>
-                </form>
-            </div>
+            <form method="post" action="{{ url_for('admin.signup_requests_clear') }}" style="display:inline;" onsubmit="return confirm('Delete all signup requests? This cannot be undone.');">
+                <button type="submit" class="btn btn-sm btn-danger-outline"><i class="fa-solid fa-trash"></i> Clear all</button>
+            </form>
         </div>
-        <p class="section-desc"><strong>Email</strong> opens Outlook Web; <strong>Copy</strong> copies their email.</p>
+        <form method="get" class="filter-bar">
+            <input type="hidden" name="q" value="{{ filter_q or '' }}">
+            <input type="hidden" name="org_status" value="{{ filter_org_status or '' }}">
+            <div class="filter-input-wrap">
+                <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+                <input type="text" name="signup_q" value="{{ filter_signup_q or '' }}" placeholder="Search signups...">
+            </div>
+            <select name="signup_plan">
+                <option value="">All plans</option>
+                <option value="standard" {{ 'selected' if filter_signup_plan=='standard' else '' }}>Standard</option>
+                <option value="pro" {{ 'selected' if filter_signup_plan=='pro' else '' }}>Pro</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+        </form>
         <div class="signup-table-wrap desktop-only">
             <table class="admin-table">
                 <thead>
@@ -347,38 +340,39 @@
         padding: 20px 24px;
         margin-bottom: 16px;
     }
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 14px;
-    }
     .section-heading {
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--text-muted);
-        margin: 0;
+        margin: 0 0 12px 0;
         display: flex;
         align-items: center;
         gap: 8px;
     }
     .section-heading i { font-size: 14px; opacity: 0.5; }
-    .section-desc { color: var(--text-muted); font-size: 13px; margin: -6px 0 14px 0; }
-    .filter-note { color: var(--text-muted); font-size: 12px; margin: -8px 0 12px 0; font-style: italic; }
+    .section-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .section-title-row .section-heading { margin-bottom: 0; }
 
-    /* --- Inline Filters --- */
-    .inline-filter {
+    /* --- Filter Bar --- */
+    .filter-bar {
         display: flex;
         gap: 8px;
         align-items: center;
-        flex-wrap: wrap;
+        margin-bottom: 16px;
+        flex-wrap: nowrap;
     }
     .filter-input-wrap {
         position: relative;
+        flex: 1;
+        max-width: 260px;
     }
     .filter-icon {
         position: absolute;
@@ -390,33 +384,19 @@
         pointer-events: none;
     }
     .filter-input-wrap input {
+        width: 100%;
         padding: 7px 10px 7px 30px;
         border: 1px solid var(--border);
         border-radius: 7px;
         font-size: 13px;
-        width: 140px;
         background: var(--bg-body);
     }
-    .filter-input-plain {
-        padding: 7px 10px;
-        border: 1px solid var(--border);
-        border-radius: 7px;
-        font-size: 13px;
-        width: 120px;
-        background: var(--bg-body);
-    }
-    .inline-filter select {
+    .filter-bar select {
         padding: 7px 10px;
         border: 1px solid var(--border);
         border-radius: 7px;
         font-size: 13px;
         background: var(--bg-body);
-    }
-    .section-header-actions {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
     }
 
     /* --- Tables --- */
@@ -532,13 +512,13 @@
         .page-title { font-size: 22px; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .revenue-grid { grid-template-columns: repeat(2, 1fr); }
-        .section-header { flex-direction: column; align-items: stretch; gap: 10px; }
-        .inline-filter { flex-direction: column; align-items: stretch; }
-        .filter-input-wrap { width: 100%; }
-        .filter-input-wrap input, .filter-input-plain { width: 100%; min-height: 44px; font-size: 16px; }
-        .inline-filter select { min-height: 44px; font-size: 16px; }
-        .inline-filter .btn { min-height: 44px; justify-content: center; }
+        .filter-bar { flex-wrap: wrap; }
+        .filter-input-wrap { max-width: 100%; flex-basis: 100%; }
+        .filter-input-wrap input { min-height: 44px; font-size: 16px; }
+        .filter-bar select { min-height: 44px; font-size: 16px; flex: 1; }
+        .filter-bar .btn { min-height: 44px; }
         .section-card { padding: 16px; }
+        .section-title-row { flex-wrap: wrap; }
         .desktop-only { display: none !important; }
         .mobile-only, .org-cards, .signup-cards { display: flex !important; }
         .pending-banner { flex-wrap: wrap; }
