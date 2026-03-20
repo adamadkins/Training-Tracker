@@ -93,6 +93,8 @@ def _handle_checkout_completed(session):
                 price_id = price.get("id") if isinstance(price, dict) else price
                 if price_id:
                     org.billing_plan = _billing_plan_from_price_id(price_id)
+            if (org.stripe_subscription_status or "").lower() in ("active", "trialing"):
+                org.status = "active"
         except Exception:
             pass
     db.session.commit()
@@ -118,7 +120,10 @@ def _handle_subscription_updated(subscription):
         price_id = price.get("id") if isinstance(price, dict) else price
         if price_id:
             org.billing_plan = _billing_plan_from_price_id(price_id)
-    if status in ("past_due", "canceled", "unpaid", "incomplete_expired"):
+    status_l = (status or "").lower()
+    if status_l in ("active", "trialing"):
+        org.status = "active"
+    elif status_l in ("past_due", "canceled", "unpaid", "incomplete_expired"):
         org.status = "suspended"
     db.session.commit()
 

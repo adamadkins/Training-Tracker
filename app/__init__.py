@@ -82,12 +82,22 @@ def create_app():
             return render_template("error.html", code=404, icon="\u26a0\ufe0f",
                 title="Organization Not Found",
                 message="This subdomain is not registered. Check the URL or contact your administrator."), 404
-        # Auto-suspend when trial has ended and they're not on a paid plan
+        # Auto-suspend when trial has ended and they're not on a paid plan.
+        # Also auto-reactivate suspended orgs when billing is active/trialing.
         from datetime import datetime, timezone
         status = getattr(org, "status", "active")
         just_trial_ended = False
+        sub_status = (org.stripe_subscription_status or "").lower()
+        has_paid_plan = bool(org.free_plan) or (
+            bool(org.stripe_subscription_id)
+            and sub_status not in ("past_due", "canceled", "unpaid", "incomplete_expired")
+        )
+        # If they paid, do not leave them locked out.
+        if status == "suspended" and has_paid_plan:
+            org.status = "active"
+            db.session.commit()
+            status = "active"
         if status == "active":
-            has_paid_plan = org.free_plan or (org.stripe_subscription_id and (org.stripe_subscription_status or "").lower() == "active")
             trial_ended = False
             if org.trial_ends_at and not has_paid_plan:
                 end = org.trial_ends_at
