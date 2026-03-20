@@ -2,133 +2,556 @@
 {% block content %}
 <div class="admin-page">
     <div class="page-header">
-        <h1 class="page-title hide-on-mobile-title">Platform users</h1>
-        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+        <div>
+            <a href="{{ url_for('admin.index') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <h1 class="page-title">Platform Users</h1>
+            <p class="page-subtitle">All users across organizations. Superusers are not listed.</p>
+        </div>
+        <div class="header-stat">
+            <span class="header-stat-value">{{ users_with_org|length }}</span>
+            <span class="header-stat-label">total users</span>
+        </div>
     </div>
-    <p class="page-subtitle">All users across organizations. Superusers (main-domain admins) are not listed.</p>
-    <form method="get" class="admin-filters filter-form">
-        <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search email">
-        <select name="org_id">
-            <option value="">All organizations</option>
-            {% for o in all_orgs %}
-            <option value="{{ o.id }}" {{ 'selected' if filter_org_id == o.id else '' }}>{{ o.name }}</option>
-            {% endfor %}
-        </select>
-        <select name="role">
-            <option value="">All roles</option>
-            <option value="manager" {{ 'selected' if filter_role == 'manager' else '' }}>Manager</option>
-            <option value="trainee" {{ 'selected' if filter_role == 'trainee' else '' }}>Trainee</option>
-        </select>
-        <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
-    </form>
-    <div class="table-card">
-        <div class="users-table-wrap desktop-only">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Organization</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Last seen</th>
-                        <th>Support</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user, org in users_with_org %}
-                    <tr>
-                        <td>{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</td>
-                        <td>{{ user.email }}</td>
-                        <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
-                        <td>{{ user.last_seen | est('%m-%d-%Y %I:%M %p') }}</td>
-                        <td class="support-actions">
-                            <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate" title="View as them (read-only, PII masked)">Spectate</a>
-                            <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate" title="Full access as this user">Impersonate</a>
-                            <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to this user?');">
-                                <button type="submit" class="btn btn-sm btn-reset">Send reset</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr><td colspan="5">No tenant users yet.</td></tr>
+
+    <div class="filters-card">
+        <form method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-input-wrap">
+                    <i class="fa-solid fa-magnifying-glass filter-icon"></i>
+                    <input type="text" name="q" value="{{ filter_q or '' }}" placeholder="Search by email...">
+                </div>
+                <select name="org_id">
+                    <option value="">All organizations</option>
+                    {% for o in all_orgs %}
+                    <option value="{{ o.id }}" {{ 'selected' if filter_org_id == o.id else '' }}>{{ o.name }}</option>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="users-cards mobile-only">
-            {% for user, org in users_with_org %}
-            <div class="user-card">
-                <div class="user-card-header">
-                    <span class="user-card-email">{{ user.email }}</span>
-                    <span class="role-badge role-{{ user.role }}">{{ user.role }}</span>
-                </div>
-                <div class="user-card-row">{% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> <code>{{ org.subdomain }}</code>{% else %}—{% endif %}</div>
-                <div class="user-card-row user-card-muted">{{ user.last_seen | est('%m-%d-%Y %I:%M %p') }}</div>
-                <div class="user-card-actions">
-                    <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="btn btn-sm btn-spectate">Spectate</a>
-                    <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="btn btn-sm btn-impersonate">Impersonate</a>
-                    <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to this user?');">
-                        <button type="submit" class="btn btn-sm btn-reset">Send reset</button>
-                    </form>
-                </div>
+                </select>
+                <select name="role">
+                    <option value="">All roles</option>
+                    <option value="manager" {{ 'selected' if filter_role == 'manager' else '' }}>Manager</option>
+                    <option value="trainee" {{ 'selected' if filter_role == 'trainee' else '' }}>Trainee</option>
+                </select>
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                {% if filter_q or filter_org_id or filter_role %}
+                <a href="{{ url_for('admin.users_list') }}" class="btn btn-sm btn-outline">Clear</a>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="users-cards-empty">No tenant users yet.</p>
-            {% endfor %}
+        </form>
+    </div>
+
+    <div class="users-table-wrap desktop-only">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Last Seen</th>
+                    <th class="th-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user, org in users_with_org %}
+                <tr>
+                    <td class="td-org">
+                        {% if org %}
+                        <a href="{{ url_for('admin.organization_detail', org_id=org.id) }}" class="org-link">{{ org.name }}</a>
+                        <code>{{ org.subdomain }}</code>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="td-email">{{ user.email }}</td>
+                    <td><span class="role-badge role-{{ user.role }}">{{ user.role }}</span></td>
+                    <td class="td-muted">{% if user.last_seen %}{{ user.last_seen | est('%m-%d-%Y %I:%M %p') }}{% else %}Never{% endif %}</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="action-btn action-spectate" title="View as them (read-only, PII masked)">
+                                <i class="fa-solid fa-eye"></i> Spectate
+                            </a>
+                            <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="action-btn action-impersonate" title="Full access as this user">
+                                <i class="fa-solid fa-user-secret"></i> Impersonate
+                            </a>
+                            <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to {{ user.email }}?');">
+                                <button type="submit" class="action-btn action-reset" title="Send password reset email">
+                                    <i class="fa-solid fa-key"></i> Reset
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="td-empty">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="users-cards mobile-only">
+        {% for user, org in users_with_org %}
+        <div class="user-card">
+            <div class="user-card-top">
+                <div class="user-card-email">{{ user.email }}</div>
+                <span class="role-badge role-{{ user.role }}">{{ user.role }}</span>
+            </div>
+            <div class="user-card-meta">
+                {% if org %}<a href="{{ url_for('admin.organization_detail', org_id=org.id) }}">{{ org.name }}</a> · <code>{{ org.subdomain }}</code>{% else %}No org{% endif %}
+            </div>
+            <div class="user-card-seen">{% if user.last_seen %}{{ user.last_seen | est('%m-%d-%Y %I:%M %p') }}{% else %}Never seen{% endif %}</div>
+            <div class="user-card-actions">
+                <a href="{{ url_for('admin.user_spectate', user_id=user.id) }}" class="action-btn action-spectate"><i class="fa-solid fa-eye"></i> Spectate</a>
+                <a href="{{ url_for('admin.user_impersonate', user_id=user.id) }}" class="action-btn action-impersonate"><i class="fa-solid fa-user-secret"></i> Impersonate</a>
+                <form method="post" action="{{ url_for('admin.user_send_reset', user_id=user.id) }}" style="display:inline;" onsubmit="return confirm('Send password reset email to {{ user.email }}?');">
+                    <button type="submit" class="action-btn action-reset"><i class="fa-solid fa-key"></i> Reset</button>
+                </form>
+            </div>
         </div>
+        {% else %}
+        <p class="empty-text">No users found.</p>
+        {% endfor %}
     </div>
 </div>
 <style>
-.admin-page { max-width: 100%; }
-.page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
-.page-title { font-size: 28px; font-weight: 800; margin: 0; color: var(--text-main); }
-.page-subtitle { color: var(--text-muted); font-size: 14px; margin: 0 0 24px 0; }
-.table-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; padding: 16px; }
-.users-table-wrap.desktop-only { display: block; }
-.users-cards.mobile-only { display: none; }
-.admin-table { width: 100%; border-collapse: collapse; }
-.admin-table th, .admin-table td { padding: 14px 20px; text-align: left; border-bottom: 1px solid var(--border); }
-.admin-table th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-.admin-table td { font-size: 14px; color: var(--text-main); }
-.admin-table a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.admin-table a:hover { text-decoration: underline; }
-.admin-table code { font-size: 12px; background: var(--bg-body); padding: 2px 8px; border-radius: 6px; }
-.role-badge { font-size: 11px; text-transform: uppercase; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-.role-manager { background: #dbeafe; color: #1e40af; }
-.role-trainee { background: #e0e7ff; color: #3730a3; }
-.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; text-decoration: none; border: none; cursor: pointer; }
-.btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.btn:hover { opacity: 0.9; }
-.support-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.btn-spectate { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-.btn-impersonate { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
-.btn-reset { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
-.admin-filters.filter-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-.admin-filters input[type="text"], .admin-filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .admin-page {
+        max-width: 1100px;
+    }
 
-.users-cards { flex-direction: column; gap: 12px; }
-.user-card { background: var(--bg-body); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-.user-card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.user-card-email { font-weight: 600; font-size: 15px; color: var(--text-main); word-break: break-all; }
-.user-card-row { font-size: 14px; color: var(--text-main); margin-bottom: 4px; }
-.user-card-row a { color: var(--primary); font-weight: 600; text-decoration: none; }
-.user-card-row code { font-size: 11px; background: var(--bg-card); padding: 2px 6px; border-radius: 4px; }
-.user-card-muted { font-size: 12px; color: var(--text-muted); }
-.user-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.user-card-actions .btn { min-height: 44px; padding: 10px 14px; }
-.users-cards-empty { margin: 0; padding: 24px; color: var(--text-muted); }
+    /* --- Header --- */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
 
-@media (max-width: 768px) {
-    .admin-page { padding: 0 4px; }
-    .page-header { flex-direction: column; align-items: stretch; }
-    .page-title { font-size: 22px; }
-    .page-header .btn { justify-content: center; min-height: 44px; }
-    .admin-filters.filter-form { flex-direction: column; align-items: stretch; }
-    .admin-filters input[type="text"], .admin-filters select { min-height: 44px; font-size: 16px; }
-    .admin-filters .btn { min-height: 44px; justify-content: center; }
-    .users-table-wrap.desktop-only { display: none !important; }
-    .users-cards.mobile-only { display: flex !important; }
-    .support-actions .btn-sm { padding: 8px 12px; font-size: 13px; min-height: 44px; }
-    .admin-table th, .admin-table td { padding: 10px 12px; font-size: 13px; }
-}
+    .back-link {
+        color: var(--text-muted);
+        font-size: 13px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+        transition: color 0.15s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .page-title {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0 0 4px 0;
+        color: var(--text-main);
+    }
+
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .header-stat {
+        text-align: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 24px;
+        flex-shrink: 0;
+    }
+
+    .header-stat-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1.2;
+    }
+
+    .header-stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-muted);
+    }
+
+    /* --- Filters --- */
+    .filters-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+
+    .filter-form {
+        margin: 0;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-input-wrap {
+        position: relative;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .filter-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .filter-input-wrap input {
+        width: 100%;
+        padding: 9px 12px 9px 34px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--bg-body);
+    }
+
+    .filter-row select {
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--bg-body);
+    }
+
+    /* --- Table --- */
+    .users-table-wrap {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-table th,
+    .admin-table td {
+        padding: 14px 20px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .admin-table th {
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        background: var(--bg-body);
+    }
+
+    .th-right {
+        text-align: right;
+    }
+
+    .admin-table td {
+        font-size: 14px;
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+
+    .td-org .org-link {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .td-org .org-link:hover {
+        text-decoration: underline;
+    }
+
+    .td-org code {
+        font-size: 11px;
+        background: var(--bg-body);
+        padding: 2px 7px;
+        border-radius: 5px;
+        color: var(--text-muted);
+        margin-left: 4px;
+    }
+
+    .td-email {
+        font-weight: 600;
+    }
+
+    .td-muted {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .td-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    /* --- Role Badges --- */
+    .role-badge {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+    }
+
+    .role-manager {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .role-trainee {
+        background: #ede9fe;
+        color: #5b21b6;
+    }
+
+    .role-trainer {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    /* --- Action Buttons --- */
+    .action-btns {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: var(--bg-body);
+        color: var(--text-main);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .action-btn i {
+        font-size: 11px;
+        opacity: 0.7;
+    }
+
+    .action-spectate {
+        border-color: #fcd34d;
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    .action-spectate:hover {
+        background: #fef3c7;
+        border-color: #f59e0b;
+        color: #78350f;
+    }
+
+    .action-impersonate {
+        border-color: #93c5fd;
+        background: #eff6ff;
+        color: #1e40af;
+    }
+
+    .action-impersonate:hover {
+        background: #dbeafe;
+        border-color: #3b82f6;
+        color: #1e3a8a;
+    }
+
+    /* --- Mobile Cards --- */
+    .users-cards {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .user-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .user-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .user-card-email {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-main);
+        word-break: break-all;
+    }
+
+    .user-card-meta {
+        font-size: 13px;
+        color: var(--text-main);
+        margin-bottom: 2px;
+    }
+
+    .user-card-meta a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .user-card-meta code {
+        font-size: 11px;
+        background: var(--bg-body);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .user-card-seen {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+    }
+
+    .user-card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .user-card-actions .action-btn {
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .empty-text {
+        text-align: center;
+        padding: 32px;
+        color: var(--text-muted);
+    }
+
+    /* --- Buttons --- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
+    }
+
+    .btn:hover {
+        opacity: 0.88;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .desktop-only {
+        display: block;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .admin-page {
+            padding: 0 4px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .header-stat {
+            align-self: flex-start;
+        }
+
+        .page-title {
+            font-size: 22px;
+        }
+
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-input-wrap {
+            min-width: 100%;
+        }
+
+        .filter-input-wrap input,
+        .filter-row select {
+            min-height: 44px;
+            font-size: 16px;
+        }
+
+        .filter-row .btn {
+            min-height: 44px;
+            justify-content: center;
+        }
+
+        .desktop-only {
+            display: none !important;
+        }
+
+        .users-cards {
+            display: flex !important;
+        }
+    }
 </style>
 {% endblock %}
