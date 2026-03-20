@@ -136,6 +136,58 @@
         </div>
     </div>
 
+    <div class="section-card whatif-card">
+        <h2 class="section-heading"><i class="fa-solid fa-flask"></i> What If Simulator</h2>
+        <p class="whatif-desc">See how your numbers change if you sign up more clients.</p>
+        <div class="whatif-inputs">
+            <div class="whatif-input-group">
+                <label>Additional Standard clients <span class="whatif-price">($40/mo each)</span></label>
+                <div class="whatif-stepper">
+                    <button type="button" class="stepper-btn" onclick="adjustWhatIf('standard', -1)"><i class="fa-solid fa-minus"></i></button>
+                    <input type="number" id="whatifStandard" value="0" min="0" max="500" onchange="recalcWhatIf()">
+                    <button type="button" class="stepper-btn" onclick="adjustWhatIf('standard', 1)"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+            <div class="whatif-input-group">
+                <label>Additional Pro clients <span class="whatif-price">($50/mo each)</span></label>
+                <div class="whatif-stepper">
+                    <button type="button" class="stepper-btn" onclick="adjustWhatIf('pro', -1)"><i class="fa-solid fa-minus"></i></button>
+                    <input type="number" id="whatifPro" value="0" min="0" max="500" onchange="recalcWhatIf()">
+                    <button type="button" class="stepper-btn" onclick="adjustWhatIf('pro', 1)"><i class="fa-solid fa-plus"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="whatif-results" id="whatifResults" style="display:none;">
+            <div class="whatif-comparison">
+                <div class="whatif-col">
+                    <div class="whatif-col-label">Current</div>
+                    <div class="whatif-row"><span>MRR</span><strong id="wiCurMrr"></strong></div>
+                    <div class="whatif-row"><span>Annual Revenue</span><strong id="wiCurRev"></strong></div>
+                    <div class="whatif-row"><span>Net Profit</span><strong id="wiCurNet"></strong></div>
+                    <div class="whatif-row whatif-row-total"><span>Est. Tax</span><strong id="wiCurTax"></strong></div>
+                    <div class="whatif-row"><span>Take-Home</span><strong id="wiCurTakeHome"></strong></div>
+                </div>
+                <div class="whatif-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                <div class="whatif-col whatif-col-new">
+                    <div class="whatif-col-label">With New Clients</div>
+                    <div class="whatif-row"><span>MRR</span><strong id="wiNewMrr"></strong></div>
+                    <div class="whatif-row"><span>Annual Revenue</span><strong id="wiNewRev"></strong></div>
+                    <div class="whatif-row"><span>Net Profit</span><strong id="wiNewNet"></strong></div>
+                    <div class="whatif-row whatif-row-total"><span>Est. Tax</span><strong id="wiNewTax"></strong></div>
+                    <div class="whatif-row"><span>Take-Home</span><strong id="wiNewTakeHome"></strong></div>
+                </div>
+                <div class="whatif-col whatif-col-diff">
+                    <div class="whatif-col-label">Difference</div>
+                    <div class="whatif-row"><span>MRR</span><strong id="wiDiffMrr" class="text-green"></strong></div>
+                    <div class="whatif-row"><span>Annual Revenue</span><strong id="wiDiffRev" class="text-green"></strong></div>
+                    <div class="whatif-row"><span>Net Profit</span><strong id="wiDiffNet" class="text-green"></strong></div>
+                    <div class="whatif-row whatif-row-total"><span>Est. Tax</span><strong id="wiDiffTax"></strong></div>
+                    <div class="whatif-row"><span>Take-Home</span><strong id="wiDiffTakeHome" class="text-green"></strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="section-card">
         <div class="section-title-row">
             <h2 class="section-heading"><i class="fa-solid fa-receipt"></i> Platform Expenses</h2>
@@ -360,6 +412,56 @@
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
+    /* --- What If --- */
+    .whatif-desc { color: var(--text-muted); font-size: 13px; margin: -8px 0 16px 0; }
+    .whatif-inputs { display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
+    .whatif-input-group { flex: 1; min-width: 200px; }
+    .whatif-input-group label {
+        display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;
+    }
+    .whatif-price { font-weight: 400; color: var(--text-muted); }
+    .whatif-stepper { display: flex; align-items: center; gap: 0; }
+    .stepper-btn {
+        width: 40px; height: 40px; border: 1px solid var(--border); background: var(--bg-body);
+        color: var(--text-main); cursor: pointer; font-size: 14px;
+        display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .stepper-btn:first-child { border-radius: 8px 0 0 8px; }
+    .stepper-btn:last-child { border-radius: 0 8px 8px 0; }
+    .stepper-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .whatif-stepper input {
+        width: 60px; height: 40px; text-align: center; border: 1px solid var(--border);
+        border-left: none; border-right: none; font-size: 16px; font-weight: 700;
+        background: var(--bg-card); color: var(--text-main);
+    }
+    .whatif-comparison {
+        display: flex; gap: 16px; align-items: stretch; flex-wrap: wrap;
+    }
+    .whatif-col {
+        flex: 1; min-width: 160px; background: var(--bg-body); border: 1px solid var(--border);
+        border-radius: 10px; padding: 14px;
+    }
+    .whatif-col-new { border-color: var(--primary); background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+    .whatif-col-diff { border-color: #bbf7d0; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
+    .whatif-col-label {
+        font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em;
+        color: var(--text-muted); margin-bottom: 10px;
+    }
+    .whatif-col-new .whatif-col-label { color: var(--primary); }
+    .whatif-col-diff .whatif-col-label { color: #15803d; }
+    .whatif-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 5px 0; font-size: 13px; color: var(--text-main);
+    }
+    .whatif-row span { color: var(--text-muted); }
+    .whatif-row strong { font-size: 14px; }
+    .whatif-row-total { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; }
+    .whatif-arrow {
+        display: flex; align-items: center; color: var(--text-muted); font-size: 18px;
+        padding: 0 4px; flex-shrink: 0;
+    }
+    .text-green { color: #15803d; }
+
     /* --- Responsive --- */
     @media (max-width: 768px) {
         .admin-page { padding: 0 8px; }
@@ -380,6 +482,11 @@
         .expense-form-row .btn { min-height: 44px; }
         .section-title-row { flex-direction: column; align-items: flex-start; gap: 8px; }
         .breakdown-table td { font-size: 13px; }
+        .whatif-inputs { flex-direction: column; gap: 16px; }
+        .whatif-comparison { flex-direction: column; }
+        .whatif-arrow { justify-content: center; transform: rotate(90deg); padding: 4px 0; }
+        .whatif-stepper input { min-height: 44px; font-size: 18px; }
+        .stepper-btn { width: 48px; height: 44px; }
     }
 
     @media (max-width: 480px) {
@@ -405,6 +512,84 @@ function cancelEdit() {
     document.getElementById('expenseFreq').value = 'monthly';
     document.getElementById('expenseBtn').innerHTML = '<i class="fa-solid fa-plus"></i> Add';
     document.getElementById('expenseCancel').style.display = 'none';
+}
+
+var WI = {
+    curMrr: {{ mrr }},
+    annualExpenses: {{ annual_expenses }},
+    standardPrice: 40,
+    proPrice: 50,
+    seTaxRate: 0.153,
+    seFactor: 0.9235,
+    stdDeduction: 15000,
+    kyRate: 0.04,
+    brackets: [[11600,0.10],[35550,0.12],[53375,0.22],[91425,0.24],[51775,0.32],[365625,0.35],[Infinity,0.37]]
+};
+
+function wiCalcTax(grossAnnual) {
+    var exp = WI.annualExpenses;
+    var net = Math.max(0, grossAnnual - exp);
+    var seIncome = net * WI.seFactor;
+    var seTax = seIncome * WI.seTaxRate;
+    var halfSe = seTax / 2;
+    var taxableIncome = Math.max(0, net - halfSe - WI.stdDeduction);
+    var fedTax = 0, rem = taxableIncome;
+    for (var i = 0; i < WI.brackets.length && rem > 0; i++) {
+        var chunk = Math.min(rem, WI.brackets[i][0]);
+        fedTax += chunk * WI.brackets[i][1];
+        rem -= chunk;
+    }
+    var stateTax = Math.max(0, net - halfSe - WI.stdDeduction) * WI.kyRate;
+    var total = seTax + fedTax + stateTax;
+    return { net: net, tax: total, takeHome: net - total };
+}
+
+function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtDiff(n) { return (n >= 0 ? '+' : '') + fmt(n); }
+
+function adjustWhatIf(plan, delta) {
+    var el = document.getElementById(plan === 'standard' ? 'whatifStandard' : 'whatifPro');
+    var v = parseInt(el.value) || 0;
+    el.value = Math.max(0, v + delta);
+    recalcWhatIf();
+}
+
+function recalcWhatIf() {
+    var addStd = parseInt(document.getElementById('whatifStandard').value) || 0;
+    var addPro = parseInt(document.getElementById('whatifPro').value) || 0;
+    var panel = document.getElementById('whatifResults');
+
+    if (addStd === 0 && addPro === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+    panel.style.display = '';
+
+    var curMrr = WI.curMrr;
+    var newMrr = curMrr + (addStd * WI.standardPrice) + (addPro * WI.proPrice);
+    var curAnnual = curMrr * 12;
+    var newAnnual = newMrr * 12;
+
+    var curCalc = wiCalcTax(curAnnual);
+    var newCalc = wiCalcTax(newAnnual);
+
+    document.getElementById('wiCurMrr').textContent = fmt(curMrr) + '/mo';
+    document.getElementById('wiCurRev').textContent = fmt(curAnnual) + '/yr';
+    document.getElementById('wiCurNet').textContent = fmt(curCalc.net);
+    document.getElementById('wiCurTax').textContent = fmt(curCalc.tax);
+    document.getElementById('wiCurTakeHome').textContent = fmt(curCalc.takeHome);
+
+    document.getElementById('wiNewMrr').textContent = fmt(newMrr) + '/mo';
+    document.getElementById('wiNewRev').textContent = fmt(newAnnual) + '/yr';
+    document.getElementById('wiNewNet').textContent = fmt(newCalc.net);
+    document.getElementById('wiNewTax').textContent = fmt(newCalc.tax);
+    document.getElementById('wiNewTakeHome').textContent = fmt(newCalc.takeHome);
+
+    document.getElementById('wiDiffMrr').textContent = fmtDiff(newMrr - curMrr) + '/mo';
+    document.getElementById('wiDiffRev').textContent = fmtDiff(newAnnual - curAnnual) + '/yr';
+    document.getElementById('wiDiffNet').textContent = fmtDiff(newCalc.net - curCalc.net);
+    document.getElementById('wiDiffTax').textContent = fmtDiff(newCalc.tax - curCalc.tax);
+    document.getElementById('wiDiffTakeHome').textContent = fmtDiff(newCalc.takeHome - curCalc.takeHome);
 }
 </script>
 {% endblock %}
